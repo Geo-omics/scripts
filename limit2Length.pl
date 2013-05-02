@@ -100,7 +100,7 @@ $lower ? print "# Total Bases assembled in contigs <= $setLen:\t$revisedSumLen\n
 print "# Longest Sequence Length:\t$longest\n" unless($quick);
 print "# Shortest Sequence Length:\t$shortest\n" unless($quick);
 print "# Mean Sequence Length before setting the $setLen base limit:\t$meanLenBefore\n";
-$lower ? print  "# Number of Sequences with Length equal to or less than $setLen bases:\t$count\n" : "# Number of Sequences with Length equal to or greater than $setLen bases:\t$count\n";
+$lower ? print  "# Number of Sequences with Length equal to or less than $setLen bases:\t$count\n" : print "# Number of Sequences with Length greater than $setLen bases:\t$count\n";
 print "# Mean Length after setting the $setLen base limit:\t$meanLenAfter\n";
 
 
