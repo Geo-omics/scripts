@@ -22,8 +22,10 @@
 
 use strict;
 use Getopt::Long;
+use Pod::Usage;
 use File::Basename;
 
+my $help;
 my $path; # Folder path
 my $ext="fasta";
 my $description=$$.".desc";
@@ -31,8 +33,11 @@ my $description=$$.".desc";
 GetOptions(
 	'p|path:s'=>\$path,
 	'e|ext:s'=>\$ext,
-	'h|help'=>sub{system('perldoc', $0); exit;},
+#	'h|help'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>\$help,
 );
+
+pod2usage(1) if $help;
 
 die "[ERROR: $0] Folder Path Required! See $0 -h for help on the usage" if !$path;
 

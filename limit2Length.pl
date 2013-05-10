@@ -25,6 +25,7 @@ use Getopt::Long;
 #######################
 ## PARAMETERS
 #######################
+my $help;
 my $fasta;
 my $fastq;
 my $setLen=2000;
@@ -41,13 +42,14 @@ GetOptions(
 	'b|bin:i'=>\$binSize,
 	'quick'=>\$quick,
 	'below'=>\$lower,
-	'h|help'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>\$help,
 );
 
 #######################
 ## CHECKS
 #######################
 my $file;
+pod2usage(1) if $help;
 if (!$fasta && !$fastq){system('perldoc', $0); exit;}
 elsif($fasta && !$fastq){ $file=$fasta; }
 elsif(!$fasta && $fastq){ $file=$fastq; }

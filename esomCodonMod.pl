@@ -10,11 +10,13 @@ use Getopt::Long;
 
 my ($lrn, $tri);
 my $out=$$."_".$lrn;
+my $version=0.2.0
 
 GetOptions(
 	'lrn=s'=>\$lrn,
 	'o|out:s'=>\$out,
 	'tri'=>\$tri,
+	'v|version'=>sub{print STDERR $0."\tversion:".$version."\n"},
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 
@@ -50,18 +52,14 @@ while(my $line=<LRN>){
 	my $pos=0;
 	if ($line=~ /^\% Key/){
 		@codonOrder=split(/\t/, $line);
-		print OUT $line."\n";
+		foreach (@codonOrder){	print OUT $_."\t" unless $removeTetra{$_}};
 	}
 	elsif($line=~ /^\d/){
 		my $thisLine;
 		my @frequencies=split(/\t/, $line);
 		foreach my $freq(@frequencies){
-			if ($removeTetra{$codonOrder[$pos]}){
-				$thisLine.="0\t";
-			}
-			else{
-				$thisLine.=$freq."\t";
-			}
+			next if ($removeTetra{$codonOrder[$pos]});
+			$thisLine.=$freq."\t";
 			$pos++;
 		}
 		$thisLine=~ s/\t$/\n/;
