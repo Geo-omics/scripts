@@ -37,37 +37,58 @@ if($tri){
 	foreach (@removeCodons){	$removeTetra{$_}++; }
 }
 
-print "Tetramers Removed:\t".keys(%removeTetra)."\n";
-#foreach my $k(keys %removeTetra){
-#	print $k."\n";
-#}
-#print "CodonMod says:".$lrn."\n";
+#print "Possible Tetramers that can be Removed:\t".keys(%removeTetra)."\n";
+
 open(LRN, $lrn) || die $!;
-open(OUT, ">".$out) || die $!;
-my @codonOrder;
+my (@codonOrder);
+my ($cols, $secondPart, $firstLine, $removed);
 while(my $line=<LRN>){
 	chomp $line;
 	next unless $line;
-	
-	my $pos=0;
 	if ($line=~ /^\% Key/){
 		@codonOrder=split(/\t/, $line);
-		foreach (@codonOrder){	print OUT $_."\t" unless $removeTetra{$_}};
+		my $thisLine;
+		foreach (@codonOrder){
+			if ($removeTetra{$_}){
+				$removed++;
+				next;
+			}
+			$thisLine.=$_."\t";
+			$cols++;
+		}
+		$thisLine=~ s/\t$/\n/;
+		$secondPart.=$thisLine;
 	}
 	elsif($line=~ /^\d/){
 		my $thisLine;
 		my @frequencies=split(/\t/, $line);
+		my $pos=-1;
 		foreach my $freq(@frequencies){
+			$pos++;
 			next if ($removeTetra{$codonOrder[$pos]});
 			$thisLine.=$freq."\t";
-			$pos++;
 		}
 		$thisLine=~ s/\t$/\n/;
-		print OUT $thisLine;
+		$secondPart.=$thisLine;
 	}
-	else{
-		print OUT $line."\n";
+	elsif($.==1){
+		$firstLine=$line;
 	}
 }
+close LRN;
+
+print "Tetramers Removed:\t".$removed."\n";
+
+open(OUT, ">".$out) || die $!;
+print OUT $firstLine."\n";
+print OUT "% ".$cols."\n";
+my $thisLine.="% 9\t";
+for (my $i=$cols; $i > 1; $i--){
+	$thisLine.="1\t";
+}
+$thisLine=~ s/\t$/\n/;
+print OUT $thisLine;
+print OUT $secondPart;
+close OUT;
 
 exit 0;
