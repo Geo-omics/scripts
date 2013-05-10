@@ -97,11 +97,12 @@ use Getopt::Long;
 use File::Basename;
 use File::Spec;
 use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
+use Pod::Usage;
 
 #######################
 ## PARAMETERS
 #######################
-my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix);
+my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix, $help);
 my $INS_SD= 13;
 my $version= "0.0.7";
 my $interval=10;
@@ -115,7 +116,7 @@ GetOptions(
 	'rev=s'=> \$rev,
 	'k|kmer=i'=> \$KMER,
 	'i|insert=i'=>\$INS,
-	'sd|insert_sd:i'=>$INS_SD,
+	'sd|insert_sd:i'=>\$INS_SD,
 	'contig_size:i'=>\$minLen,
 	'minAssemblyLen:i'=>\$min_contig_len,
 	'outdir:s'=>\$OUTDIR,
@@ -130,11 +131,14 @@ GetOptions(
 	'interval'=>\$interval,
 	'log:s'=>\$LOG,
 	'v|version'=>\sub{print $version."\n"; exit;},
-	'h|help'	=>	sub {system('perldoc', $0); exit;},
+	'h|help'=>\$help,
 );
 #######################
 ## CHECKS
 #######################
+
+# Help called
+pod2usage(1) if $help;
 
 ## Check if velvet module loaded ##
 my @tmp=`velveth 2>&1`; # velvet/1.1.07-MAX99-OPENMP
@@ -360,10 +364,14 @@ sub getStats{
 		print "Calculating stats...\n";
 		system("perl $lim2len -f $contigs -l $minLen -o $minLenFile >> $out");
 	}
+
+	my $calcN50=File::Spec->catfile( $scripts, "calcN50.pl");
+	if (-e $calcN50){
+		system("perl $calcN50 $contigs >> $out");
+	}
 	my $searchNs=File::Spec->catfile( $scripts, "findStretchesOfNs.pl");
 	my $searchNsOut=File::Spec->catfile( $OUTDIR, "stretchesOfN_k".$KMER.".out");
 	if (-e $searchNs){
-#		print LOG "\n# Number of sequences with stretches of Ns >= 10\t";
 		print "Finding long stretches of Ns...\n";
 		print LOG `perl $searchNs -f $contigs -o $searchNsOut`;
 	}

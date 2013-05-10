@@ -10,13 +10,13 @@ use Getopt::Long;
 
 my ($lrn, $tri);
 my $out=$$."_".$lrn;
-my $version=0.2.0
+my $version=0.2.0;
 
 GetOptions(
 	'lrn=s'=>\$lrn,
 	'o|out:s'=>\$out,
 	'tri'=>\$tri,
-	'v|version'=>sub{print STDERR $0."\tversion:".$version."\n"},
+	'v|version'=>sub{print STDERR $0."\tversion:".$version."\n";},
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 
