@@ -1,0 +1,1 @@
+/geomicro/data1/COMMON/scripts/tetramer_freqs_esom.pl
