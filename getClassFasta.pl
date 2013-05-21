@@ -24,7 +24,9 @@
 
 use strict;
 use Getopt::Long;
-my ($class, $names, $fasta, $classNum);
+use Pod::Usage;
+
+my ($help, $class, $names, $fasta, $classNum);
 my $version="0.0.02";
 
 GetOptions(
@@ -32,8 +34,10 @@ GetOptions(
 	"names=s"=>\$names,
 	"fasta=s"=>\$fasta,
 	"num=i"=>\$classNum,
-	"h|help"=>sub{system('perldoc', $0); exit;},
+	'h|help'=>\$help,
 );
+
+pod2usage(1) if $help;
 
 print "getClassFasta v$version\n";
 

@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-=head1 ESOM Wrapper version 0.1.1
+=head1 ESOM Wrapper version 0.1.3
 
 =head1 DESCRIPTION
 
@@ -46,13 +46,15 @@ use strict;
 use Getopt::Long;
 use File::Spec;
 use File::Basename;
+use Pod::Usage;
 
 ### Wrapped Scripts ###
 my $tetramerScript="/geomicro/data1/COMMON/scripts/tetramer_freqs_esom.pl";
 my $codonModScript="/geomicro/data1/COMMON/scripts/esomCodonMod.pl";
 ###
 
-my $version="0.1.2";
+my $version="0.1.3";
+my $help;
 my $path; # Folder path
 my $ext="fasta";
 my $prefix="esom";
@@ -76,8 +78,9 @@ GetOptions(
 	'min:i'=>\$min_length,
 	'max:i'=>\$window_size,
 	'no_mod'=>\$noMod,
-	'h|help'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>\$help,
 );
+pod2usage(1) if $help;
 
 die "[ERROR: $0] Folder Path Required! See $0 -h for help on the usage" if !$path;
 

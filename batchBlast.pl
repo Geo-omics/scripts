@@ -44,21 +44,18 @@
 #######################
 use strict;
 use Getopt::Long;
+use Pod::Usage;
 
 #######################
 ## PARAMETERS
 #######################
-my $newBlast;
-my $p; 
+my ($help,$newBlast,$p,$d,$m,$check);
 my $listOfFiles="";
 my $a=1;
 my $e="1e-3";
-my $d;
-my $m;
 my $per=0;
 my $w=11;
 my $query="";
-my $check;
 my $myID=`whoami`;
 chomp($myID);
 my $mainLogUpdate="test.log";
@@ -75,9 +72,10 @@ GetOptions(
 	'w|word_size'=>\$w,
 	'perc_identity:i'=>\$per,
 	'check'=>\$check,
-	'h|help'=> sub{system('perldoc', $0); exit;},
+	'h|help'=>\$help,
 );
 
+pod2usage(1) if $help;
 
 &checkArgs;
 my ($commandLine, @fileNames, %procsToFollow, %blastLogTable);
