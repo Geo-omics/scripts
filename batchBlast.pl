@@ -1,12 +1,11 @@
 #! /usr/bin/perl
-
 =head1 MOTIVATION
 
 	The script began as a wrapper script to run multiple instances of blast jobs when given a list of query files.
 	It has since evolved into a wrapper for catalouging all blast jobs run to avoid duplicating results and wasting resources.
 	It handles all basic functionalities of blast jobs (both new and old), and more can be added upon request.
 
-=head2 USAGE
+=head1 USAGE
 
 	Start multiple instances of blast at once:
 		batchblast.pl [-p blast type] [-l list of query files]
@@ -17,7 +16,7 @@
 	Check if any type of blast was performed on the query file:
 		batchBlast.pl [-check] [-q query fasta file]
 
-=head3 Options
+=head2 Options
 
 	-p OR -blast:	Blast Task (blastn, blastp, blastx, tblastn, tblastx)
 	-l OR -list:	List of Query File Names for Blasts; Each name should be in a seperate line.
@@ -32,7 +31,7 @@
 	-check		:	Check if blasts for this file have been performed earlier.
 	-h OR -help:	this page.
 
-=head2 AUTHOR
+=head1 AUTHOR
 
 	Sunit Jain, Aug 2011
 	sunitj [AT] umich [DOT] edu
@@ -44,12 +43,12 @@
 #######################
 use strict;
 use Getopt::Long;
-use Pod::Usage;
+use File::Basename;
 
 #######################
 ## PARAMETERS
 #######################
-my ($help,$newBlast,$p,$d,$m,$check);
+my ($newBlast,$p,$d,$m,$check);
 my $listOfFiles="";
 my $a=1;
 my $e="1e-3";
@@ -72,10 +71,8 @@ GetOptions(
 	'w|word_size'=>\$w,
 	'perc_identity:i'=>\$per,
 	'check'=>\$check,
-	'h|help'=>\$help,
+	'h|help'=>sub{system("perldoc", $0); exit;},
 );
-
-pod2usage(1) if $help;
 
 &checkArgs;
 my ($commandLine, @fileNames, %procsToFollow, %blastLogTable);
@@ -108,8 +105,8 @@ sub help{system('perldoc', $0); exit;}
 sub checkArgs{
 	&check if ($check);
 
-	if (!$p){ print "[ERROR]Missing Required Options!\n"; &help;}
-	if (!$listOfFiles && !$query){print "[ERROR]Missing Query Files Options!\n"; &help;}
+	if (!$p){ print "[ERROR]Missing Required Options!\n"; &help}
+	if (!$listOfFiles && !$query){print "[ERROR]Missing Query Files Options!\n"; &help}
 
 	if (!$m){ $m = $newBlast ? 6 : 8; }
 	

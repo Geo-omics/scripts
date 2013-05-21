@@ -4,17 +4,17 @@
 
 	This program takes a class file, a names file, a fasta file and extracts the seqs for the contigs presents in the desired class.
 
-=head2 Usage
+=head1 Usage
 
 	perl getClassFasta.pl -cls <CLASS File> -names <NAMES File> -fasta <Split FASTA File> -num <CLASS NUMBER>
-	
-=head3 Options
+
+=head2 Options
 
 	-cls	:	the .cls file
 	-names	:	the .names file
 	-fasta	:	The Concatenated fasta file that was used with the tetramer script.
 	-num	:	the class number you're interested in.
-    
+
 =head1 Questions/Comments/Suggestions/Accolades/Beer
 
 	Sunit Jain, sunitj [AT] umich [DOT] edu
@@ -26,7 +26,7 @@ use strict;
 use Getopt::Long;
 use Pod::Usage;
 
-my ($help, $class, $names, $fasta, $classNum);
+my ($class, $names, $fasta, $classNum);
 my $version="0.0.02";
 
 GetOptions(
@@ -34,10 +34,8 @@ GetOptions(
 	"names=s"=>\$names,
 	"fasta=s"=>\$fasta,
 	"num=i"=>\$classNum,
-	'h|help'=>\$help,
+	"help"=>sub{system("perldoc", $0); exit;},
 );
-
-pod2usage(1) if $help;
 
 print "getClassFasta v$version\n";
 

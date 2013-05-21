@@ -33,11 +33,8 @@ my $description=$$.".desc";
 GetOptions(
 	'p|path:s'=>\$path,
 	'e|ext:s'=>\$ext,
-#	'h|help'=>sub{system('perldoc', $0); exit;},
-	'h|help'=>\$help,
+	'h|help'=>sub{system('perldoc', $0); exit;},
 );
-
-pod2usage(1) if $help;
 
 die "[ERROR: $0] Folder Path Required! See $0 -h for help on the usage" if !$path;
 
