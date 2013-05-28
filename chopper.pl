@@ -17,7 +17,7 @@
 	-t OR totalseqs:	integer	If you already know the total number of sequences in the file, mention here, this will greatly speed up the script.
 	-avgsize:	integer	defines the average size of a fasta file. Only used when you don't specify '-p' OR '-s'.
 	-maxbase:	integer	chop the fasta file upto a certain sequence length
-	-overlap:	integer	chop a fasta sequence such that all sequences are AT MOST "maxbase" long and if a sequence has been chopped there is an overlap of 100 bases (default 100) between the two sequences.
+	-overlap:	integer	chop a fasta sequence such that all sequences are AT MOST "maxbase" long and if a sequence has been chopped there is an overlap of 'overlap' bases (default = 0) between the two sequences.
 
 =head1 AUTHOR
 
@@ -37,7 +37,7 @@ my $totalNumSeqs;
 my $numSeqs; # max number of seqs allowed in a file
 my $avgSize= 1000000;
 my $maxBases;
-my $overlap= 100;
+my $overlap;
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,

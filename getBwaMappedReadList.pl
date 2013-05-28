@@ -8,6 +8,12 @@
 
 	If you just have one contig, use the following command instead:
 		samtools view -F0x4 sortedBamFile contigName | cut -f 1 > outputFile.list
+	Some other commands to try:
+		# of unmapped reads: 
+		samtools view -f0x4 -c sortedBamFile contigName 
+		# of uniquely mapped reads:
+		samtools view -F0x4 -c -q 1 sortedBamFile contigName
+	where, -c = Instead of printing the alignments, only count them and print the total number
 
 =head2 Preparation
 
@@ -64,7 +70,7 @@ close LIST;
 my $i=0;
 foreach my $c(@contigsList){
 	$i++;
-	my $cmd="samtools view $bam $c | cut -f 1 > $out";
+	my $cmd="samtools view -F0x4 $bam $c | cut -f 1 > $out";
 	print "[$i]: ".$cmd."\n" unless ($quiet);
 	system($cmd);
 }

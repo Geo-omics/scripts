@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 =head1 Name
 
-	getRandomData - version 0.0.2
+	getRandomData - version 0.1.0
 
 =head2 Description
 
@@ -46,12 +46,14 @@ my $in;
 my $out="random".$$.".out";
 my $delimiter="tab";
 my $per= 10;
-my $version="0.0.2";
+my $version="0.1.0";
+my $file_size;
 GetOptions(
 	'i:s'=> \$in,
 	'p:f'=>\$per,
 	'o:s'=>\$out,
 	'd:s'=>\$delimiter,
+	'size:i'=>\$file_size,
 	'v'=> sub{ print $0.":\tVersion ".$version."\n"; exit; },
 	'h'=> sub{ system("perldoc", $0); exit; }
 );
@@ -67,39 +69,71 @@ while (scalar(keys %rNum) < $totalLines){
 }
 print "Sample Size: ".int($totalLines)."\n";
 
+$|++;
+
 open (IN, $in) || die "[ERROR] $in $!\n";
 open (OUT, ">".$out);
 
-$/=$delim;
 my $lNum=0;
-while(my $line=<IN>){
-	next if ($line=~ m/^#/);
-	chomp $line;
-	next unless $line;
-	$lNum++;
-	if ($rNum{$lNum}){
-		print OUT $delim unless ($delim=~ m/\n/o);
-		print OUT $line."\n";
+unless (lc($delimiter) eq "fastq"){
+	$/=$delim;
+	while(my $line=<IN>){
+		next if ($line=~ m/^#/);
+		chomp $line;
+		next unless $line;
+		$lNum++;
+		if ($rNum{$lNum}){
+			print OUT $delim unless ($delim=~ m/\n/o);
+			print OUT $line."\n";
+		}
+	}
+	$/="\n";
+}
+# Modify to parse out FASTQ files
+elsif(lc($delimiter) eq "fastq"){
+	$/="\n";
+	while(my $line=<IN>){
+                chomp $line;
+                next unless $line;
+		if ($line=~ /^@/){
+			$lNum++;
+			my $header=$line;
+			my $sequence=<IN>;
+			my $qHeader=<IN>;
+			my $qual=<IN>;
+			if ($rNum{$lNum}){
+				print OUT $header."\n".$sequence."\+\n".$qual;
+			}
+		}
 	}
 }
 close IN;
 close OUT;
+$|--;
+
+exit;
 
 sub delimiter{
 	if ((lc($delimiter) eq "tab")|| (lc($delimiter) eq "newline") || (lc($delimiter) eq "comma") || (lc($delimiter) eq "space")){
-		my $fs=`wc -l $in`;
+		my $fs= $file_size ? $file_size : `wc -l $in`;
 		return ("\n", $fs);
 	}
 	elsif (lc($delimiter) eq "fastq"){
-		my $fs = `grep -c \'\@\' $in`;
+		my $fs = $file_size ? $file_size : `wc -l $in`;
+		if (($fs % 4)==0){
+			$fs=$file_size ? $file_size : $fs/4;
+		}
+		else{
+			die "Number of lines in a FASTQ file MUST be divisible by 4\nNumber of lines in $in:\t$fs\n";
+		}
 		return ("\@", $fs);
 	}
 	elsif (lc($delimiter) eq "qual"){
-		my $fs = `grep -c \'\+\' $in`;
+		my $fs = $file_size ? $file_size : `grep -c \^\'\+\' $in`;
 		return ("\+", $fs);
 	}
 	elsif (lc($delimiter) eq "fasta"){
-		my $fs = `grep -c \'\>\' $in`;
+		my $fs = $file_size ? $file_size : `grep -c \^\'\>\' $in`;
 		return ("\>", $fs);
 	}
 	else{

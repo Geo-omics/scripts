@@ -95,11 +95,10 @@ while(my $line=<ILL>){
 		my $avgScore=sum(@score)/scalar(@score);
 		$header.="_avgScore_".$avgScore;
 
-		if(($avgScore > 40) || ($avgScore < 0)){
+		if(($avgScore > 41) || ($avgScore < 0)){
 			print STDERR "[ERROR: $0] $header has an Average Quality Score of $avgScore\n";
 			die "Incorrect offset: $offset\nChange to the correct offset by using the \"-offset\" flag\n";
-		}			
-
+		}
 		unless($summary){		
 			if(($avgScore > 30) && ($avgScore <=40)){
 				$qualSummary{"Q1"}++;
