@@ -25,6 +25,7 @@ use Getopt::Long;
 #######################
 ## PARAMETERS
 #######################
+my $version="0.1.3";
 my $fasta;
 my $fastq;
 my $setLen=2000;
@@ -41,7 +42,8 @@ GetOptions(
 	'b|bin:i'=>\$binSize,
 	'quick'=>\$quick,
 	'below'=>\$lower,
-	'h|help'=>sub{system("perldoc", $0); exit;}
+	'h|help'=>sub{system("perldoc", $0); exit;},
+	'v|version'=>sub{print STDERR "$0 version: ".$version."\n"; exit;}
 );
 
 #######################
@@ -67,6 +69,7 @@ my $total=0;
 my $sumLen=0;
 my $revisedSumLen=0;
 my (@sequence, %bins, $shortest, $longest);
+my ($A, $T, $G, $C, $N)=(0,0,0,0,0);
 #######################
 ## MAIN
 #######################
@@ -93,7 +96,7 @@ close OUT;
 my $meanLenBefore= int(($sumLen/$total) + 0.5);
 my $meanLenAfter= int(($revisedSumLen/$count) + 0.5);
 
-
+print "# $0 version: $version\n";
 print "# Total Sequences:\t$total\n";
 print "# Total Bases assembled:\t$sumLen\n";
 $lower ? print "# Total Bases assembled in contigs <= $setLen:\t$revisedSumLen\n" : print "# Total Bases assembled in contigs > $setLen:\t$revisedSumLen\n";
@@ -103,9 +106,22 @@ print "# Mean Sequence Length before setting the $setLen base limit:\t$meanLenBe
 $lower ? print  "# Number of Sequences with Length equal to or less than $setLen bases:\t$count\n" : print "# Number of Sequences with Length greater than $setLen bases:\t$count\n";
 print "# Mean Length after setting the $setLen base limit:\t$meanLenAfter\n";
 
+my $perc_A = sprintf( "%.4f",(($A/$revisedSumLen)* 100));
+my $perc_T = sprintf( "%.4f",(($T/$revisedSumLen)* 100));
+my $perc_G = sprintf( "%.4f",(($G/$revisedSumLen)* 100));
+my $perc_C = sprintf( "%.4f",(($C/$revisedSumLen)* 100));
+my $perc_N = sprintf( "%.4f",(($N/$revisedSumLen)* 100));
+
+print "# Nucleotide Distribution after setting the $setLen base limit:\n";
+print "A\t:\t$perc_A %\n";
+print "T\t:\t$perc_T %\n";
+print "G\t:\t$perc_G %\n";
+print "C\t:\t$perc_C %\n";
+print "N\t:\t$perc_N %\n";
 
 unless($quick){
 	my $i=0;
+	print "\nSequence Length Distribution:\n";
 	foreach my $b(@sequence){
 		my $from= $i > 0 ? ($sequence[$i-1])+1 : 1;
 		print $from."-".$b."\t".$bins{$b}."\n" if $bins{$b};
@@ -150,10 +166,12 @@ sub parseFastq{
 		if(($lower) && ($len <= $setLen)){
 			print OUT "$seqDesc\n$seq\n\+\n$qual\n";
 			$revisedSumLen+=$len;
+			&nucTally($seq);
 			return 1;
 		}
 		elsif((! $lower) &&  ($len > $setLen)){
 			print OUT "$seqDesc\n$seq\n\+\n$qual\n";
+			&nucTally($seq);
 			$revisedSumLen+=$len;
 			return 1;
 		}
@@ -179,16 +197,30 @@ sub parseFasta{
 	if(($lower) && ($len <= $setLen)){
 		print OUT ">".$line."\n";
 		$revisedSumLen+=$len;
+		&nucTally($seq);	
 		return 1;
 	}
 	elsif((! $lower) &&  ($len > $setLen)){
 		print OUT ">".$line."\n";
+		&nucTally($seq);
 		$revisedSumLen+=$len;
 		return 1;
 	}
 	else{
 		return 0;
 	}
+}
+
+sub nucTally {
+	my $seq=shift;
+
+	while ( $seq =~ /A/ig ) { $A++ }
+    while ( $seq =~ /T/ig ) { $T++ }
+    while ( $seq =~ /G/ig ) { $G++ }
+    while ( $seq =~ /C/ig ) { $C++ }
+    while ( $seq =~ /N/ig ) { $N++ }
+
+	return;
 }
 
 sub binIt{
