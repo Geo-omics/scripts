@@ -104,10 +104,10 @@ use Pod::Usage;
 #######################
 my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix, $help);
 my $INS_SD= 13;
-my $version= "0.0.7";
+my $version= "0.0.8";
 my $interval=10;
 my $scripts="/geomicro/data1/COMMON/scripts/";
-my $minLen=2000;
+my $minLen=1999;
 my $min_contig_len=200;
 GetOptions(
 	'paired:s'=> \$intlv,
@@ -363,16 +363,19 @@ sub getStats{
 		print LOG "\n# Helpful Stats for your sequences:\n";
 		print "Calculating stats...\n";
 		system("perl $lim2len -f $contigs -l $minLen -o $minLenFile >> $out");
+		print LOG "\n";
 	}
 
 	my $calcN50=File::Spec->catfile( $scripts, "calcN50.pl");
 	if (-e $calcN50){
+		print LOG "# Fancy Stats:\n";
 		system("perl $calcN50 $contigs >> $out");
+		print LOG "\n";
 	}
 	my $searchNs=File::Spec->catfile( $scripts, "findStretchesOfNs.pl");
 	my $searchNsOut=File::Spec->catfile( $OUTDIR, "stretchesOfN_k".$KMER.".out");
 	if (-e $searchNs){
-		print "Finding long stretches of Ns...\n";
+		print "# Finding long stretches of Ns...\n";
 		print LOG `perl $searchNs -f $contigs -o $searchNsOut`;
 	}
 	system("mail -s 'Job: $OUTDIR Completed!' $email < $out");
