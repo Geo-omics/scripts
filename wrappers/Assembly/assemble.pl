@@ -97,12 +97,11 @@ use Getopt::Long;
 use File::Basename;
 use File::Spec;
 use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
-use Pod::Usage;
 
 #######################
 ## PARAMETERS
 #######################
-my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix, $help);
+my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix);
 my $INS_SD= 13;
 my $version= "0.0.8";
 my $interval=10;
@@ -130,15 +129,12 @@ GetOptions(
 	'amos'=>\$amos,
 	'interval'=>\$interval,
 	'log:s'=>\$LOG,
-	'v|version'=>\sub{print $version."\n"; exit;},
-	'h|help'=>\$help,
+	'v|version'=>sub{print $version."\n"; exit;},
+	'h|help'=>sub {system('perldoc', $0); exit;},
 );
 #######################
 ## CHECKS
 #######################
-
-# Help called
-pod2usage(1) if $help;
 
 ## Check if velvet module loaded ##
 my @tmp=`velveth 2>&1`; # velvet/1.1.07-MAX99-OPENMP
@@ -199,6 +195,7 @@ elsif(! $fwd && ! $rev && @singles){
 ## GLOBAL
 #######################
 my $email= &identifyUser;
+print "A summary file will be emailed to: $email when the job completes\n";
 
 my ($dir, $suf);
 if (! $prefix){

@@ -3,13 +3,19 @@
 
 	Check length of each sequence and only print those that clear the minimum threshold of x (default=60) bases;
 
-=head2 USAGE
+=head1 USAGE
 	
 	perl limit2Length.pl -f fasta_File -len # [-o output file]
 	OR
 	perl limit2Length.pl -fq fastq_File -len # [-o output file]
 
-=head2 AUTHOR
+=head2 OPTIONS
+
+	-b:	bin size for length distribution; default=2000
+	-below:	get sequences equal to or less than the 'len' threshold. Default = Only greater than.
+	-quick:	don't get the distribution.
+
+=head1 AUTHOR
 
 	Sunit Jain, Mar, 2012
 
@@ -25,7 +31,7 @@ use Getopt::Long;
 #######################
 ## PARAMETERS
 #######################
-my $version="0.1.3";
+my $version="0.1.4";
 my $fasta;
 my $fastq;
 my $setLen=2000;
@@ -98,8 +104,8 @@ my $meanLenAfter= int(($revisedSumLen/$count) + 0.5);
 
 print "# $0 version: $version\n";
 print "# Total Sequences:\t$total\n";
-print "# Total Bases assembled:\t$sumLen\n";
-$lower ? print "# Total Bases assembled in contigs <= $setLen:\t$revisedSumLen\n" : print "# Total Bases assembled in contigs > $setLen:\t$revisedSumLen\n";
+print "# Total Bases:\t$sumLen\n";
+$lower ? print "# Total Bases in sequences less than or equal to $setLen:\t$revisedSumLen\n" : print "# Total Bases in sequences greater than $setLen:\t$revisedSumLen\n";
 print "# Longest Sequence Length:\t$longest\n" unless($quick);
 print "# Shortest Sequence Length:\t$shortest\n" unless($quick);
 print "# Mean Sequence Length before setting the $setLen base limit:\t$meanLenBefore\n";

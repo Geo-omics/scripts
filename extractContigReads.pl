@@ -45,6 +45,7 @@ use Getopt::Long;
 my $version="0.0.3b";
 my $readList;
 my $metav;
+my $trans;
 my $list;
 my $directory;
 my $summary;
@@ -59,6 +60,7 @@ GetOptions(
 	'l|list:s'=>\$list,
 	'r|reads:s'=>\$readList,
 	'metav'=>\$metav,
+	'trans'=>\$trans,
 	'dir=s'=>\$directory,
 	'o|out:s'=>\$OUT,
 	'summ|summary'=>\$summary,

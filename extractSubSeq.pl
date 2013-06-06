@@ -30,6 +30,7 @@ my $stop;
 my $setLen=0;
 my $setBS=0;
 my $isBlastOut;
+my $isGff;
 my $setPid=0;
 my $topHitOnly;
 my $out = $$."_subSeqs.fasta";
@@ -44,19 +45,39 @@ GetOptions(
 	'p|pid:i'=>\$setPid,
 	's|bitscore:i'=>\$setBS,
 	'blast:s'=>\$isBlastOut,
+	'gff:s'=>\$isGff,
 	'top'=>\$topHitOnly,
 	'o|out:s'=>\$out,
 	'h|help'=> sub{system('perldoc', $0); exit;},
 );
 
 my $tsv;
-if(! $tabbedFile && ! $isBlastOut){system('perldoc', $0); exit;}
-elsif( ! $tabbedFile && $isBlastOut){ $tsv = $isBlastOut; }
-elsif( $tabbedFile && ! $isBlastOut){ $tsv = $tabbedFile; }
-elsif($tabbedFile && $isBlastOut){print "Decide!! Is it a blast output OR a custom tab-delimited file?!\nAssuming it's a BLAST output!\n";}
+if(! $tabbedFile && ! $isBlastOut && ! $isGff){system('perldoc', $0); exit;}
 
-if ($tabbedFile && !$start && !$stop){print "[warn] Need start and stop columns\nAssuming Start as col 2 and Stop as col 3:\n"; $start=2; $stop=3;}
-if ($isBlastOut && !$start && !$stop){print "[warn] Need start and stop columns\nAssuming Start as col 7 and Stop as col 8:\n"; $start=7; $stop=8;}
+if ($tabbedFile){ 
+	$tsv = $isBlastOut;
+	if (!$start && !$stop){
+		warn "[WARNING] Need start and stop columns\nAssuming Start as col 2 and Stop as col 3:\n";
+		$start=2;
+		$stop=3;
+	}
+}
+elsif ($isBlastOut){
+	$tsv = $tabbedFile;
+	if (!$start && !$stop){
+		warn "[WARNING] Need start and stop columns\nAssuming Start as col 7 and Stop as col 8:\n";
+		$start=7;
+		$stop=8;
+	}
+}
+elsif ($isGff){
+	$tsv = $isGff;
+	if (!$start && !$stop){
+		warn "[WARNING] Need start and stop columns\nAssuming Start as col 7 and Stop as col 8:\n";
+		$start=7;
+		$stop=8;
+	}
+}
 
 $seqNameCol--;
 $start--;
