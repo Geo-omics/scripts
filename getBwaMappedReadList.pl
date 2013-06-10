@@ -7,7 +7,7 @@
 =head2 NOTE: For Single Contig
 
 	If you just have one contig, use the following command instead:
-		samtools view -F0x4 sortedBamFile contigName | cut -f 1 > outputFile.list
+		samtools view -F0x4 sortedBamFile contigName | cut -f 1 >> outputFile.list
 	Some other commands to try:
 		# of unmapped reads: 
 		samtools view -f0x4 -c sortedBamFile contigName 
@@ -39,13 +39,13 @@ use Getopt::Long;
 my $bam;
 my $list;
 my $out=$$.".list";
-my $quiet;
+my $verbose;
 
 GetOptions(
 	"b|bam:s"=>\$bam,
 	"l|list:s"=>\$list,
 	"o|out:s"=>\$out,
-	"q|quiet"=>\$quiet,
+	"verbose"=>\$verbose,
 	"h|help"=>sub{system('perldoc', $0); exit;},
 );
 
@@ -68,9 +68,20 @@ close LIST;
 
 
 my $i=0;
+my $tmp=$$.".tmp";
+print "Aggregating a list of mapped reads..\n";
 foreach my $c(@contigsList){
 	$i++;
-	my $cmd="samtools view -F0x4 $bam $c | cut -f 1 > $out";
-	print "[$i]: ".$cmd."\n" unless ($quiet);
+	my $cmd="samtools view -F0x4 $bam $c | cut -f 1 >> $tmp";
+	print "[$i]: ".$cmd."\n" unless ($verbose);
 	system($cmd);
 }
+
+print "Removing duplicate entries..\n";
+system("sort -u $tmp > $out");
+
+print "Removing temporary files..\n";
+unlink $tmp;
+
+print "Done!\n";
+exit;
