@@ -10,14 +10,14 @@
 
 =head2 Optional
 
-=head3 Flags For Blast Output
+=head3 For Blast Output
 
 	-query	Do you want sub sequences of your queries?
 	-subj	Do you want sub sequences of your matches/subjects?
 	
 =head3 For GFF3
 
-	-map	If you wish to replace the names of the contigs, git it a "map" file; 
+	-map	If you wish to replace the names of the contigs, give it a "map" file; 
 		column1=name you wish to change to
 		column2=name of the contig in the GFF file
 	
@@ -44,17 +44,16 @@ use Getopt::Long;
 
 my ($fasta, $needsSubj, $needsQuery);
 my ($isTabbedFile,$isBlastOut,$isGff, $map);
-my $start;
-my $stop;
+my ($start, $stop,$topHitOnly);
 my $setLen=0;
 my $setBS=0;
 my $setPid=0;
-my $topHitOnly;
 my $out = $$."_subSeqs.fasta";
+my $version="0.2.1";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
-	't|tsv:s'=>\$isTabbedFile,
+	't|tsv|list:s'=>\$isTabbedFile,
 	'blast:s'=>\$isBlastOut,
 	'gff:s'=>\$isGff,
 	'map:s'=>\$map,
@@ -68,6 +67,7 @@ GetOptions(
 	'top'=>\$topHitOnly,
 	'o|out:s'=>\$out,
 	'h|help'=> sub{system('perldoc', $0); exit;},
+	'v|version'=> sub{print "$0\t:\tv$version\n"; exit;},
 );
 
 my $tsv;
@@ -188,12 +188,12 @@ while (my $line=<FASTA>){
 			}
 			elsif($isGff){
 				if ($mapping{$name}){ $match=$mapping{$name}}else{$match=$name};
-				my $locus_tag=$posStuff[0];
+				my $attribute=$posStuff[0];
 				$posStart=$posStuff[1];
 				$posStop=$posStuff[2];
-				$printLine.=">".$match."__jgiGeneID=".$locus_tag;
+				$printLine.=">".$match."__locus_tag=".$attribute;
 			}
-			else{
+			elsif($isTabbedFile){
 				$posStart=$posStuff[0];
 				$posStop=$posStuff[1];
 				$printLine.=">".$name;
@@ -212,15 +212,15 @@ while (my $line=<FASTA>){
 close FASTA;
 close OUT;
 
-sub parseGFF3{ #http://gmod.org/wiki/GFF
+sub parseGFF3{
+#http://gmod.org/wiki/GFF
 	my $line=shift;
 	my @cols=split(/\t/, $line);
 	
-	my(@tags)=split(/\;/, $cols[-1]);
-#	$cols[-1]=s/\;/__/;
-#	return $cols[-1];
-	foreach my $t(@tags){
-		return $1 if ($t=~/ID\=(.*)/);
+	my(@attributes)=split(/\;/, $cols[-1]);
+
+	foreach my $att(@attributes){
+		return $1 if ($att=~/locus_tag\=(.*)/);
 	}	
 }
 

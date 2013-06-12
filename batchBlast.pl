@@ -157,7 +157,7 @@ sub getOutputName{
 	my @parts=split(/\./, $q[-1]);
 	my @dbParts=split (/\//, $d);
 	my $addDB= join("_", @parts[0..($#parts -1)], "vs", $dbParts[-1]); 
-	my $out= join(".", $addDB, "out");
+	my $out= join(".", $addDB,$p);
 	my $log= join(".", $addDB, "log");
 	$blastLogTable{"Output"}="$out";
 	$blastLogTable{"Log"}="$log";
@@ -210,7 +210,6 @@ sub keepAnEyeOn{
 				print $proc." Finished\n";
 				$num_jobs--;
 				$blastLogTable{"Ended"}=localtime();
-				&updateLog;
 			}
 			else{
 				exit;
