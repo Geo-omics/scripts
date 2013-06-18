@@ -2,7 +2,7 @@
 
 =head1 USAGE
 
-	USAGE: perl getSciNames.pl -i <tab-delimited-file> -db [n/p] <nucleotide or protein> -t <tax ids output; optional> -b <if input file is a blast output; mandatory>
+	USAGE: perl getSciNames.pl -l <tab-delimited-file> -db [n/p] <nucleotide or protein> -t <tax ids output; optional> -b <if input file is a blast output; mandatory>
 
 =head2 LIMITATION:
 
@@ -16,7 +16,7 @@ use Getopt::Long;
 
 
 my ($list, $isBlastOut, $mapped, $db);
-my $taxidOut=$$.".taxa";
+my $taxidOut;
 my $out=$$.".names";
 my $names_dmp="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/names.dmp";
 my $dumpFiles="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/";

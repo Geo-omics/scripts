@@ -7,7 +7,7 @@
 
 =head2 Usage
 
-	perl mapper_v04.pl [-b: blast output (m8/m9 for blastall & outfmt 6/7 for blast 2.2.24+)] [-q: query file for blast]
+	perl mapper.pl [-b: blast output (m8/m9 for blastall & outfmt 6/7 for blast 2.2.24+)] [-q: query file for blast]
 	[-o: output filename] [-p: min % id] [-l: min alignment length] [-d: % deviation allowed from top bit score]
 	[-s: min bit score] [-v: version]
 

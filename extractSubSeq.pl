@@ -236,6 +236,6 @@ sub parseBlastOut{
 	my $pid= int($cols[2] + 0.5);
 	my $bs=int($cols[-1] + 0.5);
 	
-	return ($alnLen, $pid, $bs);
+	return ($alnLen, $pid, $bs, $cols[0], $cols[1]);
 }
 

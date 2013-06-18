@@ -33,7 +33,7 @@
 	i or insert	:	Insert length; Required if using paired ended or interleaved data. 
 			Look at your bioanalyzer results, let's say you see a peak at 391, and your read size is 100, then
 			insert length = peak - (2 * avg read Length) OR 391 - (2 * 100) = 191.
-	
+	-sd		:	insert length standard deviation; default=13
 =head3 Optional:
 
 	outdir	:	The directory that contains the output
@@ -42,10 +42,15 @@
 	log		:	change the name of the log file for the script
 	contig_size	:	Minimum Contig Length in your output; default=200
 
-	Boolean Flags
+=head3 Boolean Flags
+
 	v		:	Version
 	fasta	:	If your sequence files are in the fasta format.
-	debug	:	When I need to debug the script. It doesnt actually run the assemblies.
+	debug	:	When I need to debug the script. It doesnt actually run the assemblies, just prints out the commands it would have passed;
+
+=head3 Mess with this at your own peril
+
+	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
 
 =head2 Modifying Assembly Type
 
@@ -53,37 +58,20 @@
 
 =head3 Available:
 
-	-trans	:	for meta/transcriptomic reads.
+	-trans	:	for meta/transcriptomic reads.(requires Oases)
 	-metav	:	for metavelvet (metagenomic reads only).
 
 =head3 ToDo:
 
 	Assembler Support
-	-midba	:	uses metaIDBA for assembly. WARNING: NOT tested for meta/transcriptomic reads.
-	QC
-	- Adding Quality control steps (QC, dereplication, trimming), making the script more comprehensive.
-
-=head2 What's New?
-
-	in v0.0.5, January 16, 2013
-	- added stats calculation for Meta-velvet output.
-	- added ability to search for long (10 or more) stretches of Ns.
-	- fixed email bug that wouldn't email anyone else but Sunit.
-
-	in v0.0.4, October 3, 2012
-	- Minor bug fixes
-
-	in v0.0.3, July 31, 2012
-	- Better, more sensible error reporting.
-	- Support for metaVelvet.
-
-	in v0.0.2, July 29, 2012
-	-Added email alert with important information about your assembly.
+	-idba	:	uses IDBA-UD for assembly.
 
 =head1 Comments/Accolades/Brickbats/Beers:
 	
 	Sunit Jain, 2012
 	sunitj AT umich DOT edu
+	
+	last updated: June 2013
 
 =cut
 
@@ -103,7 +91,7 @@ use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
 #######################
 my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix);
 my $INS_SD= 13;
-my $version= "0.0.8";
+my $version= "0.0.9";
 my $interval=10;
 my $scripts="/geomicro/data1/COMMON/scripts/";
 my $minLen=1999;
@@ -129,6 +117,7 @@ GetOptions(
 	'amos'=>\$amos,
 	'interval'=>\$interval,
 	'log:s'=>\$LOG,
+	'scripts:s'=>\$scripts,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub {system('perldoc', $0); exit;},
 );
@@ -365,10 +354,15 @@ sub getStats{
 
 	my $calcN50=File::Spec->catfile( $scripts, "calcN50.pl");
 	if (-e $calcN50){
-		print LOG "# Fancy Stats:\n";
+		print LOG "# N50 stats before setting the $minLen limit:\n";
 		system("perl $calcN50 $contigs >> $out");
 		print LOG "\n";
+		
+		print LOG "# N50 stats after setting the $minLen limit:\n";
+		system("perl $calcN50 $minLenFile >> $out");
+		print LOG "\n";
 	}
+	
 	my $searchNs=File::Spec->catfile( $scripts, "findStretchesOfNs.pl");
 	my $searchNsOut=File::Spec->catfile( $OUTDIR, "stretchesOfN_k".$KMER.".out");
 	if (-e $searchNs){
@@ -448,38 +442,3 @@ sub help{
 	system('perldoc', $0);
 	exit 1;
 }
-
-
-__END__
-
-# in getStats()
-# Create R script on the fly
-#	my $rScript .=<<EOF;
-# Get n50 value
-#myStatsTable<-read.table("$stats",header=TRUE)
-#contigs<-rev(sort(myStatsTable\$lgth+$KMER-1))
-#n50<-contigs[cumsum(contigs) >= sum(contigs)/2][1]
-
-#write(paste("Median: ",med, sep=" "), file="$out", append=TRUE)
-#write(paste("# N50 for this assembly is:",n50, sep=" "), file="$out", append=TRUE)
-#EOF
-
-
-# Plot length distribution histogram (log y axis)
-#pdf("$plot", width=11, height=8.5)
-#bins<-seq(0,max(contigs)+2000,2000)
-#h<-hist(contigs, breaks=bins, plot=F)
-#plot(h$mids, h$counts, lwd=10, lend=2, log="y", type="h", main="TestPlot", xlab="Length Bins", ylab="log(Counts)")
-#qplot(contigs, geom="histogram", log="y", breaks=bins)
-#dev.off()
-#EOF
-	# Creating R script
-#	open(R, ">".$rFile) || die "[ERROR $0] $!: $rFile\n";
-#	print R $rScript."\n";
-#	close R;
-	
-	# Executing R script
-#	system("R CMD BATCH $rFile");
-#	unlink $rFile;
-
-

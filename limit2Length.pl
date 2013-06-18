@@ -13,11 +13,18 @@
 
 	-b:	bin size for length distribution; default=2000
 	-below:	get sequences equal to or less than the 'len' threshold. Default = Only greater than.
+	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
+	
+=head3 Boolean Flags
 	-quick:	don't get the distribution.
+	-n50: also calculate the N50 and L50 stats for a *fasta* file
 
 =head1 AUTHOR
 
 	Sunit Jain, Mar, 2012
+	sunitj-at-umich-dot-edu
+
+	last updated: June 2013
 
 =cut
 
@@ -27,19 +34,20 @@
 #######################
 use strict;
 use Getopt::Long;
-
+use File::Spec;
 #######################
 ## PARAMETERS
 #######################
-my $version="0.1.4";
+my $version="0.1.5";
 my $fasta;
 my $fastq;
-my $setLen=2000;
+my $setLen=1999;
 my $out=$$.".fa";
 my $quick;
 my $binSize=2000;
 my $lower;
-
+my $getN50;
+my $scripts="/geomicro/data1/COMMON/scripts/";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
@@ -48,6 +56,8 @@ GetOptions(
 	'b|bin:i'=>\$binSize,
 	'quick'=>\$quick,
 	'below'=>\$lower,
+	'n50'=>\$getN50,
+	'scripts:s'=>\$scripts,
 	'h|help'=>sub{system("perldoc", $0); exit;},
 	'v|version'=>sub{print STDERR "$0 version: ".$version."\n"; exit;}
 );
@@ -106,11 +116,15 @@ print "# $0 version: $version\n";
 print "# Total Sequences:\t$total\n";
 print "# Total Bases:\t$sumLen\n";
 $lower ? print "# Total Bases in sequences less than or equal to $setLen:\t$revisedSumLen\n" : print "# Total Bases in sequences greater than $setLen:\t$revisedSumLen\n";
+
 print "# Longest Sequence Length:\t$longest\n" unless($quick);
 print "# Shortest Sequence Length:\t$shortest\n" unless($quick);
-print "# Mean Sequence Length before setting the $setLen base limit:\t$meanLenBefore\n";
-$lower ? print  "# Number of Sequences with Length equal to or less than $setLen bases:\t$count\n" : print "# Number of Sequences with Length greater than $setLen bases:\t$count\n";
+
+print "# Mean Length before setting the $setLen base limit:\t$meanLenBefore\n";
 print "# Mean Length after setting the $setLen base limit:\t$meanLenAfter\n";
+
+$lower ? print  "# Number of Sequences with Length equal to or less than $setLen bases:\t$count\n" : print "# Number of Sequences with Length greater than $setLen bases:\t$count\n";
+
 
 my $perc_A = sprintf( "%.4f",(($A/$revisedSumLen)* 100));
 my $perc_T = sprintf( "%.4f",(($T/$revisedSumLen)* 100));
@@ -134,6 +148,20 @@ unless($quick){
 		$i++;
 	}
 }
+
+if ($getN50 && $fasta){
+	my $calcN50=File::Spec->catfile( $scripts, "calcN50.pl");
+	if (-e $calcN50){
+		print "# N50 stats before setting the $setLen limit:\n";
+		system("perl $calcN50 $fasta");
+		print "\n";
+	
+		print "# N50 stats after setting the $setLen limit:\n";
+		system("perl $calcN50 $out");
+		print "\n";
+	}
+}
+
 
 exit 0;
 
