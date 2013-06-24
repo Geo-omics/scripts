@@ -9,13 +9,12 @@
 
 =head3 Options
 
-	-gc	Calculate GC content.
+	-gc	Calculate GC(%) content.
 	-len calculate for sequences abovea certain length only.	
     
 =head1 Author
 
-	Created by Gene W. Tyson
-	modified by Sunit Jain
+	Sunit Jain
 
 =cut
 
@@ -25,11 +24,13 @@ use Getopt::Long;
 my $calcGC;
 my $fasta;
 my $minLen=1;
+my $version="0.1.0";
 
 GetOptions(
 	"gc"=>\$calcGC,
 	"f:s"=>\$fasta,
 	"len:i"=>\$minLen,
+	"v|version"=>\$version,
 	"h|help"=>sub{system('perldoc', $0); exit;},
 );
 
@@ -50,28 +51,17 @@ while (my $b = <CONTIGS>) {
 		print "$name\t$length\n" ;
 	}
 	else{
-	    push (@names, $name);
-    	$sequences{$name} = uc $seq;
+		my ($g, $c);
+		$seq=uc($seq);
+	    while ( $seq =~ /G/ig ) { $g++ }
+	    while ( $seq =~ /C/ig ) { $c++ }
+
+		my $GC = (($g+$c)/$length)*100;
+		my $printGC = sprintf( "%.4f", $GC);
+		print "$name\t$printGC\t$length\n";
 	}
 }
 close CONTIGS;
-
-exit unless ($calcGC);
-
-foreach my $value (@names) {
-	my ($g,$c, $size);
-    my $seq = $sequences{$value};
-    my @sequence = (split //, $seq);
-    my $size = @sequence;
-
-	foreach my $base (@sequence) {
-		if ($base eq "G") {$g++;}
-		if ($base eq "C") {$c++;}
-	}
-	my $GC = (($g+$c)/$size);
-	my $GC_conversion = (int($GC*1000))/1000;
-	print "$value\t$GC_conversion\t$size\n";
-}
 
 sub help{
 	system('perldoc', $0);

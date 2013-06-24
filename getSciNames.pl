@@ -2,39 +2,69 @@
 
 =head1 USAGE
 
-	USAGE: perl getSciNames.pl -l <tab-delimited-file> -db [n/p] <nucleotide or protein> -t <tax ids output; optional> -b <if input file is a blast output; mandatory>
+	perl getSciNames.pl -list <gi-list-file> -dbtype <nucl/prot>
+	OR
+	perl getSciNames.pl -blast <tabular-blast-output> -dbtype <nucl/prot>
+	OR
+	perl getSciNames.pl -map <tabular-mapper-output> -dbtype <nucl/prot>
 
-=head2 LIMITATION:
+=head2 Options
 
-	If you tell the script that the input is a blast output; it will only look at the subject cloumn;
-	WARNING: will only work if the database followed "gi|gi_number|..." format (NCBI's default fasta format).
+=head3 Input_type_(choose_one_only)
+
+	-l	-list	:	if your input is a list of GI numbers
+	-b	-blast	:	if your input is a blast output
+	-m	-map	:	if your input file is a mapper output
+
+=head3 Other_Options
+
+	-dbtype		:	database type <"prot" or "nucl">; Required
+	-o	-out	:	output file name <default=process_id.names>
+
+	-taxa		:	prints Taxa ids to this file <optional>
+	-dump		:	location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/">
+	-h	-help	:	This message; press "q" to exit this screen.
+	
+=head2 Limitation:
+
+	If the input is a blast output, the script will only look at the subject cloumn and expect it to be in the NCBI FASTA header format (gi|gi_number|...)
+	
+=head1 Author
+
+	Sunit Jain, May 2010
+	sunitj-at-umich-dot-edu
+	sunitjain-dot-com
 
 =cut
 
 use strict;
 use Getopt::Long; 
 
-
+my $version="1.1.0";
 my ($list, $isBlastOut, $mapped, $db);
 my $taxidOut;
 my $out=$$.".names";
-my $names_dmp="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/names.dmp";
 my $dumpFiles="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/";
-my $nucl_dmp="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/gi_taxid_nucl.dmp";
-my $prot_dmp="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/gi_taxid_prot.dmp";
 
 GetOptions(
-	'l:s'=>\$list,
+	'l|list:s'=>\$list,
 	'b|blast:s'=>\$isBlastOut,
 	'm|map:s'=>\$mapped,
-	'db:s'=>\$db,
+	'dbtype:s'=>\$db,
 	'taxa:s'=>\$taxidOut,
 	'o|out:s'=>\$out,
-	'names_dmp:s'=>\$names_dmp,
-	'nucl_dmp:s'=>\$nucl_dmp,
-	'prot_dmp:s'=>\$prot_dmp,
-	'h|help'=> sub{system('perldoc', $0); exit;}
+	'dump:s'=>\$dumpFiles,
+	'h|help'=> sub{system('perldoc', $0); exit;},
+	'v|version'=>sub{print "Version: $0\t v$version\n"; exit;},
 );
+
+$|++;
+
+my $names_dmp=$dumpFiles."names.dmp";
+my $nucl_dmp=$dumpFiles."gi_taxid_nucl.dmp";
+my $nucl_diff_dmp=$dumpFiles."gi_taxid_nucl_diff.dmp";
+my $prot_dmp=$dumpFiles."gi_taxid_prot.dmp";
+my $prot_diff_dmp=$dumpFiles."gi_taxid_prot_diff.dmp";
 
 my $in;
 if ($list){$in=$list}
@@ -42,12 +72,12 @@ elsif($isBlastOut){$in=$isBlastOut}
 elsif($mapped){$in=$mapped}
 
 if (! $in || ! $db) {
-	print "Tab-Delimited File: $in\n";
-	print "Database Used: $db\n";
+	print "# Tab-Delimited File: $in\n";
+	print "# Database Used: $db\n";
 	sub{system('perldoc', $0); exit;}
 }
 
-#ARGV[0]: blast output
+print "# Parsing input...";
 open (LIST, $in) || die "[err] $in:\n$!\n"; 
 my %idList;
 while (my $line=<LIST>){
@@ -71,14 +101,17 @@ while (my $line=<LIST>){
 	}
 }
 close LIST;
+print "\tDONE\n";
 
-my ($fType, $dbType, $ref, $giList);
-if (lc($db) eq "p"){
+my ($fType, $dbType, $ref, $giList, $diff);
+if (lc($db) eq "prot"){
 	$ref=$prot_dmp;
+	$diff=$prot_diff_dmp;
 	$giList="giListP.tmp";
 }
-elsif (lc($db) eq "n"){
+elsif (lc($db) eq "nucl"){
 	$ref=$nucl_dmp;
+	$diff=$nucl_diff_dmp;	
 	$giList="giListN.tmp";
 }
 else{
@@ -87,21 +120,43 @@ else{
 	exit;
 }
 
+print "# Checking Dump...";
 open (INDEX, $ref) || die "[err] $ref:\n$!\n";
 open (TAXID, ">".$taxidOut) if $taxidOut;
 my (%index, %checkList);
 while(my $line=<INDEX>){
+	chomp $line;
 	my($gi, $taxa)=split(/\t/, $line);
-	chomp($gi);
-	chomp($taxa);
-	if ($idList{$gi}){
+	if ($idList{$gi} && $taxa){
 		$index{$gi}=$taxa;
 		print TAXID $gi."\t".$taxa."\n" if $taxidOut;
 		$checkList{$taxa}++;
 	}
 }
 close INDEX;
+print "\tDONE\n";
 
+if (scalar(keys(%index)) < scalar(keys(%idList))){
+	print "#\tOnly [ ".scalar(keys(%index))." ] GI numbers were current...\n";
+	print "# Trying again...";
+	open (DIFF, $diff) || die "[err] $diff:\n$!\n";
+	while(my $line=<DIFF>){
+		chomp $line;
+		my($gi, $taxa)=split(/\t/, $line);
+		if ($idList{$gi} && ! $index{$gi} && $taxa){
+			$index{$gi}=$taxa;
+			print TAXID $gi."\t".$taxa."\n" if $taxidOut;
+			$checkList{$taxa}++;
+		}
+	}
+	close DIFF;
+	close TAXA;
+	print "\tDONE\n";
+	print "#\t[ ".scalar(keys(%index))." ] out of a possible [ ".scalar(keys(%idList))." ] GI numbers found...\n";
+	print "#\tGiving Up...\n" if (scalar(keys(%index)) != scalar(keys(%idList)));
+}
+
+print "# Getting Taxonomy Names...";
 my %taxa;
 open (NAMES, $names_dmp) || die $!;
 while (my $line2=<NAMES>){
@@ -121,7 +176,9 @@ while (my($k, $v)=each(%index)){
 }
 #close TD;
 undef %taxa;
+print "\tDONE\n";
 
+print "# Writing to the output file...";
 open (BOUT, $in) || die "[err] $in:\n$!\n"; 
 open (OUT, ">".$out);
 while (my $line=<BOUT>){
@@ -133,8 +190,6 @@ while (my $line=<BOUT>){
 		if ($isBlastOut){
 			my(@stuff3)=split(/\t/, $line);
 			my ($x3,$sgi3, @blah3)=split(/\|/, $stuff3[1]);
-#			$stuff3[1]=$index{$sgi3};
-#			my $putBack=join ("\t", @stuff3);
 			my $putBack=join ("\t", $index{$sgi3}, $line);
 
 			print OUT $putBack."\n";
@@ -145,8 +200,6 @@ while (my $line=<BOUT>){
 		elsif($mapped){
 			my(@stuff3)=split(/\t/, $line);
 			my ($x, $sgi3, @blah3)=split(/\|/, $stuff3[0]);
-#			$stuff3[0]=$index{$sgi3};
-#			my $putBack=join ("\t", @stuff3);
 			my $putBack=join ("\t", $stuff3[0],$index{$sgi3}, @stuff3[1..$#stuff3]);
 			print OUT $putBack."\n";
 		}
@@ -162,3 +215,4 @@ while (my $line=<BOUT>){
 }
 close BOUT;
 close OUT;
+print "\tDONE\n";

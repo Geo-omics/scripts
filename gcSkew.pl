@@ -26,10 +26,9 @@
 
 use strict;
 use Getopt::Long;
-use Pod::Usage;
 
 my $help;
-my $version=0.0.2;
+my $version=0.0.3;
 my $fasta;
 my $out=$$.".gcskew";
 my $window=4;
@@ -40,9 +39,8 @@ GetOptions(
 	'w|window:i'=>\$window,
 	'o|out:s'=>\$out,
 	'overlap:i'=>\$overlap,
-	'h|help'=>\$help,
+	'h|help'=>\sub{system('perldoc', $0); exit;},
 );
-pod2usage(1) if $help;
 
 die "Overlap has to be less than the Window size\n" if ($overlap >= $window);
 my $step = $window - $overlap;

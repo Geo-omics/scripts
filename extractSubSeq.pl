@@ -49,7 +49,7 @@ my $setLen=0;
 my $setBS=0;
 my $setPid=0;
 my $out = $$."_subSeqs.fasta";
-my $version="0.2.1";
+my $version="0.2.2";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -219,9 +219,17 @@ sub parseGFF3{
 	
 	my(@attributes)=split(/\;/, $cols[-1]);
 
+	my $locusID
 	foreach my $att(@attributes){
-		return $1 if ($att=~/locus_tag\=(.*)/);
-	}	
+		$locusID=$1 if ($att=~/locus_tag\=(.*)/);
+	}
+	if (! $locusID){
+		foreach my $att(@attributes){
+			$locusID=$1."_exon" if ($att=~/Parent\=(.*)/);
+		}
+	}
+	
+	return $locusID;
 }
 
 sub parseBlastOut{

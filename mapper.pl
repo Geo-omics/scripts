@@ -8,16 +8,14 @@
 =head2 Usage
 
 	perl mapper.pl [-b: blast output (m8/m9 for blastall & outfmt 6/7 for blast 2.2.24+)] [-q: query file for blast]
-	[-o: output filename] [-p: min % id] [-l: min alignment length] [-d: % deviation allowed from top bit score]
-	[-s: min bit score] [-v: version]
 
-=head2 Defaults
+=head2 Options
 	
-	-o	'out.tsv'
-	-p	95%
-	-l	40 (bases)
-	-d	0%
-	-s	0 (bits)
+	-o	=	Output File; default='out.tsv'
+	-p	=	minimum percent ID; default=95%
+	-l	=	minimum alignment length= alignment Length - (mismatches + gaps)	default=40 (bases)
+	-d	=	% Deviation from the top bit score allowed, choose a value between 0-100; default=0
+	-s	=	minimum bit score; default=0 (bits)
 
 =head2 Output files
 
@@ -45,7 +43,7 @@ my $setLen=40;
 my $setDev=0;
 my $setBscore=0;
 my $out;
-my $version= "0.4.0";
+my $version= "0.4.1";
 
 GetOptions(
 	'b|blastout:s'=>\$bOut,
@@ -56,7 +54,7 @@ GetOptions(
 	'd|deviation:f'=>\$setDev,
 	's|bit_score:f'=>\$setBscore,
 	'h|help'=> sub{system('perldoc', $0); exit;},
-	'v|version'=>sub{print "Version: mapper_".$version."\n"; exit;}
+	'v|version'=>sub{print "Version: $0\tv$version\n"; exit;}
 );
 
 ## Checks ##
@@ -71,7 +69,6 @@ my $sd=$setDev/100;
 my (%hs, %queryCount,%bestQueryScore);
 my ($totalSeqs);
 print "Applying Thresholds...\n";
-#my ($hr1, $hr2, $hr3)=&setThresholds;
 &setThresholds;
 
 print "Scoring...\n";
@@ -219,7 +216,7 @@ print "\tWriting \'List\' file to:\t$qList.list\n";	# unique hits
 	undef %bestBitScores;
 	undef %subjBitScores;
 
-print "\tWriting \'Log\' file to:\t$qList.log\n";
+	print "\tWriting \'Log\' file to:\t$qList.log\n";
 
 	open (LOG, ">".$qList.".log");
 	print LOG "\#Subj\tQuery1\tQuery2...etc.\n";
@@ -230,5 +227,6 @@ print "\tWriting \'Log\' file to:\t$qList.log\n";
 		}
 		print LOG "\n";
 	}
-	print "Total Unique Queries considered:\t".$qCount."\n";
+	my $perc_queries_considered=sprintf( "%.2f",(($qCount/$totalSeqs)*100));
+	print "Unique Queries considered:\t$perc_queries_considered\% [ $qCount out of $totalSeqs queries ]\n";
 }
