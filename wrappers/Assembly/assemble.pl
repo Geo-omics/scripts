@@ -31,8 +31,7 @@
 				You may give it as many files as long as the names are seperated by a space.
 	k or kmer	:	K-mer aka Hash size upto 99; We usually use k-mers of 61, 75, 91 but feel free to play around.
 	i or insert	:	Insert length; Required if using paired ended or interleaved data. 
-			Look at your bioanalyzer results, let's say you see a peak at 391, and your read size is 100, then
-			insert length = peak - (2 * avg read Length) OR 391 - (2 * 100) = 191.
+			Look at your bioanalyzer results, let's say you see a peak at 391, that's your insert size.
 	-sd		:	insert length standard deviation; default=13
 =head3 Optional:
 

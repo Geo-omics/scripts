@@ -32,6 +32,7 @@ my $qual; #output
 my $offset=33;
 my $summary;
 my $qLim=1;
+my $version="0.6.1";
 
 GetOptions(
 	'i|in:s'=>\$in,
@@ -40,7 +41,8 @@ GetOptions(
 	'p|offset:i'=>\$offset,
 	'summary'=>\$summary,
 	'min_qual:i'=>\$qLim,
-	'h'=>sub{system('perldoc', $0); exit;},
+	'v|version'=>\sub{print "$0\t:\tv$version\n"; exit;},
+	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 
 my (@fileName)=split(/\./, $in);
@@ -54,17 +56,18 @@ if (! $fasta){
 	$fasta=$fName.".fasta";
 	print "#Fasta File: $fasta\n";
 }
-if (! $qual){
-	$qual=$fName."_phred".$offset.".qual";
-	print "#Quality File: $qual\n";
-}
+#if (! $qual){
+#	$qual=$fName."_phred".$offset.".qual";
+#	print "#Quality File: $qual\n";
+#}
 
 open (ILL, $in)||die "[ERROR: $0] $in : $! \n";
 open (FASTA, ">".$fasta)|| die "[ERROR: $0] $fasta : $! \n";
-open (QUAL, ">".$qual)|| die "[ERROR: $0] $qual : $! \n";
+open (QUAL, ">".$qual)|| die "[ERROR: $0] $qual : $! \n" if ($qual);
 
 my $lNum=0;
 my $seqName;
+my $numSeqs=0;
 my (%stats, %qualSummary);
 while(my $line=<ILL>){
 	$line= &trim($line);
@@ -74,6 +77,7 @@ while(my $line=<ILL>){
 		#Sequence Header
 		my $header=$line;
 		$header=~ s/^@/>/;
+		$numSeqs++;
 
 		#Sequence
 		$line=<ILL>;
@@ -121,7 +125,7 @@ while(my $line=<ILL>){
 	else{ die "[ERROR: $0] Script Borked! Unexpected Sequence Format.\nGet Sunit (sunitj [ AT ] umich [ DOT ] edu)\n"; }
 }
 close FASTA;
-close QUAL;
+close QUAL if ($qual);
 close ILL;
 
 if ($summary){
@@ -139,7 +143,8 @@ if ($summary){
 	my @bins=qw(Q1 Q2 Q3 Q4 Zero);
 	foreach my $b(@bins){
 		if (!$qualSummary{$b}){$qualSummary{$b}=0;}
-		print $b."\t".$qualSummary{$b}."\n";
+		my $perc=sprintf("%.2f", (($qualSummary{$b}/$numSeqs)*100));
+		print $b."\t".$perc."\n";
 	}
 }
 
@@ -149,9 +154,12 @@ sub print2Files{
 
 	print FASTA $data[0]."\n";
 	print FASTA $data[1]."\n";
-	print QUAL $data[0]."\n";
-	print QUAL $data[2]."\n";
-	return
+	
+	if ($qual){
+		print QUAL $data[0]."\n";
+		print QUAL $data[2]."\n";
+	}
+	return;
 }
 
 sub trim{

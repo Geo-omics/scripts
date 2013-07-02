@@ -72,15 +72,19 @@ my $FH=IO::Handle->new();
 #######################
 open($FH, $fwd)|| die "[ERROR1: $0] $!\n";
 while(my $line=<$FH>){
+	chomp $line;
+	next unless $line;
+	$prefixFlag=0;
+	
 	my ($name, $seq, $qName, $qual)= $fastq ? &parseFastq($line, $FH) : &parseFasta($line);
 	my (@headerParts)= &splitHeader($name);
 
-	my $strand=pop @headerParts;
-	my $common=pop @headerParts;
-	my $prefix=join("_", @headerParts) if ($prefixFlag==1);
+	my $common=shift @headerParts;
+	my $strand=shift @headerParts;
+#	my $prefix=join("_", @headerParts) if ($prefixFlag==1);
 
 
-	$forward{$common}{"PREFIX"}=$prefix  if ($prefixFlag==1);
+#	$forward{$common}{"PREFIX"}=$prefix  if ($prefixFlag==1);
 	$forward{$common}{"NAME"}=$name;
 	$forward{$common}{"STRAND"}=$strand;
 	$forward{$common}{"SEQ"}=$seq;
@@ -94,16 +98,20 @@ open(INT, ">".$out)|| die "[ERROR3: $0] $!\n";
 open(RS, ">".$revS)|| die "[ERROR4: $0] $!\n";
 
 while(my $line=<$FH>){
+	chomp $line;
+	next unless $line;
+
 	my ($name, $seq, $qName, $qual)= $fastq ? &parseFastq($line, $FH) : &parseFasta($line);
 	my (@headerParts)= &splitHeader($name);
 	
-	my $strand=pop @headerParts;
-	my $common=pop @headerParts;
+	my $common=shift @headerParts;
+	my $strand=shift @headerParts;
 
 	if ($forward{$common}){ # pair found!
-		print INT $beginsWith.$forward{$common}{"NAME"}."\n".$forward{$common}{"SEQ"}."\n";
-		print INT "\+\n".$forward{$common}{"QUAL"}."\n" if ($fastq); # forward
-		print INT $beginsWith.$name."\n".$seq."\n\+\n".$qual."\n"; #reverse
+		print INT $beginsWith.$forward{$common}{"NAME"}."\n".$forward{$common}{"SEQ"}."\n"; # forward
+		print INT "\+\n".$forward{$common}{"QUAL"}."\n" if ($fastq); 
+		print INT $beginsWith.$name."\n".$seq."\n";  #reverse
+		print INT "\+\n".$qual."\n"  if ($fastq);
 		delete $forward{$common};
 	}
 	else{ # singletons reverse
@@ -114,18 +122,18 @@ while(my $line=<$FH>){
 close $FH;
 close INT;
 close RS;
-
+$/="\n";
 
 
 open(FS, ">".$fwdS)|| die "[ERROR5: $0] $!\n";
 foreach my $n(keys %forward){ # singletons forward
-	if ($prefixFlag==1){
-		print FS $beginsWith.$forward{$n}{"PREFIX"}."_".$n.$delim.$forward{$n}{"STRAND"}."\n".$forward{$n}{"SEQ"}."\n";
-	}
-	else{
-		print FS $beginsWith.$n.$delim.$forward{$n}{"STRAND"}."\n".$forward{$n}{"SEQ"}."\n";
-	}
-	print FS "\+\n".$forward{$n}{"QUAL"}."\n" if $fastq;
+#	if ($prefixFlag==1){
+		print FS $beginsWith.$forward{$n}{"NAME"}."\n".$forward{$n}{"SEQ"}."\n";
+#	}
+#	else{
+#		print FS $beginsWith.$n.$delim.$forward{$n}{"STRAND"}."\n".$forward{$n}{"SEQ"}."\n";
+#	}
+#	print FS "\+\n".$forward{$n}{"QUAL"}."\n" if $fastq;
 }
 close FS;
 
@@ -135,14 +143,16 @@ close FS;
 sub splitHeader{
 	my $header=shift;
 	$header=~ s/^[\@\>]//;
-	if($header=~ /\_/){
-		$header=~ s/\_/ /g;
-		$prefixFlag=1;
-	}
 	my (@headerParts)=split(/ /, $header);
 	if($header=~ /\//){
 		@headerParts=split(/\//, $header);
 		return(@headerParts);
+	}
+	elsif($headerParts[0]=~ /\_/){
+		my @firstPart=split(/\_/, $headerParts[0]);
+		my @secondPart=split(/\_/, $headerParts[1]);
+#		$prefixFlag=1;
+		return($firstPart[-1], $secondPart[0]);
 	}
 	else{
 		return(@headerParts);

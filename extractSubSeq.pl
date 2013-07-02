@@ -219,13 +219,23 @@ sub parseGFF3{
 	
 	my(@attributes)=split(/\;/, $cols[-1]);
 
-	my $locusID
+	my ($locusID, $geneID);
 	foreach my $att(@attributes){
 		$locusID=$1 if ($att=~/locus_tag\=(.*)/);
+		$geneID= $1 if ($att=~/^ID\=(.*)/);
 	}
 	if (! $locusID){
 		foreach my $att(@attributes){
-			$locusID=$1."_exon" if ($att=~/Parent\=(.*)/);
+			if ($att=~/Parent\=(.*)/){
+				$locusID=$1."_exon"
+			}
+			elsif($cols[2]=~/repeat/){
+				$locusID=$1 if ($att=~/rpt_type\=(.*)/); # rpt_type=CRISPR;rpt_unit=13023..13055
+				$locusID.="[ ".$1." ]" if ($att=~/rpt_unit\=(.*)/);
+			}
+			else{
+				$locusID=$geneID."_".$cols[2];
+			}
 		}
 	}
 	
