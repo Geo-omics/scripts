@@ -82,6 +82,7 @@ if(-e $lgc){
 ## Locus Info ##
 
 my %COGS;
+if(-e $cog){
 open(COG, $cog) || die "[COG] $cog :\t$!";
 while(my $line=<COG>){
 	chomp $line;
@@ -89,8 +90,13 @@ while(my $line=<COG>){
 	$COGS{$cogData[0]}=$cogData[1]."\t".$cogData[2]."\t"; #LocusID =  cog_id <TAB> %id
 }
 close COG;
+}
+else{
+	warn "[COG] Couldn't find the \`cog\' file\n";
+}
 
 my %PFAM;
+if(-e $pfam){
 open(PFAM, $pfam) || die "[PFAM] $pfam :\t$!";
 while(my $line=<PFAM>){
 	chomp $line;
@@ -98,9 +104,14 @@ while(my $line=<PFAM>){
 	$PFAM{$pfamData[0]}=$pfamData[1]."\t"; # LocusID = pfam_id
 }
 close PFAM;
+}
+else{
+	warn "[PFAM] Couldn't find the \`pfam\' file\n";
+}
 
 my %TAXA;
-open(TAXA, $phyloDist) || die "[PhyloDist] $phyloDist :\t$!";
+if(-e $phyloDist){
+open(TAXA, $phyloDist); # || die "[PhyloDist] $phyloDist :\t$!";
 while(my $line=<TAXA>){
 	chomp $line;
 	my(@taxaData)=split(/\t/, $line);
@@ -109,8 +120,13 @@ while(my $line=<TAXA>){
 	$TAXA{$locusID}.="\t";
 }
 close TAXA;
+}
+else{
+	warn "[TAXA] Couldn't find the \`phylodist\' file\n";
+}
 
 my %KO;
+if(-e $ko){
 open(KO, $ko) || die "[KO] $ko :\t$!";
 while(my $line=<KO>){
 	chomp $line;
@@ -118,8 +134,13 @@ while(my $line=<KO>){
 	$KO{$koData[0]}=$koData[2]."\t".$koData[3]."\t"; # LocusID =  ko_term <TAB> %id
 }
 close KO;
+}
+else{
+	warn "[KO] Couldn't find the \`ko\' file\n";
+}
 
 my %EC;
+if (-e $ec){
 open(EC, $ec) || die "[EC] $ec :\t$!";
 while(my $line=<EC>){
 	chomp $line;
@@ -127,28 +148,42 @@ while(my $line=<EC>){
 	$EC{$ecData[0]}=$ecData[2]."\t"; #LocusID =  EC
 }
 close EC;
+}
+else{
+	warn "[EC] Couldn't find the \`ec\' file\n";
+}
 
 my %PROD;
-open(PROD, $geneProd) || die "[GENE_PROD] $geneProd :\t$!";
+if (-r $geneProd){
+open(PROD, $geneProd); # || die "[GENE_PROD] $geneProd :\t$!";
 while(my $line=<PROD>){
 	chomp $line;
 	my(@prodData)=split(/\t/, $line);
 	$PROD{$prodData[0]}=$prodData[1]."\t".$prodData[2]."\t"; # LocusID = product <TAB> Source
 }
 close PROD;
+}
+else{
+	warn "[PROD] Couldn't find the \`gene product\' file\n";
+}
 
 ## Contig Info ##
-
 my (%contig_name_map);
-open(MAP, $contigMap) || die "[MAP] $contigMap :\t$!\n";
-while(my $line=<MAP>){
-	chomp $line;
-	my ($original, $contigID)=split(/\t/, $line);
-	$contig_name_map{$contigID}=$original;
+if (-e $contigMap){
+	open(MAP, $contigMap) || die "[MAP] $contigMap :\t$!\n";
+	while(my $line=<MAP>){
+		chomp $line;
+		my ($original, $contigID)=split(/\t/, $line);
+		$contig_name_map{$contigID}=$original;
+	}
+	close MAP;
 }
-close MAP;
+else{
+	warn "[MAP] Couldn't find the \`map\' file\n";
+}
 
 my %LGC;
+if(-e $tmpLGC){
 open(LGC, $tmpLGC) || die "[LGC] $tmpLGC :\t$!";
 while(my $line=<LGC>){
 	chomp $line;
@@ -157,6 +192,10 @@ while(my $line=<LGC>){
 }
 close LGC;
 unlink $tmpLGC;
+}
+else{
+	warn "[LGC] Couldn't find the \`length+gc\' script\n";
+}
 
 open(GFF, $gff) || die "[GFF] $gff :\t$!\n";
 open(OUT, ">".$out) || die "[OUT] $out :\t$!\n";
