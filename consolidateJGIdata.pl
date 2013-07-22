@@ -49,16 +49,16 @@ unless ($DIR=~ m/\/$/){$DIR=$DIR."/";}
 my @FILES=<$DIR*>;
 my ($cog, $ec, $faa, $fna, $geneProd, $gff, $ko, $contigMap, $pfam, $phyloDist, $config);
 foreach my $f(@FILES){
-	 $cog=$f if ($f=~ /.*.a.cog.txt/);
-	 $ec=$f if ($f=~ /.*.a.ec.txt/);
-	 $faa=$f if ($f=~ /.*.a.faa/);
-	 $fna=$f if ($f=~ /.*.a.fna/);
-	 $geneProd=$f if ($f=~ /.*.a.gene_product.txt/);
-	 $gff=$f if ($f=~ /.*.a.gff/);
-	 $ko=$f if ($f=~ /.*.a.ko.txt/);
-	 $contigMap=$f if ($f=~ /.*.a.map.txt/);
-	 $pfam=$f if ($f=~ /.*.a.pfam.txt/);
-	 $phyloDist=$f if ($f=~ /.*.a.phylodist.txt/);
+	 $cog=$f if ($f=~ /.*.cog.txt/);
+	 $ec=$f if ($f=~ /.*.ec.txt/);
+	 $faa=$f if ($f=~ /.*.faa/);
+	 $fna=$f if ($f=~ /.*.fna/);
+	 $geneProd=$f if ($f=~ /.*.gene_product.txt/);
+	 $gff=$f if ($f=~ /.*.gff/);
+	 $ko=$f if ($f=~ /.*.ko.txt/);
+	 $contigMap=$f if ($f=~ /.*.map.txt/);
+	 $pfam=$f if ($f=~ /.*.pfam.txt/);
+	 $phyloDist=$f if ($f=~ /.*.phylodist.txt/);
 	 $config=$f if ($f=~ /.*.config/);
 }
 
