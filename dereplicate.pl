@@ -42,7 +42,7 @@
 use strict;
 use Getopt::Long;
 use List::Util 'sum';
-use Digest::MD5 'md5';
+#use Digest::MD5 'md5';
 use File::Basename;
 
 #######################
@@ -52,6 +52,7 @@ my $fasta;
 my $fastq;
 my $setScore=0;
 my $phredOffset=33;
+my $version="0.4.5";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
@@ -84,8 +85,8 @@ $setScore=$setScore+$phredOffset;
 $/=$fasta ? "\>" : "\n";
 
 my %seen;
+my %numbers;
 my %qual;
-my $lNum=0;
 
 #######################
 ## MAIN
@@ -95,11 +96,20 @@ while(my $line=<FILE>){
 	$line=&trim($line);
 	next unless $line;
 
-	$fasta ? &parseFasta($line) : &parseFastq($line)
+	$fasta ? &parseFasta($line) : &parseFastq($line);
 }
 close FILE;
 
 $fasta ? &fastaClustering : &fastqClustering;
+
+# print top 10 duplicated sequences
+my @sorted=sort{$numbers{$b} <=> $numbers{$a}} keys %numbers;
+my $counter=0;
+foreach my $s(@sorted){
+	$counter++;
+	print $s."\t".$numbers{$s}."\n";
+	last if $counter==10;
+}
 exit 0;
 
 #######################
@@ -125,8 +135,10 @@ sub parseFastq{
 		
 		$line=<FILE>; # Sequence
 		$line=&trim($line);
-		my $seqMD5=md5($line);
-		push(@{$seen{$seqMD5}}, $seqDesc);
+#		my $seqMD5=md5($line);
+#		push(@{$seen{$seqMD5}}, $seqDesc);
+		my $seq=$line;
+		push(@{$seen{$seq}}, $seqDesc);
 
 		$line=<FILE>; # Quality Header
 
@@ -163,7 +175,8 @@ sub fastqClustering{
 	foreach my $seq(keys %seen){
 		$clustNum++;
 		my $size=@{$seen{$seq}};
-
+		$numbers{$seq}=$size;
+		
 		print CLUST "c".$clustNum."\t".$size."\t";
 		my $bestSeq="";
 		my $bestSeqQual=-100;
@@ -195,8 +208,10 @@ sub parseFasta{
 	my($seqDesc,@sequence)=split(/\n/, $line);
 	my $seq = join ("", @sequence);
 	$seq=~ s/\r//g;
-	my $seqMD5=md5($seq);
-	push(@{$seen{$seqMD5}}, $seqDesc);
+#	my $seqMD5=md5($seq);
+#	push(@{$seen{$seqMD5}}, $seqDesc);
+	push(@{$seen{$seq}}, $seqDesc);
+
 	return;
 }
 
@@ -209,6 +224,8 @@ sub fastaClustering{
 	foreach my $seq(keys %seen){
 		$clustNum++;
 		my $size=@{$seen{$seq}};
+		$numbers{$seq}=$size;
+
 		print CLUST "c".$clustNum."\t".$size."\t";
 		foreach my $h(@{$seen{$seq}}){
 			print CLUST $h."\t";

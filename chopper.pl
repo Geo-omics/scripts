@@ -8,7 +8,7 @@
 
 	perl chopper.pl [-f fasta_Filename.fasta]
 	OR
-	perl chopper.pl [-fq fastq_Filename.fasta]
+	perl chopper.pl [-fq fastq_Filename.fastq]
 
 =head2 Optional
 
@@ -38,6 +38,7 @@ my $numSeqs; # max number of seqs allowed in a file
 my $avgSize= 1000000;
 my $maxBases;
 my $overlap;
+my $version="0.1.3";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -49,6 +50,7 @@ GetOptions(
 	'maxbase:i'=>\$maxBases,
 	'overlap:i'=>\$overlap,
 	'h|help'=>sub{system('perldoc', $0); exit;},
+	'v|version'=>sub{print $version."\n"; exit;},
 );
 
 my ($totalSeqs, $filePartSize);
@@ -71,7 +73,7 @@ sub checkArgs{
 	return if ($maxBases);
 
 	if (! $totalNumSeqs){
-		$totalSeqs= $fasta ? `grep -c '>' $fasta` : `grep -c '\n' $fastq`;
+		$totalSeqs= $fasta ? `grep -c \'>\' $fasta` : `wc -l $fastq`;
 		$totalSeqs=$totalSeqs/4 if ($fastq);
 	}
 	else{
