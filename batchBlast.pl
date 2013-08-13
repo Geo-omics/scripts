@@ -90,8 +90,8 @@ foreach my $file(@fileNames){
 	chomp($file);
 	$blastLogTable{"Started"}=localtime();
 	$blastLogTable{"Query"}=$file;
-	my ($queryMD5, $fName)=split(/\s+/, `md5sum $file`);
-	$blastLogTable{"Query_md5"}="$queryMD5";
+#	my ($queryMD5, $fName)=split(/\s+/, `md5sum $file`);
+#	$blastLogTable{"Query_md5"}="$queryMD5";
 	$newBlast ? &blastPlus($file) : &blastall($file);
 }
 
@@ -167,8 +167,8 @@ sub getOutputName{
 sub blastPlus{
 	my $query=shift;
 	my ($out, $log)=getOutputName($query);
-	system("nohup $p -query $query -out $out -num_threads $a -evalue $e -db $d -outfmt $m > $log &");
 	$commandLine= "$p -query $query -out $out -num_threads $a -evalue $e -db $d -outfmt $m";
+	system("nohup $commandLine > $log &");
 	$blastLogTable{"BlastVersion"}="Blast+";
 }
 
@@ -176,8 +176,8 @@ sub blastall{
 	my $query=shift;
 	my ($out, $log)=getOutputName($query);
 #	system("perl countTo100.pl 2");
-	system("nohup blastall -p $p -i $query -o $out -a $a -e $e -d $d -m $m > $log &");
 	$commandLine="blastall -p $p -i $query -o $out -a $a -e $e -d $d -m $m";
+	system("nohup blastall $commandLine > $log &");
 	$blastLogTable{"BlastVersion"}="Blastall";
 }
 
@@ -228,10 +228,10 @@ sub updateLog{
 }
 
 sub parseProcTable{
-	my $p=shift;
+	my $proc=shift;
 
-	$p=&trim($p);
-	my($pid, $tty, $stat, $time, @command)= split(/\s+/, $p);
+	$proc=&trim($proc);
+	my($pid, $tty, $stat, $time, @command)= split(/\s+/, $proc);
 	
 	return unless ($pid=~ /\d+/);
 

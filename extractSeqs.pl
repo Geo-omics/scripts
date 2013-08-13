@@ -1,22 +1,26 @@
 #!/usr/bin/perl
 
-
-=head2 NAME
-	
-	extractSeqs.pl -l <list of sequences names> -f <fasta file>
-	
 =head2 Description
 
 	Given the names of sequences. extract from a fasta file. Make sure each name is in a seperate line.
 	By default, the script prints the sequences with the names in the list.
 	This behavior can be changed by adding the '-e' flag which will ask the script to exclude the sequences present in the list
 
+=head2 Examples
+	
+	extractSeqs.pl -l <list of sequences names> -f <fasta file> -o output.fasta
+	OR
+	extractSeqs.pl -l <list of sequences names> -fq <fastq file> -o output.fastq
+	OR
+	extractSeqs.pl -l <list of sequences names> -fq <fastq file> -o output.fasta -outfmt fasta
+	
 =head2 Optional
 
 	-fq	fastq file
 	-fuzzy If you list file contains a part of the name in the sequence file, use this.
 		Default: exact match.
 	-o	name of the output file; default: processID.fasta.
+	-outfmt	fasta; if the output file required is a fasta file when a fastq file is the input.
 	-e	exclude list.
 	-h	help; this text.
 
@@ -46,16 +50,20 @@ my $fasta;
 my $fastq;
 my $excl;
 my $fuzzy;
-my $out=$$.".fasta";
+my $out;
+my $outfmt;
+my $version="extractSeqs.pl v0.4.5";
 
 GetOptions(
 	"l|list:s"	=>	\$listOfNames,
 	"f|fasta:s"	=>	\$fasta,
 	"fq|fastq:s"=>	\$fastq,
 	"o|out:s"	=>	\$out,
+	"outfmt:s"	=>	\$outfmt,
 	"e|exclude"	=>	\$excl,
 	"fuzzy"	=> \$fuzzy,
 	"h|help"	=>	sub {system('perldoc', $0); exit;},
+	"v|version"	=>	sub{print $version."\n"; exit;},
 );
 
 #######################
@@ -71,6 +79,11 @@ if ( $fasta && ! $fastq){ $seqFile = $fasta }
 elsif ( $fastq && ! $fasta){ $seqFile = $fastq }
 elsif ( $fastq && $fasta ){ print STDERR "[Warning]: I can only handle one file type at a time; ignoring fastq file..."; $seqFile = $fasta; }
 elsif (! $fastq && ! $fasta){ system('perldoc', $0); exit; }
+
+if (! $outfmt){$outfmt=$fastq ? "fastq" : "fasta";}
+if (! $out){	$out=$$.".".$outfmt	};
+
+my $printFastaOut=$outfmt eq "fasta" ? "1" : "";
 
 #######################
 ## MAIN
@@ -245,7 +258,12 @@ sub exclude{
 		}
 	}
 	unless ($c>0){
-		$fastq ? &printFastq($name, $seq, $qName, $qual) : &printFasta($name, $seq);
+		if ($printFastaOut){
+			&printFasta($name, $seq);
+		}
+		else{
+			&printFastq($name, $seq, $qName, $qual);
+		}
 		return 1;
 	}
 	else { return 0; } 
@@ -268,7 +286,12 @@ sub include{
 		}
 	}
 	if ($c>0){
-		$fastq ? &printFastq($name, $seq, $qName, $qual) : &printFasta($name, $seq);
+		if ($printFastaOut){
+			&printFasta($name, $seq);
+		}
+		else{
+			&printFastq($name, $seq, $qName, $qual);
+		}
 		return 1;
 	}
 	else { return 0; } 

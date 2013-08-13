@@ -7,18 +7,29 @@
 
 =head2 USAGE
 	
-	perl dereplicate.pl -f fasta_File
+	perl dereplicate.pl -f fasta_File -out output.fasta
 	OR
-	perl dereplicate.pl -fq fastq_File
+	perl dereplicate.pl -fq fastq_File -out output.fastq
+	OR
+	perl dereplicate.pl -fq fastq_File -out output.fasta -outfmt fasta
+	
+=head2 Options
+
+	-f	or	-fasta	[characters]	fasta file input
+	-fq	or	-fastq	[characters]	fastq file input
+	-o	or	-out	[characters]	dereplicated fasta/fastq file. Note that an output file will only be created if this option is provided.
+	-outfmt			["fasta"]	Use this if you wish that the output for your fastq input be fasta. See example #3 above.
+	-n	or	-top	[integer]	Print top N sequence clusters. Default 10.
 
 =head3 NOTE
 
 	## NOTE1: The Script DOES NOT look for sub-string matches. 
 	## NOTE2: Default Phred offset is 33
+	## Note3: An output file will only be created if the '-o' option is provided.
 
 =head2 OUTPUT
 
-	The script will create the following as its output, the ".clust" and the ".clust.list". These files are explained below.
+	The script will create the following as its output, the ".clust", the ".clust.list" and optionaly the fasta/fastq file. These files are explained below.
 	The ".clust" file:
 	This file contains the cluster number, cluster size and the names of all sequences in that particular cluster. The third column in the file is the representative for each cluster. The file is tab-delimited.
 
@@ -28,6 +39,7 @@
 =head2 AUTHOR
 
 	Sunit Jain, Oct, 2011
+	sunitj [at] umich [dot] edu
 
 =head2 Contributors
 
@@ -42,7 +54,6 @@
 use strict;
 use Getopt::Long;
 use List::Util 'sum';
-#use Digest::MD5 'md5';
 use File::Basename;
 
 #######################
@@ -52,13 +63,20 @@ my $fasta;
 my $fastq;
 my $setScore=0;
 my $phredOffset=33;
-my $version="0.4.5";
+my $out;
+my $outfmt;
+my $n=10;
+my $version="dereplicate.pl v0.5.1";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
 	's:i'=>\$setScore,
+	'o|out:s'=>\$out,
+	'outfmt:s'=>\$outfmt,
+	'n|top:i'=>\$n,
 	'p|phred_offset:i' => \$phredOffset,
-	'h'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>sub{system('perldoc', $0); exit;},
+	'v|version'=>sub{print $version."\n"; exit;},
 );
 
 #######################
@@ -68,7 +86,10 @@ my $file;
 if (!$fasta && !$fastq){system('perldoc', $0); exit;}
 elsif($fasta && !$fastq){ $file=$fasta; }
 elsif(!$fasta && $fastq){ $file=$fastq; }
-elsif($fasta && $fastq){print "Choose either fasta or fastq file at a time\n";}
+elsif($fasta && $fastq){die "Choose either fasta or fastq file at a time\n";}
+
+my $seqType= $fastq ? "fastq" : "fasta";
+if (! $outfmt){$outfmt = $seqType;}
 
 #######################
 ## GLOBAL
@@ -79,7 +100,6 @@ my $ext=pop @fileName;
 my $name=join(".", @fileName);
 my $clust = $d.$name.".clust";
 my $list = $d.$name.".clust.list";
-my $fastaOut= $d.$name.".fasta";
 
 $setScore=$setScore+$phredOffset;
 $/=$fasta ? "\>" : "\n";
@@ -87,11 +107,13 @@ $/=$fasta ? "\>" : "\n";
 my %seen;
 my %numbers;
 my %qual;
-
+my $totalSequences;
+my $derepSequences;
 #######################
 ## MAIN
 #######################
-open(FILE, $file);
+open(FILE, $file)|| die $!;
+open(OUT, ">".$out)|| die $! if ($out);
 while(my $line=<FILE>){
 	$line=&trim($line);
 	next unless $line;
@@ -101,14 +123,18 @@ while(my $line=<FILE>){
 close FILE;
 
 $fasta ? &fastaClustering : &fastqClustering;
-
-# print top 10 duplicated sequences
-my @sorted=sort{$numbers{$b} <=> $numbers{$a}} keys %numbers;
-my $counter=0;
-foreach my $s(@sorted){
-	$counter++;
-	print $s."\t".$numbers{$s}."\n";
-	last if $counter==10;
+close OUT if ($out);
+# print top N duplicated sequences
+print "# Original # of Sequences in $file:\t".$totalSequences."\n";
+print "# Sequences after duplicate removal:\t".keys(%numbers)."\n";
+if($n){
+	my @sorted=sort{$numbers{$b} <=> $numbers{$a}} keys %numbers;
+	my $counter=0;
+	foreach my $s(@sorted){
+		$counter++;
+		print $s."\t".$numbers{$s}."\n";
+		last if $counter==$n;
+	}
 }
 exit 0;
 
@@ -132,11 +158,10 @@ sub parseFastq{
 
 	if ($line=~ /^@\w+/){
 		my $seqDesc=$line; # Sequence Header
+		$seqDesc=~ s/^@//;
 		
 		$line=<FILE>; # Sequence
 		$line=&trim($line);
-#		my $seqMD5=md5($line);
-#		push(@{$seen{$seqMD5}}, $seqDesc);
 		my $seq=$line;
 		push(@{$seen{$seq}}, $seqDesc);
 
@@ -144,10 +169,13 @@ sub parseFastq{
 
 		$line=<FILE>; # Quality
 		$line=&trim($line);
+		die "[ERROR: line $.] Script Borked! Get Sunit (sunitj [ AT ] umich [ DOT ] edu)\n" if (length($seq)!= length($line));
+
 		&seqScore($seqDesc, $line);
+		$totalSequences++;
 		return $seqDesc;
 	}
-	else{ die "ERROR: Script Borked at line $.! Get Sunit (sunitj [ AT ] umich [ DOT ] edu)\n"; }
+	else{ die "[ERROR: line $.] Script Borked! Get Sunit (sunitj [ AT ] umich [ DOT ] edu)\n"; }
 }
 
 sub seqScore{
@@ -162,7 +190,8 @@ sub seqScore{
 	my $totalScore=sum(@scores);
 	# If score is lower than the threshold; get rid of the seq.
 	return if ($totalScore < $setScore);
-	$qual{$seqDesc}=$totalScore;
+	$qual{$seqDesc}{"Total"}=$totalScore;
+	$qual{$seqDesc}{"Qual"}=$qual;
 	return;
 }
 
@@ -176,13 +205,14 @@ sub fastqClustering{
 		$clustNum++;
 		my $size=@{$seen{$seq}};
 		$numbers{$seq}=$size;
+		$derepSequences+=$size;
 		
 		print CLUST "c".$clustNum."\t".$size."\t";
 		my $bestSeq="";
 		my $bestSeqQual=-100;
 		# Pick the Seq with the Best Score
 		foreach my $seqDesc(@{$seen{$seq}}){
-			my $seqQual=$qual{$seqDesc};		
+			my $seqQual=$qual{$seqDesc}{"Total"};		
 			if ($seqQual > $bestSeqQual){
 				$bestSeq=$seqDesc;
 				$bestSeqQual=$seqQual;
@@ -190,6 +220,12 @@ sub fastqClustering{
 		}
 		print CLUST $bestSeq."\t";
 		print LIST $bestSeq."\n";
+		
+		# print dereplicated file.
+		if($out){
+			$outfmt eq "fasta" ? &printFasta($bestSeq, $seq) : &printFastq($bestSeq, $seq);
+		}
+		
 		foreach my $h(@{$seen{$seq}}){
 			print CLUST $h."\t" unless ($h eq $bestSeq);
 		}
@@ -208,9 +244,10 @@ sub parseFasta{
 	my($seqDesc,@sequence)=split(/\n/, $line);
 	my $seq = join ("", @sequence);
 	$seq=~ s/\r//g;
-#	my $seqMD5=md5($seq);
-#	push(@{$seen{$seqMD5}}, $seqDesc);
+	$seqDesc=~ s/^>//;
+
 	push(@{$seen{$seq}}, $seqDesc);
+	$totalSequences++;
 
 	return;
 }
@@ -225,7 +262,13 @@ sub fastaClustering{
 		$clustNum++;
 		my $size=@{$seen{$seq}};
 		$numbers{$seq}=$size;
+		$derepSequences+=$size;
 
+		# print dereplicated file.
+		if ($out){
+			&printFasta($seen{$seq}[0], $seq);
+		}
+		
 		print CLUST "c".$clustNum."\t".$size."\t";
 		foreach my $h(@{$seen{$seq}}){
 			print CLUST $h."\t";
@@ -240,4 +283,17 @@ sub fastaClustering{
 	return;
 }
 
+## Print to files ##
+sub printFasta{
+	my ($header, $seq)=@_;
+	print OUT ">".$header."\n";
+	print OUT $seq."\n";
+}
 
+sub printFastq{
+	my($header, $seq)=@_;
+	print OUT "@".$header."\n";
+	print OUT $seq."\n";
+	print OUT "\+\n";
+	print OUT $qual{$header}{"Qual"}."\n";
+}

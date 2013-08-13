@@ -32,7 +32,7 @@ my $qual; #output
 my $offset=33;
 my $summary;
 my $qLim=1;
-my $version="0.6.1";
+my $version="parseFastq.pl v0.6.1";
 
 GetOptions(
 	'i|in:s'=>\$in,
@@ -41,10 +41,11 @@ GetOptions(
 	'p|offset:i'=>\$offset,
 	'summary'=>\$summary,
 	'min_qual:i'=>\$qLim,
-	'v|version'=>\sub{print "$0\t:\tv$version\n"; exit;},
+	'v|version'=>\sub{print $version."\n"; exit;},
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 
+if (! $offset){$offset=33;}
 my (@fileName)=split(/\./, $in);
 pop(@fileName);
 my $fName=join("\.", @fileName);
@@ -56,10 +57,6 @@ if (! $fasta){
 	$fasta=$fName.".fasta";
 	print "#Fasta File: $fasta\n";
 }
-#if (! $qual){
-#	$qual=$fName."_phred".$offset.".qual";
-#	print "#Quality File: $qual\n";
-#}
 
 open (ILL, $in)||die "[ERROR: $0] $in : $! \n";
 open (FASTA, ">".$fasta)|| die "[ERROR: $0] $fasta : $! \n";
@@ -91,6 +88,9 @@ while(my $line=<ILL>){
 		$line=<ILL>;
 		$line= &trim($line);
 		my @score=split (//, $line);
+		
+		# Error in script if length of the sequence != length of the quality score.
+		die "[ERROR: line $.] $header \nScript Borked! Unexpected Sequence Format.\nGet Sunit (sunitj [ AT ] umich [ DOT ] edu)\n" if (length($seq)!=length($line));
 
 		# score conversion.
 		@score=map{(ord($_)-$offset)} @score;
@@ -104,7 +104,7 @@ while(my $line=<ILL>){
 			die "Incorrect offset: $offset\nChange to the correct offset by using the \"-offset\" flag\n";
 		}
 		unless($summary){		
-			if(($avgScore > 30) && ($avgScore <=40)){
+			if(($avgScore > 30) && ($avgScore <=41)){
 				$qualSummary{"Q1"}++;
 			}
 			elsif(($avgScore > 20) && ($avgScore <=30)){
