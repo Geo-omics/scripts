@@ -1,7 +1,5 @@
-Geomicrobiology Lab
-===================
-University of Michigan
-----------------------
+Michigan Geomicrobiology Lab
+============================
 General scripts used in the lab. Almost all of them are in core perl, i.e require no modules that don't already come with a perl installation. These scripts are currently in use by the Lab, so expect full support. We will structure the package such that it's easier to find relevant scripts when you need one, soon(-ish).<br>
 Please do let us know if you find any bugs.<br>
 
@@ -16,3 +14,7 @@ All the scripts in the repository here are distributed in the hope that they wil
 Website
 -------
 http://www.earth.lsa.umich.edu/geomicrobiology/
+
+Contact
+-------
+email: sunitj \[AT\] umich \[DOT\] edu  
