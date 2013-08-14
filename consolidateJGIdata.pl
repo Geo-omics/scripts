@@ -13,10 +13,14 @@
 	-DIR	-d	<STRING>	path to the files downloaded from JGI;	default=present working directory
 	-OUT	-o	<STRING>	consolidated tab delimited file;		default=processID.tsv
 	-genes	-g	<STRING>	produces a fasta file of all the genes in the given file;	default=not produced
-	-script		<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/extractSubSeq.pl
+	-script		<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/
 	
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
+
+=head3 Example:
+
+	perl consolidateJGIdata.pl -d ~/JGI_data/ -o output_file.tsv -g output_genes.fasta
 
 =head1 Author
 
@@ -28,9 +32,9 @@
 use strict;
 use Getopt::Long;
 use File::Spec;
-use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
+use POSIX ":sys_wait_h";
 
-my $version="0.0.1b";
+my $version="0.0.5";
 my $DIR="./";
 my $out=$$.".tsv";
 my $scripts="/geomicro/data1/COMMON/scripts/";
@@ -44,9 +48,11 @@ GetOptions(
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 
+print "# consolidateJGIdata.pl v$version\n";
 # Get all File names in the given directory
 unless ($DIR=~ m/\/$/){$DIR=$DIR."/";}
 my @FILES=<$DIR*>;
+die "[ERROR] Can't find \"$DIR\"\nPlease check that the path exist or that you have sufficient privilages.\n" if (scalar(@FILES)==0);
 my ($cog, $ec, $faa, $fna, $geneProd, $gff, $ko, $contigMap, $pfam, $phyloDist, $config);
 foreach my $f(@FILES){
 	 $cog=$f if ($f=~ /.*.cog.txt/);
@@ -66,12 +72,11 @@ foreach my $f(@FILES){
 my %PIDs;
 my $ess=File::Spec->catfile($scripts, "extractSubSeq.pl");
 if ($fasta && -e $ess){
-	my $pid=run("perl ".$scripts." -f ".$fna." -gff ".$gff." -o ".$fasta);
+	my $pid=run("perl ".$ess." -f ".$fna." -gff ".$gff." -o ".$fasta);
 	$PIDs{$pid}++;
 }
 
 # Continue with the main script.
-
 my $lgc=File::Spec->catfile($scripts, "length+GC.pl");
 my $tmpLGC="tmp.lgc";
 if(-e $lgc){
@@ -80,9 +85,9 @@ if(-e $lgc){
 
 # Aggregate data from different files.
 ## Locus Info ##
-
 my %COGS;
 if(-e $cog){
+print "[COG] File found:\t".$cog."\n";
 open(COG, $cog) || die "[COG] $cog :\t$!";
 while(my $line=<COG>){
 	chomp $line;
@@ -97,6 +102,7 @@ else{
 
 my %PFAM;
 if(-e $pfam){
+print "[PFAM] File found:\t".$pfam."\n";
 open(PFAM, $pfam) || die "[PFAM] $pfam :\t$!";
 while(my $line=<PFAM>){
 	chomp $line;
@@ -111,6 +117,7 @@ else{
 
 my %TAXA;
 if(-e $phyloDist){
+print "[TAXA] File found:\t".$phyloDist."\n";
 open(TAXA, $phyloDist); # || die "[PhyloDist] $phyloDist :\t$!";
 while(my $line=<TAXA>){
 	chomp $line;
@@ -127,6 +134,7 @@ else{
 
 my %KO;
 if(-e $ko){
+print "[KO] File found:\t".$ko."\n";
 open(KO, $ko) || die "[KO] $ko :\t$!";
 while(my $line=<KO>){
 	chomp $line;
@@ -141,6 +149,7 @@ else{
 
 my %EC;
 if (-e $ec){
+print "[EC] File found:\t".$ec."\n";
 open(EC, $ec) || die "[EC] $ec :\t$!";
 while(my $line=<EC>){
 	chomp $line;
@@ -155,6 +164,7 @@ else{
 
 my %PROD;
 if (-r $geneProd){
+print "[PROD] File found:\t".$geneProd."\n";
 open(PROD, $geneProd); # || die "[GENE_PROD] $geneProd :\t$!";
 while(my $line=<PROD>){
 	chomp $line;
@@ -170,6 +180,7 @@ else{
 ## Contig Info ##
 my (%contig_name_map);
 if (-e $contigMap){
+print "[MAP] File found:\t".$contigMap."\n";
 	open(MAP, $contigMap) || die "[MAP] $contigMap :\t$!\n";
 	while(my $line=<MAP>){
 		chomp $line;
@@ -184,6 +195,7 @@ else{
 
 my %LGC;
 if(-e $tmpLGC){
+#print "[LGC] File found:\t".$tmpLGC."\n";
 open(LGC, $tmpLGC) || die "[LGC] $tmpLGC :\t$!";
 while(my $line=<LGC>){
 	chomp $line;
@@ -228,7 +240,7 @@ undef %KO;
 undef %EC;
 undef %PROD;
 
-if ($fasta && $scripts){
+if ($fasta && -e $ess){
 	&REAP;
 }
 
