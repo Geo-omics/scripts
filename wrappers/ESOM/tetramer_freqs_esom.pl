@@ -47,7 +47,7 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 
-my $version=$0." v2.0.10 April, 2013";
+my $version=$0." v2.0.3 August, 2013";
 my $sfile; #fasta file, may include X:s and N:s
 my $annotationfile; #full contig name in left, annotation in right, column. headers (whatever) on first line 
 my $min_length = 2500; #Minimal length (in nt) of input contig to be included in output
@@ -331,12 +331,10 @@ sub getRowColESOM{
 	my $acceptedSeq=@names;
 
 	my $mapSpace= $acceptedSeq * 5.5;
-	my $sqrt= sqrt($mapSpace);
-	my $half= $sqrt/2;
-	my $cols= (int(($half + $sqrt) + 0.5))*2;
-	my $rows= (int(($mapSpace/$cols) + 0.5))*2;
+	my $rows= int(sqrt($mapSpace/2) + 0.5);
+	my $cols=2 * $rows;
 
-	print "\nTry the following values for ESOM Training:\n\tRows:\t$rows\n\tCols:\t$cols\n";
+	print "\nTry the following values for ESOM Training:\n>Rows:\t$rows\n>Cols:\t$cols\n";
 	print "These values are just meant as suggestions, feel free to try your own.\n";
 }
 
