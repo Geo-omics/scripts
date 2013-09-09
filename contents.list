@@ -127,17 +127,17 @@ do2all.sh
 ssh2sameFolder.sh
 
 wrappers/Assembly:
-wrappers/Assembly/assemble.pl
-wrappers/Assembly/calcN50.pl
-wrappers/Assembly/findStretchesOfNs.pl
-wrappers/Assembly/interleave.pl
-wrappers/Assembly/limit2Length.pl
+assemble.pl
+calcN50.pl
+findStretchesOfNs.pl
+interleave.pl
+limit2Length.pl
 
 wrappers/ESOM:
-wrappers/ESOM/esomCodonMod.pl
-wrappers/ESOM/esomTrain.pl
-wrappers/ESOM/esomWrapper.pl
-wrappers/ESOM/getClassFasta.pl
-wrappers/ESOM/tetramer_freqs_esom.pl
+esomCodonMod.pl
+esomTrain.pl
+esomWrapper.pl
+getClassFasta.pl
+tetramer_freqs_esom.pl
 
 wrappers/PPT:
