@@ -21,6 +21,11 @@ bamTools.pl
 derep_getReadAbundance.pl
 getBwaMappedReadList.pl
 
+BashScripts:
+do2all.sh
+do2each.sh
+ssh2sameFolder.sh
+
 BlastTools:
 basicHF.pl
 batchBlast.pl
@@ -122,10 +127,6 @@ contigMetadata.pl
 extractContigReads.pl
 getMyContigs.pl
 
-BashScripts:
-do2all.sh
-ssh2sameFolder.sh
-
 wrappers/Assembly:
 assemble.pl
 calcN50.pl
@@ -141,3 +142,4 @@ getClassFasta.pl
 tetramer_freqs_esom.pl
 
 wrappers/PPT:
+PPT/

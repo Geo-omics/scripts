@@ -11,10 +11,12 @@ Disclaimer
 ----------
 All the scripts in the repository here are distributed in the hope that they will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+Questions/Comments
+------------------
+PI: Gregory J. Dick, gdick [AT] umich [DOT] edu
+Author: Sunit Jain, sunitj [AT] umich [DOT] edu
+
 Website
 -------
 http://www.earth.lsa.umich.edu/geomicrobiology/
 
-Contact
--------
-email: sunitj \[AT\] umich \[DOT\] edu  
