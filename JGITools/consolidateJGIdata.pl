@@ -4,6 +4,13 @@
 
 	Consolidate the data obtained from JGI into one tabular file
 
+=head2 Dependencies
+
+	-scripts	<STRING>	location of the script dependencies;	default=/geomicro/data1/COMMON/scripts/SeqTools
+	
+	extractSubSeq.pl - To extract genes from the contigs
+	length+gc.pl - To claculate the length and %GC of the contigs
+
 =head1 USAGE
 
 	perl consolidateJGIdata.pl -DIR path_to_the_JGI_files -OUTDIR output_directory
@@ -13,7 +20,7 @@
 	-DIR	-d	<STRING>	path to the files downloaded from JGI;	default=present working directory
 	-OUTDIR	-o	<STRING>	Directory with consolidated tab delimited files for each bin;		default=processID
 	-genes	-g	<STRING>	produces a fasta file of all the genes in the given file;	default=not produced
-	-scripts	<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/
+	-scripts	<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/SeqTools
 
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
@@ -26,11 +33,6 @@
 
 	perl consolidateJGIdata.pl -d ~/JGI_data/ -o output_directory -g output_genes.fasta
 	
-=head2 Dependencies
-
-	extractSubSeq.pl - To extract genes from the contigs
-	length+gc.pl - To claculate the length and %GC of the contigs
-
 =head1 Author
 
 	Sunit Jain, (Fri Jun  7 17:53:04 EDT 2013)
@@ -46,7 +48,7 @@ use POSIX ":sys_wait_h";
 my $version="0.0.8";
 my $DIR="./";
 my $outDir=$$;
-my $scripts="/geomicro/data1/COMMON/scripts/";
+my $scripts="./SeqTools";
 my $fasta;
 GetOptions(
 	'd|DIR:s'=>\$DIR,
@@ -83,6 +85,19 @@ foreach my $f(@FILES){
 	 $pfam=$f if ($f=~ /.*.pfam.txt/);
 	 $phyloDist=$f if ($f=~ /.*.phylodist.txt/);
 	 $config=$f if ($f=~ /.*.config/);
+}
+
+if ((! $scripts) || (! -d $scripts)){
+	if (-d "/geomicro/data1/COMMON/scripts/SeqTools"){
+		$scripts="/geomicro/data1/COMMON/scripts/SeqTools";	
+	}
+	elsif(-e "length+GC.pl"){
+		$scripts=`pwd`;
+		chomp $scripts;
+	}
+	else{
+		die "[ERROR: $0] Could not locate helper scripts: 'length+GC.pl' and 'extractSubSeq.pl', please provide the location using '-scripts' flag\n";
+	}
 }
 # Run this bit on a seperate thread.
 ## Do this for all bins seprately

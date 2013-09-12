@@ -3,7 +3,10 @@
 =head1 Description
 
 	esomTrain.pl - Given tetramer frequency script output files, the script will normalize the files and train the ESOM.
-	REQUIRED: ESOM/1.1
+
+=head2 Dependencies
+
+	ESOM 1.1 or above
 
 =head1 Usage
 

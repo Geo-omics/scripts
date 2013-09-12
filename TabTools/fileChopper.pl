@@ -72,7 +72,7 @@ sub checkArgs{
 # Get number of Lines to chop the file into; if the user doesn't mention it.
 sub bigFile{
 	$parts= int($filePartSize + 0.5);
-	warn "#[Warning]This file seems like it's larger than my definition of an average file.\n";
+	warn "#[Warning]This file seems like it's larger than my definition of an 'average file'.\n";
 	print "#Since you didn't mention a preference I'll split the File  into \~ $parts parts\n";
 	print "#You may change the 'average file size' by using the '-avgsize' flag.\nCurrently it is set at $avgSize\n";
 	$numLines= int(($totalLines/$parts) + 0.5);
@@ -81,7 +81,7 @@ sub bigFile{
 sub smallFile{
 	my $p= int($filePartSize + 0.5);
 	$parts= ($p == 0) ? 1 : $p;
-	warn "#[Warning]This file seems like it's smaller than my definition of an 'average file.\n";
+	warn "#[Warning]This file seems like it's smaller than my definition of an 'average file'.\n";
 	print "#Since you didn't mention a preference I'll split the File  into \~ $parts parts\n";
 	print "#You may change the 'average file size' by using the '-avgsize' flag.\nCurrently it is set at $avgSize\n";
 	$numLines= int(($totalLines/$parts) + 0.5);

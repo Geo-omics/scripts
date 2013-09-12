@@ -5,6 +5,10 @@
 
 	give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
 
+=head2 Dependencies
+
+	Samtools 1.1.17 or above
+
 =head2 Preparation
 
 	[1] Make sure you have an indexed sorted bam file in the same folder; and

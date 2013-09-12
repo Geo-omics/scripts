@@ -4,6 +4,23 @@
 
 	assemble.pl was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
 
+=head2 Dependencies
+
+=head3 Software
+
+	Velvet 1.1.07 or above
+	Oases 0.2.01 or above
+	MetaVelvet or 1.0.01 or above
+
+=head3 Scripts - all the required scripts can be found in the 'SeqTools' directory
+
+	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/SeqTools
+	
+	interleave.pl - to interleave the forward and reverse fastq/fasta files
+	limit2length.pl	- to generate general statistics of the final assembly
+	calcN50.pl - to generate the N50 and L50 statistics of the final assembly
+	findStretchesOfNs.pl - to find the stretches of Ns longer than k-mer
+	
 =head2 Usage
 
 	Case 1: Assemble files as singletons
@@ -33,6 +50,7 @@
 	i or insert	:	Insert length; Required if using paired ended or interleaved data. 
 			Look at your bioanalyzer results, let's say you see a peak at 391, that's your insert size.
 	-sd		:	insert length standard deviation; default=13
+
 =head3 Optional:
 
 	outdir	:	The directory that contains the output
@@ -46,10 +64,6 @@
 	v		:	Version
 	fasta	:	If your sequence files are in the fasta format.
 	debug	:	When I need to debug the script. It doesnt actually run the assemblies, just prints out the commands it would have passed;
-
-=head3 Mess with this at your own peril
-
-	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
 
 =head2 Modifying Assembly Type
 
@@ -88,11 +102,11 @@ use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
 #######################
 ## PARAMETERS
 #######################
-my($intlv, $pair, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix);
+my($intlv, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix);
 my $INS_SD= 13;
 my $version= "0.0.9";
 my $interval=10;
-my $scripts="/geomicro/data1/COMMON/scripts/";
+my $scripts="./SeqTools";
 my $minLen=1999;
 my $min_contig_len=200;
 GetOptions(
@@ -179,6 +193,22 @@ elsif($intlv){
 elsif(! $fwd && ! $rev && @singles){
 	$usage="singles";
 }
+
+####
+if ((! $scripts) || (! -d $scripts)){
+	if (-d "/geomicro/data1/COMMON/scripts/SeqTools"){
+		$scripts="/geomicro/data1/COMMON/scripts/SeqTools";	
+	}
+	elsif((-e "interleave.pl") && ($pair)){
+		$scripts=`pwd`;
+		chomp $scripts;
+	}
+	else{
+		die "[ERROR: $0] Could not locate helper scripts: 'interleave.pl', 'limit2length.pl', 'findStretchesOfNs.pl' and 'calcN50.pl', please provide the location using '-scripts' flag\n";
+	}
+}
+###
+
 #######################
 ## GLOBAL
 #######################

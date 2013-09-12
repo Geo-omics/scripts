@@ -5,6 +5,11 @@
 	It has since evolved into a wrapper for catalouging all blast jobs run to avoid duplicating results and wasting resources.
 	It handles all basic functionalities of blast jobs (both new and old), and more can be added upon request.
 
+=head2 Dependencies
+
+	Blast 2.2.20 (old); OR
+	Blast 2.2.22 or above (new)
+
 =head1 USAGE
 
 	Start multiple instances of blast at once:

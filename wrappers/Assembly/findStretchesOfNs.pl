@@ -6,6 +6,7 @@
 
 =head2 OPTIONS
 
+	nuc	[character]	any character other than 'N'	(default: N)
 	min	[integer]	minimum stretch of N's	(default: 10)
 	max	[integer]	maximum number of N's	(default: 500)
 
@@ -15,23 +16,27 @@
 	sunitj [AT] umich [DOT] edu
 
 =cut
+curl -O https://github.com/Geo-omics/scripts/archive/master.zip
 
 use strict;
 use Getopt::Long;
 
 my $fasta;
 my $out=$$.".out";
+my $nuc="N";
 my $min=10;
 my $max=500;
 
 GetOptions(
 	"f|fasta:s"=>\$fasta,
 	"o|out:s"=>\$out,
+	"n|nuc:s"=>\$nuc,
 	"min:i"=>\$min,
 	"max:i"=>\$max,
 	"h|help"=>sub{system('perldoc', $0); exit;},
 );
 
+my $find=quotemeta "$nuc";
 open(FASTA, $fasta)|| die $!;
 open(OUT, ">".$out)|| die $!;
 my %uniqueSeqNames;
@@ -46,7 +51,7 @@ while(my $line=<FASTA>){
 
 	my @matches;
 
-	while($seq=~ /N{$min,$max}/ig){
+	while($seq=~ /($find){$min,$max}/ig){
 #		push (@matches,[ $-[0], $+[0] ]);
 		print OUT $header."\t".$-[0]."\t".$+[0]."\n";
 		$uniqueSeqNames{$header}++;

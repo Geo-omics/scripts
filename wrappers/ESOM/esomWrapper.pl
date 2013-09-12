@@ -1,7 +1,5 @@
 #! /usr/bin/perl
 
-=head1 ESOM Wrapper version 0.2.3
-
 =head1 DESCRIPTION
 
 	Give me:
@@ -34,10 +32,16 @@
 			possible choices:
 			'Scale' - to scale the dataset from 0-1;
 			'ZT'	- to Z-transform the dataset;
+			
 	-min	[integer]	Optional	default=2500; Minimal length (in nt) of input contig to be included in output
 	-max	[integer]	Optional	default=5000
 	Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
 			eg: in default settings, a sequence of 14 kb will be split into a 5 kb and a 9 kb fragment if window_size = 5 kb.
+			
+	-info		[characters]	Additional information about each contig to be added during the training.
+	File Format: Original_scaffold_name <TAB> Feature 1 <TAB> Feature 2 <TAB> ... <TAB> Feature N.
+	EXAMPLE: Original_scaffold_name	percent_GC	Coverage
+	
 	-no_mod	[BOOLEAN]	Don't use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
 	-h	this page.
 
@@ -63,7 +67,7 @@ use File::Basename;
 #use POSIX ":sys_wait_h";
 
 my $scripts;
-my $version="0.2.3";
+my $version="0.2.4";
 my $path; # Fasta Folder path
 my $ext="fasta";
 my $prefix="esom";
@@ -71,6 +75,7 @@ my $outDir="ESOM";
 my $kmer = 4;
 my $noMod;
 my $train;
+my $info;
 my $min_length = 2500; #Minimal length (in nt) of input contig to be included in output
 my $window_size = 5000; #split sequence after each window_size nt, 
                      #join last part, if shorter than window_size, 
@@ -88,6 +93,7 @@ GetOptions(
 	'max:i'=>\$window_size,
 	'no_mod'=>\$noMod,
 	'train:s'=>\$train,
+	'info:s'=>\$info,
 	'scripts:s'=>\$scripts,
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
@@ -112,7 +118,7 @@ my $catFasta=File::Spec->catfile( $outDir, $concatenatedFasta);
 my $log=File::Spec->catfile( $outDir, $logFile);
 open(LOG, ">".$log) || die $!;
 
-if (! $scripts){
+if ((! $scripts) || (! -d $scripts)){
 	if (-d "/geomicro/data1/COMMON/scripts/wrappers/ESOM/"){
 		$scripts="/geomicro/data1/COMMON/scripts/wrappers/ESOM/";	
 	}
@@ -225,12 +231,12 @@ my $modLog="modTrain.log";
 if (-e $esomTrain){
 	if ($rows && $cols && $train){
 		if($noMod){
-			my $command="perl $esomTrain -lrn $lrnfile -cls $clsFile -rows $rows -columns $cols -norm $train";
+			my $command="perl $esomTrain -lrn $lrnfile -cls $clsFile -rows $rows -columns $cols -norm $train".($info ? " -info $info");
 #			print LOG2 $command."\n";
 			system ("$command >> $log");
 		}
 		else{
-			my $command="perl $esomTrain -lrn $modLrnFile -cls $clsFile -rows $rows -cols $cols -norm $train";
+			my $command="perl $esomTrain -lrn $modLrnFile -cls $clsFile -rows $rows -cols $cols -norm $train".($info ? " -info $info");
 ### Run this bit on a seperate thread.
 #			print LOG2 "[Thread2:] ".$command."\n";
 #			my $pid=&run("$command > $modLog");
