@@ -16,7 +16,6 @@
 	sunitj [AT] umich [DOT] edu
 
 =cut
-curl -O https://github.com/Geo-omics/scripts/archive/master.zip
 
 use strict;
 use Getopt::Long;
