@@ -87,6 +87,7 @@ for (my $i=$cols; $i > 1; $i--){
 	$thisLine.="1\t";
 }
 $thisLine=~ s/\t$/\n/;
+
 print OUT $thisLine;
 print OUT $secondPart;
 close OUT;
