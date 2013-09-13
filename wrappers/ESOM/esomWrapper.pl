@@ -66,8 +66,8 @@ use File::Spec;
 use File::Basename;
 #use POSIX ":sys_wait_h";
 
-my $scripts="../SeqTools";
-my $version="0.2.4";
+my $scripts;
+my $version="0.2.5";
 my $path; # Fasta Folder path
 my $ext="fasta";
 my $prefix="esom";

@@ -75,6 +75,7 @@ getGIAnnotation.sh
 getGiInfo.pl
 getGI.pl
 GI_info_XMLParser.pl
+Ebot.Output.Extract.Gi.Title.Rev3.py	This script takes a NCBI genbank file, extracts the gi#, the study name, the journal it came from and the sequence and builds a tab delimitted output for each genbank entry.
 
 RiobickerTools:
 silvaTaxonAppend.pl

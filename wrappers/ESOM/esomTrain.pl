@@ -26,8 +26,9 @@
 
 =head2 More Options
 
-	-info	[characters]	file with information associated with the sequences;
-				Column1=Column1 of *.cls file; Column2=%GC(example)...ColumnN=any_numerical_metric;
+	-info	[characters]	file with information associated with the sequences; -names flag also required
+				Column1=Column1 name of scaffold (as it appears in col3 of names file); Column2=%GC(example)...ColumnN=any_numerical_metric;
+	-names	[characters]	*.names file produced by the tetramer frequency script; required with the -info flag
 	-norm	[characters]	Normalization strategy; possible choices:
 				'Scale' - to scale the dataset from 0-1; [default]
 				'ZT'	- to Z-transform the dataset;
@@ -62,6 +63,7 @@ my ($lrn, $COLS, $ROWS, $CLS);
 
 # Optional
 my $info;
+my $names;
 my $bmSearch="standard";
 my $ALGO="kbatch";
 my $K=0.15;
@@ -83,6 +85,7 @@ GetOptions(
 	'd|dist:s'=>\$dist,
 	'norm:s'=>\$norm,
 	'i|info:s'=>\$info,
+	'n|names:s'=>\$names,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
@@ -125,28 +128,60 @@ else{
 
 
 ### MAIN ###
+
+my %lrnHeaders;
 my %matrix;
 my (@key,@infoKey);
 my %stats;
 my %colStats;
-
+my %NAMES;
 if(-e $info){
 	## Add ability to concatenate more columns before normalizing ##
+	die "names file required with the info flag, use -names flag\n" if (! $names);
+	open (NAMES, "<".$names)|| die "ERROR with names file: $names\t$!\n";
+	while(my $line=<NAMES>){
+		next if $line=~ m/^\%/;
+		chomp $line;
+		next unless $line;
+		
+		my($num, $annotation, $contig)=split(/\t/, $line);
+		push(@{$NAMES{$contig}}, $num);
+	}
 	open(INFO, "<".$info)|| die "ERROR with info file: $info\t$!\n";
 	while(my $line=<INFO>){
 		chomp $line;
 		if ($line=~ /^\#/){
 			my($name, @moreHeaders)=split(/\t/, $line);
-			push(@key,@moreHeaders);
-			my $headers=join("\t", @moreHeaders);
-			print NORM $headers."\n";
+			push(@key,@moreHeaders); #Ordered list of additional features
+		}
+		elsif($.==1){
+			my (@cols)=split(/\t/, $line);
+			my $i=0;
+			my $header;
+			while ($i < $#cols){
+				$i++;
+				push(@key,"Feature".$i);
+			}
+			
+			&for_all_parts_of_contig($line, \@key);
 		}
 		else{
-			&getStats($line);
+			&for_all_parts_of_contig($line, \@key);
 		}
 	}
 	close INFO;
 	@infoKey=@key;
+}
+
+sub for_all_parts_of_contig{
+	my $line=shift;
+	my $keyArr=shift;
+	my($name, @content)	=split(/\t/, $line);
+	foreach my $part(@{$NAMES{$name}}){
+		$line=~ s/^($name)/$part/;
+		&getStats($line); # the value of the array @key changes when this function is called, happens only here.
+	}
+	return;
 }
 
 my @key=();
@@ -173,9 +208,10 @@ while(my $line=<LRN>){
 		}
 		if($.==4){
 			my($name, @kmers)=split(/\t/, $line);
-			push(@key,@kmers);
+			push(@key,@kmers); # Ordered list of KMer Headers.
 			for(my $i=0; $i<= $#infoKey; $i++){
 				$line.="\t$infoKey[$i]";
+				push(@key,$infoKey[$i]);
 			}
 			print NORM $line."\n";
 		}
@@ -186,7 +222,7 @@ while(my $line=<LRN>){
 }
 close LRN;
 
-push(@key,@infoKey);
+#push(@key,@infoKey);
 ## Average and Std Dev ##
 if($ZT){
 	foreach my $key(keys %colStats){
@@ -214,6 +250,7 @@ foreach my $contig(@sortedContigList){
 }
 close NORM;
 
+exit;
 ### Let the training begin... ###
 my $train="esomtrn --permute --out $OUT -b $bmOut --cls $CLS --lrn $LRN --algorithm $ALGO --rows $ROWS --columns $COLS"
 	.($epochs ? " --epochs $epochs " : "")
@@ -282,8 +319,15 @@ sub zt{
 	my $value=$matrix{$contig}{$kmer};
 	my $avg=$stats{"Avg"}{$kmer};
 	my $stdev=$stats{"Stdev"}{$kmer};
-	
-	my $zscore=(($value-$avg)/$stdev);
+
+	my $zscore;
+	unless($stdev == 0){
+		$zscore=(($value-$avg)/$stdev);
+	}
+	else{
+		$zscore=0;
+	}
+	return $zscore;
 }
 
 sub average{

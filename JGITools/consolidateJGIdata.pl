@@ -45,10 +45,10 @@ use Getopt::Long;
 use File::Spec;
 use POSIX ":sys_wait_h";
 
-my $version="0.0.8";
+my $version="0.0.9";
 my $DIR="./";
 my $outDir=$$;
-my $scripts="../SeqTools";
+my $scripts;
 my $fasta;
 GetOptions(
 	'd|DIR:s'=>\$DIR,
