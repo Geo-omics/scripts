@@ -66,7 +66,7 @@ use File::Spec;
 use File::Basename;
 #use POSIX ":sys_wait_h";
 
-my $scripts;
+my $scripts="../SeqTools";
 my $version="0.2.4";
 my $path; # Fasta Folder path
 my $ext="fasta";
@@ -231,12 +231,12 @@ my $modLog="modTrain.log";
 if (-e $esomTrain){
 	if ($rows && $cols && $train){
 		if($noMod){
-			my $command="perl $esomTrain -lrn $lrnfile -cls $clsFile -rows $rows -columns $cols -norm $train".($info ? " -info $info");
+			my $command="perl $esomTrain -lrn $lrnfile -cls $clsFile -rows $rows -columns $cols -norm $train".($info ? " -info $info" : "");
 #			print LOG2 $command."\n";
 			system ("$command >> $log");
 		}
 		else{
-			my $command="perl $esomTrain -lrn $modLrnFile -cls $clsFile -rows $rows -cols $cols -norm $train".($info ? " -info $info");
+			my $command="perl $esomTrain -lrn $modLrnFile -cls $clsFile -rows $rows -cols $cols -norm $train".($info ? " -info $info" : "");
 ### Run this bit on a seperate thread.
 #			print LOG2 "[Thread2:] ".$command."\n";
 #			my $pid=&run("$command > $modLog");

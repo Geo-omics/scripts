@@ -106,7 +106,7 @@ my($intlv, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $der
 my $INS_SD= 13;
 my $version= "0.0.9";
 my $interval=10;
-my $scripts="./SeqTools";
+my $scripts="../SeqTools";
 my $minLen=1999;
 my $min_contig_len=200;
 GetOptions(

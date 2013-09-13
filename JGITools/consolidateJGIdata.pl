@@ -48,7 +48,7 @@ use POSIX ":sys_wait_h";
 my $version="0.0.8";
 my $DIR="./";
 my $outDir=$$;
-my $scripts="./SeqTools";
+my $scripts="../SeqTools";
 my $fasta;
 GetOptions(
 	'd|DIR:s'=>\$DIR,
