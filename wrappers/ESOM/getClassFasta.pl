@@ -24,10 +24,10 @@
 
 use strict;
 use Getopt::Long;
-use Pod::Usage;
 
-my ($class, $names, $fasta, $classNum);
-my $version="0.0.02";
+my ($class, $names, $fasta);
+my $classNum=0;
+my $version="0.0.03";
 
 GetOptions(
 	"cls=s"=>\$class,
@@ -39,7 +39,10 @@ GetOptions(
 
 print "getClassFasta v$version\n";
 
-die if (! $class or ! $names or ! $fasta or ! $classNum);
+print "CLASS: $class\nNAMES: $names\nFASTA: $fasta\nCLASS_NUM: $classNum\n";
+die if (! $class or ! $names or ! $fasta);
+
+$classNum++;
 
 # Parse *.cls file to get SeqID for all Seqs in the desired class
 my %clsHash;
@@ -48,6 +51,7 @@ open ( CLS, $class) || die "ERROR: $class.\n".$!;
 		chomp($line);
 		unless ($line=~ /^%/){
 			my ($seqNum, $cls)=split(/\t/,$line);
+			$cls++;
 			if ($cls==$classNum){
 				$clsHash{$seqNum}=$cls;	# %clsHash {Sequence Number  => Class Number}
 			}
@@ -62,8 +66,9 @@ open (NAMES, $names) || die "ERROR: $names.\n".$!;
 		chomp($line);
 		unless ($line =~ /^%/){
 			my ($seqNum, $seqName, $seqFastaName)=split(/\t/, $line);
+			$seqNum++;
 			if ($clsHash{$seqNum}){
-				$seqNames{$seqFastaName}=$seqName; # %seqNames {Name of Seq part of the contig => Name of the whole contig}
+				$seqNames{$seqFastaName}=$seqName; # %seqNames {Name of the sequence window of the contig => Name of the whole contig}
 			}
 		}
 	}
@@ -71,6 +76,7 @@ close NAMES;
 undef %clsHash;
 
 # Parse the fasta file to get the desired sequences, using the seqNames hash from above.
+$classNum--;
 my $outFile=$classNum.".fasta";
 open (OUT,">".$outFile )|| die "ERROR: $outFile.\n".$!;
 open (FASTA, $fasta) || die "ERROR: $fasta.\n".$!;

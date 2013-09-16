@@ -14,7 +14,8 @@ All the scripts in the repository here are distributed in the hope that they wil
 Questions/Comments
 ------------------
 PI: Gregory J. Dick, gdick [AT] umich [DOT] edu<br>
-Author: Sunit Jain, sunitj [AT] umich [DOT] edu
+Author: Sunit Jain, sunitj [AT] umich [DOT] edu (Perl, Bash)<br>
+Author: Daniel Marcus, dnmarc [AT] umich [DOT] edu (Python, Bash)
 
 Website
 -------
