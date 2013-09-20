@@ -162,11 +162,10 @@ if(-e $info){
 				$i++;
 				push(@key,"Feature".$i);
 			}
-			
-			&for_all_parts_of_contig($line, \@key);
+			&for_all_parts_of_contig($line);
 		}
 		else{
-			&for_all_parts_of_contig($line, \@key);
+			&for_all_parts_of_contig($line);
 		}
 	}
 	close INFO;
@@ -179,7 +178,7 @@ sub for_all_parts_of_contig{
 	my($name, @content)	=split(/\t/, $line);
 	foreach my $part(@{$NAMES{$name}}){
 		$line=~ s/^($name)/$part/;
-		&getStats($line); # the value of the array @key changes when this function is called, happens only here.
+		&getStats($line); # the value of the array @key changes after this function is called, happens only here.
 	}
 	return;
 }

@@ -73,7 +73,8 @@ while(my $line=<FASTA>){
 	next unless $line;
 
 	my($desc, @seq)=split(/\n/, $line);
-
+	my @description=split(/\s+/, $desc);
+	$desc=shift @description;
 	$desc=~ s/^\>//;
 	next unless $positions{$desc};
 	
@@ -91,7 +92,7 @@ while(my $line=<FASTA>){
 $/="\n";
 
 my $log="log";
-open(READS, ">".$out);
+open(READS, ">".$out)|| die $!;
 print READS "#Ref_Sequence\tStart-Stop\tNumMappedReads\t#Bases_Covered\tMeanCoverage\t#Reads_Normalized_by_Gene/Contig_Length\n";
 foreach my $c(keys %contigs){
 # samtools mpileup -C50 -f ob3b_ref.fasta -r gi\|296253650\|gb\|ADVE01000127.1\|:2539-3309 ob3b_trimAln.sorted.bam | cut -f 4
