@@ -6,10 +6,14 @@
 
 =head2 Usage
 
-	perl renameHeaders.pl -f fasta.file -n seq header prefix
+	perl renameHeaders.pl -f fasta.file -prefix "seq header prefix" -d " "
+	OR
+	perl renameHeaders.pl -f fasta.file -suffix "seq header prefix" -d " "
 
 =head3 Options
 	
+	-suffix	add after the header
+	-prefix add before the header
 	-d delimiter to follow the prefix; default= "_"
 	-o output file; default= "processID.fasta"
 
@@ -40,15 +44,6 @@ GetOptions(
 
 my $insert = ($prefix ? $prefix : $suffix);
 if (! $fasta || ! $insert){	system('perldoc', $0); exit; }
-
-#if ($insert =~ /".+?"/) {
-#	$insert=$1;
-#}
-#elsif ($insert =~ /'.+?'/) {
-#	$insert=$1;
-#}
-#$insert=~ s/\"//g;
-#$insert=~ s/\'//g;
 
 open (IN, $fasta)||die "[ERROR] $fasta: $!\n";
 open (OUT, ">".$out);
