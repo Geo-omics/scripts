@@ -44,7 +44,7 @@ my $version="1.1.0";
 my ($list, $isBlastOut, $mapped, $db);
 my $taxidOut;
 my $out=$$.".names";
-my $dumpFiles="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/";
+my $dumpFiles="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/";
 
 GetOptions(
 	'l|list:s'=>\$list,

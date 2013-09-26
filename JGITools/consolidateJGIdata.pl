@@ -45,7 +45,7 @@ use Getopt::Long;
 use File::Spec;
 use POSIX ":sys_wait_h";
 
-my $version="0.0.9";
+my $version="0.1.0";
 my $DIR="./";
 my $outDir=$$;
 my $scripts;
@@ -317,7 +317,7 @@ foreach my $bin(keys %printBin){
 }
 undef %printBin;
 
-print "\n# Bin\tNumContigs\tFraction of Dataset\tNumGenes\tFraction of Dataset\tTotal Length of Bin\tAverage GC\n";
+print "\n# Bin\tNumContigs\tFraction_of_Dataset\tNumGenes\tFraction_of_Dataset\tTotal_Length_of_Bin\tAverage_GC\n";
 
 foreach(keys %bins){
 	print $_."\t".$bins{$_}{"Contigs"}."\t".($bins{$_}{"Contigs"}/$totalContigs)."\t".$genes_per_bin{$_}."\t".($genes_per_bin{$_}/$totalGenes)."\t".$bins{$_}{"Bases"}."\t".($bins{$_}{"GC"}/$bins{$_}{"Contigs"})."\n";
@@ -380,15 +380,16 @@ sub run{
 sub REAP{ ## Use this when you want to wait till the process ends before further processing.
 	my $numPIDs= scalar(keys %PIDs);
 
-	print "in REAPER: ".$numPIDs."\n";
+#	print "in REAPER: ".$numPIDs."\n";
 	while (scalar(keys %PIDs) > 0){
 		my $pid= waitpid(-1, &WNOHANG);
 		if ($pid > 0){
-			print "in REAPER:$pid\n";
+#			print "in REAPER:$pid\n";
+			print "Process: ".$pid."\tStatus: ".($? == 0 ? "Finished" : "Running")."\nWaiting for ".$numPIDs." more processes...\n";
 			if (WIFEXITED($?) && $PIDs{$pid}){
 				`echo "Process ID: $pid\tFinished with status $?"`;
 #				$numPIDs-- ;
-				print "Process: ".$pid."\tStatus: ".$?."\nWaiting for ".$numPIDs." more processes...\n";
+				print "Process: ".$pid."\tStatus: ".($? == 0 ? "Finished" : "Running")."\nWaiting for ".$numPIDs." more processes...\n";
 				delete $PIDs{$pid};
 			}
 		}

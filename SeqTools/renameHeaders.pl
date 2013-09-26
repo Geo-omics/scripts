@@ -24,20 +24,32 @@ use strict;
 use Getopt::Long;
 
 my $fasta;
-my $insert;
+my $prefix;
+my $suffix;
 my $out=$$.".fasta";
 my $delim="_";
 
 GetOptions(
 	'f:s'=>\$fasta,
-	'n:s'=>\$insert,
+	'prefix:s'=>\$prefix,
+	'suffix:s'=>\$suffix,
 	'o:s'=>\$out,
 	'd:s'=>\$delim,
 	'h'=>sub{system('perldoc', $0); exit;},
 );
 
+my $insert = ($prefix ? $prefix : $suffix);
 if (! $fasta || ! $insert){	system('perldoc', $0); exit; }
-$insert=$fasta if (! $insert);
+
+#if ($insert =~ /".+?"/) {
+#	$insert=$1;
+#}
+#elsif ($insert =~ /'.+?'/) {
+#	$insert=$1;
+#}
+#$insert=~ s/\"//g;
+#$insert=~ s/\'//g;
+
 open (IN, $fasta)||die "[ERROR] $fasta: $!\n";
 open (OUT, ">".$out);
 my %sampleName;
@@ -51,7 +63,13 @@ while(my $line=<IN>){
 	if ($line=~ m/^>/){
 		$line=~ s/^>//;
 		$sampleName{$line}++;
-		my $newName= $insert.$delim.$line;
+		my $newName;
+		if ($prefix){
+			$newName= $insert.$delim.$line;
+		}
+		elsif ($suffix){
+			$newName= $line.$delim.$insert;
+		}
 		print OUT ">".$newName."\n";
 		$h++;
 	}
