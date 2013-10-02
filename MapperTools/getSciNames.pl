@@ -22,7 +22,7 @@
 	-o	-out	:	output file name <default=process_id.names>
 
 	-taxa		:	prints Taxa ids to this file <optional>
-	-dump		:	location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/NCBI/taxa_dump/">
+	-dump		:	location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/">
 	-h	-help	:	This message; press "q" to exit this screen.
 	
 =head2 Limitation:
