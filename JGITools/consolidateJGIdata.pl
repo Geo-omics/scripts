@@ -269,22 +269,23 @@ if (-e $contigMap){
 else{
 	my $out=File::Spec->catfile($outDir, "Unclassified.tsv");
 	open(OUT, ">".$out) || die "[OUT] $out :\t$!\n";
-	print OUT "# Bin\tIMG_Contig_Name\tOriginal_Contig_Name\tContig \%GC\tContig Length\tLocus_Tag\tIMG_Gene_ID\tGene_Start\tGene_Stop\tGene_Length\tHomolog_Gene_ID\tHomolog_Taxon_ID\tLineage \%ID\tLineage\tProduct\tSource\tCOG_ID\tCog \%ID\tPFAM_ID\tKO_Term\tKO \%ID\tEC_Number\n";
+	print OUT "# Bin\tIMG_Contig_Name\tOriginal_Contig_Name\tContig \%GC\tContig Length\tLocus_Tag\tIMG_Gene_ID\tGene_Type\tGene_Start\tGene_Stop\tGene_Length\tHomolog_Gene_ID\tHomolog_Taxon_ID\tLineage \%ID\tLineage\tProduct\tSource\tCOG_ID\tCog \%ID\tPFAM_ID\tKO_Term\tKO \%ID\tEC_Number\n";
 	close OUT;
 }
 
-my (%genes_per_bin, $totalGenes,%printBin);
+my (%genes_per_bin, $totalGenes,%printBin, %numCDS);
 open(GFF, $gff) || die "[GFF] $gff :\t$!\n";
 while(my $line=<GFF>){
 	chomp $line;
-	my($contigID, $locusID, $geneID, $start, $stop)=parseGFF3($line);
+	my($contigID, $locusID, $geneID, $start, $stop, $type)=parseGFF3($line);
 	my($begin, $end)=sort{$a <=> $b}($start, $stop);
 	my $len=$end - $begin;
 	my $bin=$contig_name_map{$contigID}{"Bin"};
+	if ($type=~ /CDS/i){$numCDS{$bin}++}
 	my $printThis=$bin."\t".$contigID."\t".$contig_name_map{$contigID}{"Name"}."\t"; # Bin <TAB> IMG Contig Name <TAB> Original Contig Name
 	$printThis.=$LGC{$contigID} ? $LGC{$contigID}{"GC"}."\t".$LGC{$contigID}{"Length"}."\t" : "\t\t"; # Contig %GC <TAB> Contig Length
-	$printThis.=$locusID."\t".$geneID."\t".$start."\t".$stop."\t";
-	$printThis.=$len."\t";
+	$printThis.=$locusID."\t".$geneID."\t".$type."\t".$start."\t".$stop."\t"; # Locus_Tag <TAB> IMG_Gene_ID <TAB> Gene_Type <TAB> Gene_Start <TAB> Gene_Stop
+	$printThis.=$len."\t"; # Gene_Length
 	$printThis.=$TAXA{$locusID} ? $TAXA{$locusID} : "\t\t\t\t"; # homolog_gene_id <TAB> homolog_taxon_id <TAB> %ID <TAB> Lineage
 	$printThis.=$PROD{$locusID} ? $PROD{$locusID} : "\t\t"; # product <TAB> Source
 	$printThis.=$COGS{$locusID} ? $COGS{$locusID} : "\t\t"; # cog_id <TAB> %id
@@ -317,10 +318,10 @@ foreach my $bin(keys %printBin){
 }
 undef %printBin;
 
-print "\n# Bin\tNumContigs\tFraction_of_Dataset\tNumGenes\tFraction_of_Dataset\tTotal_Length_of_Bin\tAverage_GC\n";
+print "\n# Bin\tNumContigs\tFraction_of_Dataset\tNumGenes\tFraction_of_Dataset\tTotal_Length_of_Bin\tAverage_GC\tNumber_of_CDS\n";
 
 foreach(keys %bins){
-	print $_."\t".$bins{$_}{"Contigs"}."\t".($bins{$_}{"Contigs"}/$totalContigs)."\t".$genes_per_bin{$_}."\t".($genes_per_bin{$_}/$totalGenes)."\t".$bins{$_}{"Bases"}."\t".($bins{$_}{"GC"}/$bins{$_}{"Contigs"})."\n";
+	print $_."\t".$bins{$_}{"Contigs"}."\t".($bins{$_}{"Contigs"}/$totalContigs)."\t".$genes_per_bin{$_}."\t".($genes_per_bin{$_}/$totalGenes)."\t".$bins{$_}{"Bases"}."\t".($bins{$_}{"GC"}/$bins{$_}{"Contigs"})."\t".$numCDS{$_}."\n";
 }
 
 if ($fasta && -e $ess){
@@ -338,6 +339,7 @@ sub parseGFF3{
 	
 	my ($locusID, $geneID);
 	my $contigID=$cols[0];
+	my $type=$cols[2];
 	my $start=$cols[3];
 	my $stop=$cols[4];
 	foreach my $att(@attributes){
@@ -358,7 +360,7 @@ sub parseGFF3{
 			}
 		}
 	}
-	return ($contigID, $locusID, $geneID, $start, $stop);
+	return ($contigID, $locusID, $geneID, $start, $stop, $type);
 }
 
 sub run{

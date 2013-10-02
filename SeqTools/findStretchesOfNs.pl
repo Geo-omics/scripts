@@ -2,13 +2,15 @@
 
 =head1 USAGE
 
-	perl findStretchesOfNs.pl -f infile.fasta -out outfile.fasta [OPTIONS]
+	perl findStretchesOfNs.pl -f infile.fasta -coord outfile.fasta [OPTIONS]
 
 =head2 OPTIONS
 
-	nuc	[character]	any character other than 'N'	(default: N)
-	min	[integer]	minimum stretch of N's	(default: 10)
-	max	[integer]	maximum number of N's	(default: 500)
+	-nuc	[character]	any character other than 'N'	(default: N)
+	-coord	[character]	coordinates file, start and stop position of the stretch of N's
+	-min	[integer]	minimum stretch of N's	(default: 10)
+	-max	[integer]	maximum number of N's	(default: 500)
+	-split	[character]	output file; split the fasta sequence at N's and write to this file.
 
 =head1 Author
 
@@ -21,14 +23,14 @@ use strict;
 use Getopt::Long;
 
 my $fasta;
-my $out=$$.".out";
+my $coord=$$.".out";
 my $nuc="N";
 my $min=10;
 my $max=500;
-
+my $split;
 GetOptions(
 	"f|fasta:s"=>\$fasta,
-	"o|out:s"=>\$out,
+	"c|o|coord:s"=>\$coord,
 	"n|nuc:s"=>\$nuc,
 	"min:i"=>\$min,
 	"max:i"=>\$max,
@@ -37,7 +39,7 @@ GetOptions(
 
 my $find=quotemeta "$nuc";
 open(FASTA, $fasta)|| die $!;
-open(OUT, ">".$out)|| die $!;
+open(OUT, ">".$coord)|| die $!;
 my %uniqueSeqNames;
 $/=">";
 while(my $line=<FASTA>){
@@ -46,13 +48,14 @@ while(my $line=<FASTA>){
 
 	my($header, @sequence)=split("\n", $line);
 	my $seq=uc(join("",@sequence));
-	my $seqLen=length($seq);
-
-	my @matches;
-
+	my $parts=0;
 	while($seq=~ /($find){$min,$max}/ig){
-#		push (@matches,[ $-[0], $+[0] ]);
 		print OUT $header."\t".$-[0]."\t".$+[0]."\n";
+		if($split){
+			print SPLIT ">".$header."_".$parts."\n";
+			print SPLIT $&."\n";
+			$parts++;
+		}
 		$uniqueSeqNames{$header}++;
 	}
 }
