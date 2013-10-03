@@ -59,4 +59,4 @@ These instructions are for ESOM-based for binning: see http://databionic-esom.so
 	
 Questions?
 ----------
-Contact: Sunit Jain sunitj \[AT\] umich \[DOT\] edu
+[Sunit Jain](http://www.sunitjain.com "Sunit's Homepage"), sunitj \[AT\] umich \[DOT\] edu

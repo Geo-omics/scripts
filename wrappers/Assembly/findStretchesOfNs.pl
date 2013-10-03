@@ -2,12 +2,12 @@
 
 =head1 USAGE
 
-	perl findStretchesOfNs.pl -f infile.fasta -coord outfile.fasta [OPTIONS]
+	perl findStretchesOfNs.pl -f infile.fasta -coord outfile.tsv [OPTIONS]
 
 =head2 OPTIONS
 
 	-nuc	[character]	any character other than 'N'	(default: N)
-	-coord	[character]	coordinates file, start and stop position of the stretch of N's
+	-coord	[character]	outputs coordinates file, start and stop position of the stretch of N's
 	-min	[integer]	minimum stretch of N's	(default: 10)
 	-max	[integer]	maximum number of N's	(default: 500)
 	-split	[character]	output file; split the fasta sequence at N's and write to this file.
@@ -27,9 +27,9 @@
 use strict;
 use Getopt::Long;
 
-my $version="v0.3.5";
+my $version="v0.3.7";
 my $fasta;
-my $coord=$$.".out";
+my $coord;
 my $nuc="N";
 my $min=10;
 my $max=500;
@@ -46,11 +46,15 @@ GetOptions(
 	"h|help"=>sub{system('perldoc', $0); exit;},
 );
 print "# findStretchesOfNs.pl $version\n";
+die "[ERROR] Choose an output type, either '-coord' or '-split'. See '-h' for more options.\n" if(! $coord) && (! $split);
 
 my $find=quotemeta "$nuc";
 open(FASTA, $fasta)|| die $!;
-open(OUT, ">".$coord)|| die $!;
-print OUT "# Sequence_Name\tN_Start\tN_Stop\tN_Length\n";
+if ($coord){
+	open(OUT, ">".$coord)|| die $!;
+	print OUT "# Sequence_Name\tN_Start\tN_Stop\tN_Length\n";
+}
+
 if ($split){
 	open(SPLIT, ">".$split)|| die $!;
 }
@@ -81,9 +85,11 @@ while(my $line=<FASTA>){
 		}
 		$uniqueSeqNames{$header}++;
 	}
+	print SPLIT ">".$realHeader."_".$parts." ".$desc."\n";
+	print SPLIT substr($seq, $lastOffset)."\n";
 }
 $/="\n";
 close FASTA;
-close OUT;
+close OUT if($coord);
 close SPLIT if($split);
 print "# Number of Sequence with at least 1 stretch of Ns >= $min:\t".keys(%uniqueSeqNames)."\n";

@@ -144,7 +144,7 @@ limit2Length.pl
 
 wrappers/ESOM:
 esomCodonMod.pl
-esomTrain.pl
+#esomTrain.pl
 esomWrapper.pl
 getClassFasta.pl
 tetramer_freqs_esom.pl
