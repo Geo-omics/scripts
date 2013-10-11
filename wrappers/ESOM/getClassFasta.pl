@@ -27,7 +27,7 @@ use Getopt::Long;
 
 my ($class, $names, $fasta);
 my $classNum=0;
-my $version="0.0.03";
+my $version="0.0.05";
 
 GetOptions(
 	"cls=s"=>\$class,
@@ -66,7 +66,6 @@ open (NAMES, $names) || die "ERROR: $names.\n".$!;
 		chomp($line);
 		unless ($line =~ /^%/){
 			my ($seqNum, $seqName, $seqFastaName)=split(/\t/, $line);
-			$seqNum++;
 			if ($clsHash{$seqNum}){
 				$seqNames{$seqFastaName}=$seqName; # %seqNames {Name of the sequence window of the contig => Name of the whole contig}
 			}
