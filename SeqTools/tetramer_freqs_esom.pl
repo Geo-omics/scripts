@@ -47,7 +47,7 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 
-my $version=$0." v2.0.3 August, 2013";
+my $version=$0." v2.0.4 October, 2013";
 my $sfile; #fasta file, may include X:s and N:s
 my $annotationfile; #full contig name in left, annotation in right, column. headers (whatever) on first line 
 my $min_length = 2500; #Minimal length (in nt) of input contig to be included in output
@@ -137,7 +137,7 @@ sub calc_tetra_freqs {
 	while (<INFILE>) {
     	chomp;
     	if ($_ =~ />(\S+)/) {
-		print  '.' if($counter++%500 == 0);
+		print  '.' if($counter++%10000 == 0);
 		my $next_id = $1;
 		get_tetra_freqs($id, $seq) if (length($seq) >= $min_length);
 		($id, $seq) = ($next_id, '');
@@ -309,7 +309,7 @@ sub make_class_file {
 }
 ################################################################################################################
 sub make_seq_file {
-    print "printing seq file: $reffile ...";
+    print "printing seq file: $reffile ... ";
     my $number_rows = @names;
 	my $getseq= @seq_list;
 	open (OUT, ">$reffile");
@@ -332,7 +332,7 @@ sub getRowColESOM{
 
 	my $mapSpace= $acceptedSeq * 5.5;
 	my $rows= int(sqrt($mapSpace/2) + 0.5);
-	my $cols=2 * $rows;
+	my $cols=1.25 * $rows;
 
 	print "\nTry the following values for ESOM Training:\n>Rows:\t$rows\n>Cols:\t$cols\n";
 	print "These values are just meant as suggestions, feel free to try your own.\n";
