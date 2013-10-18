@@ -33,10 +33,10 @@ use Getopt::Long;
 my ($fasta, $gff, $gene_product);
 my ($tbl, $fasta_out);
 my $minLen=200;
-my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords
+my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.0.1b";
+my $version="gff2tbl.pl\tv0.0.3";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -107,10 +107,9 @@ while(my $line=<FASTA>){
 		$parent=$name;
 	}
 	
-	&do_i_have_Ns($seq, $name);
+	&find_Ns($seq, $name);
 	
 	my $len=length($seq);
-#	my $parent = $nSplit_mapped_contigs{$contig}{"Parent"};
 	
 	next if ($len < $minLen);
 	print TBL ">Feature ".$name."\n"; #"\tLength:".$len."\n";
