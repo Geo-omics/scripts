@@ -332,7 +332,7 @@ sub getRowColESOM{
 
 	my $mapSpace= $acceptedSeq * 5.5;
 	my $rows= int(sqrt($mapSpace/2) + 0.5);
-	my $cols=1.25 * $rows;
+	my $cols= 2 * $rows;
 
 	print "\nTry the following values for ESOM Training:\n>Rows:\t$rows\n>Cols:\t$cols\n";
 	print "These values are just meant as suggestions, feel free to try your own.\n";
