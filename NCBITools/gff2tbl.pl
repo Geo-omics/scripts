@@ -74,7 +74,6 @@ while(my $line=<ALIAS>){
 	next unless $line;
 
 	my($alt, $orig)=split(/\t/, $line);
-#	print OUT ">".$orig."\n".$fasta{$alt}."\n" if ($fasta{$alt});
 	my($name, @desc)=split(/\s+/, $orig);
 	$alias{$alt}=$name;
 }
