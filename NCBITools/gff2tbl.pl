@@ -143,7 +143,7 @@ while(my $line=<FASTA>){
 		}
 	
 		print TBL $incomplete;
-		print TBL $gene_start."\t".$gene_stop."\t".$annotation{$parent}{$locusID}{"TYPE"}."\n"; #"\t".$annotation{$parent}{$locusID}{"LEN"}."\n";
+		print TBL $gene_start."\t".$gene_stop."\t".$annotation{$parent}{$locusID}{"TYPE"}."\n";
 		print TBL "\t\t\t";
 		if($gene_prod{$locusID}){
 			if($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
