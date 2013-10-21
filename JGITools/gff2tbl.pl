@@ -10,11 +10,13 @@
 
 =head2 Options
 
-	-fasta	[characters]	Original assembled Fasta file
+	-fasta	[characters]	Original assembled Fasta file [Required]
+	-gff	[characters]	JGI's GFF file [Required]
+	-tbl	[characters]	Output tbl file [Required]
+	
+	-gene	[characters]	gene product file from JGI. Required if GFF doesn't have the tag 'product'
+	
 	-aka	[characters]	aliased file; from "toPhylipAndBack.pl" script
-	-gff	[characters]	JGI's GFF file 
-	-gene	[characters]	gene product file from JGI
-	-tbl	[characters]	Output tbl file
 	-min	[integers]	minimum sequence length
 
 	-version -v	<BOOLEAN>	version of the current script
@@ -49,6 +51,8 @@ GetOptions(
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 print "\# $version\n";
+
+die("[FATAL] Required parameters not found. See '-h' for help on how to use the script.\n") if ((! $fasta)||(! $gff)||(! $tbl));
 
 my %gene_prod; # gene_prod{locusID - same as one in %annotation}= product name
 open(GP, "<".$gene_product); #|| die $!;

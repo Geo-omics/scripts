@@ -57,7 +57,7 @@ while(my $line=<LIST>){
 	}
 	else{
 	# Files
-		my($fileName, @comment)=split(/ /, $line);
+		my($fileName, @comment)=split(/\t/, $line);
 		my $file=File::Spec->catfile($sandbox, $fileName);
 		unless($file=~ /\./g){
 			warn "'$file' must be a folder. Skipping...\n";
