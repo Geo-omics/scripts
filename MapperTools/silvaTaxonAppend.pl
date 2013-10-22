@@ -14,8 +14,8 @@
 
 =head2 Options
 
-	-db	[characters]	Silva database fasta; really any fasta that has header in the format ">accesion_Number[SPACE]description"
-						Default: SSU version 111 (/geomicro/data1/COMMON/publicDB/silva/SSURef_111_NR_tax_silva.fasta)
+	-db	[characters]	Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
+						Default: /geomicro/data1/COMMON/publicDB/silva/release_111/SSURef_111_NR_tax_silva.fasta (SSU version 111)
 	-blast	[characters]	Blast output performed against the fasta file.
 	-mapper	[characters]	mapper.pl output performed on the blast output.
 	-out	[characters]	output file
@@ -34,8 +34,13 @@ use strict;
 use Getopt::Long;
 
 my ($out, $isBlast, $isMapped);
-my $fasta="/geomicro/data1/COMMON/publicDB/silva/release111/SSURef_111_NR_tax_silva.fasta";
-my $version="silvaTaxonAppend.pl\tv0.0.1b";
+my $fasta;
+my %db=(
+	"ssu111"=>"/geomicro/data1/COMMON/publicDB/silva/release_111/SSURef_111_NR_tax_silva.fasta",
+	"ssu115"=>"/geomicro/data1/COMMON/publicDB/silva/release_115/SSURef_NR99_tax_silva.fasta",
+);
+
+my $version="silvaTaxonAppend.pl\tv0.0.3";
 GetOptions(
 	'db=s'=>\$fasta,
 	'blast:s'=>\$isBlast,
@@ -48,6 +53,20 @@ GetOptions(
 print "#\t".$version."\n";
 
 die "[ERROR $0] Blast or mapped file required\n" if(! $isBlast && !$isMapped);
+
+if (! $fasta){
+	$fasta=$db{"ssu115"};
+}
+elsif($db{lc($fasta)}){
+	$fasta=$db{lc($fasta)};
+}
+
+if(-s $fasta){
+	$fasta=$fasta;
+}
+else{
+	die "[FATAL] Invalid fasta file: $fasta\n";
+}
 
 my %dictionary;
 $/=">";

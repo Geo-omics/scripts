@@ -88,7 +88,7 @@ getSciNames.pl
 gff2tbl.pl	-	Read GFF3(tested with JGI's gff), Contigs and Gene_product files and produce a usable output in NCBI's ridiculous '.tbl' format.
 GI_info_XMLParser.pl
 
-RiobickerTools:
+RibopickerTools:
 silvaTaxonAppend.pl
 taxonDist.pl
 
