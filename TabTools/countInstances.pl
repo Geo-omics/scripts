@@ -27,7 +27,7 @@ use Getopt::Long;
 
 my $version="0.0.1b";
 my $col=2;
-my ($in, $out);
+my ($in, $out, $sum);
 GetOptions(
 	'in=s'=>\$in,
 	'o|out=s'=>\$out,
@@ -38,7 +38,7 @@ GetOptions(
 );
 
 $col--;
-$sum--;
+#$sum--;
 
 my %counts;
 open(IN, "<".$in)|| die $!;
@@ -48,6 +48,7 @@ while(my $line=<IN>){
 	
 	my @cols=split(/\t/, $line);
 	if($sum){
+		$sum--;
 		$counts{$cols[$col]}+=$cols[$sum];
 	}
 	else{

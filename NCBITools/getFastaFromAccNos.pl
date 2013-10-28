@@ -66,27 +66,43 @@
 #extract_links
 #get_ftp_file
 
+=head1
+
+	perl getFastaFromAccNos.pl -list Accession_number.list -db protein -out output.fasta
+
+=cut
+
 
 use LWP::Simple;
 use LWP::UserAgent;
 use Net::FTP;
+use Getopt::Long;
 
+my($list, $db, $out);
+GetOptions(
+	'list=s'=>\$list,
+	'db=s'=>\$db,
+	'out=s'=>\$out,
+	'h|help'=>sub{system('perldoc', $0); exit;},
+);
 
 my $delay = 0;
 my $maxdelay = 3;
 my $base = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
 
+die "See '$0 -h'  For usage\n" if ((! $list) || (! $db) || (! $out));
+
 #*************************************************************
 #** SCRIPT MAIN BODY *****************************************
 
-$params{email} = "menli@umich.edu";
-$params{db} = "protein";
+$params{email} = "sunitj@umich.edu";
+$params{db} = $db;
 $params{tool} = "ebot";
-$params{id} = "accnos.list";
+$params{id} = $list;
 %params = epost_file(%params);
 
 $params{retmode} = "text";
-$params{outfile} = "accnos.fasta";
+$params{outfile} = $out;
 $params{rettype} = "fasta";
 efetch_batch(%params);
 

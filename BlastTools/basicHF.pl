@@ -6,22 +6,23 @@
 	
 =head2 Dependencies
 
-	Blast 2.2.20 or below (old)
+	Blast 2.2.22 and above
 
-=head2 USAGE
+=head3 Options
 
-	perl basicHF.pl [-i: list of all files you wish to compare, the seed should be the first one on the list]
-	[-p: Blast percent identity] [-a: alignment length ratio (0-1)]	[-e: E-Value] [-t: file type (protein or nucleotide)]
-	[-h: help (this page)]
+	-i or list	[character]	list of all files you wish to compare, the seed should be the first one on the list
+	-t or -file_type	[characters]	file type (prot or nucl) [Default = prot]
+	-p or -percent	[float]	Blast percent identity [Default = 50]
+	-len or -aln_len	[float]	alignment length coverage (0-1) [Default = 0.75] [aln_len/(min(subj_len,query_len))]
+	-e or -evalue	[real number] E-Value; [Default = -4]
+	-a or -num_threads	[integer] Number of processors for blast jobs; [Default = 7]
+	-h or -help	[boolean] help (this page)
+	-v or -version	[boolean]	prints the current version of the script.
 	
-=head2 DEFAULTS
-	
-	If you dont mention any of the following, this is what will be assumed.
-	-p	blast % id= 50%
-	-a	alignment length ratio= 0.75
-	-e	E-Value= -4;
-	-t	File type= 'p' (protein).
-	
+=head2 Example
+
+	perl basicHF.pl -list file_names.list -file_type prot -percent 60 -len 0.50 -evalue -5 -num_threads 2 
+
 =head2 AUTHOR
 	
 	Sunit Jain, December 2010
@@ -41,22 +42,24 @@ my $list;
 my $per=50;
 my $aLen=0.75;
 my $eVal=-4;
-my $fType='p';
-
+my $fType='prot';
+my $proc=7;
+my $version="basicHF.pl\tv0.1.3";
 GetOptions(
 	'i|input:s'=>\$list,
 	'p|percent:f'=>\$per,
-	'a|len:f'=>\$aLen,
-	'e|eval:f'=>\$eVal,
-	't|fileType:s'=>\$fType,
+	'len:f'=>\$aLen,
+	'e|evalue:f'=>\$eVal,
+	't|file_type:s'=>\$fType,
+	'a|num_threads:i'=>\$proc,
+	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=> sub{system('perldoc', $0); exit;},
 );
-
-if (!$list){system('perldoc', $0); exit;}
+print "\# $version\n";
+die "[FATAL] List file: $list not found!\n" if (!$list);
 
 ## MAIN ##
 
-uc($fType);
 open (LIST, $list) || die "[ERROR] $list:$!\n";
 my @fileList=<LIST>;
 close LIST;
@@ -64,12 +67,12 @@ close LIST;
 chomp(@fileList);
 
 my($dbFormat,$blastType);
-if (lc($fType) eq 'p'){
-	$dbFormat='T';
+if (lc($fType) eq 'prot'){
+	$dbFormat='prot';
 	$blastType='blastp';
 }
-elsif(lc($fType) eq 'n'){
-	$dbFormat='F';
+elsif(lc($fType) eq 'nucl'){
+	$dbFormat='nucl';
 	$blastType='blastn';
 }
 	
@@ -93,18 +96,17 @@ open(NUM, ">".$seed."P".$per."L".$aLen."E".$eVal."B121.tsv");
 print NAME "\#E-Value:\t".$eVal."\n";
 print NAME "\#\% ID:\t".$per."\n";
 print NAME "\#Alignment Length Ratio:\t".$aLen."\n";
+print NAME "\#Ref\t";
 
 print NUM "\#E-Value:\t".$eVal."\n";
 print NUM "\#\% ID:\t".$per."\n";
 print NUM "\#Alignment Length Ratio:\t".$aLen."\n";
-
-print NAME "\#Ref\t";
 print NUM "\#Ref\t";
 
 my %homologs;
 for (my $i=0; $i<$totalGenomes; $i++){
 	my %qsHits;
-	my $blastOut="Qvs".$i.".bout";
+	my $blastOut="Qvs".$i.".".$blastType;
 	print NAME $fileList[$i]."\t";
 	print NUM $fileList[$i]."\t";
 	print "Blast:\t".$seed."\tvs\t".$fileList[$i]."\n";
@@ -112,7 +114,7 @@ for (my $i=0; $i<$totalGenomes; $i++){
 	my %sLens=getLengths($edList[$i]);	
 	my $subjSize=keys(%sLens);
 	if ($subjSize>=1){
-		system ("blastall -p ".$blastType." -e 1e".$eVal." -m 9 -a 8 -i ".$seed." -d ". $edList[$i]." -o ".$blastOut);
+		system ($blastType." -evalue 1e".$eVal." -outfmt 6 -num_threads $proc -query ".$seed." -db ". $edList[$i]." -out ".$blastOut);
 
 		my %qsHits=parseBlastOutput($blastOut, \%qLens, \%sLens, $per, $aLen);
 	
@@ -141,20 +143,22 @@ while (my($k, $value)=each(%homologs)){
 }
 close NAME;
 
-print NUM "Total\n";
+print NUM "Total\tPresence\n";
 foreach my $k(keys %numbers){
 	print NUM $k."\t";
 	my $sum=0;
+	my $presence=0;
 	for (my $i=0; $i<$totalGenomes; $i++){
 		if ($numbers{$k}{$i}){
 			print NUM $numbers{$k}{$i}."\t";
+			$presence++;
 		}
 		else{
 			print NUM "0\t";
 		}
 		$sum +=$numbers{$k}{$i};
 	}
-	print NUM "$sum\n";
+	print NUM "$sum\t$presence\n";
 }
 close NUM;
 
@@ -163,7 +167,7 @@ system ("rm *.phr");
 system ("rm *.pin");
 system ("rm *.psq");
 system ("rm *_ed.faa");
-system ("rm *.bout");
+system ("rm *.$blastType");
 
 
 # Timing
@@ -194,7 +198,7 @@ sub prepFasta{
 			$numbers=$gi."\|".$taxa;
 		}
 		else{
-			my ($num,$name)=split(/\s/, $query);
+			my ($num,$name)=split(/\s+/, $query);
 			$numbers=$num;
 		}
 		my $nuQuery=$numbers."@".$gNum;
@@ -216,7 +220,7 @@ sub prepFasta{
 	}
 	
 #	print "\tMaking Blast DB for $out\n";
-	system ("formatdb -i ".$out." -p ".$format);
+	system ("makeblastdb -in ".$out." -dbtype ".$format);
 #	print "\tDONE!!\n\t\tTotal Contigs:\t".keys(%wg)."\n\n";
 
 	return $out;
@@ -261,7 +265,7 @@ sub parseBlastOutput {
 			my $subjLen=$sLens{$subj};
 			my $queryLen=$qLens{$query};
 			# print $subjLen."\t".$queryLen."\n";
-			if ($subjLen==$queryLen || $subjLen < $queryLen){
+			if ($subjLen<= $queryLen){
 				$tempLen=$aLen/$subjLen;
 			}
 			else{

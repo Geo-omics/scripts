@@ -19,6 +19,7 @@
 
 	-DIR	-d	<STRING>	path to the files downloaded from JGI;	default=present working directory
 	-OUTDIR	-o	<STRING>	Directory with consolidated tab delimited files for each bin;		default=processID
+	-lgc		<STRING>	If you already have the length+gc calculated, save some time. Provide the *lgc file here, so the script doesn't calculate it again.
 	-genes	-g	<STRING>	produces a fasta file of all the genes in the given file;	default=not produced
 	-scripts	<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/SeqTools
 
@@ -45,15 +46,17 @@ use Getopt::Long;
 use File::Spec;
 use POSIX ":sys_wait_h";
 
-my $version="0.1.0";
+my $version="0.1.3";
 my $DIR="./";
 my $outDir=$$;
 my $scripts;
+my $tmpLGC;
 my $fasta;
 GetOptions(
 	'd|DIR:s'=>\$DIR,
 	'o|OUTDIR:s'=>\$outDir,
 	'g|genes:s'=>\$fasta,
+	'lgc:s'=>\$tmpLGC,
 	'scripts:s'=>\$scripts,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system('perldoc', $0); exit;},
@@ -84,7 +87,6 @@ foreach my $f(@FILES){
 	 $contigMap=$f if ($f=~ /.*.map.txt/);
 	 $pfam=$f if ($f=~ /.*.pfam.txt/);
 	 $phyloDist=$f if ($f=~ /.*.phylodist.txt/);
-	 $config=$f if ($f=~ /.*.config/);
 }
 
 if ((! $scripts) || (! -d $scripts)){
@@ -111,11 +113,16 @@ if ($fasta && -e $ess){
 ####
 
 # Continue with the main script.
-print "[LGC] Calculating length and GC content of all contigs...\n";
-my $lgc=File::Spec->catfile($scripts, "length+GC.pl");
-my $tmpLGC=File::Spec->catfile($outDir, $outDir.".lgc");
-if(-e $lgc){
-	system("perl $lgc -f $fna -gc > $tmpLGC");
+if (! $tmpLGC){
+	print "[LGC] Calculating length and GC content of all contigs...\n";
+	my $lgc=File::Spec->catfile($scripts, "length+GC.pl");
+	$tmpLGC=File::Spec->catfile($outDir, $outDir.".lgc");
+	if(-e $lgc){
+		system("perl $lgc -f $fna -gc > $tmpLGC");
+	}
+}
+else{
+	print "[LGC] File Found:\t".$tmpLGC."\n";
 }
 
 # Aggregate data from different files.

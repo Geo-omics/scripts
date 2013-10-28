@@ -16,6 +16,7 @@
 	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
 	
 =head3 Boolean Flags
+
 	-quick:	don't get the distribution.
 	-n50: also calculate the N50 and L50 stats for a *fasta* file
 
@@ -38,16 +39,16 @@ use File::Spec;
 #######################
 ## PARAMETERS
 #######################
-my $version="0.1.5";
+my $version="0.1.7";
 my $fasta;
 my $fastq;
-my $setLen=1999;
+my $setLen=2000;
 my $out=$$.".fa";
 my $quick;
 my $binSize=2000;
 my $lower;
 my $getN50;
-my $scripts="/geomicro/data1/COMMON/scripts/";
+my $scripts="/geomicro/data1/COMMON/scripts/SeqTools";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
@@ -77,6 +78,8 @@ die "[ERROR: $0] Minimum length threshold MUST be a positive integer greater tha
 ## GLOBAL
 #######################
 
+if(! $lower){	$setLen--; }
+
 open (OUT, ">".$out)|| die "[ERROR: $0]: $!";
 
 $/=$fasta ? "\>" : "\n";
@@ -90,11 +93,11 @@ my ($A, $T, $G, $C, $N)=(0,0,0,0,0);
 ## MAIN
 #######################
 unless($quick){
-	@sequence= map { $binSize * $_ } 1 .. 50;
+	@sequence= map { $binSize * $_ } 1 .. 50; # number of intervals
 	@sequence=sort{$a <=> $b} @sequence;
 	push(@sequence, (($sequence[-1])*10)); # capture REALLY long contigs.
 
-	$shortest=1000000000000000000000; # ridiculously high number to capture the smaller ones
+	$shortest=100000000000000000000000; # ridiculously high number to capture the smaller ones
 	$longest=-1;
 }
 
@@ -115,7 +118,7 @@ my $meanLenAfter= int(($revisedSumLen/$count) + 0.5);
 print "# $0 version: $version\n";
 print "# Total Sequences:\t$total\n";
 print "# Total Bases:\t$sumLen\n";
-$lower ? print "# Total Bases in sequences less than or equal to $setLen:\t$revisedSumLen\n" : print "# Total Bases in sequences greater than $setLen:\t$revisedSumLen\n";
+$lower ? print "# Total Bases in sequences LESS THAN to $setLen:\t$revisedSumLen\n" : print "# Total Bases in sequences GREATER THAN $setLen:\t$revisedSumLen\n";
 
 print "# Longest Sequence Length:\t$longest\n" unless($quick);
 print "# Shortest Sequence Length:\t$shortest\n" unless($quick);
@@ -123,7 +126,7 @@ print "# Shortest Sequence Length:\t$shortest\n" unless($quick);
 print "# Mean Length before setting the $setLen base limit:\t$meanLenBefore\n";
 print "# Mean Length after setting the $setLen base limit:\t$meanLenAfter\n";
 
-$lower ? print  "# Number of Sequences with Length equal to or less than $setLen bases:\t$count\n" : print "# Number of Sequences with Length greater than $setLen bases:\t$count\n";
+$lower ? print  "# Number of Sequences with Length LESS THAN $setLen bases:\t$count\n" : print "# Number of Sequences with Length GREATER THAN $setLen bases:\t$count\n";
 
 
 my $perc_A = sprintf( "%.4f",(($A/$revisedSumLen)* 100));
@@ -197,7 +200,7 @@ sub parseFastq{
 
 		$sumLen+=$len;
 
-		if(($lower) && ($len <= $setLen)){
+		if(($lower) && ($len < $setLen)){
 			print OUT "$seqDesc\n$seq\n\+\n$qual\n";
 			$revisedSumLen+=$len;
 			&nucTally($seq);
