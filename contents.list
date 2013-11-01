@@ -126,7 +126,6 @@ countInstances.pl
 fileChopper.pl
 getCol.pl
 getSciNames.pl
-Tally_Compare
 
 TabTools/Tally_Compare:
 getMasterList.pl

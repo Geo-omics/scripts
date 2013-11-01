@@ -47,6 +47,7 @@ my $setPer=0;
 my $setLen=0;
 my $setScore=0;
 my $out=$$.".pb.out";
+my $version="postBlast.pl\tv0.1.1";
 
 my(
 $blast,
@@ -69,7 +70,7 @@ GetOptions(
 	'subj'=>\$subj,
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
-
+print "\# $version\n";
 die "[ERROR] Blast output file required. See $0 -h for help.\n" if (!$blast);
 
 if (($list) && (!$subj)){ print "# Searching Queries\n";}
@@ -95,7 +96,8 @@ else{
 
 open (BLAST, $blast) || die "[ERROR]: $!\n";
 open (OUT, ">".$out) || die "[ERROR]: $!\n";
-print OUT "# Blast Output=$blast; \%ID=$setPer; aln_len=$setLen; e-value=$setEval; bitScore=$setScore; QueryCoverage=$printCov\%\n";
+print OUT "#Thresholds: Blast Output=$blast; \%ID=$setPer; aln_len=$setLen; e-value=$setEval; bitScore=$setScore; QueryCoverage=$printCov\%\n";
+print OUT "#Columns: Query\tSubject\tPercent_ID\tAln_Len\tMismatch\tGap\tQuery_Start\tQuery_Stop\tSubject_Start\tSubject_Stop\tE-Value\tBit_Score\n";
 while(my $line=<BLAST>){
 	next if $line=~ /^#/;
 	$line=~ s/\r//;

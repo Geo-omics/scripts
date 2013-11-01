@@ -104,7 +104,7 @@ use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
 #######################
 my($intlv, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $derep, $fasta, $DEBUG, $metaV, $amos, $LOG, $prefix);
 my $INS_SD= 13;
-my $version= "0.0.10";
+my $version= "assemble.pl\tv0.0.10";
 my $interval=10;
 my $scripts;
 my $minLen=1999;
@@ -137,7 +137,7 @@ GetOptions(
 #######################
 ## CHECKS
 #######################
-
+print "\# $version\n";
 ## Check if velvet module loaded ##
 my @tmp=`velveth 2>&1`; # velvet/1.1.07-MAX99-OPENMP
 &helpLoadingModules if ((scalar(@tmp)) < 2);
@@ -448,7 +448,7 @@ sub REAP{ ## Use this when you want to wait till the process ends before further
 			if (WIFEXITED($?) && $PIDs{$pid}){
 				`echo "Process ID: $pid\tFinished with status $?"`;
 #				$numPIDs-- ;
-				print "Process: ".$pid."\tStatus: ".$?."\nWaiting for ".$numPIDs." more processes...\n";
+				print "Process: ".$pid."\tStatus: ".$?."\nWaiting for ".scalar(keys %PIDs)." more processes...\n";
 				delete $PIDs{$pid};
 			}
 		}

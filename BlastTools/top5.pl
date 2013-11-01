@@ -16,7 +16,7 @@ GetOptions(
 	'b:s'=>\$in,
 	't:i'=>\$x,
 	'o|out:s'=>\$out,
-	'h'=> sub{system('perldoc', $0); exit;},
+	'h'=> sub{system("perldoc $0 \| cat"); exit;},
 );
 
 open (TB, $in) || die "[err] $in: $! \n";

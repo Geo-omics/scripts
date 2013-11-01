@@ -10,7 +10,7 @@
 
 =head3 Options
 
-	-i or list	[character]	list of all files you wish to compare, the seed should be the first one on the list
+	-i or list	[character]	list of all files you wish to compare, the seed/reference should be the first one on the list
 	-t or -file_type	[characters]	file type (prot or nucl) [Default = prot]
 	-p or -percent	[float]	Blast percent identity [Default = 50]
 	-len or -aln_len	[float]	alignment length coverage (0-1) [Default = 0.75] [aln_len/(min(subj_len,query_len))]
@@ -39,15 +39,15 @@ my $start=new Benchmark;
 
 ## Default Values ##
 my $list;
-my $per=50;
+my $setPer=50;
 my $aLen=0.75;
 my $eVal=-4;
 my $fType='prot';
 my $proc=7;
-my $version="basicHF.pl\tv0.1.3";
+my $version="basicHF.pl\tv0.1.5";
 GetOptions(
 	'i|input:s'=>\$list,
-	'p|percent:f'=>\$per,
+	'p|percent:i'=>\$setPer,
 	'len:f'=>\$aLen,
 	'e|evalue:f'=>\$eVal,
 	't|file_type:s'=>\$fType,
@@ -89,17 +89,17 @@ my $totalGenomes=@fileList;
 
 my %qLens=getLengths($seed);
 
-open(NAME, ">".$seed."P".$per."L".$aLen."E".$eVal."B121.names");
-open(NUM, ">".$seed."P".$per."L".$aLen."E".$eVal."B121.tsv");
+open(NAME, ">".$seed."P".$setPer."L".$aLen."E".$eVal."B121.names");
+open(NUM, ">".$seed."P".$setPer."L".$aLen."E".$eVal."B121.tsv");
 
 ## PARAMETERS ##
 print NAME "\#E-Value:\t".$eVal."\n";
-print NAME "\#\% ID:\t".$per."\n";
+print NAME "\#\% ID:\t".$setPer."\n";
 print NAME "\#Alignment Length Ratio:\t".$aLen."\n";
 print NAME "\#Ref\t";
 
 print NUM "\#E-Value:\t".$eVal."\n";
-print NUM "\#\% ID:\t".$per."\n";
+print NUM "\#\% ID:\t".$setPer."\n";
 print NUM "\#Alignment Length Ratio:\t".$aLen."\n";
 print NUM "\#Ref\t";
 
@@ -116,7 +116,7 @@ for (my $i=0; $i<$totalGenomes; $i++){
 	if ($subjSize>=1){
 		system ($blastType." -evalue 1e".$eVal." -outfmt 6 -num_threads $proc -query ".$seed." -db ". $edList[$i]." -out ".$blastOut);
 
-		my %qsHits=parseBlastOutput($blastOut, \%qLens, \%sLens, $per, $aLen);
+		my %qsHits=parseBlastOutput($blastOut, \%qLens, \%sLens, $setPer, $aLen);
 	
 		my %seen;
 		while(my ($k, $value)=each(%qsHits)){
@@ -167,7 +167,7 @@ system ("rm *.phr");
 system ("rm *.pin");
 system ("rm *.psq");
 system ("rm *_ed.faa");
-system ("rm *.$blastType");
+system ("rm -f *.$blastType");
 
 
 # Timing
