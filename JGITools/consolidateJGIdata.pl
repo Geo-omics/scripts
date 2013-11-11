@@ -9,7 +9,7 @@
 	-scripts	<STRING>	location of the script dependencies;	default=/geomicro/data1/COMMON/scripts/SeqTools
 	
 	extractSubSeq.pl - To extract genes from the contigs
-	length+gc.pl - To claculate the length and %GC of the contigs
+	length+gc.pl - To calculate the length and %GC of the contigs
 
 =head1 USAGE
 
@@ -24,7 +24,7 @@
 	-scripts	<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/SeqTools
 
 	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
+	-help	-h	<BOOLEAN>	This message.
 
 =head3 NOTE:
 
@@ -46,7 +46,7 @@ use Getopt::Long;
 use File::Spec;
 use POSIX ":sys_wait_h";
 
-my $version="0.1.3";
+my $version="0.1.5";
 my $DIR="./";
 my $outDir=$$;
 my $scripts;
@@ -59,7 +59,7 @@ GetOptions(
 	'lgc:s'=>\$tmpLGC,
 	'scripts:s'=>\$scripts,
 	'v|version'=>sub{print $version."\n"; exit;},
-	'h|help'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 
 print "# consolidateJGIdata.pl v$version\n";
@@ -127,35 +127,41 @@ else{
 
 # Aggregate data from different files.
 ## Locus Info ##
-my %COGS;
+my (%COGS, %seen);
 if(-e $cog){
 print "[COG] File found:\t".$cog."\n";
 open(COG, $cog) || die "[COG] $cog :\t$!";
 while(my $line=<COG>){
 	chomp $line;
 	my(@cogData)=split(/\t/, $line);
-	$COGS{$cogData[0]}=$cogData[1]."\t".$cogData[2]."\t"; #LocusID =  cog_id <TAB> %id
+	next if $seen{$cogData[0]};
+	$COGS{$cogData[0]}=$cogData[1]."\t".$cogData[2]."\t"; #LocusID =  cog_id <TAB> %id (get top hits only)
+	$seen{$cogData[0]}++;
 }
 close COG;
 }
 else{
 	warn "[COG] Couldn't find the \`cog\' file\n";
 }
+undef %seen;
 
-my %PFAM;
+my (%PFAM, %seen);
 if(-e $pfam){
 print "[PFAM] File found:\t".$pfam."\n";
-open(PFAM, $pfam) || die "[PFAM] $pfam :\t$!";
+open(PFAM, $pfam) || die "[PFAM] $pfam :\t$!"; # blast output
 while(my $line=<PFAM>){
 	chomp $line;
 	my(@pfamData)=split(/\t/, $line);
-	$PFAM{$pfamData[0]}=$pfamData[1]."\t"; # LocusID = pfam_id
+	next if $seen{$pfamData[0]};
+	$PFAM{$pfamData[0]}=$pfamData[1]."\t"; # LocusID = pfam_id (get top hits only)
+	$seen{$pfamData[0]}++;
 }
 close PFAM;
 }
 else{
 	warn "[PFAM] Couldn't find the \`pfam\' file\n";
 }
+undef %seen;
 
 my %TAXA;
 if(-e $phyloDist){

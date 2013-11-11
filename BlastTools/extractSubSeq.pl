@@ -49,7 +49,7 @@ my $setLen=0;
 my $setBS=0;
 my $setPid=0;
 my $out = $$."_subSeqs.fasta";
-my $version="0.2.2";
+my $version="extractSubSeqs.pl\tv0.2.3";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -66,9 +66,11 @@ GetOptions(
 	's|bitscore:i'=>\$setBS,
 	'top'=>\$topHitOnly,
 	'o|out:s'=>\$out,
-	'h|help'=> sub{system('perldoc', $0); exit;},
-	'v|version'=> sub{print "$0\t:\tv$version\n"; exit;},
+	'h|help'=> sub{print $version."\n"; system("perldoc $0 \| cat"); exit;},
+	'v|version'=> sub{print "# $version\n"; exit;},
 );
+
+print "# $version\n";
 
 my $tsv;
 if(! $isTabbedFile && ! $isBlastOut && ! $isGff){system('perldoc', $0); exit;}
