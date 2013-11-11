@@ -12,7 +12,8 @@ These instructions are for ESOM-based for binning: see http://databionic-esom.so
 
 1.	Generate input files.
 -------------------------
-* Use the `esomWrapper.pl` script to create the relevant input files for ESOM. In order to run this script, you'll need to have all your sequences(in fasta format) files with the same extension in the same folder. For example:
+* Although not necessary but we recommend adding some reference genomes based on your 16s/OTU analysis as 'controls'. The idea is that, if the ESOM worked, your reference genome should form a bin itself. You may do this by downloading genomes in fasta format from any public database, preferably a complete single sequence genome.
+* Use the `esomWrapper.pl` script to create the relevant input files for ESOM. In order to run this script, you'll need to have all your sequence(in fasta format) files with the same extension in the same folder. For example:
 	`perl esomWrapper.pl -path fasta_folder -ext fa`<br>
 	For more help and examples, type:<br>
 	`perl esomWrapper.pl -h`
