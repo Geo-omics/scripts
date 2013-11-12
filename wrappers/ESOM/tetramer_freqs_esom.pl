@@ -137,7 +137,8 @@ sub calc_tetra_freqs {
 	while (<INFILE>) {
     	chomp;
     	if ($_ =~ />(\S+)/) {
-		print  '.' if($counter++%10000 == 0);
+    	$counter++;
+		print  '.' if($counter % 100000 == 0);
 		my $next_id = $1;
 		get_tetra_freqs($id, $seq) if (length($seq) >= $min_length);
 		($id, $seq) = ($next_id, '');

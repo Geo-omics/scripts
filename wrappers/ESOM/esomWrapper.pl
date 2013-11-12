@@ -67,7 +67,7 @@ use File::Basename;
 #use POSIX ":sys_wait_h";
 
 my $scripts;
-my $version="0.2.5";
+my $version="esomWrapper.pl\tv0.2.6\t";
 my $path; # Fasta Folder path
 my $ext="fasta";
 my $prefix="esom";
@@ -95,10 +95,10 @@ GetOptions(
 	'train:s'=>\$train,
 	'info:s'=>\$info,
 	'scripts:s'=>\$scripts,
-	'h|help'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>sub{print "#".$version."\n"; system("perldoc $0 \| cat"); exit;},
 );
 
-print "## ESOM Wrapper version: $version ##\n";
+print "## $version ##\n";
 die "[ERROR: $0] Folder Path Required! See $0 -h for help on the usage" if !$path;
 my @files=<$path/*.$ext>;
 die "[ERROR] Can't find \"$path\"\nPlease check that the path exist or that you have sufficient privilages.\n" if (scalar(@files)==0);
