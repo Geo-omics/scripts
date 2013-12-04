@@ -153,7 +153,7 @@ esomWrapper.pl
 getClassFasta.pl
 tetramer_freqs_esom.pl
 addInfo2lrn.pl	-	Adds additional content to the lrn file.
-img_Bin_Classifier.pl -- Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
+img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
 
 wrappers/AntiSmash:
 parallel_antiSmash.pl	-	Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner. Requires "antiSmash v2.0.2" to be installed.
