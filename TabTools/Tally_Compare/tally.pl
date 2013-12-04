@@ -5,12 +5,14 @@ use Getopt::Long;
 my $in;
 my $master;
 my $out=$$.".out";
-my $bs;
+my $bs=0;
+my $printValues;
 GetOptions(
 	'i:s'=>\$in,
 	'm:s'=>\$master,
 	'o:s'=>\$out,
 	's:f'=>\$bs,
+	'values|value'=>\$printValues,
 );
 
 open(IN, $in)|| die "[Error] $in: $!\n";
@@ -22,7 +24,12 @@ while (my $line=<IN>){
 	$line=~ s/\r//g;
 
 	my @lineParts=split(/\t/, $line);
-	$seen{$lineParts[0]}++ if ($lineParts[-1] >= $bs);
+	if(! $printValues){
+		$seen{$lineParts[0]}++ if ($lineParts[-1] >= $bs);
+	}
+	else{
+		$seen{$lineParts[0]}=$lineParts[-1];
+	}
 }
 close IN;
 

@@ -10,8 +10,7 @@
 
 =head3 Options
 
-	-r	:	R script filename; default= process_id.r
-	-i	:	image file name; default= iProcess_id.png
+	-prefix	:	output R-script and image file name; default= Process_id.r and iProcess_id.png
 	-start	:	define a specific region in the reference genome
 	-stop	:	define a specific region in the reference genome; not required if stop is the end of the genome.
 	-p	:	min percent id; default= 0%
@@ -100,6 +99,7 @@ sub parseBlastOut{
 		$line=~ s/\r//;
 
 		my($thisQuery, $ref, $pid, $alnLen, $mm, $gaps, $qStart, $qEnd, $sStart, $sEnd, $eval, $bs)=split(/\t/, $line);
+		next if ($ref eq $thisQuery);
 		next if ($pid < $minPer);
 		next if ($bs < $minBS);
 		next if ($alnLen < $minLen);

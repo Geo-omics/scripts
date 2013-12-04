@@ -46,7 +46,7 @@ use Getopt::Long;
 use File::Spec;
 use POSIX ":sys_wait_h";
 
-my $version="0.1.5";
+my $version="consolidateJGIdata.pl v0.1.5";
 my $DIR="./";
 my $outDir=$$;
 my $scripts;
@@ -62,7 +62,7 @@ GetOptions(
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 
-print "# consolidateJGIdata.pl v$version\n";
+print "# $version\n";
 # Get all File names in the given directory
 unless ($DIR=~ m/\/$/){$DIR=$DIR."/";}
 my @FILES=<$DIR*>;
@@ -275,7 +275,7 @@ if (-e $contigMap){
 	foreach(keys %bins){
 		my $out=File::Spec->catfile($outDir, $_.".tsv");
 		open(OUT, ">".$out) || die "[OUT] $out :\t$!\n";
-		print OUT "# Bin\tIMG_Contig_Name\tOriginal_Contig_Name\tContig \%GC\tContig Length\tLocus_Tag\tIMG_Gene_ID\tGene_Start\tGene_Stop\tGene_Length\tHomolog_Gene_ID\tHomolog_Taxon_ID\tLineage \%ID\tLineage\tProduct\tSource\tCOG_ID\tCog \%ID\tPFAM_ID\tKO_Term\tKO \%ID\tEC_Number\n";
+		print OUT "# Bin\tIMG_Contig_Name\tOriginal_Contig_Name\tContig \%GC\tContig Length\tLocus_Tag\tIMG_Gene_ID\tGene_Type\tGene_Start\tGene_Stop\tGene_Length\tHomolog_Gene_ID\tHomolog_Taxon_ID\tLineage \%ID\tLineage\tProduct\tSource\tCOG_ID\tCog \%ID\tPFAM_ID\tKO_Term\tKO \%ID\tEC_Number\n";
 		close OUT;
 	}
 }

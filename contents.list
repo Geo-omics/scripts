@@ -65,6 +65,7 @@ uClustHomology.pl
 JGITools:
 consolidateJGIdata.pl
 extractGenomes.pl
+img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
 gff2tbl.pl	-	Read JGI's GFF3, Contigs and Gene_product files and produce a usable output in NCBI's ridiculous '.tbl' format.
 
 MapperTools:
@@ -147,11 +148,13 @@ limit2Length.pl
 
 wrappers/ESOM:
 esomCodonMod.pl
-#esomTrain.pl
+#esomTrain.pl	-	Not ready for prime time yet. Do not use.
 esomWrapper.pl
 getClassFasta.pl
 tetramer_freqs_esom.pl
+addInfo2lrn.pl	-	Adds additional content to the lrn file.
+img_Bin_Classifier.pl -- Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
 
 wrappers/AntiSmash:
 parallel_antiSmash.pl	-	Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner. Requires "antiSmash v2.0.2" to be installed.
-
+summarize_antiSmash.pl	-	Takes the antismash project directory as input and produces a tabular summary of gene clusters and smcogs in the form of counts and sequence names

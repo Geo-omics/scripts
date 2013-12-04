@@ -34,7 +34,7 @@ use File::Basename;
 my ($class, $names, $fasta);
 my $classNum=0;
 my $confidence=0;
-my $version="getClassFasta.pl\tv0.0.9";
+my $version="getClassFasta.pl\tv0.1.01";
 my ($no_conf, $unique_id);
 
 GetOptions(
@@ -117,6 +117,7 @@ unless ($no_conf){
 	Please refer to the $conf_out file for details about your recruited contigs\n" if ($confidence==0);
 	open (CONF,">".$conf_out) || die "ERROR: $conf_out\n".$!;
 	print CONF "# Min Conf: ".$confidence."\n";
+	print CONF "# Bin\tContig_Name\tConfidence\n";
 }
 
 $/= ">";
@@ -128,7 +129,7 @@ while (my $line = <FASTA>) {
 	if ($currentCls{$name}){
 		print OUT ">".$name."\n";
 		print OUT $seq."\n";
-		print CONF $name."\t".$currentCls{$name}."\n";
+		print CONF $classNum."\t".$name."\t".$currentCls{$name}."\n";
 	}
 }
 $/= "\n";

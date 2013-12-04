@@ -1,6 +1,7 @@
 #!/user/bin/perl
 use strict;
 use Getopt::Long;
+use File::Basename;
 
 my $ext="tally";
 my $out;
@@ -15,7 +16,7 @@ print OUT "#Transcripts\t";
 my %master;
 print @files." Files will be tallied...!\n";
 foreach my $f(@files){
-	my ($dbName, $etc)=split(/\_/, $f);
+	my $dbName=basename($f,"\.$ext"); #split(/\_/, $f);
 	print OUT $dbName."\t";
 	my $fh;
 	open($fh, $f) || die "[error] $f: $! \n";

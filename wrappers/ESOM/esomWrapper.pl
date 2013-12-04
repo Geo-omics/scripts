@@ -303,6 +303,7 @@ sub parseFasta{
 		print FASTA ">".$header."\n".$seq."\n";
 		print ANN $header."\t".$header."\t".$class."\n";
 	}
+	close IN;
 	$/="\n";
 	return $countSeqs;
 }

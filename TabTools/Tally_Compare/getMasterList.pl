@@ -5,7 +5,7 @@ use Getopt::Long;
 my $ext="out";
 my $out=$$.".list";
 my $col=1;
-my $bs=40;
+my $bs=0;
 GetOptions(
 	'e:s'=>\$ext,
 	'o:s'=>\$out,
