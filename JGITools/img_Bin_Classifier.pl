@@ -43,7 +43,7 @@
 use strict;
 use Getopt::Long;
 
-my ($IMG, $names, $cls, $map, $taxaSumm, $conf);
+my ($IMG, $names, $cls, $taxaSumm, $conf);
 my $top = 5;
 my $taxaSumm=$$.".bin.taxa";
 my $help;
@@ -66,10 +66,10 @@ GetOptions(
 );
 print "\# $version\n";
 
-my $rRNA=$taxaSumm.".rrna";
+my $RNA=$taxaSumm.".rrna";
 my %binIndex;
 if ($conf){
-	open(CONF, ">".$conf)||die $!;
+	open(CONF, "<".$conf)||die $!;
 	while(my $line=<CONF>){
 		chomp $line;
 		$line=strip($line);
@@ -91,7 +91,7 @@ while(my $line=<CONS>){
 	next if $line=~ /^#/;
 	
 	my (@data)=split(/\t/, $line);
-	my $rRNA=$data[7];
+	my $geneType=strip(lc($data[7]));
 	my $contig=strip(lc($data[2]));
 	my $bin;
 	if ($conf){
@@ -143,8 +143,8 @@ while(my $line=<CONS>){
 	$taxaData{$bin}{"Family"}{$family}++;
 	$taxaData{$bin}{"Genus"}{$genus}++;
 	$taxaData{$bin}{"Species"}{$species}++;
-	if ($geneType eq "rRNA"){
-		print RNA $bin."\t".$contig."\t".$taxa."\n";
+	if ($geneType eq "rrna"){
+		print RNA $bin."\t".$geneType."\t".$contig."\t".$taxa."\n";
 	}
 	$binSize{$bin}++;
 }
@@ -171,9 +171,9 @@ foreach my $bin(keys %printMatrix){
 		print SUMM $bin."\t".$binSize{$bin};
 		foreach my $t(@colOrder){
 			if($printMatrix{$bin}{$t}[$row]){
-				my $value=ucfirst($printMatrix{$bin}{$t}[$row]);
+				my $value=$printMatrix{$bin}{$t}[$row];
 				my $pid=sprintf("%.3f",(($taxaData{$bin}{$t}{$value}/$binSize{$bin}) * 100));
-				print SUMM "\t".$value."\t".$pid."\%";
+				print SUMM "\t".ucfirst($value)."\t".$pid."\%";
 			}
 			else{
 				print SUMM "\t\t";
