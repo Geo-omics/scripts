@@ -38,7 +38,7 @@ my $minLen=200;
 my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.0.3";
+my $version="gff2tbl.pl\tv0.0.9";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -55,14 +55,16 @@ print "\# $version\n";
 die("[FATAL] Required parameters not found. See '-h' for help on how to use the script.\n") if ((! $fasta)||(! $gff)||(! $tbl));
 
 my %gene_prod; # gene_prod{locusID - same as one in %annotation}= product name
+my %otherInfo;
 open(GP, "<".$gene_product); #|| die $!;
 while(my $line=<GP>){
 	chomp $line;
 	next if $line=~ /^#/;
 	next unless $line;
 
-	my($locusID, $product)=split(/\t/, $line);
+	my($locusID, $product, @extra)=split(/\t/, $line);
 	$gene_prod{$locusID}=$product;
+	$otherInfo{$locusID}=join("\t",@extra);
 }
 close GP;
 
@@ -110,6 +112,8 @@ while(my $line=<FASTA>){
 		$parent=$name;
 	}
 	
+	next unless ($annotation{$parent});
+	
 	&find_Ns($seq, $name);
 	
 	my $len=length($seq);
@@ -118,23 +122,25 @@ while(my $line=<FASTA>){
 	print TBL ">Feature ".$name."\n"; #"\tLength:".$len."\n";
 #	print ">Feature ".$name."\n"; #"\tLength:".$len."\n";
 #	exit
+	my $exonNum=0;
 	foreach my $locusID(keys %{$annotation{$parent}}){
 		my $original_contig_gene_start=$annotation{$parent}{$locusID}{"START"};
 		my $original_contig_gene_stop=$annotation{$parent}{$locusID}{"STOP"};
 		($original_contig_gene_start, $original_contig_gene_stop)=sort{$a<=>$b} ($original_contig_gene_start, $original_contig_gene_stop);
 
-		my ($incomplete, $gene_start, $gene_stop);
 		# Question: Is the feature incomplete?
-		
+		my $incomplete_5="";
+		my $incomplete_3="";
 		# Workaround: Does the feature start at position 1 **AND** is less than "$minGeneLen" (300 by default). Assume it's incomplete.
-		if (($original_contig_gene_start == 1) && (($original_contig_gene_stop - $original_contig_gene_stop) <= $minGeneLen)){ 
-			$incomplete="\<";
+		if (($original_contig_gene_start == 1) && (abs($original_contig_gene_stop - $original_contig_gene_start) <= $minGeneLen)){ 
+			$incomplete_5="\<";
 		}
 		# Workaround: Does the feature stop at the end of the scaffold **AND** is less than "$minGeneLen" (300 by default). Assume it's incomplete.
-		if(($original_contig_gene_stop == $len) && (($original_contig_gene_stop - $original_contig_gene_stop) <= $minGeneLen)){
-			$incomplete="\>";
+		if(($original_contig_gene_stop == $len) && (abs($original_contig_gene_stop - $original_contig_gene_start) <= $minGeneLen)){
+			$incomplete_3="\>";
 		}
 
+		my ($gene_start, $gene_stop);
 		if($annotation{$parent}{$locusID}{"STRAND"}=~ /^\-/){
 			($gene_start, $gene_stop)=($original_contig_gene_stop, $original_contig_gene_start);
 		}
@@ -142,9 +148,11 @@ while(my $line=<FASTA>){
 			($gene_start, $gene_stop)=($original_contig_gene_start, $original_contig_gene_stop);
 		}
 	
-		print TBL $incomplete;
-		print TBL $gene_start."\t".$gene_stop."\t".$annotation{$parent}{$locusID}{"TYPE"}."\n";
+		print TBL $incomplete_5.$gene_start."\t";
+		print TBL $incomplete_3.$gene_stop."\t";
+		print TBL $annotation{$parent}{$locusID}{"TYPE"}."\n";
 		print TBL "\t\t\t";
+		
 		if($gene_prod{$locusID}){
 			if($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
 				print TBL "product\t".$annotation{$parent}{$locusID}{"TYPE"}."-".$gene_prod{$locusID}."\n";
@@ -155,15 +163,30 @@ while(my $line=<FASTA>){
 			else{
 				print TBL "prot_desc\t".$gene_prod{$locusID}."\n";
 			}
+			
+			if ($otherInfo{$locusID}){
+				my @info=split(/\t/,$otherInfo{$locusID});
+				print TBL "\t\t\tnote\t".$_."\n" foreach @info;
+			}
 		}
 		elsif($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
 			print TBL "product\t".$annotation{$parent}{$locusID}{"TYPE"}."\n";
+		}
+		elsif($annotation{$parent}{$locusID}{"TYPE"} eq "exon"){
+			$exonNum++;
+			print TBL "number\t".$exonNum."\n";
+		}
+		elsif($annotation{$parent}{$locusID}{"TYPE"} eq "repeat_region"){
+			my($locus, $rpt_type, $unit, $fam)=split(/__/, $locusID);
+			print TBL "rpt_type\t".$rpt_type."\n";
+			print TBL "\t\t\trpt_unit\t".$unit."\n";
+			print TBL "\t\t\trpt_family\t".$fam."\n";
 		}
 		else{
 			my  ($ID, @desc)=split(/\_/, $locusID);
 			my $type=join("_", @desc);
 			print TBL "note\thypothetical protein\n";
-			print TBL "note\tlocus=".$locusID."\t".$type."\n";
+			print TBL "\t\t\tnote\tlocus='".$locusID."'\n";
 		}
 	}	
 }
@@ -187,7 +210,7 @@ sub parseGFF3{
     
     my(@attributes)=split(/\;/, $attribs);
 
-    my ($locusID, $ID, $Name,$Alias, $Parent, $Target, $Gap, $Derives_from, $Note, $Dbxref, $Onto, $repeat_type, $product);
+    my ($locusID, $ID, $Name,$Alias, $Parent, $Target, $Gap, $Derives_from, $Note, $Dbxref, $Onto, $repeat_type, $repeat_unit, $repeat_fam, $product);
     foreach my $att(@attributes){
 		$locusID=$1 if ($att=~/locus_tag\=(.*)/);
 		$ID= $1 if ($att=~/^ID\=(.*)/);
@@ -201,6 +224,8 @@ sub parseGFF3{
 		$Dbxref=$1 if ($att=~/Dbxref\=(.*)/);
 		$Onto=$1 if ($att=~/^Ontology.*\=(.*)/);
 		$repeat_type=$1 if ($att=~/^rpt_type\=(.*)/);
+		$repeat_fam=$1 if ($att=~/^rpt_family\=(.*)/);
+		$repeat_unit=$1 if ($att=~/^rpt_unit\=(.*)/);
 		$product=$1 if ($att=~/^product\=(.*)/);
     }
     if (! $locusID){
@@ -209,8 +234,11 @@ sub parseGFF3{
 				$locusID=$Parent."__exon"
 			}
 			elsif($type=~/repeat/){
-				$locusID=$ID."__".$repeat_type; # rpt_type=CRISPR;rpt_unit=13023..13055
-				$locusID.="[".$1."]" if ($att=~/rpt_unit\=(.*)/);
+				$locusID=$ID."__".
+				($repeat_type ? $repeat_type : "Unknown")."__".
+				($repeat_unit ? $repeat_unit : "Unknown")."__".
+				($repeat_fam ? $repeat_fam : "Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
+				#$locusID.="[".$1."]" if ($repeat_unit);
             }
             else{
 				$locusID=$ID."__".$type;
@@ -222,7 +250,7 @@ sub parseGFF3{
 	$annotation{$contig}{$locusID}{"TYPE"}=$type;
 	$annotation{$contig}{$locusID}{"LEN"}=($stop-$start);
 	$annotation{$contig}{$locusID}{"STRAND"}=$strand;
-	$gene_prod{$locusID}=$product;
+	$gene_prod{$locusID}=$product if ($product);
 #        return $locusID;
 }
 

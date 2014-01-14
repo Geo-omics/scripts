@@ -46,7 +46,7 @@ use Getopt::Long;
 use File::Spec;
 use POSIX ":sys_wait_h";
 
-my $version="consolidateJGIdata.pl v0.1.5";
+my $version="consolidateJGIdata.pl v0.1.6";
 my $DIR="./";
 my $outDir=$$;
 my $scripts;
@@ -268,7 +268,7 @@ print "[MAP] File found:\t".$contigMap."\n";
 	close MAP;
 }
 else{
-	warn "[MAP] Couldn't find the \`map\' file\n";
+	warn "[MAP] Couldn't find the \`map\' file. All bins will be named 'Unclassified'\n";
 }
 
 if (-e $contigMap){
@@ -295,7 +295,8 @@ while(my $line=<GFF>){
 	my $len=$end - $begin;
 	my $bin=$contig_name_map{$contigID}{"Bin"};
 	if ($type=~ /CDS/i){$numCDS{$bin}++}
-	my $printThis=$bin."\t".$contigID."\t".$contig_name_map{$contigID}{"Name"}."\t"; # Bin <TAB> IMG Contig Name <TAB> Original Contig Name
+	my $printThis= ($bin ? $bin : "Unclassified");
+	$printThis.="\t".$contigID."\t".$contig_name_map{$contigID}{"Name"}."\t"; # Bin <TAB> IMG Contig Name <TAB> Original Contig Name
 	$printThis.=$LGC{$contigID} ? $LGC{$contigID}{"GC"}."\t".$LGC{$contigID}{"Length"}."\t" : "\t\t"; # Contig %GC <TAB> Contig Length
 	$printThis.=$locusID."\t".$geneID."\t".$type."\t".$start."\t".$stop."\t"; # Locus_Tag <TAB> IMG_Gene_ID <TAB> Gene_Type <TAB> Gene_Start <TAB> Gene_Stop
 	$printThis.=$len."\t"; # Gene_Length
