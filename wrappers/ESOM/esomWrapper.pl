@@ -8,14 +8,12 @@
 	I will:
 		- Create an annotation file and a concatenated fasta for ESOM binning;
 		- Run the tetramer frequency script on the files;
-		- Train the ESOM (REQUIRED: ESOM v1.1)
 
 =head2 Dependencies
 
 	As such there are no external perl module dependancies but this script is a wrapper which formats inputs runs other scripts, they are:
-	tetramer_freqs_esom.pl - To calculate the tetramer frequencies of your contigs
-	esomCodonMod.pl - To remove the tetramers containing stop codons from the analysis
-	esomTrain.pl - To train the ESOM and generate the map. This step requires that ESOM version 1.1 be installed.
+	tetramer_freqs_esom.pl - To calculate the tetramer frequencies of your contigs [ REQUIRED ]
+	esomCodonMod.pl - To remove the tetramers containing stop codons from the analysis [ OPTIONAL ]
 
 =head1 USAGE
 
@@ -28,21 +26,13 @@
 	-prefix		[characters]	prefix filename for annotation and concatenated file; default=esom
 	-scripts	[characters]	location of all the wrapped scripts; default="current working directory" OR "/geomicro/data1/COMMON/scripts/wrappers/ESOM/"
 	-DIR or dir	[characters]	name of the output directory; default= ESOM
-	-train		[characters]	Normalize and Train the data for ESOM. Choose a Normalization strategy; [default = don't train]
-			possible choices:
-			'Scale' - to scale the dataset from 0-1;
-			'ZT'	- to Z-transform the dataset;
 			
 	-min	[integer]	Optional	default=2500; Minimal length (in nt) of input contig to be included in output
 	-max	[integer]	Optional	default=5000
 	Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
 			eg: in default settings, a sequence of 14 kb will be split into a 5 kb and a 9 kb fragment if window_size = 5 kb.
 			
-	-info		[characters]	Additional information about each contig to be added during the training.
-	File Format: Original_scaffold_name <TAB> Feature 1 <TAB> Feature 2 <TAB> ... <TAB> Feature N.
-	EXAMPLE: Original_scaffold_name	percent_GC	Coverage
-	
-	-no_mod	[BOOLEAN]	Don't use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
+	-mod	[BOOLEAN]	[Experimental Feature] Use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
 	-h	this page.
 
 =head3 Example 1: Required Options
@@ -51,7 +41,7 @@
 
 =head3 Example 2: Other Options
 
-	perl esomWrapper.pl -path . -ext fa -dir MyESOM -prefix esomOutput -min 2000 -max 5000 -train ZT -no_mod
+	perl esomWrapper.pl -path . -ext fa -dir MyESOM -prefix esomOutput -min 2000 -max 5000
 
 =head1 Suggestions/Corrections/Feedback/Beer
 
@@ -67,13 +57,13 @@ use File::Basename;
 #use POSIX ":sys_wait_h";
 
 my $scripts;
-my $version="esomWrapper.pl\tv0.2.6\t";
+my $version="esomWrapper.pl\tv0.2.9\t";
 my $path; # Fasta Folder path
 my $ext="fasta";
 my $prefix="esom";
 my $outDir="ESOM";
 my $kmer = 4;
-my $noMod;
+my $mod;
 my $train;
 my $info;
 my $min_length = 2500; #Minimal length (in nt) of input contig to be included in output
@@ -91,7 +81,7 @@ GetOptions(
 	'DIR|dir:s'=>\$outDir,
 	'min:i'=>\$min_length,
 	'max:i'=>\$window_size,
-	'no_mod'=>\$noMod,
+	'mod'=>\$mod,
 	'train:s'=>\$train,
 	'info:s'=>\$info,
 	'scripts:s'=>\$scripts,
@@ -178,11 +168,11 @@ system("perl $tetramerScript -f $concatenatedFasta -a $annotationFile -min $min_
 
 my $lrnfile ="Tetra_".$prefix."_".$min_length.".lrn";
 my $modLrnFile;
-unless($noMod){
+if($mod){
 	if(! -e $codonModScript){
 		warn "[WARNING:] $codonModScript not found. Please use the '-scripts' flag to specify the script's location\n";
 		warn "[WARNING:] The rest of the analysis will be done on the unmodified \*.lrn file.\n";
-		$noMod++;
+		$mod--;
 	}
 	else{
 		print "# Applying Codon Modification...\n";
@@ -208,6 +198,7 @@ while(my $line=<CLS>){
 
 system("mv $tmpCls $clsFile");
 
+=begin Training Commented
 print "# Let the Training begin...\n";
 my @dimensions=`grep "^>" $log`;
 my ($rows, $cols);
@@ -228,6 +219,7 @@ foreach(@dimensions){
 }
 my %PIDs;
 my $modLog="modTrain.log";
+
 if (-e $esomTrain){
 	if ($rows && $cols && $train){
 		if($noMod){
@@ -248,7 +240,7 @@ if (-e $esomTrain){
 else{
 	print LOG2 "esomTrain.pl not found. Please specify the location of the script using the '-scripts' flag or try running the esomTrain.pl script independently\n";
 }
-
+=cut
 
 #if (keys %PIDs){
 #	&REAP;
