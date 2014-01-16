@@ -38,7 +38,7 @@ my $numSeqs; # max number of seqs allowed in a file
 my $avgSize= 1000000;
 my $maxBases;
 my $overlap;
-my $version="0.1.3";
+my $version="0.1.7";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -160,7 +160,7 @@ sub chopFile{
 		elsif($fastq){
 			if ($b=~/^@(\S+)/){
 				$b=~ s/^@//;
-				$name="@".$b;
+				$name=$b;
 				$qName="+".$b;
 
 				$b=<FILE>;
@@ -173,7 +173,7 @@ sub chopFile{
 				$b= &trim($b);
 				$qual=$b;
 
-				$b=join("\n", $name,$seq,$qName,$qual);
+				$b=$name."\n".$seq."\n".$qName."\n".$qual."\n";
 			}
 			else{ 
 				die "ERROR: Script Borked! Get Sunit (sunitj [ AT ] umich [ DOT ] edu)\n";

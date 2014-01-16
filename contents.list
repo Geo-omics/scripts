@@ -64,8 +64,9 @@ uClustHomology.pl
 
 JGITools:
 consolidateJGIdata.pl
-extractGenomes.pl
+extractGenomes.pl	-	extract genomes from NCBI databases (nr/nt) using NCBI Taxon ID, curate and concatenate them to form your own customized database.
 img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
+getGFF.pl	-	Given a list of contig names extract GFF data.
 gff2tbl.pl	-	Read JGI's GFF3, Contigs and Gene_product files and produce a usable output in NCBI's ridiculous '.tbl' format.
 
 MapperTools:
@@ -80,7 +81,9 @@ extractContigReads.pl
 
 NCBITools:
 Ebot.Output.Extract.Gi.Title.Rev3.py	-	This script takes a NCBI genbank file, extracts the gi#, the study name, the journal it came from and the sequence and builds a tab delimitted output for each genbank entry.
+extractGenomes.pl	-	 extract genomes from NCBI databases (nr/nt) using NCBI Taxon ID, curate and concatenate them to form your own customized database.
 getFastaFromAccNos.pl
+getGFF.pl	-	Given a list of contig names extract GFF data.
 getGIAnnotation.sh
 getGiInfo.pl
 getGI.pl
