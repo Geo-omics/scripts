@@ -47,7 +47,7 @@ my ($IMG, $names, $cls, $conf, $useIMGName);
 my $top = 5;
 my $prefix=$$;
 my $help;
-my $version="img_Bin_Classifier.pl\tv0.0.9b";
+my $version="img_Bin_Classifier.pl\tv0.0.10b";
 my $vpid=30;
 my $bpid=50;
 my $other_pid=50;
@@ -132,7 +132,7 @@ while(my $line=<CONS>){
 		$taxaData{$bin}{"Family"}{"Unknown"}++;
 		$taxaData{$bin}{"Genus"}{"Unknown"}++;
 		$taxaData{$bin}{"Species"}{"Unknown"}++;
-		$binData{$bin}{"Len"}+=$contigLen;
+		$binData{$bin}{"Len"}+=$contigLen unless $seen{$contig};
 		$binSize{$bin}++;
 		$no_taxa{$geneType}++;
 		next;
@@ -166,7 +166,7 @@ while(my $line=<CONS>){
 	$taxaData{$bin}{"Family"}{$family}++;
 	$taxaData{$bin}{"Genus"}{$genus}++;
 	$taxaData{$bin}{"Species"}{$species}++;
-	$binData{$bin}{"Len"}+=$contigLen;
+	$binData{$bin}{"Len"}+=$contigLen unless $seen{$contig};
 	$binSize{$bin}++;
 }
 close CONS;

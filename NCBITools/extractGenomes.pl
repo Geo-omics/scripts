@@ -135,14 +135,12 @@ my ($fType, $ref, $giList, $file, $tmpExt);
 if (lc($db) eq "nr"){
 	$file="gi_taxid_prot.dmp";
 	$ref=File::Spec->catfile($dmp_path, $file);
-	$giList=$uName."_".$$."_giListP.tmp";
 	$fType='T';
 	$tmpExt='fap';
 }
 elsif (lc($db) eq "nt"){
 	$file="gi_taxid_nucl.dmp";
 	$ref=File::Spec->catfile($dmp_path, $file);
-	$giList=$uName."_".$$."_giListN.tmp";
 	$fType='F';
 	$tmpExt='fan';
 }
@@ -152,11 +150,19 @@ else{
 	exit;
 }
 
+if (-e $ref){
+	print "Taxa Dump file found: $ref\n"; 
+}
+else{
+	die "Could not locate Taxa Dump file here: $ref\n";
+}
+
 my @allGenomes;
 mkdir $resultDB unless (-d $resultDB);
 
 foreach my $k(keys %idList){
 	print "Extracting Taxon ID: $k\n";
+	my $giList=$k."_".$$.".gi";
 	open (TAXGI, ">".$giList);
 	open (INDEX, $ref) || die "[err] $ref:\n$!\n";
 
@@ -172,18 +178,16 @@ foreach my $k(keys %idList){
 	my $customDB=$k.".".$tmpExt;
 	chomp($customDB);
 	system("blastdbcmd -db ".$db." -entry_batch ".$giList." -out ".$customDB);
-	unlink($giList);
+#	unlink($giList);
 		
 	print "Checking for Duplicates in the DB...\n";
 	print "\tNumber of Sequences before Curation: ";
 	system ("grep -c \"\^\>\" ".$customDB);
-	print "\n";
+#	print "\n";
 #	my $curated=curate($customDB, $db, $redun, $tmpExt);
-	
 	print "Done!\n";
-	print "Removing temporary files...\n";
 	
-
+	print "Removing temporary files...\n\n";
 	system(" mv ".$customDB." ./".$resultDB."/");
 	system(" mv reduSeqs_".$customDB.".red ./".$resultDB."/") unless (lc($redun) eq 'n');
 	unlink ($customDB);

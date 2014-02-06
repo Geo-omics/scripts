@@ -54,7 +54,7 @@ while (my $line=<TMPR>){
 
 	if ($hasGItags){
 		my ($giTag, $giNum, @etc)=split(/\|/, $line);
-		print OUT ">".$line."\n" unless ($seen{$giNum});
+		print OUT ">".$line unless ($seen{$giNum});
 		$seen{$giNum}++;
 	}
 	else{

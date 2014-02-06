@@ -38,7 +38,7 @@ my $minLen=200;
 my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.0.9";
+my $version="gff2tbl.pl\tv0.1.1";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -157,11 +157,11 @@ while(my $line=<FASTA>){
 			if($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
 				print TBL "product\t".$annotation{$parent}{$locusID}{"TYPE"}."-".$gene_prod{$locusID}."\n";
 			}
-			elsif($gene_prod{$locusID}=~ /hypothetical/i){
-				print TBL "note\t".$gene_prod{$locusID}."\n";
-			}
+			#elsif($gene_prod{$locusID}=~ /hypothetical/i){
+			#	print TBL "product\t".$gene_prod{$locusID}."\n";
+			#}
 			else{
-				print TBL "prot_desc\t".$gene_prod{$locusID}."\n";
+				print TBL "product\t".$gene_prod{$locusID}."\n";
 			}
 			
 			if ($otherInfo{$locusID}){
@@ -250,7 +250,7 @@ sub parseGFF3{
 	$annotation{$contig}{$locusID}{"TYPE"}=$type;
 	$annotation{$contig}{$locusID}{"LEN"}=($stop-$start);
 	$annotation{$contig}{$locusID}{"STRAND"}=$strand;
-	$gene_prod{$locusID}=$product if ($product);
+	$gene_prod{$locusID}=$product unless ($gene_prod{$locusID});
 #        return $locusID;
 }
 

@@ -19,6 +19,7 @@ interleave.pl	-	Take the forward(1) and reverse(2) fasta/fastq files and arrange
 kmerFreq.pl		-	Calculate any kmer frequency from the given fasta
 length+GC.pl	-	Calculate the length and  GC content from the fasta file.
 limit2Length.pl	-	Remove sequences from a fasta file that do not pass the length threshold set by the user. Print length distribution to the screen
+separateInterleaved.pl	-       Separate interleaved files.
 usageStats.pl	-	Monitor a given process and email report when process finishes
 
 BamTools:
@@ -68,6 +69,7 @@ extractGenomes.pl	-	extract genomes from NCBI databases (nr/nt) using NCBI Taxon
 img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
 getGFF.pl	-	Given a list of contig names extract GFF data.
 gff2tbl.pl	-	Read JGI's GFF3, Contigs and Gene_product files and produce a usable output in NCBI's ridiculous '.tbl' format.
+separateInterleaved.pl	-       Separate interleaved files.
 
 MapperTools:
 getQueryList.pl
@@ -120,6 +122,7 @@ mapper.pl
 parseFastq.pl
 renameHeaders.pl
 sangerSeqParser.pl
+separateInterleaved.pl	-	Separate interleaved files.
 tetramer_freqs_esom.pl
 toPhylipAndBack.pl
 triage.pl
