@@ -22,7 +22,6 @@
 
 use strict;
 use Getopt::Long;
-use Pod::Usage;
 use File::Basename;
 
 my $help;
