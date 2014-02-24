@@ -20,6 +20,8 @@
 	-proc	<INTEGER>	Number of processors. default=30
 	-ppr	<INTEGER>	Processors per run. default=2
 	-len	<INTEGER>	Only run antismash on sequences greater than this value; default=1000
+	-pfam	<BOOLEAN>	perform pfam analysis as well
+	-pfamdir	<CHAR>	folder to pfamA database provided by Antismash.
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -45,16 +47,19 @@ use File::Copy;
 
 my $help;
 my $version="parallel_antiSmash.pl\tv0.1.0";
-my $fasta;
+my ($fasta, $pfam);
 my $procs=30;
 my $ppr=2;
 my $minLen=1000;
+my $pfamdir="/opt/packages/AntiSmash/antismash/generic_modules/fullhmmer/";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'p|procs|proc:i'=>\$procs,
 	'l|len:i'=>\$minLen,
 	'ppr|c:i'=>\$ppr,
+	'pfam'=>\$pfam,
+	'pfamdir:s'=>\$pfamdir,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
@@ -93,7 +98,12 @@ while(my $line=<FASTA>){
 	close $FH;
 
 	# Run antismash on new file
-	my $pid= &run("run_antismash -c $ppr --statusfile $i.status --input-type nucl --smcogs --clusterblast --outputfolder $i $singleFasta");
+	my $addPFam
+	if($pfam){
+		$addPFam="--full-hmmer --pfamdir $pfamdir ";
+		die "# [FATAL] Could not find directory $pfamdir\n# Please check to see if it exists or that you have proper permissions\n" if (! -d $pfamdir);
+	}
+	my $pid= &run("run_antismash -c $ppr --statusfile $i.status --input-type nucl --smcogs --clusterblast ".($pfam ? $addPFam : "" )."--outputfolder $i $singleFasta");
 	print "[$pid] Starting $singleFasta...\n";
 	$PIDs{$pid}++;
 	$files{$pid}=$singleFasta;
