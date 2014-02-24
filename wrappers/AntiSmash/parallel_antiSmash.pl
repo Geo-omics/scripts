@@ -98,7 +98,7 @@ while(my $line=<FASTA>){
 	close $FH;
 
 	# Run antismash on new file
-	my $addPFam
+	my $addPFam;
 	if($pfam){
 		$addPFam="--full-hmmer --pfamdir $pfamdir ";
 		die "# [FATAL] Could not find directory $pfamdir\n# Please check to see if it exists or that you have proper permissions\n" if (! -d $pfamdir);
