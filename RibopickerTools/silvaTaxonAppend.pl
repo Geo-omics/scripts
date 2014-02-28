@@ -7,15 +7,15 @@
 =head1 USAGE
 
 	# For Blast outpts
-	perl silvaTaxonAppend.pl -db <Silva Fasta File used for your data> -blast <blast output> -out <output filename>
+	perl silvaTaxonAppend.pl -blast <blast output> -out <output filename>
 	OR
 	# For Mapper files
-	perl silvaTaxonAppend.pl -db <Silva Fasta File used for your data> -mapper <mapper output> -out <output filename>
+	perl silvaTaxonAppend.pl -mapper <mapper output> -out <output filename>
 
 =head2 Options
 
 	-db	[characters]	Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
-						Default: /geomicro/data1/COMMON/publicDB/silva/release_111/SSURef_111_NR_tax_silva.fasta (SSU version 111)
+						Default: "ssu115" with location set as: /geomicro/data1/COMMON/publicDB/silva/release_115/SSURef_NR99_tax_silva.fasta (SSU version 115)
 	-blast	[characters]	Blast output performed against the fasta file.
 	-mapper	[characters]	mapper.pl output performed on the blast output.
 	-out	[characters]	output file
@@ -40,7 +40,7 @@ my %db=(
 	"ssu115"=>"/geomicro/data1/COMMON/publicDB/silva/release_115/SSURef_NR99_tax_silva.fasta",
 );
 
-my $version="silvaTaxonAppend.pl\tv0.0.3";
+my $version="silvaTaxonAppend.pl\tv0.0.4";
 GetOptions(
 	'db=s'=>\$fasta,
 	'blast:s'=>\$isBlast,

@@ -6,11 +6,11 @@
 
 =head1 USAGE
 
-	perl summarize_antiSmash.pl
+	perl summarize_antiSmash.pl -dir project_folder
 
 =head2 Options
 
-
+	-dir	<CHAR>	path to the project folder with all the Antismash outputs
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -23,7 +23,7 @@
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head 1 Disclaimer
+=head1 Disclaimer
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
@@ -69,7 +69,7 @@ my(@clusterBlastFiles, $Overview_geneCluster, $Overview_smcogs, @nrpspks);
 foreach my $file(@content){
 	if($file=~ m#clusterblast/cluster#i){
 		push(@clusterBlastFiles,$file);
-#		print $file."\n";
+		print $file."\n";
 	}
 	elsif($file=~ m#Overview.geneclusters#i){
 		$Overview_geneCluster=$file;
@@ -81,7 +81,7 @@ foreach my $file(@content){
 	}
 	elsif($file=~ m#nrpspks_predictions_txt/(.*fasta)#){
 		push(@nrpspks, $file);
-#		print $file."\n";
+		print $file."\n";
 	}
 }
 

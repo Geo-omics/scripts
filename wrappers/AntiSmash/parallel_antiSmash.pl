@@ -46,7 +46,7 @@ use POSIX ":sys_wait_h"; # qw(:signal_h :errno_h :sys_wait_h);
 use File::Copy;
 
 my $help;
-my $version="parallel_antiSmash.pl\tv0.1.0";
+my $version="parallel_antiSmash.pl\tv0.1.1";
 my ($fasta, $pfam);
 my $procs=30;
 my $ppr=2;
