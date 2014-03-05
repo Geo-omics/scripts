@@ -34,7 +34,7 @@ use Getopt::Long;
 use File::Find;
 
 my $help;
-my $version="summarize_antiSmash.pl\tv0.0.1b";
+my $version="summarize_antiSmash.pl\tv0.0.2b";
 my($DIR, $prefix);
 GetOptions(
 	'dir:s'=>\$DIR,
@@ -44,12 +44,12 @@ GetOptions(
 print "\# $version\n";
 
 # Get all File names in the given directory
-unless ($DIR=~ m/\/$/){
-	$prefix=$DIR;
+$prefix=$DIR;
+if ($DIR!~ m/\/$/){
 	$DIR=$DIR."/";
 }
 else{
-	$prefix=$DIR;
+	$prefix=~ s/\/$//;
 }
 
 # Get output names.
@@ -64,27 +64,34 @@ die "[ERROR] Can't find \"$DIR\"\nPlease check that the path exist or that you h
 my @content;
 find(\&wanted, $DIR);
 
-print "# Files found:\n";
+print "# Files found:\t";
+my $numberOfFiles=0;
 my(@clusterBlastFiles, $Overview_geneCluster, $Overview_smcogs, @nrpspks);
 foreach my $file(@content){
 	if($file=~ m#clusterblast/cluster#i){
 		push(@clusterBlastFiles,$file);
-		print $file."\n";
+		$numberOfFiles++;
+#		print $file."\n";
 	}
 	elsif($file=~ m#Overview.geneclusters#i){
 		$Overview_geneCluster=$file;
-		print $file."\n";
+		$numberOfFiles++;
+#		print $file."\n";
 	}
 	elsif($file=~ m#Overview.smcogs.txt#i){
 		$Overview_smcogs=$file;
-		print $file."\n";
+		$numberOfFiles++;
+#		print $file."\n";
 	}
 	elsif($file=~ m#nrpspks_predictions_txt/(.*fasta)#){
 		push(@nrpspks, $file);
-		print $file."\n";
+		$numberOfFiles++;
+#		print $file."\n";
 	}
 }
+print $numberOfFiles."\n";
 
+print "Reading Gene Cluster Overview file...\t";
 open(OGC, "<".$Overview_geneCluster) || die $!;
 my (%GCS, %num_name);
 my $num="";
@@ -103,8 +110,9 @@ while(my $line=<OGC>){
 	$num_name{$num}=$name;
 }
 close OGC;
+print "done\n";
 
-
+print "Summarizing Gene Cluster Overview file...\t";
 open(GCS, ">".$GeneClustSummary) || die $!;
 open(GCSeq, ">".$GeneClustSeqs) || die $!;
 foreach my $d(keys %GCS){
@@ -117,7 +125,9 @@ foreach my $d(keys %GCS){
 }
 close GCS;
 close GCSeq;
+print "done\n";
 
+print "Reading smCOG Overview file...\t";
 open(OSM, "<".$Overview_smcogs)||die $!;
 my $currentSeqNum=0;
 my %SMCOGS;
@@ -140,7 +150,9 @@ while(my $line=<OSM>){
 	}
 }
 close OSM;
+print "done\n";
 
+print "Summarizing smCOG Overview file...\t";
 open(SS, ">".$smcogSummary) || die $!;
 open(SSeq, ">".$smcogSeqs) || die $!;
 foreach my $s(keys %SMCOGS){
@@ -155,6 +167,7 @@ foreach my $s(keys %SMCOGS){
 }
 close SS;
 close SSeq;
+print "done\n";
 
 exit 0;
 sub wanted{

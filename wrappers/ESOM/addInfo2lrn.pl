@@ -14,6 +14,10 @@
 	-lrn	<CHAR>	LRN file created from the ESOM wrapper script.
 	-names	<CHAR>	NAMES file created from the ESOM wrapper script.
 	-out	<CHAR>	output file in the *.lrn format with the additional columns.
+
+	-map	<CHAR>	If your contig/scaffold names were changed at some point such that the coverage names don;t match your scaffold names anymore, create a file in the format:
+			scaffold_name_asIn_Coverage <TAB> scaffold_name_asIn_ESOM_input_fasta
+
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -36,9 +40,10 @@ use strict;
 use Getopt::Long;
 
 my $help;
-my $version="addInfo2lrn.pl\tv0.0.3";
-my ($info, $lrn, $names, $out);
+my $version="addInfo2lrn.pl\tv0.0.4";
+my ($info, $lrn, $names, $out, $map);
 GetOptions(
+	'map:s'=>\$map,
 	'info:s'=>\$info,
 	'lrn:s'=>\$lrn,
 	'names:s'=>\$names,
@@ -47,6 +52,21 @@ GetOptions(
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 print "\# $version\n";
+
+my %alias;
+if($map){
+	open(MAP, "<".$map)|| die $!;
+	while(my $line=<MAP>){
+		next if ($line=~ /#/);
+		chomp $line;
+		next unless $line;
+
+		my($original, $JGI)=split(/\t/, $line);
+
+		$alias{uc($original)}=$JGI;
+	}
+	close MAP;
+}
 
 open(INFO, "<".$info) || die $!;
 my (%INFO,@newHeaders);
@@ -64,6 +84,8 @@ while(my $line=<INFO>){
 			push(@newHeaders, "Feature".$i);
 		}
 	}
+	
+	$name=$alias{uc($name)} if ($map);
 
 	$INFO{uc($name)}=join("\t", @data);
 }

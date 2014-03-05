@@ -2,6 +2,9 @@
 General scripts used in the lab. Almost all of them are in core Perl/Python, i.e require no modules that don't already come with a Perl/Python installation. These scripts are currently in use by the Lab, so expect full support. Please refer to **contents.list** to find descriptions and location of scripts.<br>
 Please do let us know if you find any bugs or easier/quicker/more elegant solutions.<br>
 
+This material is based upon work supported by the National Science Foundation under Grant Number EAR-1035955.<br>
+Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.<br>
+
 ## Coming Up ...
 1. Galaxy integeration.
 2. Galaxy Workflows.

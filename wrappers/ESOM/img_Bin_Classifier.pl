@@ -18,7 +18,7 @@
 	-bact    <INT>	Value between [0-100]	Minimum percent id for a bacterial taxa; [default=50]
 	-other    <INT>	Value between [0-100]	Minimum percent id for any other taxa; [default=50]
 	-min_conf    <FLOAT>	Value between [0-1]	Minimum confidence value for a contig/scaffold to be considered a part of the bin; [default=0.6]
-	-img_names	<CHAR>	Use IMG contig names. If your conf file contains IMG assigned contig names
+	-img_names	<BOOLEAN>	Use IMG contig names. If your conf file contains IMG assigned contig names
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -47,7 +47,7 @@ my ($IMG, $names, $cls, $conf, $useIMGName);
 my $top = 5;
 my $prefix=$$;
 my $help;
-my $version="img_Bin_Classifier.pl\tv0.0.10b";
+my $version="img_Bin_Classifier.pl\tv0.0.11b";
 my $vpid=30;
 my $bpid=50;
 my $other_pid=50;
