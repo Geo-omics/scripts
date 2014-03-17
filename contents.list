@@ -36,6 +36,7 @@ firefox_already_running.sh	-	Helps fight that pesky 'firefox already running' er
 BlastTools:
 basicHF.pl
 batchBlast.pl	-	Run multiple Blasts at once in an "embarassingly" parallel manner
+blastDensityPlot.pl	-	Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
 extract_Blast_Hits_Of_Interest.pl
 extractSubSeq.pl
 fragRec.pl
