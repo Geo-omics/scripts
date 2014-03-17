@@ -49,7 +49,7 @@ my %COGS;
 my($list, $tsv, $imgName, $col, $more, $out, $myCOGS);
 my $prefix=$$;
 my $help;
-my $version="measureCompleteness.pl\tv0.1.1";
+my $version="measureCompleteness.pl\tv0.1.2";
 GetOptions(
 	'l|list:s'=>\$list,
 	'p|o|prefix:s'=>\$prefix,
@@ -82,9 +82,12 @@ if ($myCOGS){
 		chomp $line;
 		next unless $line;
 		
-		my($cog, $desc)=split(/\t/, $line);
-		$desc="Description not provided" if (! $desc);
+		my($cog, @d)=split(/\t/, $line);
+		my $desc=join(" ", @d);
+		$desc="Description not provided" if (scalar(@d) == 0);
+		print "COG:$cog\tDESC:$desc\n";
 		$COGS{uc($cog)}=$desc;
+		exit;
 	}
 	close COGS;
 }
