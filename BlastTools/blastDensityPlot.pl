@@ -48,7 +48,8 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 
-my($blast, $ext, $prefix);
+my($blast, $prefix);
+my $ext="blastn";
 my($perc,$bs,$aln,$eval, $scaled, $keep_tmp);
 my $help;
 my $version="blastDensityPlot.pl\tv0.1.0";

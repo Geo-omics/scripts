@@ -4,12 +4,8 @@ Please do let us know if you find any bugs or easier/quicker/more elegant soluti
 <br>
 This material is based upon work supported by the **National Science Foundation** under Grant Number **EAR-1035955**.<br>
 
-## Coming Up ...
-1. Galaxy integeration.
-2. Galaxy Workflows.
-
 ## Questions/Comments/Beers
-* [Sunit Jain](http://www.sunitjain.com "Sunit's Homepage"), sunitj [AT] umich [DOT] edu (Perl, Bash)
+* [Sunit Jain](http://www.sunitjain.com "Sunit's Homepage"), sunitj [AT] umich [DOT] edu (Perl, R, Bash)
 * Daniel Marcus, dnmarc [AT] umich [DOT] edu (Python, Bash)
 
 ## Principal Investigator
@@ -21,8 +17,7 @@ This material is based upon work supported by the **National Science Foundation*
 All the scripts in the repository here are licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
 ## Disclaimer
-
-Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the **National Science Foundation**.<br>
-All the scripts in the repository here are distributed in the hope that they will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the **National Science Foundation**.<br>
+* All the scripts in the repository here are distributed in the hope that they will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ***
