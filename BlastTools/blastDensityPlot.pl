@@ -6,7 +6,8 @@
 	
 =head2 NOTE
 
-	* Requires R with library ggplot2
+	* Requires Rscript
+	* Requires R package 'ggplot2'
 	* Recommended that the blast outputs only be top hits. (Use "top5.pl")
 
 =head1 USAGE
@@ -25,6 +26,7 @@
 	-bs			<BOOLEAN>	Use Bit Scores
 	-scaled		<BOOLEAN>	Scale the graphs [0,1], such that all the peaks have the same height.
 	-tmp		<BOOLEAN>	Keep intermediate files. Deletes the r-script and temporary output unless this flag is provided.
+	-verbose	<BOOLEAN>	Get R log file
 	
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
@@ -50,9 +52,9 @@ use File::Basename;
 
 my($blast, $prefix);
 my $ext="blastn";
-my($perc,$bs,$aln,$eval, $scaled, $keep_tmp);
+my($perc,$bs,$aln,$eval, $scaled, $keep_tmp, $verbose);
 my $help;
-my $version="blastDensityPlot.pl\tv0.1.0";
+my $version="blastDensityPlot.pl\tv0.1.1";
 GetOptions(
 	'b|blast:s'=>\$blast,
 	'e|ext:s'=>\$ext,
@@ -64,6 +66,7 @@ GetOptions(
 	'aln'=>\$aln,
 	'scaled'=>\$scaled,
 	'tmp'=>\$keep_tmp,
+	'verbose'=>\$verbose,
 	
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
@@ -106,36 +109,34 @@ foreach my $file(@files){
 close OUT;
 
 &plot;
+exit 0;
 
 sub plot{
-	my $rScript=$prefix.".r";
 	my $pdf=$prefix.".pdf";
-	my ($script, $ggplot_cmd);	
+	my $ggplot_cmd;
 	if($scaled){
 		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=Samples, y=..scaled..), size=1) + stat_density(position=\"identity\", fill=NA) + theme_bw()";
 	}
 	else{
 		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=Samples)) + stat_density(position=\"identity\", fill=NA) + theme_bw()";
 	}
-	$script.=<<EOF;
-library(ggplot2)	
-myTable=read.table(\"$table\", header = TRUE, row.names=NULL)
-pdf(\"$pdf\", paper="a4r")
-$ggplot_cmd
-dev.off()
-EOF
 
-	#write and execute R script
-	open(RFILE, ">".$rScript)|| die "[ERROR] $!\n";
-	print RFILE $script;
-	close RFILE;
-	print "# Starting R...\t";
-	system("R --no-save < $rScript > /dev/null");
+	#Create command line Rscript
+	print "# Creating the density plot...\t";
+	my $script="-e 'library(ggplot2)' -e 'myTable=read.table(\"$table\", header = TRUE, row.names=NULL)' -e 'pdf(\"$pdf\", paper=\"a4r\")' -e '$ggplot_cmd' -e 'dev.off()'";
+	if ($verbose){
+		$script.=" &> ".$prefix.".log";
+	}
+	else{
+		$script.=" &> /dev/null";
+	}
+	
+	# Execute Rscript
+	system("Rscript ".$script);
 	print "DONE!\n";
 	
 	# Remove intermediate files.
 	unless($keep_tmp){
-		unlink $rScript;
 		unlink $table;
 	}
 }
