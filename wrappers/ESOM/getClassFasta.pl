@@ -6,7 +6,7 @@
 
 =head1 Usage
 
-	perl getClassFasta.pl -cls <CLASS File> -names <NAMES File> -fasta <Split FASTA File> -num <CLASS NUMBER>
+	perl getClassFasta.pl -cls <CLASS File> -names <NAMES File> -fasta <esom FASTA File> -num <CLASS NUMBER>
 
 =head2 Options
 
@@ -34,7 +34,7 @@ use File::Basename;
 my ($class, $names, $fasta);
 my $classNum=0;
 my $confidence=0;
-my $version="getClassFasta.pl\tv0.1.01";
+my $version="getClassFasta.pl\tv0.1.2";
 my ($no_conf, $unique_id);
 
 GetOptions(

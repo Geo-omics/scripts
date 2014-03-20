@@ -156,6 +156,7 @@ interleave.pl
 limit2Length.pl
 
 wrappers/ESOM:
+changeClasses.pl	-	Edit the *.cls file to change the class numbers for a given list of contig names.
 esomCodonMod.pl
 #esomTrain.pl	-	Not ready for prime time yet. Do not use.
 esomWrapper.pl
