@@ -6,7 +6,7 @@
 
 =head1 USAGE
 
-	perl changeClasses.pl -cls esom.cls -names esom.names -num 8 -list contigs.list
+	perl changeClasses.pl -cls esom.cls -names esom.names -list contigs.list -o output.cls
 
 =head2 Options
 
@@ -39,7 +39,7 @@ use File::Basename;
 
 my($cls, $names, $list, $tag, $out);
 my $help;
-my $version="changeClasses.pl\tv0.1.0";
+my $version="changeClasses.pl\tv0.1.1";
 GetOptions(
 	'c|cls:s'=>\$cls,
 	'n|names:s'=>\$names,
