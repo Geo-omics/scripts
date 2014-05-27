@@ -6,7 +6,7 @@ top5.pl -- This program gets the top 5 hits for each query in a blast tabular ou
 
 =head1 USAGE
 
-perl top5.pl -b <blast output> -t <top X hits; default: 5> -o <output_File_Name>
+	perl top5.pl -b <blast output> -t <top X hits; default: 5> -o <output_File_Name>
 	
 =head2 Example
 
@@ -14,13 +14,13 @@ perl top5.pl -b sample.blastn -o sample_topHits.blastn -t 1
 
 =head2 Options
 
-	b	<CHAR>	Blast output in tabular (-outfmt 6/7 OR -m 8/9). [REQUIRED]
-    t	<INT>	# of top hits. [default = 5 ]
-    o	<CHAR>	output file; same format as blast file
-	no_self	<BOOLEAN>	remove self hits. helpful in a self blast.
-
-    -version -v	<BOOLEAN>	version of the current script
-    -help	-h	<BOOLEAN>	This message.
+-b	<CHAR>	Blast output in tabular (-outfmt 6/7 OR -m 8/9). [REQUIRED]
+-t	<INT>	# of top hits. [default = 5 ]
+-o	<CHAR>	output file; same format as blast file
+-no_self	<BOOLEAN>	remove self hits. helpful in a self blast.
+	
+-version -v	<BOOLEAN>	version of the current script
+-help	-h	<BOOLEAN>	This message.
 
 =head1 Author
 
@@ -49,7 +49,7 @@ GetOptions(
 	'b:s'=>\$in,
 	't:i'=>\$x,
 	'o|out:s'=>\$out,
-	'no_self'=\$no_self,
+	'no_self'=>\$no_self,
 	'h'=> sub{system("perldoc $0 \| cat"); exit;},
 );
 
