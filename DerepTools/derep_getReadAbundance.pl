@@ -3,7 +3,7 @@
 use strict;
 use Getopt::Long;
 
-my ($bam, $stats, $fwdClust, $revClust);
+my ($list,$bam, $stats, $fwdClust, $revClust);
 my $out=$$.".abundance";
 
 GetOptions(

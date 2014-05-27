@@ -100,8 +100,7 @@ foreach my $file(@files){
 		
 		my($query, $subj, @data)=split(/\t/, $line);
 		
-		my $column=$data[$col];
-		print OUT $subj."__".$name2print."\t".$column."\t".$name2print."\n";
+		print OUT $subj."__".$name2print."\t".$data[$col]."\t".$name2print."\n";
 	}
 	close $FH;
 	print "DONE!\n";

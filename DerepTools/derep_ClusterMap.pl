@@ -34,14 +34,16 @@ my $log;
 my $mapped;
 my $clustF;
 my $out=$$.".derep.map";
-
+my $version= "derep_ClusterMap.pl v 0.1.9";
 GetOptions(
 	'l|log=s'=>\$log,
 	'm|mapped=s'=>\$mapped,
 	'clust=s'=>\$clustF,
 	'o|out:s'=>\$out,
 	'h'=>sub{system('perldoc', $0); exit;},
+	'v|version'=>sub{print "# $version\n"; exit;}
 );
+print "# $version\n";
 
 my @clustFiles=split(/\,/, $clustF);
 
@@ -65,8 +67,9 @@ my $numNames=scalar(keys %index);
 print "[".$0."] Looking for [ ".$numNames." ] items.\n";
 
 
-my $totalSeqs;
+my $totalSeqs=0;
 my %multiplier;
+my $expandedNumSeqs=0;
 foreach my $clust(@clustFiles){
 	open (CLUST, $clust) || die "[ERROR] $clust:$!\n";
 	print "Parsing: $clust\n";
@@ -81,6 +84,7 @@ foreach my $clust(@clustFiles){
 		$name=~ s/^@//;
 		if ($index{$name}){
 			$multiplier{$name}=$size;
+			$expandedNumSeqs+=$size;
 			delete $index{$name};
 		}
 		$totalSeqs+=$size;
@@ -90,7 +94,8 @@ foreach my $clust(@clustFiles){
 
 my $notFound=scalar(keys %index);
 
-print "[".$0."]".$notFound." not found!\n" unless $notFound==0;
+print "# [".$0."] ".$numNames." dereplicated sequences correspond to ".$expandedNumSeqs." real sequences.\n";
+print "# [".$0."] ".$notFound." not found!\n" unless $notFound==0;
 
 open (OUT, ">".$out) || die "$mapped : $!";
 open(MAPPED, $mapped) || die "$mapped : $!";
@@ -100,10 +105,15 @@ while(my $line=<MAPPED>){
 
 
 	if ($line=~ /^#/){
-		print OUT $line."\n";
+		if($.==4){
+			print OUT $line."\t\t\tRead Counts:\t".$expandedNumSeqs."\n";
+		}
+		else{
+			print OUT $line."\n";
+		}
  		next;
 	}
-
+	
 	my($query, @data)=split(/\t/, $line);
 	my $newTotal=0;
 	if ($map{$query}){
@@ -111,7 +121,7 @@ while(my $line=<MAPPED>){
 			$newTotal+=$multiplier{$h} if ($multiplier{$h});
 		}
 		$data[-3]=$newTotal;
-		$data[-1]=($newTotal/$totalSeqs) * 100;
+#		$data[-1]=($newTotal/$totalSeqs) * 100;
 		$line=join("\t", $query, @data);
 	}
 	else{
