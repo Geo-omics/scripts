@@ -33,6 +33,7 @@
 
 use strict;
 use Getopt::Long;
+use File::Basename;
 
 ## Set Defaults ##
 
@@ -43,7 +44,7 @@ my $setLen=40;
 my $setDev=0;
 my $setBscore=0;
 my $out;
-my $version= "0.4.1";
+my $version= "0.4.3";
 
 GetOptions(
 	'b|blastout:s'=>\$bOut,
@@ -53,7 +54,7 @@ GetOptions(
 	'l|alen:i'=>\$setLen,
 	'd|deviation:f'=>\$setDev,
 	's|bit_score:f'=>\$setBscore,
-	'h|help'=> sub{system('perldoc', $0); exit;},
+	'h|help'=> sub{system("perldoc $0 \| cat"); exit;},
 	'v|version'=>sub{print "Version: $0\tv$version\n"; exit;}
 );
 
@@ -64,6 +65,8 @@ if (! $qFasta){print "Query file not found. See help (-h) for details.\n"; exit;
 if (! $out){ $out="out_pid".$$."_P".$setPer.".mapped";}
 
 ## MAIN ##
+
+my($qList, @etc)=fileparse($out, ".mapped");
 
 my $sd=$setDev/100;
 my (%hs, %queryCount,%bestQueryScore);
@@ -155,9 +158,7 @@ sub getCounts{
 }
 sub score{
 # coolScript.pl by Ryan
-
-	my($qList, @etc)=split(/\./, $out);
-print "\tWriting \'List\' file to:\t$qList.list\n";	# unique hits
+	print "\tWriting \'List\' file to:\t$qList.list\n";	# unique hits
 
 	open (LIST, ">".$qList.".list");
 	my $qCount=0;
@@ -186,7 +187,6 @@ print "\tWriting \'List\' file to:\t$qList.list\n";	# unique hits
 			push (@{$subjBitScores{$subj}},$bitScore);
 		}
 	}
-	close LOG;
 	undef %hs;
 	undef %bestQueryScore;
 

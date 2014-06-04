@@ -50,15 +50,16 @@ use strict;
 use Getopt::Long;
 use File::Basename;
 
-my($blast, $prefix);
+my($blast, $perc,$bs,$aln,$eval, $scaled, $keep_tmp, $verbose, $table, $help, $ani);
 my $ext="blastn";
-my($perc,$bs,$aln,$eval, $scaled, $keep_tmp, $verbose);
-my $help;
-my $version="blastDensityPlot.pl\tv0.1.1";
+my $prefix=$$;
+my $version="blastDensityPlot.pl\tv0.1.5";
 GetOptions(
 	'b|blast:s'=>\$blast,
+	't|table:s'=>\$table,
 	'e|ext:s'=>\$ext,
 	'p|prefix:s'=>\$prefix,
+	'ani:f'=>\$ani,
 	
 	'perc'=>\$perc,
 	'bs'=>\$bs,
@@ -73,7 +74,7 @@ GetOptions(
 );
 print "\# $version\n";
 
-die "# [FATAL] See '-h' for help on how to use the script\n" if (! $blast);
+die "# [FATAL] See '-h' for help on how to use the script\n" if (! $blast && ! $table);
 my ($col, $col_name);
 if($perc){ $col = 0; $col_name="Percent_ID"}
 elsif($aln){ $col = 1; $col_name="Alignment_Length"}
@@ -81,15 +82,20 @@ elsif($bs){$col = -1; $col_name="Bit_Score"}
 elsif($eval){$col = -2; $col_name="E_Value"}
 else{$col = 0; $col_name="Percent_ID"}
 
+if($table){
+	&plot;
+	exit 0;
+}
+
 my @files=<$blast/*.$ext>;
 die "# [FATAL] Can't find \"$blast\"\n# Please check that the path exist or that you have sufficient privilages.\n" if (scalar(@files)==0);
 
 my %REF;
-my $table=$prefix.".out";
+$table=$prefix.".out";
 open(OUT, ">".$table) || die $!;
 print OUT "NAME\t$col_name\tSamples\n";
 foreach my $file(@files){
-	my $FH;
+	my ($FH, %seen);
 	print "# Reading $file...\t";
 	my $name2print=fileparse($file, ".".$ext);
 	open($FH, "<".$file) || die $!;
@@ -100,7 +106,9 @@ foreach my $file(@files){
 		
 		my($query, $subj, @data)=split(/\t/, $line);
 		
+		next if $seen{$query};
 		print OUT $subj."__".$name2print."\t".$data[$col]."\t".$name2print."\n";
+		$seen{$query}++;
 	}
 	close $FH;
 	print "DONE!\n";
@@ -111,7 +119,8 @@ close OUT;
 exit 0;
 
 sub plot{
-	my $pdf=$prefix.".pdf";
+	my $pdf=$prefix."_".lc($col_name).($scaled ? "_scaled" : "").($ani ? "_withANI" : "").".pdf";
+	if (-e $pdf){ $pdf=$prefix."_".lc($col_name).($scaled ? "_scaled" : "")."_".$$.".pdf"}
 	my $ggplot_cmd;
 	if($scaled){
 		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=Samples, y=..scaled..), size=1) + stat_density(position=\"identity\", fill=NA) + theme_bw()";
@@ -120,9 +129,14 @@ sub plot{
 		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=Samples)) + stat_density(position=\"identity\", fill=NA) + theme_bw()";
 	}
 
+	if ($ani){
+		$ggplot_cmd.="+ geom_vline(aes(xintercept=$ani), show_guide=F) +geom_text(aes(x=$ani, y=0, label=\"ANI\"), color=\"black\", angle=90, vjust=0, hjust=0)";
+	}
+	my $save_pdf="ggsave(file=\"$pdf\", width = 210, height = 297, units = \"mm\")";
+
 	#Create command line Rscript
 	print "# Creating the density plot...\t";
-	my $script="-e 'library(ggplot2)' -e 'myTable=read.table(\"$table\", header = TRUE, row.names=NULL)' -e 'pdf(\"$pdf\", paper=\"a4r\")' -e '$ggplot_cmd' -e 'dev.off()'";
+	my $script="-e 'library(ggplot2)' -e 'myTable=read.table(\"$table\", header = TRUE, row.names=NULL)' -e 'myPlot=$ggplot_cmd' -e '$save_pdf'";
 	if ($verbose){
 		$script.=" &> ".$prefix.".log";
 	}
