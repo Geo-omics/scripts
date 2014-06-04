@@ -1,0 +1,94 @@
+# Setting scripts folder location as:
+/geomicro/data1/COMMON/scripts/wrappers/ESOM/
+# FileName	Class Assigned	Number of Sequences
+AFIASar324	0	647
+MG2_SCGC_AAA288-C18	1	47
+MG2_SCGC_AB-629-J06	2	113
+MG3_SCGC_AAA007-O11	3	33
+MG3_SCGC_AAA288-E19	4	103
+N_maritiums	5	1
+Pelagibacter	6	1
+Ruthia_magnifica	7	1
+S_Autotrophica	8	1
+Sar86	9	13
+SUP05	10	96
+
+# Files processed:	 11
+/geomicro/data1/COMMON/scripts/wrappers/ESOM/tetramer_freqs_esom.pl v2.0.3 August, 2013
+
+Copyright (C) 2007 Anders Andersson (anders.andersson@scilifelab.se)
+This is free software; see the COPYRIGHT file accompanying this script for details. There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Please cite:
+Dick, G.J., A. Andersson, B.J. Baker, S.S. Simmons, B.C. Thomas, A.P. Yelton, and J.F. Banfield (2009).  Community-wide analysis of microbial genome sequence signatures. Genome Biology, 10: R85.
+
+
+#################### 4-mer Frequencies #####################
+Minimum length (in bases) of input contig to be included in output:
+2500
+Window Size:
+5000
+calculating 4-mer frequencies ...ok, 1056 data points
+printing lrn file Tetra_esom_2500.lrn ... ok
+printing names file Tetra_esom_2500.names ... ok
+printing class file Tetra_esom_2500.cls ... ok
+printing seq file: Tetra_esom_2500_5000_split.fasta ...ok
+
+Try the following values for ESOM Training:
+>Rows:	81
+>Cols:	162
+These values are just meant as suggestions, feel free to try your own.
+
+All Done!!
+Tetramers Removed:	21
+# esomTrain.pl	v0.0.9
+Executing...
+esomtrn --permute --out Tetra_esom_2500.mod.zt_norm_81x162e20.wts -b Tetra_esom_2500.mod.zt_norm_81x162e20.bm --cls Tetra_esom_2500.cls --lrn Tetra_esom_2500.mod.zt_norm.lrn --algorithm kbatch --rows 81 --columns 162 --epochs 20  -k 0.15 --bmsearch standard --start-radius 41 --dist euc 
+k-batch training
+20 epochs
+gauss neighborhood
+permuting data: true
+loading file: Tetra_esom_2500.mod.zt_norm.lrn
+toroid 2D grid, euclid distance, 81x162 neurons
+map update every 360 data points.
+linear radius cooling 41->1
+linear learning rate cooling 0.5->0.1
+using euc data distance
+initializing map with norm_mean_2std method
+calculating mean of data columns
+calculating standard deviation of data columns
+starting training
+0%
+5%
+10%
+15%
+20%
+25%
+30%
+35%
+40%
+45%
+50%
+55%
+60%
+65%
+70%
+75%
+80%
+85%
+90%
+95%
+center map at neuron with highest density
+searching pareto radius...
+spheres for 18%-tile contain on average 23% of the data
+spheres for 16%-tile contain on average 21% of the data
+spheres for 15%-tile contain on average 20% of the data
+16%tile chosen.
+adjusting pareto radius for about 6 clusters.
+training time: 433.424 seconds
+100%
+saving file: Tetra_esom_2500.mod.zt_norm_81x162e20.bm
+Error saving user properties: java.io.FileNotFoundException: /opt/packages/ESOM/1.1/etc/custom.conf (Permission denied)
+
+All done! please check this file for errors/warnings before you proceed
+Please make sure that your class (.cls) files have values in both the columns

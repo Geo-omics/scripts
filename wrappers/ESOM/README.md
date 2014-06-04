@@ -18,14 +18,14 @@ These instructions are for ESOM-based for binning: see http://databionic-esom.so
 	For more help and examples, type:<br>
 	`perl esomWrapper.pl -h`
 
-* The script will use the fasta file to produce three tab-delimited files that ESOM requires:<br>
---	Learn file = a table of tetranucleotide frequencies (.lrn)<br>
---	Names file = a list of the names of each contig (.names)<br>
---	Class file = a list of the class of each contig, which can be used to color data points, etc. ( .cls)<br>
+* The script will use the fasta file to produce three tab-delimited files that ESOM requires:
+ * Learn file = a table of tetranucleotide frequencies (.lrn)
+ * Names file = a list of the names of each contig (.names)
+ * Class file = a list of the class of each contig, which can be used to color data points, etc. ( .cls)
 
 **NOTE:**`class number`: The esom mapping requires that you define your sequences as classes. We generally define all the sequences that belong to your query (meatgenome for example) as 0 and all the others 1, 2 and so on. think of these as your predefined bins, each sequence that has the same class number will be assigned the same color in the map.
 
-* These files are generated with Anders Anderssons perl script `tetramer_freqs _esom.pl` which needs to be in the same folder as the `esomWrapper.pl`. To see how to use the `tetramer_freqs _esom.pl` independent of the wrapper, type:
+* These files are generated using Anders Anderssons perl script `tetramer_freqs _esom.pl` which needs to be in the same folder as the `esomWrapper.pl`. To see how to use the `tetramer_freqs _esom.pl` independent of the wrapper, type:
 	`perl tetramer_freqs _esom.pl -h`
 
 2.	Run ESOM:
@@ -33,10 +33,11 @@ These instructions are for ESOM-based for binning: see http://databionic-esom.so
 * On you termial, run w/ following command from anywhere (X11 must be enabled): <br>
 	`./esomana`
 * Load .lrn, .names, and .cls files (File > load .lrn etc.)
-* Normalize the data if desired: under data tab, see Z-transform, RobustZT, or To\[0,1\] as described in the users manual. I find that this RobustZT makes the map look cleaner although a similar result is obtained no matter what preprocessing is done (even none).
+* Normalize the data(optional, but recommended): under data tab, see Z-transform, RobustZT, or To\[0,1\] as described in the users manual. I find that this RobustZT makes the map look cleaner.
 
 3.	Train the data:
 -------------------
+###Using the GUI
 * Tools > Training:
 * Parameters: use default parameters with the following exceptions.  Note this is what seems work best for AMD datasets but the complete parameter space has not been fully optimized.  David Soergel (Brenner Lab) is working on this:
 * Training algorithm: K-batch
@@ -45,19 +46,31 @@ These instructions are for ESOM-based for binning: see http://databionic-esom.so
 * I've never seen a benefit to training for more than 20 epochs for the AMD data.
 * Hit 'START' -- training will take 10 minutes to many hours depending on the size of the data set and parameters used.
 
+###From the terminal
+* At this point, you may also choose to add additional data (like coverage) to your contigs. You may do so using the `addInfo2lrn.pl` script **OR** by simply using the flag `-info` in `esomTrain.pl`.
+* To train the data using without the GUI, use the `esomTrain.pl` script. This script will normalize the dataset before it starts the training. Type `perl esomTrain.pl -h` in your terminal to see the help document for this script.
+* To view the results of the training, simply launch ESOM and follow the instructions in *Step 5: Loading a previous project* to load the relevant files.
+* Don't forget to return to *Step 4: Analyzing the output*
+
 4. Analyzing the output:
 ------------------------
 * Best viewed (see VIEW tab) with UMatrix background, tiled display.  Use Zoom, Color, Bestmatch size to get desired view.  Also viewing without data points drawn (uncheck "Draw bestmatches") helps to see the underlying data structure.
 * Use CLASSES tab to rename and recolor classes.
 * To select a region of the map, go to DATA tab then draw a shape with mouse (holding left click), close it with right click.  Data points will be selected and displayed in DATA tab.
-* To assign data points to bins, use the CLASS MASK tab to draw a class mask (e.g. using the data structure as a guide -- see also "contours" box in VIEW tab which might help to delineate bins) then `Tools > Classify`.  This will assign each data point to a class (bin).  The new .cls file can be saved for further analysis (along with .names file which has the window IDs).<br>
+* To assign data points to bins, use the CLASS tab and using your pointer draw a boundary around the region of interest (e.g. using the data structure as a guide -- see also "contours" box in VIEW tab which might help to delineate bins). This will assign each data point to a class (bin).  The new .cls file can be saved (`File > Save .cls`) for further analysis.
 
 5.	Loading a previous project:
 ------------------------------
-* On you termial, run w/ following command from anywhere (X11 must be enabled): <br>
-	`./esomana`
+* On you termial, run w/ following command from anywhere (X11 must be enabled):	`./esomana`
 * `File > load .wts`
 	
 Questions?
 ----------
-[Sunit Jain](http://www.sunitjain.com "Sunit's Homepage"), sunitj \[AT\] umich \[DOT\] edu
+* [Gregory J. Dick](http://www.earth.lsa.umich.edu/geomicrobiology/Index.html "Geomicro Homepage"), <br>
+gdick \[AT\] umich \[DOT\] edu,<br>
+Assistant Professor, Michigan Geomicrobiology Lab,<br>
+University of Michigan
+* [Sunit Jain](http://www.sunitjain.com "Sunit's Homepage"), <br>
+sunitj \[AT\] umich \[DOT\] edu,<br>
+Bioinformatics Specialist, Michigan Geomicrobiology Lab,<br>
+University of Michigan.
