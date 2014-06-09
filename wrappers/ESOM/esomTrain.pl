@@ -30,7 +30,8 @@
 				Column1=Column1 name of scaffold (as it appears in col3 of names file); Column2=%GC(example)...ColumnN=any_numerical_metric;
 	-names	[characters]	*.names file produced by the tetramer frequency script; required with the -info flag
 	-norm	[characters]	Normalization strategy; possible choices:
-				'Scale' - to scale the dataset from 0-1; [default]
+				'RZT'	- to robust-zt the dataset (replaces the mean and std dev with median and median absolute deviation); [default]
+				'Scale' - to scale the dataset from 0-1;
 				'ZT'	- to Z-transform the dataset;
 
 =head3 Advance Options
@@ -62,16 +63,14 @@ use File::Basename;
 my ($lrn, $COLS, $ROWS, $CLS);
 
 # Optional
-my $info;
-my $names;
 my $bmSearch="standard";
 my $ALGO="kbatch";
 my $K=0.15;
 my $epochs=20;
 my $dist="euc";
 my $scripts="/geomicro/data1/COMMON/scripts/wrappers/ESOM/";
-my ($startRadius,$endRadius,$norm,$info, $DEBUG);
-my $version="esomTrain.pl\tv0.0.14b";
+my ($startRadius,$endRadius,$norm,$info,$names,$DEBUG);
+my $version="esomTrain.pl\tv0.0.15b";
 GetOptions(
 	'lrn=s'=>\$lrn,
 	'cls=s'=>\$CLS,
@@ -87,20 +86,27 @@ GetOptions(
 	'norm:s'=>\$norm,
 	'i|info:s'=>\$info,
 	'n|names:s'=>\$names,
+	'scripts:s'=>\$scripts,
 	'cmd|test|debug'=>\$DEBUG,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 print "\# $version\n";
-my $colCounter=0;
+
 ### Sanity Checks ###
 $norm=lc($norm);
 $ALGO=lc($ALGO);
 
 if (! $lrn ||  ! $COLS || ! $ROWS || ! $CLS){
-	die "Missing required files. See `-h' for help on how to use the script\n"
+	die "[FATAL] Missing required files. See `-h' for help on how to use the script\n"
 }
 
+if ($info && ! $names){
+	die "[FATAL] Using the '-info' flag requires that you provide the '-names' flag to provide the *.names file as well.\n Info File='$info'\nNames File='$names' not found!\n";
+}
+
+
+### Global Variables ###
 if (! $startRadius){ 
 	my @compare=sort{$a <=> $b} ($ROWS, $COLS);
 	$startRadius= int(($compare[0] / 2) + 0.5);
@@ -109,24 +115,26 @@ if (! $startRadius){
 my $local_bm_radius=int(($startRadius/4) + 0.5);
 
 my($SCALE, $ZT, $RZT, $LRN, $OUT, $bmOut);
-my ($prefix,$path,$suffix) = fileparse($lrn,"lrn");
+my ($prefix,$path,$suffix) = fileparse($lrn,".lrn");
+if ($info){	$prefix.="_with_Info"}
+
 if ($norm eq "zt"){
 	$ZT++;
-	$LRN=$prefix."zt_norm.lrn";
-	$OUT=$prefix."zt_norm_".$ROWS."x".$COLS."e".$epochs.".wts";
-	$bmOut=$prefix."zt_norm_".$ROWS."x".$COLS."e".$epochs.".bm";
+	$LRN=$prefix.".zt_norm.lrn";
+	$OUT=$prefix.".zt_norm_".$ROWS."x".$COLS."e".$epochs.".wts";
+	$bmOut=$prefix.".zt_norm_".$ROWS."x".$COLS."e".$epochs.".bm";
 }
 elsif($norm eq "scale"){
 	$SCALE++;
-	$LRN=$prefix."01_norm.lrn";
-	$OUT=$prefix."01_norm_".$ROWS."x".$COLS."e".$epochs.".wts";	
-	$bmOut=$prefix."01_norm_".$ROWS."x".$COLS."e".$epochs.".bm";
+	$LRN=$prefix.".01_norm.lrn";
+	$OUT=$prefix.".01_norm_".$ROWS."x".$COLS."e".$epochs.".wts";	
+	$bmOut=$prefix.".01_norm_".$ROWS."x".$COLS."e".$epochs.".bm";
 }
 else{
 	$RZT++;
-	$LRN=$prefix."rzt_norm.lrn";
-	$OUT=$prefix."rzt_norm_".$ROWS."x".$COLS."e".$epochs.".wts";	
-	$bmOut=$prefix."rzt_norm_".$ROWS."x".$COLS."e".$epochs.".bm";
+	$LRN=$prefix.".rzt_norm.lrn";
+	$OUT=$prefix.".rzt_norm_".$ROWS."x".$COLS."e".$epochs.".wts";	
+	$bmOut=$prefix.".rzt_norm_".$ROWS."x".$COLS."e".$epochs.".bm";
 	warn "[WARNING]\tA normalization scheme was either not mentioned or not valid, applying default Robust-ZT normalization.\n" if ((! $norm) || ($norm != "rzt"));
 }
 
@@ -134,8 +142,8 @@ else{
 ### MAIN ###
 if (-e $info){
 	my $info2lrn=catfile($scripts, "addInfo2lrn.pl");
-	die "[FATAL] Script 'addInfo2lrn.pl' not found\n" unless (-e $info2lrn);
-	my $tmpLrn="tmp_".$$.".lrn";
+	die "[FATAL] Script 'addInfo2lrn.pl' not found. Please use the '-scripts' flag to point to the location.\n" unless (-e $info2lrn);
+	my $tmpLrn=$prefix.".lrn";
 	system("perl $info2lrn -names $names -lrn $lrn -info $info -o $tmpLrn");
 	$lrn=$tmpLrn;
 }
