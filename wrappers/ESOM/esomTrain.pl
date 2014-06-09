@@ -71,7 +71,7 @@ my $epochs=20;
 my $dist="euc";
 my $scripts="/geomicro/data1/COMMON/scripts/wrappers/ESOM/";
 my ($startRadius,$endRadius,$norm,$info, $DEBUG);
-my $version="esomTrain.pl\tv0.0.12b";
+my $version="esomTrain.pl\tv0.0.14b";
 GetOptions(
 	'lrn=s'=>\$lrn,
 	'cls=s'=>\$CLS,
@@ -165,19 +165,21 @@ close LRN;
 #push(@key,@infoKey);
 ## Average and Std Dev ##
 if($ZT){
+	print "#KMER\tAverage\tMedian\tStdDev\n" if ($DEBUG);
 	foreach my $col(keys %colStats){
 		$stats{"Avg"}{$col}= &average(\@{$colStats{$col}});
 		$stats{"Stdev"}{$col}= &stdev(\@{$colStats{$col}}, $stats{"Avg"}{$col});
-		my $median=&median(\@{$colStats{$col}});
-		print $col."\t".$stats{"Avg"}{$col}."\t".$median."\t".$stats{"Stdev"}{$col}."\n";
+		my $median=&median(\@{$colStats{$col}}) if ($DEBUG);
+		print $col."\t".$stats{"Avg"}{$col}."\t".$median."\t".$stats{"Stdev"}{$col}."\n" if ($DEBUG);
 	}
 }
 elsif($RZT){
+	print "#KMER\tAverage\tMedian\tMedian_Absolute_Dev\n" if ($DEBUG);
 	foreach my $col(keys %colStats){
-		my $average= &average(\@{$colStats{$col}});
+		my $average= &average(\@{$colStats{$col}}) if ($DEBUG);
 		$stats{"Avg"}{$col}=&median(\@{$colStats{$col}});
 		$stats{"Stdev"}{$col}= &median_absolute_deviation(\@{$colStats{$col}},$stats{"Avg"}{$col});
-		print $col."\t".$average."\t".$stats{"Avg"}{$col}."\t".$stats{"Stdev"}{$col}."\n";
+		print $col."\t".$average."\t".$stats{"Avg"}{$col}."\t".$stats{"Stdev"}{$col}."\n" if ($DEBUG);
 	}
 }
 undef %colStats;
@@ -208,7 +210,7 @@ my $train="esomtrn --permute --out $OUT -b $bmOut --cls $CLS --lrn $LRN --algori
 	.($endRadius ? " --end-radius $endRadius" : "")
 	.($dist ? " --dist $dist" : "");
 
-print "Executing...\n".$train."\n";
+print "#Executing...\n".$train."\n";
 
 system($train) unless($DEBUG);
 
@@ -335,7 +337,7 @@ sub median_absolute_deviation{
 	
 	return $mad;
 }
-__END__
+
 sub get_quartiles{
 	my $data = shift;
 	my $median = shift;
