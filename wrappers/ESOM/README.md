@@ -48,7 +48,7 @@ These instructions are for ESOM-based for binning: see http://databionic-esom.so
 
 ###From the terminal
 * At this point, you may also choose to add additional data (like coverage) to your contigs. You may do so using the `addInfo2lrn.pl` script **OR** by simply using the flag `-info` in `esomTrain.pl`.
-* `esomTrain.pl` script maybe used to train the data without launching the GUI. This script will add the additional information (if provided, usinh `-info`)to the lrn file, normalize it and start the training. Type `perl esomTrain.pl -h` in your terminal to see the help document for this script.
+* `esomTrain.pl` script maybe used to train the data without launching the GUI. This script will add the additional information to the lrn file (using `-info`), normalize it and train the ESOM. Type `perl esomTrain.pl -h` in your terminal to see the help document for this script.
 * To view the results of the training, simply launch ESOM by following the instructions in *Step 5: Loading a previous project* to load the relevant files.
 * Resume analysis from *Step 4: Analyzing the output*
 
