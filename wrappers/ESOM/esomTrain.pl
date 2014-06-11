@@ -12,7 +12,7 @@
 
 	perl esomTrain.pl -lrn esom.lrn -cls esom.cls -rows #1 -cols #2
 	OR
-	perl esomTrain.pl -lrn esom.lrn -cls esom.cls -rows #1 -cols #2 -info file.info -names esom.names
+	perl esomTrain.pl -lrn esom.lrn -cls esom.cls -rows #1 -cols #2 -info file.info -names esom.names -scripts /path/to/other/scripts
 
 =head2 Required options
 
