@@ -26,6 +26,7 @@ use Getopt::Long;
 use File::Spec;
 use File::Path;
 use File::Copy;
+use FileHandle;
 
 my $version="crawler.pl\tv0.0.1b";
 my $list="contents.list";
@@ -41,6 +42,8 @@ print "\# $version\n";
 open(LIST, "<".$list) || die $!;
 my $folder="./ERROR/";
 mkpath($folder);
+my %table_of_contents; # see what I did here?!
+my $MD=FileHandle->new;
 while(my $line=<LIST>){
 	next if $line=~ /^#/;
 	chomp $line;
@@ -50,6 +53,10 @@ while(my $line=<LIST>){
 	# Folders
 		$line=~ s/\:$//;
 		$folder=File::Spec->catfile($path, $line);
+		my $contentsMD=File::Spec->catfile($folder, "contents.md");
+		close $MD;
+		$MD=FileHandle->new;
+		open($MD, ">".$contentsMD) || die "Can't create table of contents at: $contentsMD\n";
 		if (! -d $folder){
 			my $dir = eval{ mkpath($folder) };
 			die "Failed to create $line: $@\n" unless $dir;
@@ -69,6 +76,7 @@ while(my $line=<LIST>){
 			next;
 		}
 		copy($file, $folder) || die "Failed to copy $file: $!\n";
+		print $MD $line."\n";
 	}
 }
 close LIST;
