@@ -53,10 +53,13 @@ while(my $line=<LIST>){
 	# Folders
 		$line=~ s/\:$//;
 		$folder=File::Spec->catfile($path, $line);
-		my $contentsMD=File::Spec->catfile($folder, "contents.md");
 		close $MD;
-		$MD=FileHandle->new;
-		open($MD, ">".$contentsMD) || die "Can't create table of contents at: $contentsMD\n";
+		unless($folder=~ /wrappers/g){
+			my $contentsMD=File::Spec->catfile($folder, "README1.md");
+			$MD=FileHandle->new;
+			open($MD, ">".$contentsMD) || die "Can't create table of contents at: $contentsMD\n";
+		}
+		
 		if (! -d $folder){
 			my $dir = eval{ mkpath($folder) };
 			die "Failed to create $line: $@\n" unless $dir;
@@ -76,7 +79,7 @@ while(my $line=<LIST>){
 			next;
 		}
 		copy($file, $folder) || die "Failed to copy $file: $!\n";
-		print $MD $line."\n";
+		print $MD $line."\n" unless($folder=~ /wrappers/g);
 	}
 }
 close LIST;
