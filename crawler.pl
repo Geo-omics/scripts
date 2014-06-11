@@ -28,7 +28,7 @@ use File::Path;
 use File::Copy;
 use FileHandle;
 
-my $version="crawler.pl\tv0.0.4b";
+my $version="crawler.pl\tv0.0.5b";
 my $list="contents.list";
 my $path= "/geomicro/data1/COMMON/scripts/";
 my $sandbox="/geomicro/data1/COMMON/scripts/sandbox";
@@ -58,6 +58,7 @@ while(my $line=<LIST>){
 			my $contentsMD=File::Spec->catfile($folder, "README.md");
 			$MD=FileHandle->new;
 			open($MD, ">".$contentsMD) || die "Can't create table of contents at: $contentsMD\n";
+			print $MD "## Script Descriptions\n";
 		}
 		
 		if (! -d $folder){
@@ -82,7 +83,6 @@ while(my $line=<LIST>){
 
 		unless($folder=~ /wrappers/g){
 			$fileName=~s/\_/\\\_/g;
-			print $MD "## Script Descriptions\n";
 			print $MD "* **".$fileName."**"."\t".join("\t", @comment)."\n";
 		}
 	}
