@@ -79,7 +79,7 @@ while(my $line=<LIST>){
 			next;
 		}
 		copy($file, $folder) || die "Failed to copy $file: $!\n";
-		$line=s/_/\\_/g;
+		$line=~s/\_/\\\_/g;
 		print $MD "* ".$line."\n" unless($folder=~ /wrappers/g);
 	}
 }
