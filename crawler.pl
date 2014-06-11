@@ -28,7 +28,7 @@ use File::Path;
 use File::Copy;
 use FileHandle;
 
-my $version="crawler.pl\tv0.0.1b";
+my $version="crawler.pl\tv0.0.3b";
 my $list="contents.list";
 my $path= "/geomicro/data1/COMMON/scripts/";
 my $sandbox="/geomicro/data1/COMMON/scripts/sandbox";
@@ -79,7 +79,8 @@ while(my $line=<LIST>){
 			next;
 		}
 		copy($file, $folder) || die "Failed to copy $file: $!\n";
-		print $MD $line."\n" unless($folder=~ /wrappers/g);
+		$line=s/_/\\_/g;
+		print $MD "* ".$line."\n" unless($folder=~ /wrappers/g);
 	}
 }
 close LIST;
