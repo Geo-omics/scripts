@@ -44,7 +44,8 @@
 					'online' - standard online training
 	-startRadius	[integer]	start value for radius, default: half the smaller length of the grid.
 	-epochs		[integer]	The number of iterations over the training data; default=20
-	
+	-cmd	[boolean]	tells the script to print the ESOM training command to the screen but not to execute it and print some basic stats per k-mer.
+		
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
 
@@ -87,7 +88,7 @@ GetOptions(
 	'i|info:s'=>\$info,
 	'n|names:s'=>\$names,
 	'scripts:s'=>\$scripts,
-	'cmd|test|debug'=>\$DEBUG,
+	'cmd|debug'=>\$DEBUG,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
