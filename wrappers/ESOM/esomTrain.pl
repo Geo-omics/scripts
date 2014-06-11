@@ -36,6 +36,7 @@
 
 =head3 Advance Options
 
+	-scripts	[characters]	path to the "addInfo2lrn.pl" script. [default=current working directory]
 	-k	[float]		k for k-Batch as percentage of data set.[default is 15% written as = 0.15]
 				Percentage of all data vectors that is processed between map updates.
 	-algorithm	[characters]	training algorithm; possible choices:
@@ -68,8 +69,7 @@ my $ALGO="kbatch";
 my $K=0.15;
 my $epochs=20;
 my $dist="euc";
-my $scripts="/geomicro/data1/COMMON/scripts/wrappers/ESOM/";
-my ($startRadius,$endRadius,$norm,$info,$names,$DEBUG);
+my ($startRadius,$endRadius,$norm,$info,$names,$DEBUG, $scripts);
 my $version="esomTrain.pl\tv0.0.15b";
 GetOptions(
 	'lrn=s'=>\$lrn,
@@ -102,7 +102,7 @@ if (! $lrn ||  ! $COLS || ! $ROWS || ! $CLS){
 }
 
 if ($info && ! $names){
-	die "[FATAL] Using the '-info' flag requires that you provide the '-names' flag to provide the *.names file as well.\n Info File='$info'\nNames File='$names' not found!\n";
+	die "[FATAL] Using the '-info' flag requires that you provide the provide the *.names file as well, using '-names'.\n Info File='$info'\nNames File='$names' not found!\n";
 }
 
 
@@ -141,7 +141,11 @@ else{
 
 ### MAIN ###
 if (-e $info){
+	if (! $scripts){
+		$scripts="./";
+	}
 	my $info2lrn=catfile($scripts, "addInfo2lrn.pl");
+	
 	die "[FATAL] Script 'addInfo2lrn.pl' not found. Please use the '-scripts' flag to point to the location.\n" unless (-e $info2lrn);
 	my $tmpLrn=$prefix.".lrn";
 	system("perl $info2lrn -names $names -lrn $lrn -info $info -o $tmpLrn");
