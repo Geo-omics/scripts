@@ -55,7 +55,7 @@ while(my $line=<LIST>){
 		$folder=File::Spec->catfile($path, $line);
 		close $MD;
 		unless($folder=~ /wrappers/g){
-			my $contentsMD=File::Spec->catfile($folder, "README1.md");
+			my $contentsMD=File::Spec->catfile($folder, "README.md");
 			$MD=FileHandle->new;
 			open($MD, ">".$contentsMD) || die "Can't create table of contents at: $contentsMD\n";
 		}
