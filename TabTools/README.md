@@ -1,4 +1,8 @@
-* countInstances.pl
-* fileChopper.pl
-* getCol.pl
-* getSciNames.pl
+## Script Descriptions
+* **countInstances.pl**	
+## Script Descriptions
+* **fileChopper.pl**	
+## Script Descriptions
+* **getCol.pl**	
+## Script Descriptions
+* **getSciNames.pl**	

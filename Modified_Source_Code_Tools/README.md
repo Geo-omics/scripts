@@ -1,1 +1,2 @@
-* extractContigReads.pl
+## Script Descriptions
+* **extractContigReads.pl**	

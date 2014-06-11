@@ -1,3 +1,6 @@
-* derep\_ClusterMap.pl
-* derep\_getReadAbundance.pl
-* dereplicate.pl
+## Script Descriptions
+* **derep\_ClusterMap.pl**	
+## Script Descriptions
+* **derep\_getReadAbundance.pl**	
+## Script Descriptions
+* **dereplicate.pl**	

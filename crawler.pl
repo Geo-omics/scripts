@@ -28,7 +28,7 @@ use File::Path;
 use File::Copy;
 use FileHandle;
 
-my $version="crawler.pl\tv0.0.3b";
+my $version="crawler.pl\tv0.0.4b";
 my $list="contents.list";
 my $path= "/geomicro/data1/COMMON/scripts/";
 my $sandbox="/geomicro/data1/COMMON/scripts/sandbox";
@@ -79,8 +79,12 @@ while(my $line=<LIST>){
 			next;
 		}
 		copy($file, $folder) || die "Failed to copy $file: $!\n";
-		$line=~s/\_/\\\_/g;
-		print $MD "* ".$line."\n" unless($folder=~ /wrappers/g);
+
+		unless($folder=~ /wrappers/g){
+			$fileName=~s/\_/\\\_/g;
+			print $MD "## Script Descriptions\n";
+			print $MD "* **".$fileName."**"."\t".join("\t", @comment)."\n";
+		}
 	}
 }
 close LIST;

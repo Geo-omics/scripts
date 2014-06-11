@@ -1,3 +1,6 @@
-* contigMetadata.pl
-* extractContigReads.pl
-* getMyContigs.pl
+## Script Descriptions
+* **contigMetadata.pl**	
+## Script Descriptions
+* **extractContigReads.pl**	
+## Script Descriptions
+* **getMyContigs.pl**	
