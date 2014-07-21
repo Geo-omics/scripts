@@ -44,7 +44,7 @@ my $in;
 my $x=5;
 my $out=$$.".top5";
 my $no_self;
-my $version="top5.pl\tv0.1.0";
+my $version="top5.pl\tv0.1.1";
 GetOptions(
 	'b:s'=>\$in,
 	't:i'=>\$x,
@@ -63,7 +63,8 @@ while (my $line=<TB>){
 	
 	my($query, @etc)=split(/\t/, $line);
 	if($no_self){
-		next if $query eq $etc[0];
+		my ($subj, @desc)=split(/ /, $etc[0]);
+		next if $query eq $subj;
 	}
 	
 	push(@{$file{$query}}, $line);

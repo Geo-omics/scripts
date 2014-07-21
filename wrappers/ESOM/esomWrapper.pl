@@ -57,7 +57,7 @@ use File::Basename;
 #use POSIX ":sys_wait_h";
 
 my $scripts;
-my $version="esomWrapper.pl\tv0.2.9\t";
+my $version="esomWrapper.pl\tv0.2.91\t";
 my $path; # Fasta Folder path
 my $ext="fasta";
 my $prefix="esom";
@@ -86,6 +86,7 @@ GetOptions(
 	'info:s'=>\$info,
 	'scripts:s'=>\$scripts,
 	'h|help'=>sub{print "#".$version."\n"; system("perldoc $0 \| cat"); exit;},
+	'v|verison'=>\sub{print "#".$version."\n"; exit;}
 );
 
 print "## $version ##\n";
