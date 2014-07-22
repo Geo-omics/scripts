@@ -128,6 +128,8 @@ sangerSeqParser.pl
 separateInterleaved.pl	-	Separate interleaved files.
 tetramer_freqs_esom.pl
 toPhylipAndBack.pl
+tinySeq2table.xslt      -       restructure TinySeq format XML file to a tab-delimited file
+tinySeq2fasta.xslt      -       restructure TinySeq format XML file to a FASTA format file
 triage.pl
 U2T.pl
 
@@ -147,6 +149,10 @@ VelvetTools:
 contigMetadata.pl
 extractContigReads.pl
 getMyContigs.pl
+
+TinySeqTools:
+tinySeq2table.xslt	-	restructure TinySeq format XML file to a *tab-delimited* file
+tinySeq2fasta.xslt	-	restructure TinySeq format XML file to a *FASTA* format file
 
 wrappers/Assembly:
 assemble.pl
@@ -168,3 +174,4 @@ img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffold
 wrappers/AntiSmash:
 parallel_antiSmash.pl	-	Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner. Requires "antiSmash v2.0.2" to be installed.
 summarize_antiSmash.pl	-	Takes the antismash project directory as input and produces a tabular summary of gene clusters and smcogs in the form of counts and sequence names
+
