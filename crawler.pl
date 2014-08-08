@@ -42,7 +42,7 @@ print "\# $version\n";
 open(LIST, "<".$list) || die $!;
 my $folder="./ERROR/";
 mkpath($folder);
-my %table_of_contents; # see what I did here?!
+my %table_of_contents;
 my $MD=FileHandle->new;
 while(my $line=<LIST>){
 	next if $line=~ /^#/;

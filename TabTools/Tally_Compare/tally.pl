@@ -6,15 +6,34 @@ my $in;
 my $master;
 my $out=$$.".out";
 my $bs=0;
-my $printValues;
+my $printValues; # which column?
+my $fasta;
 GetOptions(
 	'i:s'=>\$in,
 	'm:s'=>\$master,
 	'o:s'=>\$out,
 	's:f'=>\$bs,
-	'values|value'=>\$printValues,
+	'f|fasta:s'=>\$fasta,
+	'v|values|value:i'=>\$printValues,
 );
 
+my %seqLen;
+if($fasta){
+	$/=">";
+	open(FASTA, "<".$fasta)|| die $!;
+	while(my $line=<FASTA>){
+		chomp $line;
+		next unless $line;
+		my($header, @s)=split(/\n/, $line);
+		my $seq=join("",@s);
+		$header=~ s/^>//;
+		$seqLen{$header}=length($seq);
+	}
+	close(FASTA);
+	$/="\n";
+}
+
+$printValues--;
 open(IN, $in)|| die "[Error] $in: $!\n";
 my %seen;
 while (my $line=<IN>){
@@ -24,11 +43,24 @@ while (my $line=<IN>){
 	$line=~ s/\r//g;
 
 	my @lineParts=split(/\t/, $line);
-	if(! $printValues){
-		$seen{$lineParts[0]}++ if ($lineParts[-1] >= $bs);
+
+	if(($fasta) && ($seqLen{$lineParts[0]})){
+		# Alternative to previous condition; don't need it if query 100% identical with same start and stop positions.
+		my($subjStart,$subjStop)=sort{$a <=> $b} ($lineParts[8],$lineParts[9]);
+		next if(($lineParts[6]==$lineParts[8]) && ($lineParts[7]==$lineParts[9]) && ($lineParts[2]==100) && ($subjStop==$seqLen{$lineParts[0]}));
 	}
 	else{
-		$seen{$lineParts[0]}=$lineParts[-1];
+		next if ($lineParts[0] eq $lineParts[1]); # Don't want query and subj to be the same
+	}
+	
+	next if($seen{$lineParts[0]}); # Only need the top hit.
+	next if ($lineParts[-1] < $bs); # Don't need anything with a bitscore less than user provided BS.
+
+	if(! $printValues){
+		$seen{$lineParts[0]}++;
+	}
+	else{
+		$seen{$lineParts[0]}=$lineParts[$printValues];
 	}
 }
 close IN;

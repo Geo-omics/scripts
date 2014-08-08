@@ -29,10 +29,8 @@ foreach my $f(@listOfFiles){
 		next unless $line;
 
 		my @cols=split(/\t/, $line);
-		if ($cols[-1] >= $bs){
-			print OUT $cols[$c]."\n" unless ($masterList{$cols[$c]});
-			$masterList{$cols[$c]}++;
-		}
+		print OUT $cols[$c]."\n" unless ($masterList{$cols[$c]});
+		$masterList{$cols[$c]}++;
 	}
 	close $fh;
 }

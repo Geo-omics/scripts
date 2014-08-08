@@ -123,10 +123,10 @@ sub plot{
 	if (-e $pdf){ $pdf=$prefix."_".lc($col_name).($scaled ? "_scaled" : "")."_".$$.".pdf"}
 	my $ggplot_cmd;
 	if($scaled){
-		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=Samples, y=..scaled..), size=1) + stat_density(position=\"identity\", fill=NA) + theme_bw()";
+		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=as.factor(Samples), y=..scaled..), size=1) + stat_density(position=\"identity\", fill=NA) + theme_bw() + scale_colour_discrete(name  =\"Samples\")";
 	}
 	else{
-		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=Samples)) + stat_density(position=\"identity\", fill=NA) + theme_bw()";
+		$ggplot_cmd="ggplot(myTable, aes(x=".$col_name.", color=as.factor(Samples))) + stat_density(position=\"identity\", fill=NA) + theme_bw() + scale_colour_discrete(name  =\"Samples\")";
 	}
 
 	if ($ani){

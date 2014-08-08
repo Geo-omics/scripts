@@ -3,10 +3,10 @@
 =head1 Usage
 
 	# In multiple blast outputs, count the number of times a query gets a hit above a certain bit score.
-	perl tallyWrap.pl -ext blastn -m masterList_output -t combinedTally_output -s 40
+	perl tallyWrap.pl -ext blastp -m masterList_output -t combinedTally_output -s 40
 	
 	# In multiple tab delimited files, for each value in the first column, combine the values of the last column from each file into a combined tabular file.
-	perl tallyWrap.pl -ext blastn -m masterList_output -t combinedTally_output -values
+	perl tallyWrap.pl -ext blastp -m masterList_output -t combinedTally_output -values
 	
 =head1 Dependencies
 
@@ -22,17 +22,19 @@ use Getopt::Long;
 use File::Spec::Functions;
 
 my $masterList;
-my $ext;
+my $ext="blastn";
 my $combinedTally;
 my $bs=0;
-my $printValue;
+my $printValue; # column number (start counting from 1)
 my $SCRIPTS="/geomicro/data1/COMMON/scripts/TabTools/Tally_Compare/";
+my $fasta; # query fasta
 GetOptions(
 	'ext:s'=>\$ext,
 	'm:s'=>\$masterList,
 	't:s'=>\$combinedTally,
 	's:f'=>\$bs,
-	'value|values'=>\$printValue,
+	'value|values:i'=>\$printValue,
+	'f|fasta:s'=>\$fasta,
 	'scripts:s'=>\$SCRIPTS,
 );
 
@@ -45,15 +47,14 @@ die "Could not find dependent scripts. Use the '-scripts' flag to provide a loca
 
 
 my @files=glob("*.$ext");
-print @files." Files Found.\n";
 print "Creating MasterList\n";
-system("perl getMasterList.pl -o ".$masterList." -s ".$bs.($ext ? " -e $ext" : ""));
+system("perl $masterListScript -o ".$masterList." -s ".$bs.($ext ? " -e $ext" : ""));
 foreach my $f(@files){
 	print "\tTally.pl: $f\n";
 	my($name, $ext)=split(/\./, $f);
 	my $tallyFile=$name.".tally";
-	system("perl tally.pl -m ".$masterList." -i ".$f ." -o ".$tallyFile." -s ".$bs.($printValue ? " -values" : ""));
+	system("perl $tallyScript -m ".$masterList." -i ".$f ." -o ".$tallyFile." -s ".$bs.($printValue ? " -values $printValue" : "").($fasta ? " -fasta $fasta":""));
 }
 print "Weaving all tally files...\n";
-system("perl weave.pl -o ".$combinedTally);
+system("perl $weaveScript -o ".$combinedTally);
 exit;

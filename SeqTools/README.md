@@ -25,7 +25,7 @@
 * **separateInterleaved.pl**	-	Separate interleaved files.
 * **tetramer\_freqs\_esom.pl**	
 * **toPhylipAndBack.pl**	
-* **tinySeq2table.xslt**	-	restructure TinySeq format XML file to a tab-delimited file
-* **tinySeq2fasta.xslt**	-	restructure TinySeq format XML file to a FASTA format file
+* **tinySeq2table.xslt**	-	restructure TinySeq format XML file to a *tab-delimited* file
+* **tinySeq2fasta.xslt**	-	restructure TinySeq format XML file to a *FASTA* format file
 * **triage.pl**	
 * **U2T.pl**	
