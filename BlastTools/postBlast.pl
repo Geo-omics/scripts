@@ -22,11 +22,13 @@
 	-list	Just get me the queries/subj in the list File;
 		if you wish to search in subj column for matches; mention with flag "-subj";
 		default= will look in query;
-
+	
 =head3 Dependencies
 	
 	-f	Query Fasta; required if using query coverage cut-off
 	-subj	look for items in list in the subj col; required if using '-list' AND wish to only check subjects for matches to the list.
+	-add_cov	add 2 columns at the end; one provides the calculated query coverage andthe other provides the length of the query
+			requires flags '-c' and '-f'.
 
 =head3 Output
 
@@ -47,7 +49,8 @@ my $setPer=0;
 my $setLen=0;
 my $setScore=0;
 my $out=$$.".pb.out";
-my $version="postBlast.pl\tv0.1.1";
+my $version="postBlast.pl\tv0.1.5";
+my $wholeSeqPerID=50;
 
 my(
 $blast,
@@ -55,6 +58,7 @@ $list,
 $subj,
 $queryFasta,
 $setCoverage,
+$getCoverage,
 );
 
 GetOptions(
@@ -68,6 +72,9 @@ GetOptions(
 	'c|cov:i'=>\$setCoverage,
 	'f|q|fasta|query:s'=>\$queryFasta,
 	'subj'=>\$subj,
+	'add_cov'=>\$getCoverage,
+	'spid:i'=>\$wholeSeqPerID,
+	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 print "\# $version\n";
@@ -97,7 +104,9 @@ else{
 open (BLAST, $blast) || die "[ERROR]: $!\n";
 open (OUT, ">".$out) || die "[ERROR]: $!\n";
 print OUT "#Thresholds: Blast Output=$blast; \%ID=$setPer; aln_len=$setLen; e-value=$setEval; bitScore=$setScore; QueryCoverage=$printCov\%\n";
-print OUT "#Columns: Query\tSubject\tPercent_ID\tAln_Len\tMismatch\tGap\tQuery_Start\tQuery_Stop\tSubject_Start\tSubject_Stop\tE-Value\tBit_Score\n";
+my $header="#Columns: Query\tSubject\tPercent_ID\tAln_Len\tMismatch\tGap\tQuery_Start\tQuery_Stop\tSubject_Start\tSubject_Stop\tE-Value\tBit_Score";
+$header.= ($getCoverage ? "\tQueryLength\tCoverage\n" : "\n");
+print OUT $header;
 while(my $line=<BLAST>){
 	next if $line=~ /^#/;
 	$line=~ s/\r//;
@@ -105,20 +114,31 @@ while(my $line=<BLAST>){
 	next unless $line;
 
 	my ($q, $s, $per, $len, $mm, $gap, $q_start, $q_stop, $s_start, $s_stop, $eval, $score)=split(/\t/, $line);
-	my $cov=$setCoverage > 0 ? (($len-$mm-$gap)/$lengths{$q}): $setCoverage; #$len
+	my $cov=$setCoverage > 0 ? ($len/$lengths{$q}): 0; #$len
+	my $id_along_whole_seq = $wholeSeqPerID > 0 ? (($len-$mm-$gap)/$lengths{$q}) : 0;
 	my $item=$subj ? $s : $q;
 	if (($per >= $setPer) && ($len >= $setLen) && ($eval <= $setEval) && ($score >= $setScore) && ($cov >= $setCoverage)){
-		if ($list){
-			print OUT $line."\n" if ($index{$item});
+		my $printLine="";
+		if (($list) && ($index{$item})){
+			$printLine = $line
+		}
+		elsif(($list) && (! $index{$item})){
+			next;
 		}
 		else{
-			print OUT $line."\n";
+			$printLine = $line;
 		}
+
+		if($getCoverage){
+			$cov=sprintf("%.3f", ($cov*100));
+			$printLine.="\t".$lengths{$q}."\t".$cov."\t".$id_along_whole_seq;
+		}
+
+		print OUT $printLine."\n";
 	}	
 }
 
 ## Sub-routines ##
-
 sub getLengths{
 	open(FASTA, $queryFasta)|| die "[ERROR]: $!\n";
 	$/=">";

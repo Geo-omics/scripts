@@ -11,6 +11,7 @@
 =head2 Options
 
 	-dir	<CHAR>	path to the project folder with all the Antismash outputs
+	-prefix	<CHAR>	output file prefix
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -38,18 +39,19 @@ my $version="summarize_antiSmash.pl\tv0.0.2b";
 my($DIR, $prefix);
 GetOptions(
 	'dir:s'=>\$DIR,
+	'p|prefix:s'=>\$prefix,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 print "\# $version\n";
 
 # Get all File names in the given directory
-$prefix=$DIR;
 if ($DIR!~ m/\/$/){
 	$DIR=$DIR."/";
 }
-else{
-	$prefix=~ s/\/$//;
+
+if(!$prefix){
+	$prefix= $$;
 }
 
 # Get output names.

@@ -12,9 +12,9 @@
 
 =head2 Options
 
-	-list	-l	<CHAR>	List of headers in you bin matching the contig or IMG_Name column of consolidated data
+	-list	-l	<CHAR>	List of headers in your bin matching the contig or IMG_Name column of consolidated data
 	-tsv		<CHAR>	Consolidated IMG data generated from "consolidateJGIdata.pl"
-	-prefix	-p	<CHAR>	presence/absence, copy numbers and contig names. (extension= .out)
+	-prefix	-p	<CHAR>	Output file; Contains --> presence/absence, copy numbers and contig names. (extension= .out)
 	
 	-img_names	<BOOLEAN>	use IMG assigned names to match headers.
 	-version -v	<BOOLEAN>	version of the current script
@@ -22,8 +22,8 @@
 
 =head2 Additional Features
 
-	-detail	-d	<BOOLEAN>	print line from consolidated data containing the match. (extension= .tsv)
-	-myCOGS	-m	<CHAR>	user defined list of cog numbers. One enrty per line; only first 2 columns will be read.
+	-detail	-d	<BOOLEAN>	Optional Output File; print line from consolidated data containing the match. (extension= .tsv)
+	-myCOGS	-m	<CHAR>	user defined list of cog numbers. One entry per line; only first 2 columns will be read.
 			FORMAT: Column1=COG#### <TAB> COG_Description
 
 =head1 Author
@@ -49,7 +49,7 @@ my %COGS;
 my($list, $tsv, $imgName, $col, $more, $out, $myCOGS);
 my $prefix=$$;
 my $help;
-my $version="measureCompleteness.pl\tv0.1.2";
+my $version="measureCompleteness.pl\tv0.1.3";
 GetOptions(
 	'l|list:s'=>\$list,
 	'p|o|prefix:s'=>\$prefix,

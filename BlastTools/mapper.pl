@@ -11,7 +11,7 @@
 
 =head2 Options
 	
-	-o	=	Output File; default='out.tsv'
+	-o	=	Output Prefix; default='out'
 	-p	=	minimum percent ID; default=95%
 	-l	=	minimum alignment length= alignment Length - (mismatches + gaps)	default=40 (bases)
 	-d	=	% Deviation from the top bit score allowed, choose a value between 0-100; default=0
@@ -44,12 +44,12 @@ my $setLen=40;
 my $setDev=0;
 my $setBscore=0;
 my $out;
-my $version= "0.4.3";
+my $version= "0.4.5";
 
 GetOptions(
 	'b|blastout:s'=>\$bOut,
 	'q|query:s'=>\$qFasta,
-	'o|output:s'=>\$out,
+	'o|prefix:s'=>\$out,
 	'p|per:f'=>\$setPer,
 	'l|alen:i'=>\$setLen,
 	'd|deviation:f'=>\$setDev,
@@ -66,7 +66,9 @@ if (! $out){ $out="out_pid".$$."_P".$setPer.".mapped";}
 
 ## MAIN ##
 
-my($qList, @etc)=fileparse($out, ".mapped");
+# my($qList, @etc)=fileparse($out, ".mapped");
+my $qList=$out;
+$out=$out.".mapped";
 
 my $sd=$setDev/100;
 my (%hs, %queryCount,%bestQueryScore);
