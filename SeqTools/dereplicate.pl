@@ -9,7 +9,7 @@
 	
 	perl dereplicate.pl -f fasta_File -out output.fasta
 	OR
-	perl dereplicate.pl -fq fastq_File -out output.fastq
+	perl dereplicate.pl -fq fastq_File -out output.fastq 
 	OR
 	perl dereplicate.pl -fq fastq_File -out output.fasta -outfmt fasta
 	
@@ -61,18 +61,20 @@ use File::Basename;
 #######################
 my $fasta;
 my $fastq;
+my $usearch;
 my $setScore=0;
 my $phredOffset=33;
 my $out;
 my $outfmt;
 my $n=10;
-my $version="dereplicate.pl v0.6.1";
+my $version="dereplicate.pl v0.6.2";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
 	's:i'=>\$setScore,
 	'o|out:s'=>\$out,
 	'outfmt:s'=>\$outfmt,
+	'usearch'=>\$usearch,
 	'n|top:i'=>\$n,
 	'p|phred_offset:i' => \$phredOffset,
 	'h|help'=>sub{system('perldoc', $0); exit;},
@@ -286,7 +288,13 @@ sub fastaClustering{
 ## Print to files ##
 sub printFasta{
 	my ($header, $seq, $size)=@_;
-	print OUT ">".$header."\tsize=".$size."\n";
+	if($usearch){
+		$header=~ s/ /\_/g;
+		print OUT ">".$header.";size=".$size.";\n";
+	}
+	else{
+		print OUT ">".$header."\n";
+	}
 	print OUT $seq."\n";
 }
 
