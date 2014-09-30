@@ -44,7 +44,7 @@ my $setLen=40;
 my $setDev=0;
 my $setBscore=0;
 my $out;
-my $version= "0.4.5";
+my $version= "0.4.6";
 
 GetOptions(
 	'b|blastout:s'=>\$bOut,
@@ -103,7 +103,7 @@ sub setThresholds {
 		my $aLen=$blastOut[3];
 		my $mm=$blastOut[4];
 		my $gaps=$blastOut[5];
-		my $score=$blastOut[-1];
+		my $score=$blastOut[11];
 		chomp($query,$subj,$per,$aLen,$gaps,$mm,$score);
 #		Get all hits that clear the thresholds
 		my $tempLen=$aLen-$mm-$gaps;

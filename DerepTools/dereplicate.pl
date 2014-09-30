@@ -66,7 +66,7 @@ my $phredOffset=33;
 my $out;
 my $outfmt;
 my $n=10;
-my $version="dereplicate.pl v0.5.1";
+my $version="dereplicate.pl v0.6.1";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
@@ -223,7 +223,7 @@ sub fastqClustering{
 		
 		# print dereplicated file.
 		if($out){
-			$outfmt eq "fasta" ? &printFasta($bestSeq, $seq) : &printFastq($bestSeq, $seq);
+			$outfmt eq "fasta" ? &printFasta($bestSeq, $seq, $size) : &printFastq($bestSeq, $seq);
 		}
 		
 		foreach my $h(@{$seen{$seq}}){
@@ -266,7 +266,7 @@ sub fastaClustering{
 
 		# print dereplicated file.
 		if ($out){
-			&printFasta($seen{$seq}[0], $seq);
+			&printFasta($seen{$seq}[0], $seq, $size);
 		}
 		
 		print CLUST "c".$clustNum."\t".$size."\t";
@@ -285,8 +285,8 @@ sub fastaClustering{
 
 ## Print to files ##
 sub printFasta{
-	my ($header, $seq)=@_;
-	print OUT ">".$header."\n";
+	my ($header, $seq, $size)=@_;
+	print OUT ">".$header."\tsize=".$size."\n";
 	print OUT $seq."\n";
 }
 
