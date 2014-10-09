@@ -15,7 +15,7 @@
 =head2 Options
 
 	-db	[characters]	Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
-						Default: "ssu115" with location set as: /geomicro/data1/COMMON/publicDB/silva/release_115/SSURef_NR99_tax_silva.fasta (SSU version 115)
+						Default: "ssu119" with location set as: /omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta (SSU version 119)
 	-blast	[characters]	Blast output performed against the fasta file.
 	-mapper	[characters]	mapper.pl output performed on the blast output.
 	-out	[characters]	output file
@@ -38,9 +38,10 @@ my $fasta;
 my %db=(
 	"ssu111"=>"/geomicro/data1/COMMON/publicDB/silva/release_111/SSURef_111_NR_tax_silva.fasta",
 	"ssu115"=>"/geomicro/data1/COMMON/publicDB/silva/release_115/SSURef_NR99_tax_silva.fasta",
+	"ssu119"=>"/omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta"
 );
 
-my $version="silvaTaxonAppend.pl\tv0.0.4";
+my $version="silvaTaxonAppend.pl\tv0.1.1";
 GetOptions(
 	'db=s'=>\$fasta,
 	'blast:s'=>\$isBlast,
@@ -55,7 +56,7 @@ print "#\t".$version."\n";
 die "[ERROR $0] Blast or mapped file required\n" if(! $isBlast && !$isMapped);
 
 if (! $fasta){
-	$fasta=$db{"ssu115"};
+	$fasta=$db{"ssu119"};
 }
 elsif($db{lc($fasta)}){
 	$fasta=$db{lc($fasta)};

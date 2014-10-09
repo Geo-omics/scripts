@@ -50,7 +50,7 @@ my $setLen=0;
 my $setScore=0;
 my $out=$$.".pb.out";
 my $version="postBlast.pl\tv0.1.5";
-my $wholeSeqPerID=50;
+my $wholeSeqPerID=0;
 
 my(
 $blast,

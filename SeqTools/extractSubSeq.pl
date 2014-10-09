@@ -49,7 +49,7 @@ my $setLen=0;
 my $setBS=0;
 my $setPid=0;
 my $out = $$."_subSeqs.fasta";
-my $version="extractSubSeqs.pl\tv0.2.3";
+my $version="extractSubSeqs.pl\tv0.2.5";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -173,6 +173,7 @@ while (my $line=<FASTA>){
 
 	my ($name, @seq)=split(/\n/, $line);
 	my $sequence=join("", @seq);
+	my $seqLen=length($sequence);
 	my @wholeSeq=split(//, $sequence);
 	if (($name=~ /\s/g) && ($isBlastOut)){ 
 		my $etc;
@@ -203,6 +204,10 @@ while (my $line=<FASTA>){
 			$printLine.="__[".$posStart."-".$posStop."]\n";
 			
 			my ($begin, $end)=sort{$a <=> $b}($posStart, $posStop);
+			if($end > $seqLen){
+				print STDERR "The 'stop coordinate' [".$end."] is out of bounds. Length of the sequence [".$seqLen."]\n";
+				die "[FATAL] $printLine\n"
+			}
 			$begin--;
 			$end--;
 			print OUT $printLine;
