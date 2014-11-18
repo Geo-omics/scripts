@@ -49,7 +49,7 @@ my $setLen=0;
 my $setBS=0;
 my $setPid=0;
 my $out = $$."_subSeqs.fasta";
-my $version="extractSubSeqs.pl\tv0.2.5";
+my $version="extractSubSeqs.pl\tv0.2.6";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -259,7 +259,7 @@ sub parseBlastOut{
 	my $gaps=$cols[5];
 	my $alnLen= $aLen - ($mis + $gaps);
 	my $pid= int($cols[2] + 0.5);
-	my $bs=int($cols[-1] + 0.5);
+	my $bs=int($cols[11] + 0.5);
 	
 	return ($alnLen, $pid, $bs, $cols[0], $cols[1]);
 }

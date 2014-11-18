@@ -8,12 +8,17 @@
 	perl limit2Length.pl -f fasta_File -len # [-o output file]
 	OR
 	perl limit2Length.pl -fq fastq_File -len # [-o output file]
+	OR
+	perl limit2Length.pl -below -len 2001 -f fasta_file -len # [-o output file]
 
 =head2 OPTIONS
 
-	-b:	bin size for length distribution; default=2000
-	-below:	get sequences equal to or less than the 'len' threshold. Default = Only greater than.
-	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
+    -len    [INTEGER] : Get sequences of (length+1).
+            Default =  Sequences greater than this parameter will be included. To change this behavior see '-below'.
+	-b  [INTEGER]:	bin size for length distribution; default=2000
+	-below [BOOLEAN]:	get sequences equal to or less than the 'len' threshold. 
+	        Default = Only greater than -len.
+	-scripts    [CHARACTER]: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
 	
 =head3 Boolean Flags
 
@@ -39,7 +44,7 @@ use File::Spec;
 #######################
 ## PARAMETERS
 #######################
-my $version="0.1.7";
+my $version="0.1.8";
 my $fasta;
 my $fastq;
 my $setLen=2000;
