@@ -163,6 +163,9 @@ calcN50.pl
 findStretchesOfNs.pl
 interleave.pl
 limit2Length.pl
+mapping.sh      -       BWA mapping pipeline. Open the file in a text editor for help.
+qc.sh   -       NGS QC pipeline
+assembly.sh     -       NGS de novo assembly pipeline. Expects the QC to be done using qc.sh.
 
 wrappers/ESOM:
 changeClasses.pl	-	Edit the *.cls file to change the class numbers for a given list of contig names.
@@ -177,4 +180,4 @@ img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffold
 wrappers/AntiSmash:
 parallel_antiSmash.pl	-	Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner. Requires "antiSmash v2.0.2" to be installed.
 summarize_antiSmash.pl	-	Takes the antismash project directory as input and produces a tabular summary of gene clusters and smcogs in the form of counts and sequence names.
-antismash_Summary.sh	-	Summarizes the output from parallel_antismash.pl. Needs to run from within the main output folder for parallel_antismash.pl.
+antiSmash_Summary.sh	-	Summarizes the output from parallel_antismash.pl. Needs to run from within the main output folder for parallel_antismash.pl.
