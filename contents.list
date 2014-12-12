@@ -32,6 +32,9 @@ do2folder.sh	-	Do something to the entire folder. Just add the command into the 
 do2list.sh	-	Do something to the a list of file/folder locations. Just add the command into the script.
 ssh2sameFolder.sh	-	As the name suggests, SSH to your current location in a different server. The path should exist on the other server.
 firefox_already_running.sh	-	Helps fight that pesky 'firefox already running' error. You know which one.
+mapping.sh	-	BWA mapping pipeline. Open the file in a text editor for help.
+qc.sh	-	NGS QC pipeline
+assembly.sh	-	NGS de novo assembly pipeline. Expects the QC to be done using qc.sh.
 
 BlastTools:
 basicHF.pl
@@ -173,5 +176,5 @@ img_Bin_Classifier.pl	-	Use the IMG taxonomic classification of contigs/scaffold
 
 wrappers/AntiSmash:
 parallel_antiSmash.pl	-	Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner. Requires "antiSmash v2.0.2" to be installed.
-summarize_antiSmash.pl	-	Takes the antismash project directory as input and produces a tabular summary of gene clusters and smcogs in the form of counts and sequence names
-
+summarize_antiSmash.pl	-	Takes the antismash project directory as input and produces a tabular summary of gene clusters and smcogs in the form of counts and sequence names.
+antismash_Summary.sh	-	Summarizes the output from parallel_antismash.pl. Needs to run from within the main output folder for parallel_antismash.pl.
