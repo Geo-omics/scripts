@@ -5,3 +5,4 @@
 * **firefox\_already\_running.sh**	-	Helps fight that pesky 'firefox already running' error. You know which one.
 * **mapping.sh**	-	BWA mapping pipeline. Open the file in a text editor for help.
 * **qc.sh**	-	NGS QC pipeline
+* **assemble.sh**	-	NGS de novo assembly pipeline. Expects the QC to be done using qc.sh.
