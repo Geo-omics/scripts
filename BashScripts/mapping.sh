@@ -1,6 +1,6 @@
 #!/bin/sh
 # Usage: ./mapping.sh Sample#
-# Assumption1: Sample# == Dir name which contains a fwd.fastq and rev.fastq
+# Assumption1: Sample# == Dir name which contains a fwd.fastq, rev.fastq and reference fasta
 # Assumption2: Reference Name == scaffold.fasta
 
 set -e
@@ -15,7 +15,7 @@ set -u
 #######################################
 # Only accepted extensions are ".fasta" and ".fastq"
 
-path2scaffolds=scaffold.fasta
+path2scaffolds=$1/scaffold.fasta
 path2fwd=$1/fwd.fastq
 path2rev=$1/rev.fastq
 threads=8
@@ -24,11 +24,11 @@ threads=8
 ##### DO NOT MAKE ANY CHANGES BEYOND THIS LINE #####
 #####     unless you know what you're doing    #####
 ####################################################
-version="1.2.2"
-ssssss=$1/$(echo $path2scaffolds | sed "s#.fasta#_aligned.sam#")
-alnSamLog=$1/${path2scaffolds}.aln.log
-sam2bam=$1/$(echo $path2scaffolds | sed "s#.fasta#_fixmate.bam#")
-sortBam=$1/$(echo $path2scaffolds | sed "s#.fasta#_sorted.bam#")
+version="1.3.3"
+alnSam=$(echo $path2scaffolds | sed "s#.fasta#_aligned.sam#")
+alnSamLog=${path2scaffolds}.aln.log
+sam2bam=$(echo $path2scaffolds | sed "s#.fasta#_fixmate.bam#")
+sortBam=$(echo $path2scaffolds | sed "s#.fasta#_sorted.bam#")
 readGroup="@RG\\tID:group_${1}\\tSM:Sample_${1}\\tPL:illumina\\tLB:lib_${1}\\tPU:unit_${1}"
 
 #######################################

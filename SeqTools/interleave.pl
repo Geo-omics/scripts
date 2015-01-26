@@ -46,7 +46,7 @@ use IO::Handle;
 ## PARAMETERS
 #######################
 my ($fwd, $rev, $prefix, $fastq, $old, $outfmt);
-my $version="interleave.pl v0.3.6";
+my $version="interleave.pl v0.3.7";
 
 GetOptions(
 	"o|out|p|prefix=s"	=>	\$prefix,
@@ -167,12 +167,12 @@ sub splitHeader{
 		@headerParts=split(/\//, $header);
 		return(@headerParts);
 	}
-	elsif($headerParts[0]=~ /\_/){
-		my @firstPart=split(/\_/, $headerParts[0]);
-		my @secondPart=split(/\_/, $headerParts[1]);
+#	elsif($headerParts[0]=~ /\_/){
+#		my @firstPart=split(/\_/, $headerParts[0]);
+#		my @secondPart=split(/\_/, $headerParts[1]);
 #		$prefixFlag=1;
-		return($firstPart[-1], $secondPart[0]);
-	}
+#		return($firstPart[-1], $secondPart[0]);
+#	}
 	else{
 		return(@headerParts);
 	}
