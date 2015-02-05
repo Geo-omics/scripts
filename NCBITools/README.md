@@ -1,6 +1,7 @@
 ## Script Descriptions
 * **Ebot.Output.Extract.Gi.Title.Rev3.py**	-	This script takes a NCBI genbank file, extracts the gi#, the study name, the journal it came from and the sequence and builds a tab delimitted output for each genbank entry.
 * **extractGenomes.pl**	-	 extract genomes from NCBI databases (nr/nt) using NCBI Taxon ID, curate and concatenate them to form your own customized database.
+* **extractGenbankMetadata.pl**	-	Extract Meta data and protein translations from a Genbank format file.
 * **getFastaFromAccNos.pl**	
 * **getGFF.pl**	-	Given a list of contig names extract GFF data.
 * **getGIAnnotation.sh**	
