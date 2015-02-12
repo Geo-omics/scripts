@@ -10,6 +10,11 @@
 
 =head2 Options
 
+	-prefix	prefix to the filename; this will appear at the end of the current header BEFORE the filename.
+	-suffix	suffix to the filename; this will appear at the end of the current header AFTER the filename.
+	-after	add the filename AFTER the existing header. (default: BEFORE the existing header.)
+	-sep	separator between existing header and filename. (default: "_")
+	-replace	replace something in the file name.
 	-p	path to folder; use "." (dot, without the quotes) for current folder.
 	-e	file extension to look for in folder; default= fasta
 	-h	this page.
@@ -28,20 +33,29 @@ my $help;
 my $path; # Folder path
 my $ext="fasta";
 my $description=$$.".desc";
-
+my $prefix="";
+my $suffix="";
+my $after;
+my $sep="_";
+my $replace=" ";
+my $version=fileparse($0)."\tv2.1.3";
 GetOptions(
+	'prefix:s'=>\$prefix,
+	'suffix:s'=>\$suffix,
+	'after'=>\$after,
+	'sep:s'=>\$sep,
+	'replace:s'=>\$replace,
 	'p|path:s'=>\$path,
 	'e|ext:s'=>\$ext,
 	'h|help'=>sub{system('perldoc', $0); exit;},
+	'v|version'=>sub{print $version."\n"; exit;},
 );
-
+print "\# $version\n";
 die "[ERROR: $0] Folder Path Required! See $0 -h for help on the usage" if !$path;
 
 unless (-e "renamed"){mkdir("renamed", 0755)};
 
 my @files=<$path/*.$ext>;
-
-$|++;
 
 foreach my $fileName(@files){
 	my $countSeqs=$ext eq "fastq" ? &parseFastq($fileName) : &parseFasta($fileName);
@@ -50,9 +64,10 @@ foreach my $fileName(@files){
 
 sub parseFasta{
 	my $fileName=shift;
-	my $f = basename($fileName, ".fasta");
+	my $f = fileparse($fileName, ".fasta");
 	my $fOut="./renamed/".$f.".fasta";
-
+	$f=~ s/$replace//oe;
+	my $addition=$prefix.$f.$suffix;
 	open(IN, $fileName) || die $!;
 	open(FASTA, ">".$fOut) || die $!;
 	my ($prevHeader, $flag);
@@ -76,7 +91,7 @@ sub parseFasta{
 			$prevHeader="";
 		}
 
-		my $nuHead=$f."_".$header;
+		my $nuHead=$after ? $header.$sep.$addition : $addition.$sep.$header;
 		$countSeqs++;
 		print FASTA ">".$nuHead."\n".$seq."\n";
 	}
@@ -88,8 +103,10 @@ sub parseFasta{
 
 sub parseFastq{
 	my $fileName=shift;
-	my $f = basename($fileName, ".fastq");
+	my $f = fileparse($fileName, ".fastq");
 	my $fOut="./renamed/".$f.".fastq";
+	$f=~ s/$replace//oe;
+	my $addition=$prefix.$f.$suffix;
 	my $countSeqs=0;
 	open(FILE, $fileName) || die $!;
 	open(FASTQ, ">".$fOut) || die $!;
@@ -97,7 +114,9 @@ sub parseFastq{
 		$line=&trim($line);
 		if ($line=~ /^@/){
 			$line=~s/\@//;
-			print FASTQ "\@".$f."_".$line."\n"; # Sequence Header
+			
+			my $nuHead=$after ? $line.$sep.$addition : $addition.$sep.$line;
+			print FASTQ "\@".$nuHead."\n"; # Sequence Header
 			$countSeqs++;
 		
 			$line=<FILE>; # Sequence

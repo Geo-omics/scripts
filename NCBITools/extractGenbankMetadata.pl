@@ -2,8 +2,7 @@
 
 =head1 DESCRIPTION
 
-extractGenbankMetaData -- Extract Meta data and protein translations from a Genbank file.
-    This script was created to be used as a part of the VirDB pipeline.
+extractGenbankMetaData -- Extract Meta data and protein translations from a Genbank file. This script was created to be used as a part of the VirDB pipeline.
     
 =head2 DEPENDENCIES
 
@@ -11,7 +10,7 @@ extractGenbankMetaData -- Extract Meta data and protein translations from a Genb
 
 =head1 USAGE
 
-perl extractGenbankMetadata.pl -gbk in.gbk -faa out.faa -meta out.meta -list geneTags.list
+    perl extractGenbankMetadata.pl -gbk in.gbk -faa out.faa -meta out.meta -list geneTags.list
 
 =head2 Options
 
@@ -52,7 +51,7 @@ my $self=fileparse($0);
 my ($gbkFile,$metaFile,$locusFile,$faaFile);
 my $nullValue="NA";
 my $help;
-my $version="$self\tv1.0.1";
+my $version="$self\tv0.1.4";
 GetOptions(
     'g|gbk:s'=>\$gbkFile,
     'f|faa:s'=>\$faaFile,
@@ -83,15 +82,15 @@ open($FAA, ">", $faaFile) || die $!;
 my $META=FileHandle->new();
 open($META, ">", $metaFile) || die $!;
 # Meta-Data Headers                
-print $META "# BioProject\tContig\tContigLength\tisPlasmid\tDBsources\t";
-print $META "DB-xRef\tGeneLocus\tGeneStart\tGeneStop\tStrand\t";
+print $META "# BioProject\tContig\tContigLength\tisPlasmid\tContigDesc\tDBsources\t";
+print $META "DB-xRef\tGeneLocus\tGeneStart\tGeneStop\tStrand\tProtein_Length\t";
 print $META "Species\tTaxonomy\tProteinID\tProduct\tTranslation_table\tNotes\n";
 parseGBK($gbkFile);
 close $FAA;
 close $META;
 
 ##############################
-######   Sub-Routines   ######
+######   Sub-Routines   ######  
 ##############################
 
 sub parseGBK{
@@ -100,46 +99,57 @@ sub parseGBK{
                                 -file=> shift,
                                 );
     
-    while (my $seqObj=$genbank->next_seq) {   
-        # Get definition line and check is the word palsmid is mentioned
-        my $definition=$seqObj->desc;
+    while (my $seqObj=$genbank->next_seq) {
+        # Contig Level Details that can be overwritten at the CDS level
+        my($definition, $contigIsPlasmid, $LocusID, $Length, $species, $taxa, $bioProject, $xLinks);
+        
+        # Get definition line and check if the word palsmid is mentioned
+        $definition=$seqObj->desc;
 #        print $definition."\n";
-        my $isPlasmid;
+
         if ($definition=~ /plasmid/igo) {
-            $isPlasmid++;
+            $contigIsPlasmid++;
         }
         
         # LOCUS Identifier
-        my $LocusID=$seqObj->display_id;
+        $LocusID=$seqObj->display_id;
         
         # Contig/Scaffold Length
-        my $Length=$seqObj->length;
+        $Length=$seqObj->length;
         
         # Organism
-        my $species = $seqObj->species->node_name;
+        $species = $seqObj->species->node_name;
         my @classification = $seqObj->species->classification;
-        my $taxa=join(";", @classification);
+        $taxa=join(";", @classification);
+        
+        if ($taxa eq ".") {
+            $taxa=$definition;
+        }
+        
         
         # DB Cross links
         my @dblinks=$seqObj->get_Annotations('dblink');
-        my ($xLinks, $bioProject);
         foreach(@dblinks){
             $xLinks.=$_->display_text."," ;
-            if($_->display_text=~ /Project: (.*)/){
+            if($_->display_text=~ /Project:(.*)/){
 		$bioProject=$1;
             }
         }
         $xLinks=~ s/\,$//;
 
-        # Features for all CDS in file.
-        my($locus,$product, $start, $stop, $strand, $transTable, $note, $protID,$aa_length, $xRef);
+        # Features for all CDSs in file.
         foreach my $featObj ($seqObj->get_SeqFeatures){
-            my ($locus, $product, $translation,);
+            #my ($locus, $product, );
             if($featObj->primary_tag eq "CDS"){
+                # CDS Level details that should be specific to the current CDS. Can overwrite Contig level variables as well.
+                my($locus,$product, $start, $stop, $strand, $transTable, $note, $protID,$aa_length, $xRef, $translation, $markPlasmid);
+                my $isPlasmid="";
+                
                 $start=$featObj->location->start;
                 $stop=$featObj->location->end;
                 $strand=$featObj->location->strand;
                 
+                # Get Locus Tag
                 if ($featObj->has_tag('locus_tag')) {
                     my @locii=$featObj->get_tag_values("locus_tag");
                     $locus=join(",", @locii);
@@ -152,17 +162,22 @@ sub parseGBK{
                     $locus=$nullValue;
                 }
                 
+                # Check if Plasmid
+                if($contigIsPlasmid){
+                    $isPlasmid="Yes: Contig definition";
+                    $markPlasmid++;
+                }
+                
                 if ($featObj->has_tag('plasmid')) {
                     my @plasmids=$featObj->get_tag_values("plasmid");
-                    $isPlasmid=join(",", @plasmids);
+                    $isPlasmid.=join(",", @plasmids);
+                    $markPlasmid++;
                 }
-                elsif($isPlasmid){
-                    $isPlasmid="Yes";
-                }
-                else{
+                elsif(! $contigIsPlasmid){
                     $isPlasmid="No";
                 }
                 
+                # Get product description, if present
                 if ($featObj->has_tag('product')) {
                     my @products=$featObj->get_tag_values("product");
                     $product=join(",", @products);
@@ -171,6 +186,7 @@ sub parseGBK{
                     $product=$nullValue;
                 }
                 
+                # Get Translation Table, if present
                 if ($featObj->has_tag('transl_table')) {
                     my @transTables=$featObj->get_tag_values("transl_table");
                     $transTable=join(",", @transTables);
@@ -179,6 +195,7 @@ sub parseGBK{
                     $transTable=$nullValue;
                 }
                 
+                # Get Protein IDs, if present
                 if ($featObj->has_tag('protein_id')) {
                     my @protIDs=$featObj->get_tag_values("protein_id");
                     $protID=join(",", @protIDs);
@@ -188,6 +205,7 @@ sub parseGBK{
                     $protID=$nullValue;
                 }
                 
+                # Get notes, if present
                 if ($featObj->has_tag('note')) {
                     my @notes=$featObj->get_tag_values("note");
                     $note=join(";", @notes);
@@ -196,6 +214,7 @@ sub parseGBK{
                     $note=$nullValue;
                 }
                 
+                # Get translation (protein seq), if present
                 if ($featObj->has_tag('translation')) {
                     my @translations=$featObj->get_tag_values("translation");
                     $translation=join("", @translations);
@@ -206,6 +225,7 @@ sub parseGBK{
                     $aa_length=0;
                 }
                 
+                # Get DB XREFs, if present
                 if ($featObj->has_tag('db_xref')) {
                     my @xRefs=$featObj->get_tag_values("db_xref");
                     $xRef=join(",", @xRefs);
@@ -215,21 +235,22 @@ sub parseGBK{
                 }
                 
 # Meta-Data Headers                
-# print $META "# BioProject\tContig\tContigLength\tisPlasmid\tDBsources\t";
-# print $META "DB-xRef\tGeneLocus\tGeneStart\tGeneStop\tStrand\t";
+# print $META "# BioProject\tContig\tContigLength\tisPlasmid\tContigDesc\tDBsources\t";
+# print $META "DB-xRef\tGeneLocus\tGeneStart\tGeneStop\tStrand\tProtein_Length\t";
 # print $META "Species\tTaxonomy\tProteinID\tProduct\tTranslation_table\tNotes\n";
                 
-                # Write Meta-Data
-                ## Contig/Scaffold
-                print $META ($bioProject ? $bioProject : $nullValue)."\t".$LocusID."\t".$Length."\t".$isPlasmid."\t".$xLinks."\t";
-                ## Gene/Locus
-                print $META $xRef."\t".$locus."\t".$start."\t".$stop."\t".$strand."\t";
-                print $META $species."\t".$taxa."\t".$protID."\t".$product."\t".$transTable."\t".$note."\n";
-                
-                # Write to protein fasta file
-                print $FAA ">".$locus.($LocusID ? "__".$LocusID : "")."\t".$protID."\t".$product."\t".$xRef."\n";
-                print $FAA $translation."\n";
-                
+                if ($aa_length > 0) {   
+                    # Write Meta-Data
+                    ## Contig/Scaffold
+                    print $META ($bioProject ? $bioProject : $nullValue)."\t".$LocusID."\t".$Length."\t".$isPlasmid."\t".$definition."\t".$xLinks."\t";
+                    ## Gene/Locus
+                    print $META $xRef."\t".$locus."\t".$start."\t".$stop."\t".$strand."\t".$aa_length."\t";
+                    print $META $species."\t".$taxa."\t".$protID."\t".$product."\t".$transTable."\t".$note."\n";
+                    
+                    # Write to protein fasta file
+                    print $FAA ">".$locus.($LocusID ? "__".$LocusID : "")."\t".$protID."\t".$product."\t".$xRef.($markPlasmid ? "\tPLASMID" : "")."\n";
+                    print $FAA $translation."\n";
+                }
             }
         }
     }

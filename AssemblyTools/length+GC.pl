@@ -21,10 +21,12 @@
 
 use strict;
 use Getopt::Long;
+use FileHandle;
+
 my $calcGC;
 my $fasta;
 my $minLen=1;
-my $version="0.1.0";
+my $version="0.1.1";
 
 GetOptions(
 	"gc"=>\$calcGC,
@@ -36,16 +38,20 @@ GetOptions(
 
 &help if ! $fasta;
 
-open (CONTIGS, $fasta) || die "Couldn't open $fasta\n";
+my $CONTIGS=FileHandle->new();
+open ($CONTIGS, "<",$fasta) || die "Couldn't open $fasta\n";
 $/= ">";
 my (%sequences, @names);
-while (my $b = <CONTIGS>) {
+while (my $b = <$CONTIGS>) {
     chomp $b;
     next unless $b;
     my ($name, @sequence) = split (/\n/, $b);
     my $seq = join ("", @sequence);
     my $length = length($seq);
-	next unless ($length >=$minLen);
+	if($length < $minLen){
+	    print STDERR "[WARNING: Length_less_than_minimum]\t".$name."\t".$length."\n";
+	    next;
+	}
 
 	unless ($calcGC){
 		print "$name\t$length\n" ;
@@ -61,7 +67,7 @@ while (my $b = <CONTIGS>) {
 		print "$name\t$printGC\t$length\n";
 	}
 }
-close CONTIGS;
+close $CONTIGS;
 
 sub help{
 	system('perldoc', $0);
