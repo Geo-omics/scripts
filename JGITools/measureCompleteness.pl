@@ -22,6 +22,7 @@
 
 =head2 Additional Features
 
+	-binned		<BOOLEAN>	If consolidated file belongs to the list of scaffolds that you're interested in ONLY, use this instead of "-list" flag.
 	-detail	-d	<BOOLEAN>	Optional Output File; print line from consolidated data containing the match. (extension= .tsv)
 	-myCOGS	-m	<CHAR>	user defined list of cog numbers. One entry per line; only first 2 columns will be read.
 			FORMAT: Column1=COG#### <TAB> COG_Description
