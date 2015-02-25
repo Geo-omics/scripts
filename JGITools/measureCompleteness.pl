@@ -46,12 +46,13 @@ use Getopt::Long;
 use File::Spec;
 
 my %COGS;
-my($list, $tsv, $imgName, $col, $more, $out, $myCOGS);
+my($list, $tsv, $imgName, $col, $more, $out, $myCOGS, $binned);
 my $prefix=$$;
 my $help;
-my $version="measureCompleteness.pl\tv0.1.3";
+my $version="measureCompleteness.pl\tv0.2.0";
 GetOptions(
 	'l|list:s'=>\$list,
+	'binned'=>\$binned,
 	'p|o|prefix:s'=>\$prefix,
 	'tsv:s'=>\$tsv,
 	'img_names'=>\$imgName,
@@ -63,7 +64,7 @@ GetOptions(
 print "\# $version\n";
 
 ## Sanity Check ##
-die &help if ((! $list) || (! $tsv));
+die &help if (! $tsv);
 
 ###################
 ## Load Defaults ##
@@ -97,17 +98,19 @@ else{
 
 ## Load Contig names of Interest ##
 my %index;
-open(LIST, "<".$list ) || die $!;
-while(my $line=<LIST>){
-	next if ($line=~ /^#/);
-	chomp $line;
-	next unless $line;
-	
-	$line=~ s/^>//;
-	$index{lc($line)}++;
-}
-close LIST;
 
+unless($binned){
+	open(LIST, "<".$list ) || die $!;
+	while(my $line=<LIST>){
+		next if ($line=~ /^#/);
+		chomp $line;
+		next unless $line;
+		
+		$line=~ s/^>//;
+		$index{lc($line)}++;
+	}
+	close LIST;
+}
 print "# Searching for [ ".scalar(keys %COGS)." ] housekeeping genes in [ ".scalar(keys %index)." ] contigs\n";
 
 ## Lookup data in the consolidated file ##
@@ -124,7 +127,9 @@ while(my $line=<TSV>){
 	my $name=$data[$col];
 	my $cog=uc($data[17]);
 
-	next unless $index{lc($name)};
+	if(!$binned){
+		next unless $index{lc($name)};
+	}
 	next unless $COGS{$cog};
 	
 	push (@{$found{$cog}}, $name);
