@@ -170,7 +170,7 @@ limit2Length.pl
 mapping.sh	-	BWA mapping pipeline. Open the file in a text editor for help.
 qc.sh	-	NGS QC pipeline
 assemble.sh	-	NGS de novo assembly pipeline. Expects the QC to be done using qc.sh.
-coveragePerScaffold.pl  -       Using the GenomeCoverageBed default output to calculate the coverage per scaffold and the whole genome.
+coveragePerScaffold.pl	-	Using the GenomeCoverageBed default output to calculate the coverage per scaffold and the whole genome.
 
 wrappers/ESOM:
 changeClasses.pl	-	Edit the *.cls file to change the class numbers for a given list of contig names.
