@@ -7,6 +7,7 @@
 	perl toPhylipAndBack.pl -original -f InputFile.fasta -alias file_Prefix
 
 =head1 Description
+
 =head2	-phylip
 
 	Converts a regular fasta file to a 10-digit header fasta file and creates an 'aka' file that keeps track of the name changes.
