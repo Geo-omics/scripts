@@ -51,7 +51,7 @@ my $self=fileparse($0);
 my ($gbkFile,$metaFile,$locusFile,$faaFile);
 my $nullValue="NA";
 my $help;
-my $version="$self\tv0.1.4";
+my $version="$self\tv0.1.5";
 GetOptions(
     'g|gbk:s'=>\$gbkFile,
     'f|faa:s'=>\$faaFile,
@@ -117,34 +117,32 @@ sub parseGBK{
         # Contig/Scaffold Length
         $Length=$seqObj->length;
         
-        # Organism
-        $species = $seqObj->species->node_name;
-        my @classification = $seqObj->species->classification;
-        $taxa=join(";", @classification);
-        
-        if ($taxa eq ".") {
-            $taxa=$definition;
-        }
-        
-        
-        # DB Cross links
-        my @dblinks=$seqObj->get_Annotations('dblink');
-        foreach(@dblinks){
-            $xLinks.=$_->display_text."," ;
-            if($_->display_text=~ /Project:(.*)/){
-		$bioProject=$1;
+        eval { 
+            # Organism
+            $species = $seqObj->species->node_name;
+            my @classification = $seqObj->species->classification;
+            $taxa=join(";", @classification);
+            
+            if ($taxa eq ".") {
+                $taxa=$definition;
             }
-        }
-        $xLinks=~ s/\,$//;
-
+        
+            # DB Cross links
+            my @dblinks=$seqObj->get_Annotations('dblink');
+            foreach(@dblinks){
+                $xLinks.=$_->display_text."," ;
+                if($_->display_text=~ /Project:(.*)/){
+                    $bioProject=$1;
+                }
+            } 
+            $xLinks=~ s/\,$//;
+        }; warn $@ if $@;
         # Features for all CDSs in file.
         foreach my $featObj ($seqObj->get_SeqFeatures){
-            #my ($locus, $product, );
             if($featObj->primary_tag eq "CDS"){
                 # CDS Level details that should be specific to the current CDS. Can overwrite Contig level variables as well.
                 my($locus,$product, $start, $stop, $strand, $transTable, $note, $protID,$aa_length, $xRef, $translation, $markPlasmid);
                 my $isPlasmid="";
-                
                 $start=$featObj->location->start;
                 $stop=$featObj->location->end;
                 $strand=$featObj->location->strand;
@@ -156,7 +154,6 @@ sub parseGBK{
                     if ($locusFile) {
                         next unless $locusTags{uc($locus)};
                     }
-                    
                 }
                 else{
                     $locus=$nullValue;
@@ -242,10 +239,14 @@ sub parseGBK{
                 if ($aa_length > 0) {   
                     # Write Meta-Data
                     ## Contig/Scaffold
-                    print $META ($bioProject ? $bioProject : $nullValue)."\t".$LocusID."\t".$Length."\t".$isPlasmid."\t".$definition."\t".$xLinks."\t";
+                    print $META ($bioProject ? $bioProject : $nullValue)."\t".
+                                $LocusID."\t".$Length."\t".$isPlasmid."\t".$definition."\t".
+                                ($xLinks ? $xLinks : $nullValue)."\t";
                     ## Gene/Locus
                     print $META $xRef."\t".$locus."\t".$start."\t".$stop."\t".$strand."\t".$aa_length."\t";
-                    print $META $species."\t".$taxa."\t".$protID."\t".$product."\t".$transTable."\t".$note."\n";
+                    print $META ($species ? $species : $nullValue)."\t".
+                                ($taxa ? $taxa : $nullValue)."\t".
+                                $protID."\t".$product."\t".$transTable."\t".$note."\n";
                     
                     # Write to protein fasta file
                     print $FAA ">".$locus.($LocusID ? "__".$LocusID : "")."\t".$protID."\t".$product."\t".$xRef.($markPlasmid ? "\tPLASMID" : "")."\n";

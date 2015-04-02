@@ -11,6 +11,7 @@ perl coveragePerScaffold.pl -bed genomeCovBed.txt
 =head2 Options
 
         -bed    -b      <CHAR>      Default output format from the genomeCoverageBed command in bedtools.
+        -min            <INT>       Only count bases with coverage more than or equal to this; default=0;
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -35,10 +36,12 @@ use FileHandle;
 use File::Basename;
 
 my $help;
-my $version=fileparse($0)."\tv0.0.1";
+my $version=fileparse($0)."\tv0.0.2";
 my $bedFile;
+my $minCov=0;
 GetOptions(
         'b|bed:s'=>\$bedFile,
+        'min:i'=>\$minCov,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
@@ -52,7 +55,8 @@ while(my $line=<$FILE>){
     next unless $line;
     my($scaffold,$depth,$numBases, $scafLen,$fraction)=split(/\t/, $line);
     next if ($depth!~ /\d+/);
-    
+    next if ($depth < $minCov);
+
     $cov{$scaffold}{"LEN"}=$scafLen;
     $cov{$scaffold}{"CMCOV"}+=($depth*$numBases);
 }

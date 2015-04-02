@@ -1,5 +1,5 @@
 #!/bin/bash
-# USAGE: qc.log ./Sample_####
+# USAGE: qc.sh ./Sample_####
 # Module required
 # module load Scythe/0.993b (or above)
 
@@ -9,8 +9,8 @@ set -e
 # http://www.davidpashley.com/articles/writing-robust-shell-scripts/#id2382181
 set -u
 
-if [ ! -h "NexteraPE-PE.fa" ]; then
-	ln -s /opt/packages/Trimmomatic/0.32/adapters/NexteraPE-PE.fa .
+if [ ! -h "adapters.fa" ]; then
+	ln -s /opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa adapters.fa
 fi
 
 if [ ! -h "dereplicate.pl" ]; then
@@ -28,13 +28,13 @@ SNUM=$(echo $sample | sed "s#./##" |sed "s#Sample_##")
 
 # Decompress Raw Data
 echo -e "[`date`]\tDecompressing"
-if [ -f $sample/${SNUM}*L007*_R1_004*.gz ]; then
+if [ -f $sample/${SNUM}*L005_R1_004*.gz ]; then
 	for fwd in $sample/*R1*.gz; do
 		gunzip $fwd
 	done
 fi
 
-if [ -f $sample/${SNUM}*L007_R2_004*.gz ]; then
+if [ -f $sample/${SNUM}*L005_R2_004*.gz ]; then
 	for rev in $sample/*R2*.gz; do
  		gunzip $rev
 	done 
@@ -44,8 +44,13 @@ fi
 echo -e "[`date`]\tConcatenating"
 FWD=$sample/${SNUM}_fwd.fastq
 REV=$sample/${SNUM}_rev.fastq
-cat $sample/*R1*.fastq > $FWD
-cat $sample/*R2*.fastq > $REV
+if [ ! -e $FWD ]; then
+	cat $sample/*R1*.fastq > $FWD
+fi
+
+if [ ! -e $REV ]; then
+	cat $sample/*R2*.fastq > $REV
+fi
 
 # Quality Check 1
 echo -e "[`date`]\tQC-1 started in background"
@@ -59,8 +64,8 @@ perl dereplicate.pl -fq $REV -o $sample/derep_rev_${SNUM}.fastq
 
 # Scythe Adapter Trimming
 echo -e "[`date`]\tAdapter Trimming"
-scythe -a NexteraPE-PE.fa -q sanger -m $sample/derep_fwd_${SNUM}.matches.fastq -o $sample/derep_scythe_fwd_${SNUM}.fastq $sample/derep_fwd_${SNUM}.fastq
-scythe -a NexteraPE-PE.fa -q sanger -m $sample/derep_rev_${SNUM}.matches.fastq -o $sample/derep_scythe_rev_${SNUM}.fastq $sample/derep_rev_${SNUM}.fastq
+scythe -a adapters.fa -q sanger -m $sample/derep_fwd_${SNUM}.matches.fastq -o $sample/derep_scythe_fwd_${SNUM}.fastq $sample/derep_fwd_${SNUM}.fastq
+scythe -a adapters.fa -q sanger -m $sample/derep_rev_${SNUM}.matches.fastq -o $sample/derep_scythe_rev_${SNUM}.fastq $sample/derep_rev_${SNUM}.fastq
 
 # Sickle Quality Trimming
 echo -e "[`date`]\tQuality Trimming"

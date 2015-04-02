@@ -13,6 +13,7 @@ set -u
 # module load idba/1.1.1 (or above)
 # module load QUAST/2.3 (or above)
 # module load blast/2.2.28 (or above)
+# module load PhyloSift/1.0.1 (or above)
 
 #######################################
 ##### MAKE PARAMETER CHANGES HERE #####
@@ -21,6 +22,7 @@ set -u
 path2silva="/omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta"
 path2bact="/omics/PublicDB/NCBI/Bacteria/ncbi_bacteria_10302014.fasta"
 path2arch="/omics/PublicDB/NCBI/Archaea/ncbi_archaea_10302014.fasta"
+path2markers="~/share/phylosift"
 
 # IDBA Parameters
 mink=52
@@ -71,6 +73,13 @@ for i in $(find -maxdepth 1 -type d -name "Sample*"); do
 
     perl top5.pl -t 1 -b $BBLAST -o $TBBLAST
     perl top5.pl -t 1 -b $ABLAST -o $TABLAST
+
+    mkdir -p PhyloSift
+    if [ -d $path2markers ]; then
+	phylosift all --disable_updates --output PhyloSift/Whole_Assembly --threads 10 $FASTA
+    else
+	phylosift all --output PhyloSift/Whole_Assembly --threads 10 $FASTA
+    fi
 
     echo -e "[`date`]\tFinished with ${i}"
     echo ""
