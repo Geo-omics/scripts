@@ -1,12 +1,12 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 =head1 DESCRIPTION
 
-map_project_names.pl -- Map IMG project names to your own. Creates Symbolic links with your project names to extracted IMG tar balls.
+clusterDensity.pl -- Do this.
 
 =head1 USAGE
 
-perl map_project_names.pl
+perl clusterDensity.pl
 
 =head2 Options
 
@@ -16,7 +16,7 @@ perl map_project_names.pl
 
 =head1 Author
 
-Sunit Jain, (Mon Feb 23 12:55:40 EST 2015)
+Sunit Jain, (Mon Mar  2 16:41:57 EST 2015)
 sunitj [AT] umich [DOT] edu
 
 =head1 License
@@ -36,31 +36,27 @@ use File::Basename;
 
 my $help;
 my $version=fileparse($0)."\tv0.0.1b";
-my $mapFile="names_map.txt";
-my $path2col1="./";
-my $outPath="./";
-
+my $clustFile="results.txt";
 GetOptions(
-        'm|map:s'=>\$mapFile,
-        'p1|path2col1:s'=>\$path2col1,
-        'o|outdir:s'=>\$outPath,
+        'c|clusters:s'=>\$clustFile,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 print "\# $version\n";
 
-my %projects;
-my $MAP=FileHandle->new();
-open( $MAP, "<", $mapFile) || die $!;
-while(my $line=<$MAP>){
+my $FILE=FileHandle->new();
+open( $FILE, "<", $clustFile) || die $!;
+while(my $line=<$FILE>){
     chomp $line;
-    next unless ($line=~/^\d+/);
     next unless $line;
-    my($imgName, $sampleNum, $desc)=split(/\t/, $line);
-    my $oldPath=File::Spec->catdir($path2col1,$imgName);
-    my $newPath=File::Spec->catdir($outPath,$sampleNum);
-    symlink($oldPath, $newPath);
+    
+    my($thresh, $fMeasure, $combinedClust)=split(/\t/, $line);
+    my @clustComma=split(/\,/,$combinedClust);
+    my @clustSemiColon=split(/\;/, $combinedClust);
+    my $totalClusters=scalar(@clustSemiColon);
+    my $totalNodes=scalar(@clustComma);
+    print $thresh."\t".$totalNodes."\t".$totalClusters."\t".($totalNodes/$totalClusters)."\n";
 }
-close $MAP;
+close $FILE;
 
 

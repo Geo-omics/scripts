@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-getLineage - classify BLAST hits by taxonomy (nucleotides only).
+getLineageNT - classify BLAST hits by taxonomy (Nucleotides only).
 
 =head2 USAGE
 
@@ -67,13 +67,19 @@ $SEP = '_';
 
 # Set relative path to dmp files.
 my $home=$ENV{"HOME"};
+my $up=File::Spec->updir();
+my $d1="COMMON";
+my $d2="extractedDB";
+my $d3="dump";
+my @dir=($home, $up, $d1, $d2, $d3);
+
 
 # Default Values.
 my $evalue_filter = 1e-4;
 my @files;
 my $zcat = 'zcat'; # or gunzip -c 
-my $prefix = "/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/";
-my $gi2taxidfile = File::Spec->catfile($prefix, "gi_taxid_nucl.dmp");
+my $prefix = File::Spec->catdir(@dir);
+my $gi2taxidfile = File::Spec->catfile(@dir, "gi_taxid_prot.dmp");
 
 GetOptions(
 	   'v|verbose|debug' => \$DEBUG,
@@ -86,29 +92,29 @@ GetOptions(
 				  exit },
 	   );
 
-# insure idx location is created
-mkdir(File::Spec->catfile($prefix,'idx')) 
-    unless -d File::Spec->catfile($prefix,'idx');
+# insure idxSP location is created
+mkdir(File::Spec->catfile($prefix,'idxSP')) 
+    unless -d File::Spec->catfile($prefix,'idxSP');
 
 # these files came from ftp://ftp.ncbi.nih.gov/pub/taxonomy
 my $taxdb = Bio::DB::Taxonomy->new
     (-source => 'flatfile',
-     -directory => File::Spec->catfile($prefix, 'idx'), 
+     -directory => File::Spec->catfile($prefix, 'idxSP'), 
      -nodesfile => File::Spec->catfile($prefix,'nodes.dmp'),
      -namesfile => File::Spec->catfile($prefix,'names.dmp')
      );
 my %query;
 
-my $range = 10000000;
+my $range = 10000000000;
 my $randomNumber = int(rand($range));
-my $gi2className='gi2class'.$randomNumber;
+my $gi2className='spGi2class'.$randomNumber;
 
 my (%taxid4gi,%gi2node);
 my $dbh = tie(%gi2node, 'DB_File', $gi2className);
 
 #open (TEST, $prefix."gi_taxid_nucl.dmp") || die $!;
 
-my $giidxfile = File::Spec->catfile($prefix,'idx','gi2taxid');
+my $giidxfile = File::Spec->catfile($prefix,'idxSP','gi2taxid');
 my $done = -e $giidxfile;
 my $dbh2 = tie(%taxid4gi, 'DB_File', $giidxfile);
 
@@ -123,7 +129,7 @@ if( ! $done ) {
     }
     my $i= 0;
     while(<$fh>) {
-	    next if ($_=~/^\#/);
+    next if ($_=~/^\#/);
 		my ($gi, $taxid) = split(/\t/,$_);
 		chomp($gi);
 		chomp($taxid);
@@ -136,7 +142,7 @@ if( ! $done ) {
     $dbh2->sync;
 }
 
-open (NOTAXA, ">noTaxIDfound_P".$randomNumber.".log");
+#open (NOTAXA, ">noTaxIDfound_Sp".$randomNumber.".log");
 for my $file ( @files ) {
 	open (OUT, ">l_$file.txt");
     warn("$file\n");
@@ -168,6 +174,7 @@ for my $file ( @files ) {
 		if( ! $taxid ) {
 #		    warn("no taxid for $gi\n");
 		    print NOTAXA $gi."\n";
+		    print OUT $gi."\tnotFound\($gi\)\n";
 		    next;
 		}
 		my $node = $taxdb->get_Taxonomy_Node($taxid);
@@ -179,7 +186,7 @@ for my $file ( @files ) {
 
 		# THIS IS WHERE THE KINGDOM DECISION IS MADE
 		# DON'T FORGET TO WIPE OUT YOUR CACHE FILE
-		# gi2class after you make changes here
+		# spGi2class after you make changes here
 		while( defined $parent && $parent->node_name ne 'root' ) { 
 		    # this is walking up the taxonomy hierarchy
 		    # can be a little slow, but works...
@@ -187,7 +194,17 @@ for my $file ( @files ) {
 		    # deal with Eubacteria, Archea separate from 
 		    # Metazoa, Fungi, Viriplantae differently
 		    # (everything else Eukaryotic goes in Eukaryota)
-		    if($parent->rank eq 'class') {
+		    if($parent->rank eq 'family') {
+			# caching in ... 
+				($gi2node{$gi}) = $parent->node_name;
+				print OUT $gi."\t".$parent->node_name."\t".$parent->rank."\n";
+				last;
+		    } elsif($parent->rank eq 'order') {
+			# caching in ... 
+				($gi2node{$gi}) = $parent->node_name;
+				print OUT $gi."\t".$parent->node_name."\t".$parent->rank."\n";
+				last;
+		    }  elsif($parent->rank eq 'class') {
 			# caching in ... 
 				($gi2node{$gi}) = $parent->node_name;
 				print OUT $gi."\t".$parent->node_name."\t".$parent->rank."\n";
@@ -259,4 +276,4 @@ while( my ($sp,$d) = each %query ) {
 }
 
 system('rm -f '.$gi2className);
-#system('rm -rf idx');
+#system('rm -rf idxSP');
