@@ -20,10 +20,10 @@ set -u
 #######################################
 # Required Databases
 path2silva="/omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta"
-path2bact="/omics/PublicDB/NCBI/Bacteria/ncbi_bacteria_10302014.fasta"
-path2arch="/omics/PublicDB/NCBI/Archaea/ncbi_archaea_10302014.fasta"
+path2bact="/omics/PublicDB/NCBI/Bacteria/latest_16S.fasta"
+path2arch="/omics/PublicDB/NCBI/Archaea/latest_16S.fasta"
 path2markers="~/share/phylosift"
-
+path2scripts="/geomicro/data1/COMMON/scripts"
 # IDBA Parameters
 mink=52
 maxk=92
@@ -43,6 +43,15 @@ for i in $(find -maxdepth 1 -type d -name "Sample*"); do
     cd $myPath
     ln -s ../*int*fasta .
 
+	if [ ! -h "top5.pl" ]; then
+        	ln -s $path2scripts/BlastTools/top5.pl .
+	fi
+
+	if [ ! -h "extractSubSeqs.pl" ]; then
+        	ln -s $path2scripts/SeqTools/extractSubSeqs.pl .
+	fi
+
+
     echo -e "[`date`]\tAssembling ${i} at $PWD"
     idba_ud -o ${assembly} -r *_int.fasta --num_threads ${threads} --mink $mink --maxk $maxk --step $step &> idba_${assembly}.log
 
@@ -52,7 +61,7 @@ for i in $(find -maxdepth 1 -type d -name "Sample*"); do
     echo -e "[`date`]\tSearch for scaffolds with 16S"
     mkdir -p BLASTN
     blastn -query ${assembly}/scaffold.fa -db $path2silva -outfmt "7 std qlen stitle" -out BLASTN/${i}_vs_silvaSSU119.blastn -num_threads ${threads}
-    ln -s /geomicro/data1/COMMON/scripts/BlastTools/top5.pl .
+    
     T1BLAST=BLASTN/${i}_vs_silvaSSU119.topHits.blastn
     perl top5.pl -t 1 -b BLASTN/${i}_vs_silvaSSU119.blastn -o $T1BLAST
 
@@ -62,7 +71,6 @@ for i in $(find -maxdepth 1 -type d -name "Sample*"); do
     FASTA=${assembly}/scaffold.fa
     SSEQ=BLASTN/silvaSSU119.topHits.fasta
 
-    ln -s /geomicro/data1/COMMON/scripts/SeqTools/extractSubSeq.pl .
     perl extractSubSeq.pl -query -blast $T1BLAST -f $FASTA -o $SSEQ
 
     blastn -query $SSEQ -db $path2bact -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads ${threads}
