@@ -12,8 +12,7 @@ perl nsmpReport.pl -as path/to/AntiSmash/output/overview/directory -mp path/to/m
 
     -antismash -as  <CHAR>  path to Antismash overview directory
     -metapathways -mp   <CHAR>  path to MetaPathways output directory.
-    -out -o     <CHAR>  Default output file
-    -concise -c	<CHAR>	Concise output file    
+    -prefix -p	<CHAR>	output file prefix   
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -83,6 +82,7 @@ if (! $imageDir){
 
 ## Check for pre-existing file/folders
 my %preExist;
+my $fatal=0;
 unless ($overwrite){
 	if(-e $details){
 		$preExist{$details}++;
@@ -98,9 +98,12 @@ unless ($overwrite){
 
 	foreach (keys %preExist){
 		print STDERR "[FATAL] '$_' already exists!\n";
+		$fatal++;
 	}
-	print STDERR "[ACTION] Use the '-force' or '-f' flag to overwrite already existing files and/or directories.\n";
-	die "[MOCK] Try again...\n";
+	if($fatal > 0){
+		print STDERR "[ACTION] Use the '-force' or '-f' flag to overwrite already existing files and/or directories.\n";
+		die "[MOCK] Try again...\n";
+	}
 }
 undef(%preExist);
 
@@ -499,10 +502,10 @@ sub mapNames{
 }
 
 sub parseGBK{
-    my $genbank = Bio::SeqIO->new(
+	my $genbank = Bio::SeqIO->new(
                                 -format=> 'genbank',
                                 -file=> shift,
-								-verbose=>-1
+				-verbose=>-1
                                 );
 	print "[GBK]\n";
 
@@ -514,12 +517,12 @@ sub parseGBK{
 ## NOTE ## $contig == $definition in hash $asCluster{$definition}	
         # Features for all CDSs in file.
 		my (%clusterGenes, %adjusted);
-        foreach my $featObj ($seqObj->get_SeqFeatures){
+        	foreach my $featObj ($seqObj->get_SeqFeatures){
 			my $adjFeature;
-            if($featObj->primary_tag eq "CDS"){
+        		if($featObj->primary_tag eq "CDS"){
 				my $type="CDS";
                 # CDS Level details that should be specific to the current CDS. Can overwrite Contig level variables as well.
-                my($locus,$product, $start, $stop, $strand,$clustNum, $adjStart, $adjStop);
+                		my($locus,$product, $start, $stop, $strand,$clustNum, $adjStart, $adjStop);
 				($start, $stop, $strand,$clustNum, $adjStart, $adjStop)=genes2cluster($contig,$featObj);
 				next unless $clustNum;
 
@@ -537,8 +540,9 @@ sub parseGBK{
 
 				$adjusted{$featObj}{"START"}=$adjStart;
 				$adjusted{$featObj}{"STOP"}=$adjStop;
-            }
-        }
+			}
+		}	
+		
 		foreach (keys %clusterGenes){
 			my %Clusters;
 			my $panel=$asClusters{$contig}{$_}{"Panel"};
@@ -547,12 +551,10 @@ sub parseGBK{
 			foreach my $feature(@{$clusterGenes{$_}}){
 				push(@{$Clusters{$_}},$feature);
 			}
-			render($panel,$pngFile,\%Clusters, 'chartreuse', \%adjusted);
+			render($panel,$pngFile,\%Clusters, 'green', \%adjusted);
 		}
-    }
-
-
-    return;
+	}
+	return;
 }
 
 sub genes2cluster{
@@ -569,7 +571,7 @@ sub genes2cluster{
 		my ($cStart, $cStop)=sort{$a<=>$b}($clustStart, $clustStop);
 
 		next if($cStop < $gStart); 
-        next if($gStop < $cStart); 
+	        next if($gStop < $cStart); 
 		$clustNum=$_;
 		$adjStart=$gStart-$cStart;
 		$adjStop=$gStop-$cStart;
@@ -579,61 +581,4 @@ sub genes2cluster{
 	}
 	
 	return($start, $stop, $strand,$clustNum, $adjStart, $adjStop);
-}
-
-
-
-__END__
-
-sub parseGFF3{
-#http://gmod.org/wiki/GFF
-# contig, source, type, start,stop,score,strand, phase,attributes
-    my $line=shift;
-    my ($contig, $source, $type, $start,$stop,$score,$strand, $phase,$attribs)=split(/\t/, $line);
-    my(@attributes)=split(/\;/, $attribs);
-    $contig=$nameMap{$contig}; 
-    my ($locusID, $ID, $Name,$Alias, $Parent, $Target, $Gap, $Derives_from, $Note, $Dbxref, $Onto, $repeat_type, $repeat_unit, $repeat_fam, $product);
-    foreach my $att(@attributes){
-	if ($att=~/^ID\=(.*)/){
-	    $ID= $1;
-	    next;
-	}
-	if ($att=~/locus_tag\=(.*)/){
-	    $locusID=$1;
-	    next;
-	}
-    }
-    if ($locusID){
-        foreach my $att(@attributes){
-            next if ($att=~/^ID/);
-            next if ($att=~/^locus_tag/);
-            my($tag, $data)=split(/\=/,$att);
-	    #$gff_attributes{$tag}++;
-	    $annotation{$contig}{$locusID}{$tag}=$data;
-        }
-    }
-    else{
-	foreach my $att(@attributes){
-	    if ($Parent){
-	        $locusID=$Parent."__exon"
-	    }
-	    elsif($type=~/repeat/){
-		$locusID=$ID."__".
-		($repeat_type ? $repeat_type : "Unknown")."__".
-		($repeat_unit ? $repeat_unit : "Unknown")."__".
-		($repeat_fam ? $repeat_fam : "Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
-		#$locusID.="[".$1."]" if ($repeat_unit);
-            }
-            else{
-    		$locusID=$ID."__".$type;
-            }
-        }
-    }
-    $annotation{$contig}{$locusID}{"START"}=$start;
-    $annotation{$contig}{$locusID}{"STOP"}=$stop;
-    $annotation{$contig}{$locusID}{"TYPE"}=$type;
-    $annotation{$contig}{$locusID}{"LEN"}=($stop-$start);
-    $annotation{$contig}{$locusID}{"STRAND"}=$strand;
-    return;
-#   $gene_prod{$locusID}=$product unless ($gene_prod{$locusID});
 }
