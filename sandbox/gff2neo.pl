@@ -67,8 +67,6 @@ while( my $result = $parser->next_feature ) {
 	my $seq_id = $result->seq_id();
 	my $source = $result->source_tag();
 	my $strand = $result->strand();
-print $strand. " | ";
-next;
 	$strand =~ s/-1/-/g;
 	$strand =~ s/1/+/g;
 	my $end = $result->end();
