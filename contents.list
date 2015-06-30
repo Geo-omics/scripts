@@ -161,6 +161,9 @@ TinySeqTools:
 tinySeq2table.xslt	-	restructure TinySeq format XML file to a *tab-delimited* file
 tinySeq2fasta.xslt	-	restructure TinySeq format XML file to a *FASTA* format file
 
+OmicsDBTools/Parsers:
+gff2neo.pl	-	Read a GFF(version 3) file and create nodes and relationship files for upload to a GraphDB. Tested on Neo4j v2.2.3.
+
 wrappers/Assembly:
 assemble.pl
 calcN50.pl
