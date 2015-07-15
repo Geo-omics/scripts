@@ -10,7 +10,9 @@ perl createNodes.pl
 
 =head2 Options
 
-
+	-config	-c	<CHAR>		Config file explicitly declaring which columns to make nodes out of and which the properties; Recommended but Optional; default = guess.
+	-nodes	-n	<CHAR>		Read this nodes file created by one of the parsers and create nodes in the database; Required.
+	-port	-p	<INT>		Port which the database is listening to; default: 7474.
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message.
 
@@ -36,17 +38,22 @@ use File::Basename;
 
 my $help;
 my $version=fileparse($0)."\tv0.0.1b";
+my ($configFile, $nodesFile);
+my $port = 7474;
 GetOptions(
+	'c|config:s'=>\$configFile,
+	'n|nodes:n'=>\$nodesFile,
+	'p|port:i'=>\$port,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 print "\# $version\n";
 
-my $FILE=FileHandle->new();
-open( $FILE, "<", $fileName) || die $!;
-while(my $line=<$FILE>){
+my $NODES=FileHandle->new();
+open( $NODES, "<", $nodesFile) || die $!;
+while(my $line=<$NODES>){
 
 }
-close $FILE;
+close $NODES;
 
 

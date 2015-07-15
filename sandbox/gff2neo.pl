@@ -35,14 +35,14 @@ use Getopt::Long;
 use FileHandle;
 use File::Basename;
 
-use Bio::Tools::GFF;
-
 my $help;
-my $version=fileparse($0)."\tv0.0.1b";
+my $version=fileparse($0)."\tv0.0.2b";
 my ($gffFile, $prefix);
+my $minLen = 200;
 GetOptions(
 	'gff:s'=>\$gffFile,
 	'p|prefix:s'=>\$prefix,
+	'l|len:i'=>\$minLen,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
@@ -53,44 +53,55 @@ if(!$prefix){
 	$prefix=fileparse($gffFile, ".gff");
 }
 
-my $parser = new Bio::Tools::GFF->new(-file=> $gffFile, -gff_version => 3);
+# Can't use BioPerl since it can't deal with the mess that is IMG. Doesn't parse strands from IMG gff outputs.
+# use Bio::Tools::GFF;
+# my $parser = new Bio::Tools::GFF->new(-file=> $gffFile, -gff_version => 3);
 
 my (%parents,%outputs);
-while( my $result = $parser->next_feature ) {
-	my ($id,@junk)= $result->get_tag_values("ID");
-	my $type = $result->primary_tag();
+my $GFF=FileHandle->new();
+open( $GFF, "<", $gffFile) || die $!;
+while(my $line=<$GFF>){
+	chomp $line;
+	next unless $line;
+	next if($line=~ /^#/);
 
-	if(!$result){
-		last;
+	my($seq_id, $source, $type, $start,$end,$score,$strand,$phase,$attributes)=split(/\t/, $line);
+	my @attribs=split(/;/, $attributes);
+	my (%atts, $locus_tag);
+	foreach my $item(@attribs){
+		my($key, $value)=split(/\=/,$item);
+		$atts{$key}=$value;
+		$locus_tag=$value if (lc($key) eq "locus_tag");
 	}
+	my @a=sort keys %atts;
 
-	my $seq_id = $result->seq_id();
-	my $source = $result->source_tag();
-	my $strand = $result->strand();
-	$strand =~ s/-1/-/g;
-	$strand =~ s/1/+/g;
-	my $end = $result->end();
-	my $start = $result->start();
-	my @atts = $result->get_all_tags();
+	$strand=~ s/-1/-/g;
+	$strand=~ s/1/+/g;
+	my $length=abs($start-$end)+1;
+
+	next unless ($length >= $minLen);
 
 	# Open a file handle for each 'type' of feature
 	my($NODES, $REL);
 	unless($outputs{$type}{"NODES"}){
 		$outputs{$type}{"REL"}=FileHandle->new();
 		$outputs{$type}{"NODES"}=FileHandle->new();
-		$outputs{$type}{"ATTRS"}=\@atts;
+		$outputs{$type}{"ATTRS"}=\@a;
 
 		# NODES File
 		$NODES = $outputs{$type}{"NODES"};
 		open($NODES, ">>", $prefix."_".$type.".nodes") || die $!;
-		my $node_header="Scaffold\tSource\tType\tStart\tEnd\tStrand\t";
-		$node_header.= $_."\t" foreach (@atts);
+		my $node_header="Scaffold\tSource\tType\tStart\tEnd\tLength\tStrand\t";
+		$node_header.= $_."\t" foreach (@{$outputs{$type}{"ATTRS"}});
 		$node_header=~ s/\t$/\n/;
 		print $NODES $node_header;
 
-		# RELATIONS File
-		$REL = $outputs{$type}{"REL"};
-		open($REL, ">>", $prefix."_".$type.".rel") || die $!;
+		if($locus_tag){
+			# RELATIONS File
+			$REL = $outputs{$type}{"REL"};
+			open($REL, ">>", $prefix."_".$type.".rel") || die $!;
+			print $REL "ID\tTHIS\tTO\tTHAT\n";
+		}
 	}
 	
 	# Redirect output to corresponding file handle
@@ -98,30 +109,20 @@ while( my $result = $parser->next_feature ) {
 	$REL=$outputs{$type}{"REL"};
 	
 	# Write to Nodes file
-	my $line="$seq_id\t$source\t$type\t$start\t$end\t$strand\t";
+	my $node;
 	foreach my $tag(@{$outputs{$type}{"ATTRS"}}){
-		my($value, @junk)=$result->get_tag_values($tag);
-		$line.=$value."\t";
+		my $value= $atts{$tag};
+		$node.=$value."\t";
 	}
-	$line=~ s/\t$/\n/;
-	print $NODES $line;
+	$node.="$seq_id\t$source\t$type\t$start\t$end\t$length\t$strand\t";
+	$node=~ s/\t$/\n/;
+	print $NODES $node;
 
 	# Write to Relationship file
-
-	next;
-
-	if($type eq "mRNA"){
-		my ($parent,@junk)= $result->get_tag_values("Parent");
-		$parents{$id} = $parent;
-	}
-	if($type eq "exon"){
-		#find out transcript (parent) and gene for THIS exon
-		my ($parent,@junk)= $result->get_tag_values("Parent");
-		my $transcript = $parent;
-		my $gene = $parents{$transcript};	
-		print "$seq_id\t$source\t$type\t$start\t$end\t.\t$strand\t.\tgene_id \"$gene\";transcript_id \"$transcript\";\n";
-	}
+	my $rel=$locus_tag."__".$seq_id."\t".$locus_tag."\tis_".$type."_on\t".$seq_id."\n";
+	print $REL $rel;
 }
+close $GFF;
 
 # Close all open file handles.
 foreach my $type(keys %outputs){

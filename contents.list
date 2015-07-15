@@ -104,6 +104,13 @@ getSciNames.pl
 gff2tbl.pl	-	Read GFF3(tested with JGI's gff), Contigs and Gene_product files and produce a usable output in NCBI's ridiculous '.tbl' format.
 GI_info_XMLParser.pl
 
+PPTTools:
+ppt_getGI.pl	-	Get GI numbers for a search term
+ppt_getXML.pl	-	Get TinySeq XML for the GI numbers
+parseTinySeqXML.xslt	-	Reformat TinySeq XML to tabular data
+derep+alias.pl	-	Remove duplicates and assign unique ids to sequences; print output in fasta format along with other metadata. (legacy)
+createPhgDB.sh	-	Bash wrapper that uses these scripts to create the NCBI portion of the PhgDB.
+
 RibopickerTools:
 silvaTaxonAppend.pl
 taxonDist.pl
