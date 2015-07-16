@@ -144,6 +144,7 @@ $params{id} = $gi;
 $params{retmode} = "xml";
 $params{outfile} = $out;
 $params{rettype} = "fasta";
+$params{batch} = -1;
 efetch_batch(%params);
 
 #** END SCRIPT MAIN BODY ************************************

@@ -12,6 +12,7 @@ scripts="/geomicro/data1/COMMON/scripts"
 ##### DO NOT MAKE ANY CHANGES BEYOND THIS LINE #####
 #####     unless you know what you're doing    #####
 ####################################################
+version=1.0.0
 fmtDate=`date +"%m_%Y"`
 giFile="phgDB_${fmtDate}.gi.list"
 fileBasename=${giFile##*/}
@@ -20,6 +21,7 @@ rfmtXmlFile=${fileBasename%.*}.refmt.xml
 dataFile=${fileBasename%.*}.data
 phgDB=${fileBasename%.*.*}.db
 
+echo "[`date`] Firing up version: ${version}..."
 echo "[`date`] Setting up helper scripts..."
 for script in ppt_getGI.pl ppt_getXML.pl parseTinySeqXML.xslt derep+alias.pl; do
 	if [ ! -h $script ]; then
@@ -54,11 +56,13 @@ else
 	echo -e "\tNo errors found."
 fi
 
+# Fixed in Version: 1.0.0; by adding "$params{batch} = -1" in the getXML script.
 # Using eUtils  messes up the xml output (because it queries your GI numbers 500 records at a time; it concatenates each output; and not in a smart way.) The following is a hack around this; needs to be made more robust.
-echo "[`date`] Reformatting TinySeq XML output..."
-head -n 3 $xmlFile > $rfmtXmlFile 
-grep -v "<\?xml" $xmlFile | grep -v "<\!DOCTYPE" | grep -v "<TSeqSet>" | grep -v "</TSeqSet>" >> $rfmtXmlFile
-tail -n 3 $xmlFile >> $rfmtXmlFile
+# echo "[`date`] Reformatting TinySeq XML output..."
+# head -n 3 $xmlFile > $rfmtXmlFile 
+# grep -v "<\?xml" $xmlFile | grep -v "<\!DOCTYPE" | grep -v "<TSeqSet>" | grep -v "</TSeqSet>" >> $rfmtXmlFile
+# tail -n 3 $xmlFile >> $rfmtXmlFile
+$rfmtXmlFile=$xmlFile # since no need to reformat after fix.
 
 # Reformatted TinySeq XML to table; for legacy reasons; Format: <GI>\t<NCBI Taxon ID>\t<Prot Sequence>
 xsltproc parseTinySeqXML.xslt $rfmtXmlFile > $dataFile
