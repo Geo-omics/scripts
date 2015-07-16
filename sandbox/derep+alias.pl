@@ -7,33 +7,52 @@ use Getopt::Long;
 
 	perl derep+alias.pl -l gi.list -d gi.data -abs 75
 	OR
-	perl derep+alias.pl -l gi.list -d gi.data -per 75
+	perl derep+alias.pl -l gi.list -d gi.data -percent 75
 	OR
 	perl derep+alias.pl -l gi.list -d gi.data -all
+
+=head2 Options
+
+	-p	-percent	<INT:1-100>	What percent of taxa you want randomly extracted?
+	-abs	-absolute	<INT>	How many taxa you want randomly extracted? (overrides -p)
+	-prefix			<CHAR>	Output prefix
+	-l	-list		<FILE>	File containing a list of GI numbers. Used to weed out any sequences that may not belong.
+	-d	-data		<FILE>	File obtained from fetching the data from NCBI in tabular form. GI<tab>NCBI Taxon ID<tab>Prot Seq<eol>
+	-h	-help		<>	This page.
+
+=head1 Developer
+
+	Sunit Jain
+	June 2010.
+	
 =cut
 
 #system("blastdbcmd -entry_batch phg_gi.list -db nr -outfmt "%g %T %s" -out phg_gi.data");
 
 my $absolute;
 my $percent;
-my $all;
 my $phgGI_list="phg_gi.list";  # original GI list; obtain this from NCBI.
 my $phgGI_data="phg_gi.data";  # original data file; obtain this from 'blastdbcmd'
-
+my $prefix;
 my $tmpGI_data="tmp_phg.data";
 my $tmpGI_taxa="tmp_taxa.list";
 
 GetOptions(
-	'p|per:i'=>\$percent,
+	'p|per|percent:i'=>\$percent,
 	'abs|absolute:i'=>\$absolute,
-	'all'=>\$all,
+	'prefix:s'=>\$prefix,
 	'l|list:s'=>\$phgGI_list,
 	'd|data:s'=>\$phgGI_data,
+	'h|help'=>sub{system("perldoc $0 | cat"); exit;}
 );
+
+my $all;
 if (! $absolute && ! $percent){ $all++};
 if ($all){$percent=100}
-my $prefix= ($percent ? "subset_random_".$percent."_percent" : "subset_random_".$absolute);
 
+unless($prefix){
+	$prefix= ($percent ? "subset_random_".$percent."_percent" : "subset_random_".$absolute);
+}
 my $testGI_data=$prefix.".data";
 my $testGI_fasta=$prefix.".fasta";
 my $testGI_meta=$prefix.".meta";
