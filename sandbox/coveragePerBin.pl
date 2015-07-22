@@ -76,9 +76,11 @@ while(my $line=<$CONF>){
 close $CONF;
 
 if (scalar(keys %errorTrigger) > 0) {
-    my $error="------------------------------------------------\n";
+    my $numOfChar=80;
+    my $error=("-" x $numOfChar)."\n";
     $error.="[ERROR] Scaffold assigned to multiple bins!\n";
     $error.="Can't decide which bin to add it to.\n";
+    $error.="Use the `getClassFasta.pl' script with a loyalty value >= 51 (recommend: 60)\n";
     $error.="Here are the offending scaffolds and their bins:\n";
     foreach my $scaffold(keys %errorTrigger){
         $error.="$scaffold";
@@ -87,7 +89,7 @@ if (scalar(keys %errorTrigger) > 0) {
         }
         $error.="\n";
     }
-    $error.="------------------------------------------------\n";
+    $error.=("-" x $numOfChar)."\n";
     die $error;
 }
 
