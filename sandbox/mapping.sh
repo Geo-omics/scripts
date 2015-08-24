@@ -20,7 +20,7 @@ path2scaffolds=$1/scaffold.fasta
 path2fwd=$1/fwd.fastq
 path2rev=$1/rev.fastq
 path2scripts="/geomicro/data1/COMMON/scripts/BamTools"
-threads=8
+threads=14
 
 ####################################################
 ##### DO NOT MAKE ANY CHANGES BEYOND THIS LINE #####
@@ -31,11 +31,12 @@ if [ ! -h "coveragePerScaffold.pl" ]; then
 	ln -s ${path2scripts}/coveragePerScaffold.pl .
 fi
 
-version="1.4.1"
+version="1.5.0"
 alnSam=$(echo $path2scaffolds | sed "s#.fasta#_aligned.sam#")
 alnSamLog=${path2scaffolds}.aln.log
 sam2bam=$(echo $path2scaffolds | sed "s#.fasta#_fixmate.bam#")
 sortBam=$(echo $path2scaffolds | sed "s#.fasta#_sorted.bam#")
+nameSortBam=$(echo $path2scaffolds | sed "s#.fasta#_name_sorted.bam#")
 readGroup="@RG\\tID:group_${1}\\tSM:Sample_${1}\\tPL:illumina\\tLB:lib_${1}\\tPU:unit_${1}"
 bedOut=$(echo $path2scaffolds | sed "s#.fasta#.genomeCovBed.tsv#")
 scafCov=$(echo $path2scaffolds | sed "s#.fasta#.cov#")
@@ -48,12 +49,21 @@ bwa index $path2scaffolds
 
 echo -e "[`date`]\tAligning FWD and REV reads using 'bwa mem'"
 echo -e "[NOTE]\tUsing Read Group ${readGroup}"
-bwa mem -M -R ${readGroup} -t $threads $path2scaffolds $path2fwd $path2rev 1> $alnSam 2> $alnSamLog
+if [ -e $path2rev ]; then
+	echo -e "[NOTE]\tRead Pairs detected; Starting paired-end mapping..."
+	bwa mem -M -R ${readGroup} -t $threads $path2scaffolds $path2fwd $path2rev 1> $alnSam 2> $alnSamLog;
+else
+	echo -e "[NOTE]\tSingle-end Reads detected; Starting single-end mapping..."
+	bwa mem -M -R ${readGroup} -t $threads $path2scaffolds $path2fwd 1> $alnSam 2> $alnSamLog;
+fi
 
 echo -e "[`date`]\tFixing alignment artifacts and converting SAM to BAM"
 samtools fixmate -O bam $alnSam $sam2bam
 
-echo -e "[`date`]\tSorting BAM"
+echo -e "[`date`]\tSorting BAM by Name"
+samtools sort -n -m 50G -@ ${threads} -O bam -o $nameSortBam -T $$.samSort.tmp $sam2bam
+
+echo -e "[`date`]\tSorting BAM by Position"
 samtools sort -m 50G -@ ${threads} -O bam -o $sortBam -T $$.samSort.tmp $sam2bam
 
 echo -e "[`date`]\tIndexing Sorted BAM"
