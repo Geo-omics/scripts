@@ -20,6 +20,9 @@
 	-map	If you wish to replace the names of the contigs, give it a "map" file; 
 		column1=name you wish to change to
 		column2=name of the contig in the GFF file
+
+	-header	only use the tag from attributes column as sequence header (example: "locus_tag" or "id"); default: scaffoldName__locus_tag=####__[start-end]
+	-feat or feature_type	only extract genes of a certain type (example: "cds" or "exon"); default: all.
 	
 =head3 General Options
 	
@@ -44,12 +47,12 @@ use Getopt::Long;
 
 my ($fasta, $needsSubj, $needsQuery);
 my ($isTabbedFile,$isBlastOut,$isGff, $map);
-my ($start, $stop,$topHitOnly);
+my ($start, $stop,$topHitOnly,$featType,$headerType);
 my $setLen=0;
 my $setBS=0;
 my $setPid=0;
 my $out = $$."_subSeqs.fasta";
-my $version="extractSubSeqs.pl\tv0.2.6";
+my $version="extractSubSeqs.pl\tv0.3.1";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
@@ -66,6 +69,8 @@ GetOptions(
 	's|bitscore:i'=>\$setBS,
 	'top'=>\$topHitOnly,
 	'o|out:s'=>\$out,
+	'feat|feature_type:s'=>\$featType,
+	'header:s'=>\$headerType,
 	'h|help'=> sub{print $version."\n"; system("perldoc $0 \| cat"); exit;},
 	'v|version'=> sub{print "# $version\n"; exit;},
 );
@@ -74,7 +79,8 @@ print "# $version\n";
 
 my $tsv;
 if(! $isTabbedFile && ! $isBlastOut && ! $isGff){system('perldoc', $0); exit;}
-
+if($headerType) {$headerType=lc($headerType)}
+if($featType) {$featType=lc($featType)}
 if ($isTabbedFile){ 
 	$tsv = $isTabbedFile;
 	if (!$start && !$stop){
@@ -135,6 +141,7 @@ while (my $line=<TSV>){
 	}
 	elsif($isGff){
 		my $name= &parseGFF3($line);
+		next unless $name;
 		my $contig=$cols[0];
 		$xy=$name."\t".$cols[$start]."\t".$cols[$stop];
 		push(@{$coord{$contig}},$xy);
@@ -194,15 +201,20 @@ while (my $line=<FASTA>){
 				my $attribute=$posStuff[0];
 				$posStart=$posStuff[1];
 				$posStop=$posStuff[2];
-				$printLine.=">".$match."__locus_tag=".$attribute;
+				if($headerType){
+					$printLine.=">".$attribute
+				}
+				else{
+					$printLine.=">".$match."__locus_tag=".$attribute;
+				}
 			}
 			elsif($isTabbedFile){
 				$posStart=$posStuff[0];
 				$posStop=$posStuff[1];
 				$printLine.=">".$name;
 			}
-			$printLine.="__[".$posStart."-".$posStop."]\n";
-			
+			$printLine.="__[".$posStart."-".$posStop."]" unless ($headerType);
+			$printLine.="\n";
 			my ($begin, $end)=sort{$a <=> $b}($posStart, $posStop);
 			if($end > $seqLen){
 				print STDERR "The 'stop coordinate' [".$end."] is out of bounds. Length of the sequence [".$seqLen."]\n";
@@ -223,25 +235,37 @@ sub parseGFF3{
 #http://gmod.org/wiki/GFF
 	my $line=shift;
 	my @cols=split(/\t/, $line);
-	
-	my(@attributes)=split(/\;/, $cols[-1]);
 
-	my ($locusID, $geneID);
-	foreach my $att(@attributes){
-		$locusID=$1 if ($att=~/locus_tag\=(.*)/);
-		$geneID= $1 if ($att=~/^ID\=(.*)/);
+	my(@attributes)=split(/\;/, $cols[-1]);
+	
+	if ($featType){
+		return unless (lc($cols[2]) eq lc($featType));
 	}
-	if (! $locusID){
-		foreach my $att(@attributes){
-			if ($att=~/Parent\=(.*)/){
-				$locusID=$1."_exon"
+
+	my ($locusID,%attribs);
+	foreach my $att(@attributes){
+		my @a=split(/\=/, $att);
+		my $value=join("=",@a[1..$#a]);
+		$attribs{lc($a[0])}=$value;
+	}
+
+	if(($headerType) && ($attribs{lc($headerType)})){
+		$locusID = $attribs{lc($headerType)};
+	}
+	elsif(! $headerType){
+		if( $attribs{"locus_tag"}){
+			$locusID=$attribs{"locus_tag"}
+		}
+		else{
+			if ($attribs{"parent"}){
+				$locusID=$attribs{"parent"}."_exon"
 			}
-			elsif($cols[2]=~/repeat/){
-				$locusID=$1 if ($att=~/rpt_type\=(.*)/); # rpt_type=CRISPR;rpt_unit=13023..13055
-				$locusID.="[ ".$1." ]" if ($att=~/rpt_unit\=(.*)/);
+			elsif($attribs{"repeat"}){
+				$locusID=$attribs{"repeat"} if ($attribs{"rpt_type"}); # rpt_type=CRISPR;rpt_unit=13023..13055
+				$locusID.="[ ".$attribs{"rpt_unit"}." ]" if ($attribs{"rpt_unit"});
 			}
 			else{
-				$locusID=$geneID."_".$cols[2];
+				$locusID=$attribs{"id"}."_".$cols[2];
 			}
 		}
 	}
