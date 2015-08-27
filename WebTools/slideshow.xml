@@ -21,10 +21,10 @@
 
           <div class="image-wrapper">
             <div data-picture data-alt="Athabasca&#x20;Glacier&#x20;Sampling">
-              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Aciego_Large_MG_1229-3.jpg.transform&#x2f;reg&#x2f;image.jpg" data-media="(min-width: 1px)"></div>
-              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Aciego_Large_MG_1229-3.jpg.transform&#x2f;big&#x2f;image.jpg" data-media="(min-width: 768px)"></div>
-              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Aciego_Large_MG_1229-3.jpg.transform&#x2f;xbig&#x2f;image.jpg" data-media="(min-width: 992px)"></div>
-              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Aciego_Large_MG_1229-3.jpg.transform&#x2f;xbig&#x2f;image.jpg" data-media="(min-width: 1200px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 1px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 768px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 992px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 1200px)"></div>
               <noscript>
                   <img src="/content/dam/earth-assets/earthslideshow/Aciego_Large_MG_1229-3.jpg.transform/xbig/image.jpg" alt="Athabasca&#x20;Glacier&#x20;Sampling">
               </noscript>
