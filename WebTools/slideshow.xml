@@ -3,7 +3,13 @@
     <ModulePrefs title="Twitter Timeline"/>
     <Content type="html">
         <![CDATA[
-        <div class="slideshow-wrap">
+        <div class="container" id="content">
+    <div class="row">
+      <h1 class="sr-only">Earth and Environmental Sciences</h1>
+      <!-- mandatory page components -->
+      <div class="col-sm-8 col-xs-12">
+        <div>
+<div class="slideshow-wrap">
 	<div id="homepage-slideshow" class="carousel slide" data-ride="carousel">
 
     <!-- Wrapper for DAM slides  -->
