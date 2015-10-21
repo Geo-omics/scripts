@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+    <ModulePrefs title="Twitter Timeline"/>
+    <Content type="html">
+        <![CDATA[
+        <div class="container" id="content">
+    <div class="row">
+      <h1 class="sr-only">Earth and Environmental Sciences</h1>
+      <!-- mandatory page components -->
+      <div class="col-sm-8 col-xs-12">
+        <div>
+<div class="slideshow-wrap">
+	<div id="homepage-slideshow" class="carousel slide" data-ride="carousel">
+
+    <!-- Wrapper for DAM slides  -->
+
+
+      <div class="carousel-inner">
+
+        <div class="item loading active">
+
+          <div class="image-wrapper">
+            <div data-picture data-alt="Athabasca&#x20;Glacier&#x20;Sampling">
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 1px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 768px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 992px)"></div>
+              <div data-src="http://www.earth.lsa.umich.edu/geomicrobiology/guaymas_panorama.jpg" data-media="(min-width: 1200px)"></div>
+              <noscript>
+                  <img src="/content/dam/earth-assets/earthslideshow/Aciego_Large_MG_1229-3.jpg.transform/xbig/image.jpg" alt="Athabasca&#x20;Glacier&#x20;Sampling">
+              </noscript>
+            </div>
+          </div>
+          <!-- for md lg -->
+          <div class="caption bottom
+              dark">
+              <span>
+                <a class="themeText themeLink" href="/earth/research.html">Athabasca Glacier Sampling</a>
+                <span class="teaser">Graduate student Carli Arendt sampling water and ice at the toe of the Athabasca Glacier in the Canadian Rockies. Photo&#x3a; M. Cambiar</span>
+              </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="item loading ">
+
+          <div class="image-wrapper">
+            <div data-picture data-alt="Big&#x20;Sur,&#x20;CA">
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Arbic_big_sur.jpg.transform&#x2f;reg&#x2f;image.jpg" data-media="(min-width: 1px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Arbic_big_sur.jpg.transform&#x2f;big&#x2f;image.jpg" data-media="(min-width: 768px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Arbic_big_sur.jpg.transform&#x2f;xbig&#x2f;image.jpg" data-media="(min-width: 992px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;Arbic_big_sur.jpg.transform&#x2f;xbig&#x2f;image.jpg" data-media="(min-width: 1200px)"></div>
+              <noscript>
+                  <img src="/content/dam/earth-assets/earthslideshow/Arbic_big_sur.jpg.transform/xbig/image.jpg" alt="Big&#x20;Sur,&#x20;CA">
+              </noscript>
+            </div>
+          </div>
+          <!-- for md lg -->
+          <div class="caption top
+              light">
+              <span>
+                <a class="themeText themeLink" href="/earth/research.html">Big Sur, CA</a>
+                <span class="teaser">The ocean plays a critically important role in global climate change, due to the substantial amounts of heat and carbon that it stores and transports. Photo&#x3a; Brian Arbic</span>
+              </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="item loading ">
+
+          <div class="image-wrapper">
+            <div data-picture data-alt="Mammoth&#x20;Tusk">
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;tusk&#x20;excavation_Fisher_Rountrey.jpg.transform&#x2f;reg&#x2f;image.jpg" data-media="(min-width: 1px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;tusk&#x20;excavation_Fisher_Rountrey.jpg.transform&#x2f;big&#x2f;image.jpg" data-media="(min-width: 768px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;tusk&#x20;excavation_Fisher_Rountrey.jpg.transform&#x2f;xbig&#x2f;image.jpg" data-media="(min-width: 992px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;tusk&#x20;excavation_Fisher_Rountrey.jpg.transform&#x2f;xbig&#x2f;image.jpg" data-media="(min-width: 1200px)"></div>
+              <noscript>
+                  <img src="/content/dam/earth-assets/earthslideshow/tusk%20excavation_Fisher_Rountrey.jpg.transform/xbig/image.jpg" alt="Mammoth&#x20;Tusk">
+              </noscript>
+            </div>
+          </div>
+          <!-- for md lg -->
+          <div class="caption bottom
+              dark">
+              <span>
+                <a class="themeText themeLink" href="/earth/research.html">Mammoth Tusk</a>
+                <span class="teaser">Professor Dan Fisher and postdoc Adam Rountrey excavating the tusk of an 11,000-year-old mammoth, found at Morrison Lake Country Club near Saranac, Michigan.</span>
+              </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="item loading ">
+
+          <div class="image-wrapper">
+            <div data-picture data-alt="BIF">
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;DSC_0314.JPG.transform&#x2f;reg&#x2f;image.JPG" data-media="(min-width: 1px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;DSC_0314.JPG.transform&#x2f;big&#x2f;image.JPG" data-media="(min-width: 768px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;DSC_0314.JPG.transform&#x2f;xbig&#x2f;image.JPG" data-media="(min-width: 992px)"></div>
+              <div data-src="&#x2f;content&#x2f;dam&#x2f;earth-assets&#x2f;earthslideshow&#x2f;DSC_0314.JPG.transform&#x2f;xbig&#x2f;image.JPG" data-media="(min-width: 1200px)"></div>
+              <noscript>
+                  <img src="/content/dam/earth-assets/earthslideshow/DSC_0314.JPG.transform/xbig/image.JPG" alt="BIF">
+              </noscript>
+            </div>
+          </div>
+          <!-- for md lg -->
+          <div class="caption bottom
+              dark">
+              <span>
+                <a class="themeText themeLink" href="/earth/research.html">BIF</a>
+                <span class="teaser">Banded iron formation consisting largely of hematite and silica from the Negaunee Iron Formation at Jasper Knob near Ishpeming, Michigan. Also shown are pellets consisting of hematite and clay, which are used as blast furnace feed. Photo&#x3a; Dale Austin</span>
+              </span>
+
+          </div>
+
+        </div>
+      </div>
+      <!-- Slides as DAM Images Indicators -->
+      <ol class="carousel-indicators ">
+        <li data-target="#homepage-slideshow" data-slide-to="0" class="active theme-bg">
+          <span class="sr-only">Slide 0</span>
+        </li>
+
+        <li data-target="#homepage-slideshow" data-slide-to="1" class=" theme-bg">
+          <span class="sr-only">Slide 1</span>
+        </li>
+
+        <li data-target="#homepage-slideshow" data-slide-to="2" class=" theme-bg">
+          <span class="sr-only">Slide 2</span>
+        </li>
+
+        <li data-target="#homepage-slideshow" data-slide-to="3" class=" theme-bg">
+          <span class="sr-only">Slide 3</span>
+        </li>
+      </ol>
+
+
+
+    <!-- Controls -->
+    <div class="controls hidden-xs ">
+      <a class="left carousel-control" href="#homepage-slideshow" role="button" data-slide="prev">
+        <span class="sr-only">Previous Slide</span>
+        <span class="arrow left"></span>
+      </a>
+      <a class="right carousel-control" href="#homepage-slideshow" role="button" data-slide="next">
+        <span class="sr-only">Next Slide</span>
+        <span class="arrow right"></span>
+      </a>
+    </div>
+
+  </div>
+
+</div></div>
+        ]]>
+    </Content>
+</Module>
