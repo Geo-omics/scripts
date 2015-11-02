@@ -19,7 +19,7 @@ set -u
 ##### MAKE PARAMETER CHANGES HERE #####
 #######################################
 # Required Databases
-path2silva="/omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta"
+path2silva="/omics/PublicDB/silva/release_123/SILVA_123_SSURef_tax_silva.fasta"
 path2bact="/omics/PublicDB/NCBI/Bacteria/latest_16S.fasta"
 path2arch="/omics/PublicDB/NCBI/Archaea/latest_16S.fasta"
 path2markers="~/share/phylosift"
@@ -37,7 +37,9 @@ threads=15
 ##### DO NOT MAKE ANY CHANGES BEYOND THIS LINE #####
 #####     unless you know what you're doing    #####
 ####################################################
-for i in $(find -maxdepth 1 -type d -name "Sample*"); do
+version=1.7.3
+echo -e "[`date`]\tAssembled using $0 version: $version"
+for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
     myPath=${i}/Assembly
     mkdir -p $myPath
     cd $myPath
@@ -47,8 +49,8 @@ for i in $(find -maxdepth 1 -type d -name "Sample*"); do
         	ln -s $path2scripts/BlastTools/top5.pl .
 	fi
 
-	if [ ! -h "extractSubSeqs.pl" ]; then
-        	ln -s $path2scripts/SeqTools/extractSubSeqs.pl .
+	if [ ! -h "extractSubSeq.pl" ]; then
+        	ln -s $path2scripts/SeqTools/extractSubSeq.pl .
 	fi
 
 
@@ -65,28 +67,31 @@ for i in $(find -maxdepth 1 -type d -name "Sample*"); do
     T1BLAST=BLASTN/${i}_vs_silvaSSU119.topHits.blastn
     perl top5.pl -t 1 -b BLASTN/${i}_vs_silvaSSU119.blastn -o $T1BLAST
 
-    echo -e "[`date`]\tLook up top hits from 16S search for complete genomes in NCBI"
-    BBLAST=BLASTN/${i}_subSeq_vs_bactNCBI.blastn
-    ABLAST=BLASTN/${i}_subSeq_vs_archaeaNCBI.blastn
-    FASTA=${assembly}/scaffold.fa
-    SSEQ=BLASTN/silvaSSU119.topHits.fasta
+    if [ ! -s BLASTN/${i}_vs_silvaSSU119.blastn ]; then
+	echo -e "[`date`]\tLook up top hits from 16S search for complete genomes in NCBI"
+	BBLAST=BLASTN/${i}_subSeq_vs_bactNCBI.blastn
+	ABLAST=BLASTN/${i}_subSeq_vs_archaeaNCBI.blastn
+	FASTA=${assembly}/scaffold.fa
+	SSEQ=BLASTN/silvaSSU119.topHits.fasta
 
-    perl extractSubSeq.pl -query -blast $T1BLAST -f $FASTA -o $SSEQ
+	perl extractSubSeq.pl -query -blast $T1BLAST -f $FASTA -o $SSEQ
 
-    blastn -query $SSEQ -db $path2bact -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads ${threads}
-    blastn -query $SSEQ -db $path2arch -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads ${threads}
+	blastn -query $SSEQ -db $path2bact -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads ${threads}
+	blastn -query $SSEQ -db $path2arch -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads ${threads}
 
-    TBBLAST=$(echo $BBLAST | sed "s#.blastn#.topHits.blastn#")
-    TABLAST=$(echo $ABLAST | sed "s#.blastn#.topHits.blastn#")
+	TBBLAST=$(echo $BBLAST | sed "s#.blastn#.topHits.blastn#")
+	TABLAST=$(echo $ABLAST | sed "s#.blastn#.topHits.blastn#")
 
-    perl top5.pl -t 1 -b $BBLAST -o $TBBLAST
-    perl top5.pl -t 1 -b $ABLAST -o $TABLAST
+	perl top5.pl -t 1 -b $BBLAST -o $TBBLAST
+	perl top5.pl -t 1 -b $ABLAST -o $TABLAST
+
+	fi
 
     mkdir -p PhyloSift
     if [ -d $path2markers ]; then
-	phylosift all --disable_updates --output PhyloSift/Whole_Assembly --threads 10 $FASTA
+	phylosift all --disable_updates --output PhyloSift/Whole_Assembly $FASTA
     else
-	phylosift all --output PhyloSift/Whole_Assembly --threads 10 $FASTA
+	phylosift all --output PhyloSift/Whole_Assembly $FASTA
     fi
 
     echo -e "[`date`]\tFinished with ${i}"
