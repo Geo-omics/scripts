@@ -187,6 +187,8 @@ interleave.pl
 limit2Length.pl
 mapping.sh	-	BWA mapping pipeline. Open the file in a text editor for help.
 qc.sh	-	NGS QC pipeline
+qc_no_derep.sh	-	NGS QC Pipeline without derep
+qc_no_derep_no_interleave.sh	-	NGS QC Pipeline without derep or interleave
 assemble.sh	-	NGS de novo assembly pipeline. Expects the QC to be done using qc.sh.
 coveragePerScaffold.pl	-	Using the GenomeCoverageBed default output to calculate the coverage per scaffold and the whole genome.
 coveragePerBin.pl	-	Using the Conf and Scaffold files to get the coverage per bin.
