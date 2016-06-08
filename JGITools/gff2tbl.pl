@@ -42,7 +42,7 @@ my $minLen=200;
 my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.2.0";
+my $version="gff2tbl.pl\tv0.2.1";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -238,20 +238,17 @@ sub parseGFF3{
 		$gene_prod{$locusID}=$product unless ($gene_prod{$locusID});
 	}
     elsif(! $locusID){
-		foreach my $att(@attributes){
-			if ($Parent){
-				$locusID=$Parent."__exon"
-			}
-			elsif($type=~/repeat/){
-				$locusID=$ID."__".
-				($repeat_type ? $repeat_type : "Unknown")."__".
-				($repeat_unit ? $repeat_unit : "Unknown")."__".
-				($repeat_fam ? $repeat_fam : "Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
-				#$locusID.="[".$1."]" if ($repeat_unit);
-            }
-            else{
-				$locusID=$ID."__".$type;
-            }
+		if ($Parent){
+			$locusID=$Parent."__exon"
+		}
+		elsif($type=~/repeat/){
+			$locusID=$ID."__".
+			($repeat_type ? $repeat_type : "Unknown")."__".
+			($repeat_unit ? $repeat_unit : "Unknown")."__".
+			($repeat_fam ? $repeat_fam : "Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
+        }
+        else{
+			$locusID=$ID."__".$type;
         }
     }
 	$annotation{$contig}{$locusID}{"START"}=$start;
