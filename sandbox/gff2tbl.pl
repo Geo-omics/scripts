@@ -42,7 +42,7 @@ my $minLen=200;
 my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.2.0";
+my $version="gff2tbl.pl\tv0.2.1";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -66,9 +66,13 @@ while(my $line=<GP>){
 	next if $line=~ /^#/;
 	next unless $line;
 
-	my($locusID, $product, @extra)=split(/\t/, $line);
-	$gene_prod{$locusID}=$product;
-	$otherInfo{$locusID}=join("\t",@extra);
+	my($img_gene_id, $locusID, $tag, @data)=split(/\t/, $line);
+	if(lc($tag) eq "product_name"){
+		$gene_prod{$locusID}=join(";", @data);
+	}
+	else{
+		push(@{$otherInfo{$locusID}}, join(",",@data));
+	}
 }
 close GP;
 
@@ -162,16 +166,12 @@ while(my $line=<FASTA>){
 			if($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
 				print TBL "product\t".$annotation{$parent}{$locusID}{"TYPE"}."-".$gene_prod{$locusID}."\n";
 			}
-			#elsif($gene_prod{$locusID}=~ /hypothetical/i){
-			#	print TBL "product\t".$gene_prod{$locusID}."\n";
-			#}
 			else{
 				print TBL "product\t".$gene_prod{$locusID}."\n";
 			}
 
-			if ($otherInfo{$locusID}){
-				my @info=split(/\t/,$otherInfo{$locusID});
-				print TBL "\t\t\tnote\t".$_."\n" foreach @info;
+			foreach my $info(@{$otherInfo{$locusID}}){
+				print TBL "\t\t\tnote\t".$info."\n";
 			}
 		}
 		elsif($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
@@ -191,7 +191,7 @@ while(my $line=<FASTA>){
 			my  ($ID, @desc)=split(/\_/, $locusID);
 			my $type=join("_", @desc);
 			print TBL "note\thypothetical protein\n";
-			print TBL "\t\t\tnote\tlocus='".$locusID."'\n";
+			print TBL "\t\t\tnote\tIMG_locus='".$locusID."'\n";
 		}
 	}
 }
@@ -238,20 +238,17 @@ sub parseGFF3{
 		$gene_prod{$locusID}=$product unless ($gene_prod{$locusID});
 	}
     elsif(! $locusID){
-		foreach my $att(@attributes){
-			if ($Parent){
-				$locusID=$Parent."__exon"
-			}
-			elsif($type=~/repeat/){
-				$locusID=$ID."__".
-				($repeat_type ? $repeat_type : "Unknown")."__".
-				($repeat_unit ? $repeat_unit : "Unknown")."__".
-				($repeat_fam ? $repeat_fam : "Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
-				#$locusID.="[".$1."]" if ($repeat_unit);
-            }
-            else{
-				$locusID=$ID."__".$type;
-            }
+		if ($Parent){
+			$locusID=$Parent."__exon"
+		}
+		elsif($type=~/repeat/){
+			$locusID=$ID."__".
+			($repeat_type ? "Type_".$repeat_type : "Type_Unknown")."__".
+			($repeat_unit ? "Unit_".$repeat_unit : "Unit_Unknown")."__".
+			($repeat_fam ? "Family_".$repeat_fam : "Family_Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
+        }
+        else{
+			$locusID=$ID."__".$type;
         }
     }
 	$annotation{$contig}{$locusID}{"START"}=$start;
@@ -259,5 +256,4 @@ sub parseGFF3{
 	$annotation{$contig}{$locusID}{"TYPE"}=$type;
 	$annotation{$contig}{$locusID}{"LEN"}=($stop-$start);
 	$annotation{$contig}{$locusID}{"STRAND"}=$strand;
-#        return $locusID;
 }
