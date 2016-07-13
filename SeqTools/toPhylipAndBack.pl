@@ -100,7 +100,7 @@ sub createAlias{
 		print ALIAS $defLine."\t".$l."\n";
 		print OUT ">".$defLine."\n".$fasta{$l}."\n";
 	}
-	print "\t$i new aliases created...\n";
+	print "\t".$i-($num_start-1)." new aliases created...\n";
 }
 
 sub back2original{
