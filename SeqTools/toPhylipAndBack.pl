@@ -2,19 +2,19 @@
 
 =head1 USAGE
 
-	perl toPhylipAndBack.pl -phylip -f InputFile.fasta -alias file_Prefix
+	perl toAliasAndBack.pl -alias -f InputFile.fasta -alias file_Prefix
 	OR
-	perl toPhylipAndBack.pl -original -f InputFile.fasta -alias file_Prefix
+	perl toAliasAndBack.pl -original -f InputFile.fasta -alias file_Prefix
 
 =head1 Description
 
-=head2	-phylip
+=head2	-alias
 
 	Converts a regular fasta file to a 10-digit header fasta file and creates an 'aka' file that keeps track of the name changes.
 
 =head2	-original
 
-	Converts the fasta file generated from '-phylip' to it's original self using the 'aka' file.
+	Converts the fasta file generated from '-alias' to it's original self using the 'aka' file.
 
 =head2 Advanced Commands
 
@@ -36,7 +36,7 @@
 use strict;
 use Getopt::Long;
 
-my ($file, $aliasFile, $out, $toPhylip, $toOriginal);
+my ($file, $aliasFile, $out, $toAlias, $toOriginal);
 my $defPrefix="";
 my $num_digits=10;
 my $num_start=1;
@@ -46,13 +46,13 @@ GetOptions(
 	'p|prefix:s'=>\$defPrefix,
 	'num_digits:i'=>\$num_digits,
 	'num_start:f'=>\$num_start,
-	'phylip'=>\$toPhylip,
+	'alias'=>\$toAlias,
 	'original'=>\$toOriginal,
 	'h|help'=>sub{system('perldoc', $0); exit;},
 );
 
 if (! $file || ! $aliasFile){die "[ERROR: $0] Missing required input. \nFor help, type: '$0 -h'\n";}
-if (! $toPhylip && ! $toOriginal){die "[ERROR: $0] Missing conversion type (-phylip ? OR -original ?). \nFor help, type: '$0 -h'\n";}
+if (! $toAlias && ! $toOriginal){die "[ERROR: $0] Missing conversion type (-alias ? OR -original ?). \nFor help, type: '$0 -h'\n";}
 
 open(FASTA, $file) || die "[ERROR: $0] Unable to open Fasta File: $! \n";
 my %fasta;
@@ -72,7 +72,7 @@ while(my $line=<FASTA>){
 $/="\n";
 
 my $aka;
-if($toPhylip){
+if($toAlias){
 	$aka=$aliasFile;
 	$aliasFile=~ s/\.aka$//;
 	$out=$aliasFile.".aliased.fasta";
