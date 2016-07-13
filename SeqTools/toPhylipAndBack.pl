@@ -16,10 +16,16 @@
 
 	Converts the fasta file generated from '-phylip' to it's original self using the 'aka' file.
 
+=head2 Advanced Commands
+
+	-prefix	-p	Add a uniform prefix before the aliased name (default="")
+	-num_digits	The alias will be this many digits long. (default=10)
+	-num_start Start the aliased numbering from x (default: 1)
+
 =head1 Outputs
 
 	*.aka file, is your alias file. Guard it with your life! I won't be able to convert your fasta file to their original names without this.
-	*.toPhylip.fasta OR *.toOriginal.fasta file, will have the same name as the '.aka' file. This is your converted fasta file.
+	*.aliased.fasta OR *.toOriginal.fasta file, will have the same name as the '.aka' file. This is your converted fasta file.
 
 =head1 Questions/Suggestions/Feedback/Beer
 
@@ -31,10 +37,15 @@ use strict;
 use Getopt::Long;
 
 my ($file, $aliasFile, $out, $toPhylip, $toOriginal);
-
+my $defPrefix="";
+my $num_digits=10;
+my $num_start=1;
 GetOptions(
 	'f|fasta=s'=>\$file,
 	'aka|alias=s'=>\$aliasFile,
+	'p|prefix:s'=>\$defPrefix,
+	'num_digits:i'=>\$num_digits,
+	'num_start:f'=>\$num_start,
 	'phylip'=>\$toPhylip,
 	'original'=>\$toOriginal,
 	'h|help'=>sub{system('perldoc', $0); exit;},
@@ -53,7 +64,7 @@ while(my $line=<FASTA>){
 
 	my($name, @seqs)=split("\n", $line);
 	my $seq=join("", @seqs);
-	
+
 	$seq=~ s/\n//g;
 
 	$fasta{$name}=$seq;
@@ -64,7 +75,7 @@ my $aka;
 if($toPhylip){
 	$aka=$aliasFile;
 	$aliasFile=~ s/\.aka$//;
-	$out=$aliasFile.".toPhylip.fasta";
+	$out=$aliasFile.".aliased.fasta";
 	$aka=$aliasFile.".aka";
 	&createAlias;
 }
@@ -80,12 +91,13 @@ sub createAlias{
 	open(OUT, ">".$out) || die "[ERROR: $0] Unable to create aliased from original Fasta: $! \n";
 
 	print ALIAS "# ALIAS\tORIGINAL\n";
-	my $i=0;
+	my $i=$num_start-1;
 	foreach my $l(keys %fasta){
 		$i++;
-		my $alias=sprintf("%010d", $i);
-		print ALIAS $alias."\t".$l."\n";
-		print OUT ">".$alias."\n".$fasta{$l}."\n";
+		my $alias=sprintf("%0${num_digits}d", $i);
+		my $defLine= $defPrefix.$alias;
+		print ALIAS $defLine."\t".$l."\n";
+		print OUT ">".$defLine."\n".$fasta{$l}."\n";
 	}
 	print "\t$i new aliases created...\n";
 }
@@ -96,7 +108,7 @@ sub back2original{
 
 	my $i=0;
 	while(my $line=<AKA>){
-		next if $line=~ /^#/;		
+		next if $line=~ /^#/;
 		chomp $line;
 		next unless $line;
 
@@ -106,5 +118,3 @@ sub back2original{
 	}
 	print "\t$i new aliases created...\n";
 }
-
-
