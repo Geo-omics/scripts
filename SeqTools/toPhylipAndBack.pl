@@ -30,6 +30,7 @@
 =head1 Questions/Suggestions/Feedback/Beer
 
 	Sunit Jain, October 2012 (sunitj [AT] umich [DOT] edu)
+	Last Updated: July 2016
 
 =cut
 
