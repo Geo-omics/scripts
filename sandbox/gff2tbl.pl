@@ -18,6 +18,7 @@
 
 	-aka	[characters]	aliased file; from "toPhylipAndBack.pl" script
 	-min	[integers]	minimum sequence length
+	-prot_prefix	[characters]	Project specific prefix for CDS regions.
 
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message. press q to exit this screen.
@@ -40,9 +41,10 @@ my ($fasta, $gff, $gene_product);
 my ($tbl, $fasta_out);
 my $minLen=200;
 my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
+my $prot_prefix="";
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.2.1";
+my $version="gff2tbl.pl\tv0.2.2";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -50,6 +52,7 @@ GetOptions(
 	'aka:s'=>\$aka,
 	'tbl:s'=>\$tbl,
 	'min:i'=>\$minLen,
+	'prot_prefix:s'=>\$prot_prefix,
 	'o|out:s'=>\$fasta_out,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system('perldoc', $0); exit;},
@@ -160,6 +163,7 @@ while(my $line=<FASTA>){
 		print TBL $incomplete_3.$gene_stop."\t";
 		print TBL $annotation{$parent}{$locusID}{"TYPE"}."\n";
 		print TBL "\t\t\tlocus_tag\t$locusID\n";
+		print TBL "\t\t\tprotein_id\t$prot_prefix.$locusID\n"
 		print TBL "\t\t\t";
 
 		if($gene_prod{$locusID}){

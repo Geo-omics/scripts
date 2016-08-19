@@ -13,19 +13,24 @@
 	-fasta	[characters]	Original assembled Fasta file [Required]
 	-gff	[characters]	JGI's GFF file [Required]
 	-tbl	[characters]	Output tbl file [Required]
-	
+
 	-gene	[characters]	gene product file from JGI. Required if GFF doesn't have the tag 'product'
-	
+
 	-aka	[characters]	aliased file; from "toPhylipAndBack.pl" script
 	-min	[integers]	minimum sequence length
+	-prot_prefix	[characters]	Project specific prefix for CDS regions.
 
 	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message. press q to exit this screen.	
+	-help	-h	<BOOLEAN>	This message. press q to exit this screen.
+
+=head1 Feedback/Bug Reports
+
+Please use the Github issues page for any issues/bugs with these scripts. Make sure you add the name of the script in the issue header.
 
 =head1 Author
 
 	Sunit Jain, (Thu Oct 10 12:48:37 EDT 2013)
-	sunitj [AT] umich [DOT] edu
+	Last Updated: June 02, 2016
 
 =cut
 
@@ -36,9 +41,10 @@ my ($fasta, $gff, $gene_product);
 my ($tbl, $fasta_out);
 my $minLen=200;
 my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of manual curation required afterwords. This is used to determine 'incompleteness' of a gene.
+my $prot_prefix="";
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.1.1";
+my $version="gff2tbl.pl\tv0.2.2";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -46,6 +52,7 @@ GetOptions(
 	'aka:s'=>\$aka,
 	'tbl:s'=>\$tbl,
 	'min:i'=>\$minLen,
+	'prot_prefix:s'=>\$prot_prefix,
 	'o|out:s'=>\$fasta_out,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system('perldoc', $0); exit;},
@@ -62,9 +69,13 @@ while(my $line=<GP>){
 	next if $line=~ /^#/;
 	next unless $line;
 
-	my($locusID, $product, @extra)=split(/\t/, $line);
-	$gene_prod{$locusID}=$product;
-	$otherInfo{$locusID}=join("\t",@extra);
+	my($img_gene_id, $locusID, $tag, @data)=split(/\t/, $line);
+	if(lc($tag) eq "product_name"){
+		$gene_prod{$locusID}=join(";", @data);
+	}
+	else{
+		push(@{$otherInfo{$locusID}}, join(",",@data));
+	}
 }
 close GP;
 
@@ -100,7 +111,7 @@ while(my $line=<FASTA>){
 	chomp $line;
 	next if $line=~ /^#/;
 	next unless $line;
-	
+
 	my($header, @sequence)=split(/\n/, $line);
 	my $seq=join("", @sequence);
 	my ($name, @desc)=split(/\s+/, $header);
@@ -111,13 +122,13 @@ while(my $line=<FASTA>){
 	else{
 		$parent=$name;
 	}
-	
+
 	next unless ($annotation{$parent});
-	
+
 	&find_Ns($seq, $name);
-	
+
 	my $len=length($seq);
-	
+
 	next if ($len < $minLen);
 	print TBL ">Feature ".$name."\n"; #"\tLength:".$len."\n";
 #	print ">Feature ".$name."\n"; #"\tLength:".$len."\n";
@@ -132,7 +143,7 @@ while(my $line=<FASTA>){
 		my $incomplete_5="";
 		my $incomplete_3="";
 		# Workaround: Does the feature start at position 1 **AND** is less than "$minGeneLen" (300 by default). Assume it's incomplete.
-		if (($original_contig_gene_start == 1) && (abs($original_contig_gene_stop - $original_contig_gene_start) <= $minGeneLen)){ 
+		if (($original_contig_gene_start == 1) && (abs($original_contig_gene_stop - $original_contig_gene_start) <= $minGeneLen)){
 			$incomplete_5="\<";
 		}
 		# Workaround: Does the feature stop at the end of the scaffold **AND** is less than "$minGeneLen" (300 by default). Assume it's incomplete.
@@ -147,26 +158,24 @@ while(my $line=<FASTA>){
 		else{
 			($gene_start, $gene_stop)=($original_contig_gene_start, $original_contig_gene_stop);
 		}
-	
+
 		print TBL $incomplete_5.$gene_start."\t";
 		print TBL $incomplete_3.$gene_stop."\t";
 		print TBL $annotation{$parent}{$locusID}{"TYPE"}."\n";
+		print TBL "\t\t\tlocus_tag\t$locusID\n";
+		print TBL "\t\t\tprotein_id\t$prot_prefix.$locusID\n"
 		print TBL "\t\t\t";
-		
+
 		if($gene_prod{$locusID}){
 			if($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
 				print TBL "product\t".$annotation{$parent}{$locusID}{"TYPE"}."-".$gene_prod{$locusID}."\n";
 			}
-			#elsif($gene_prod{$locusID}=~ /hypothetical/i){
-			#	print TBL "product\t".$gene_prod{$locusID}."\n";
-			#}
 			else{
 				print TBL "product\t".$gene_prod{$locusID}."\n";
 			}
-			
-			if ($otherInfo{$locusID}){
-				my @info=split(/\t/,$otherInfo{$locusID});
-				print TBL "\t\t\tnote\t".$_."\n" foreach @info;
+
+			foreach my $info(@{$otherInfo{$locusID}}){
+				print TBL "\t\t\tnote\t".$info."\n";
 			}
 		}
 		elsif($annotation{$parent}{$locusID}{"TYPE"}=~ /RNA/i){
@@ -186,9 +195,9 @@ while(my $line=<FASTA>){
 			my  ($ID, @desc)=split(/\_/, $locusID);
 			my $type=join("_", @desc);
 			print TBL "note\thypothetical protein\n";
-			print TBL "\t\t\tnote\tlocus='".$locusID."'\n";
+			print TBL "\t\t\tnote\tIMG_locus='".$locusID."'\n";
 		}
-	}	
+	}
 }
 close FASTA;
 close TBL;
@@ -207,7 +216,7 @@ sub parseGFF3{
 # contig, source, type, start,stop,score,strand, phase,attributes
     my $line=shift;
     my ($contig, $source, $type, $start,$stop,$score,$strand, $phase,$attribs)=split(/\t/, $line);
-    
+
     my(@attributes)=split(/\;/, $attribs);
 
     my ($locusID, $ID, $Name,$Alias, $Parent, $Target, $Gap, $Derives_from, $Note, $Dbxref, $Onto, $repeat_type, $repeat_unit, $repeat_fam, $product);
@@ -228,21 +237,22 @@ sub parseGFF3{
 		$repeat_unit=$1 if ($att=~/^rpt_unit\=(.*)/);
 		$product=$1 if ($att=~/^product\=(.*)/);
     }
-    if (! $locusID){
-		foreach my $att(@attributes){
-			if ($Parent){
-				$locusID=$Parent."__exon"
-			}
-			elsif($type=~/repeat/){
-				$locusID=$ID."__".
-				($repeat_type ? $repeat_type : "Unknown")."__".
-				($repeat_unit ? $repeat_unit : "Unknown")."__".
-				($repeat_fam ? $repeat_fam : "Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
-				#$locusID.="[".$1."]" if ($repeat_unit);
-            }
-            else{
-				$locusID=$ID."__".$type;
-            }
+
+	if($locusID){
+		$gene_prod{$locusID}=$product unless ($gene_prod{$locusID});
+	}
+    elsif(! $locusID){
+		if ($Parent){
+			$locusID=$Parent."__exon"
+		}
+		elsif($type=~/repeat/){
+			$locusID=$ID."__".
+			($repeat_type ? "Type_".$repeat_type : "Type_Unknown")."__".
+			($repeat_unit ? "Unit_".$repeat_unit : "Unit_Unknown")."__".
+			($repeat_fam ? "Family_".$repeat_fam : "Family_Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
+        }
+        else{
+			$locusID=$ID."__".$type;
         }
     }
 	$annotation{$contig}{$locusID}{"START"}=$start;
@@ -250,7 +260,4 @@ sub parseGFF3{
 	$annotation{$contig}{$locusID}{"TYPE"}=$type;
 	$annotation{$contig}{$locusID}{"LEN"}=($stop-$start);
 	$annotation{$contig}{$locusID}{"STRAND"}=$strand;
-	$gene_prod{$locusID}=$product unless ($gene_prod{$locusID});
-#        return $locusID;
 }
-
