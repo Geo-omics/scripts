@@ -18,7 +18,7 @@
 
 	-aka	[characters]	aliased file; from "toPhylipAndBack.pl" script
 	-min	[integers]	minimum sequence length
-	-prot_prefix	[characters]	Project specific prefix for CDS regions.
+	-prot_prefix	[characters]	Project specific prefix for CDS regions. example: "abc|unique_lab_name|"
 
 	-version -v	<BOOLEAN>	version of the current script
 	-help	-h	<BOOLEAN>	This message. press q to exit this screen.
@@ -44,7 +44,7 @@ my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of man
 my $prot_prefix="";
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.2.3";
+my $version="gff2tbl.pl\tv0.2.4";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -163,7 +163,7 @@ while(my $line=<FASTA>){
 		print TBL $incomplete_3.$gene_stop."\t";
 		print TBL $annotation{$parent}{$locusID}{"TYPE"}."\n";
 		print TBL "\t\t\tlocus_tag\t$locusID\n";
-		print TBL "\t\t\tprotein_id\t$prot_prefix.$locusID\n";
+		print TBL "\t\t\tprotein_id\t$prot_prefix"."$locusID\n";
 		print TBL "\t\t\t";
 
 		if($gene_prod{$locusID}){
