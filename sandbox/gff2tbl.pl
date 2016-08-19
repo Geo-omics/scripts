@@ -44,7 +44,7 @@ my $minGeneLen= 300; # just used an arbitary number, to reduce the amount of man
 my $prot_prefix="";
 my $aka;
 my $help;
-my $version="gff2tbl.pl\tv0.2.4";
+my $version="gff2tbl.pl\tv0.2.5";
 GetOptions(
 	'f|fasta:s'=>\$fasta,
 	'gff:s'=>\$gff,
@@ -158,6 +158,11 @@ while(my $line=<FASTA>){
 		else{
 			($gene_start, $gene_stop)=($original_contig_gene_start, $original_contig_gene_stop);
 		}
+
+		print TBL $incomplete_5.$gene_start."\t";
+		print TBL $incomplete_3.$gene_stop."\t";
+		print TBL "gene\n";
+		print TBL "\t\t\tlocus_tag\t$locusID\n";
 
 		print TBL $incomplete_5.$gene_start."\t";
 		print TBL $incomplete_3.$gene_stop."\t";
