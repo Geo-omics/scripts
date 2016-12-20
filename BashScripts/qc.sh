@@ -9,18 +9,9 @@ set -e
 # http://www.davidpashley.com/articles/writing-robust-shell-scripts/#id2382181
 set -u
 
-if [ ! -h "adapters.fa" ]; then
-	ln -s /opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa adapters.fa
-fi
-
-if [ ! -h "dereplicate.pl" ]; then
-	ln -s /geomicro/data1/COMMON/scripts/SeqTools/dereplicate.pl .
-fi
-
-if [ ! -h "interleave.pl" ]; then
-	ln -s /geomicro/data1/COMMON/scripts/SeqTools/interleave.pl .
-fi
-
+ADAPTERS=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
+DEREPLICATE=/geomicro/data1/COMMON/scripts/SeqTools/dereplicate.pl
+INTERLEAVE=/geomicro/data1/COMMON/scripts/SeqTools/interleave.pl
 
 sample=$1
 
@@ -63,13 +54,13 @@ fastqc -o $sample/FASTQC -f fastq -t 2 $FWD $REV &> $sample/$SNUM.fqc.log &
 
 # Dereplication
 echo -e "[`date`]\tDereplicating"
-perl dereplicate.pl -fq $FWD -o $sample/derep_fwd_${SNUM}.fastq
-perl dereplicate.pl -fq $REV -o $sample/derep_rev_${SNUM}.fastq
+perl $DEREPLICATE -fq $FWD -o $sample/derep_fwd_${SNUM}.fastq
+perl $DEREPLICATE -fq $REV -o $sample/derep_rev_${SNUM}.fastq
 
 # Scythe Adapter Trimming
 echo -e "[`date`]\tAdapter Trimming"
-scythe -a adapters.fa -q sanger -m $sample/derep_fwd_${SNUM}.matches.fastq -o $sample/derep_scythe_fwd_${SNUM}.fastq $sample/derep_fwd_${SNUM}.fastq
-scythe -a adapters.fa -q sanger -m $sample/derep_rev_${SNUM}.matches.fastq -o $sample/derep_scythe_rev_${SNUM}.fastq $sample/derep_rev_${SNUM}.fastq
+scythe -a $ADAPTERS -q sanger -m $sample/derep_fwd_${SNUM}.matches.fastq -o $sample/derep_scythe_fwd_${SNUM}.fastq $sample/derep_fwd_${SNUM}.fastq
+scythe -a $ADAPTERS -q sanger -m $sample/derep_rev_${SNUM}.matches.fastq -o $sample/derep_scythe_rev_${SNUM}.fastq $sample/derep_rev_${SNUM}.fastq
 
 # Sickle Quality Trimming
 echo -e "[`date`]\tQuality Trimming"
@@ -82,7 +73,7 @@ fastqc -o $sample/FASTQC -f fastq -t 2 $sample/derep_scythe_sickle_*_${SNUM}.fas
 
 # Interleave
 echo -e "[`date`]\tInterleaving"
-perl interleave.pl -fastq -outfmt fasta -rev $sample/derep_scythe_sickle_rev_${SNUM}.fastq -fwd $sample/derep_scythe_sickle_fwd_${SNUM}.fastq -o $sample/dt &
+perl $INTERLEAVE -fastq -outfmt fasta -rev $sample/derep_scythe_sickle_rev_${SNUM}.fastq -fwd $sample/derep_scythe_sickle_fwd_${SNUM}.fastq -o $sample/dt &
 
 #done
 echo "[`date`]\tDone!"
