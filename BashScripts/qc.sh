@@ -40,16 +40,8 @@ fi
 
 # Decompress Raw Data
 echo -e "[`date`]\tDecompressing"
-if [ -f $sample/${SNUM}*L005_R1_004*.gz ]; then
-	for fwd in $sample/*R1*.gz; do
-		gunzip $fwd
-	done
-fi
-
-if [ -f $sample/${SNUM}*L005_R2_004*.gz ]; then
-	for rev in $sample/*R2*.gz; do
- 		gunzip $rev
-	done 
+if ls "$sample/${SNUM}"*.fastq.gz >/dev/null 2>&1; then
+    gunzip -v "$sample/${SNUM}"*.fastq.gz
 fi
 
 # Concatenate Raw Data
