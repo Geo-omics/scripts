@@ -23,8 +23,20 @@ fi
 
 
 sample=$1
+
+if [ ! -d "$sample" ]; then
+    echo "Error: $sample is not a directory."
+    exit 1
+fi
+
 echo $sample
-SNUM=$(echo $sample | sed "s#./##" |sed "s#Sample_##")
+SNUM=$(basename "$sample")
+SNUM=${SNUM#Sample_}
+
+if ! ls "$sample/$SNUM"*_R[12]_*.fastq* >/dev/null; then
+    echo "Error: $sample does not seem to contain raw fastq[.gz] files with sample id $SNUM."
+    exit 1
+fi
 
 # Decompress Raw Data
 echo -e "[`date`]\tDecompressing"
