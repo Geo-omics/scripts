@@ -58,14 +58,14 @@ for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
     echo -e "[`date`]\tAssembling ${i} at $PWD"
     idba_ud -o ${assembly} -r *_int.fasta --num_threads ${threads} --mink $mink --maxk $maxk --step $step &> idba_${assembly}.log
 
-    FASTA=${assembly}/scaffold.fa
+    SCAFFOLD=${assembly}/scaffold.fa
 
     echo -e "[`date`]\tProducing assembly stats for ${i}"
-    $QUAST -f --meta -T ${threads} -l "Scaffolds, Contigs" ${assembly}/scaffold.fa ${assembly}/contig.fa &> quast.log
+    $QUAST -f --meta -T ${threads} -l "Scaffolds, Contigs" $SCAFFOLD ${assembly}/contig.fa &> quast.log
 
     echo -e "[`date`]\tSearch for scaffolds with 16S"
     mkdir -p BLASTN
-    blastn -query ${assembly}/scaffold.fa -db $path2silva -outfmt "7 std qlen stitle" -out BLASTN/${i}_vs_silvaSSU119.blastn -num_threads ${threads}
+    blastn -query $SCAFFOLD -db $path2silva -outfmt "7 std qlen stitle" -out BLASTN/${i}_vs_silvaSSU119.blastn -num_threads ${threads}
     
     T1BLAST=BLASTN/${i}_vs_silvaSSU119.topHits.blastn
     perl top5.pl -t 1 -b BLASTN/${i}_vs_silvaSSU119.blastn -o $T1BLAST
@@ -76,7 +76,7 @@ for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
 	ABLAST=BLASTN/${i}_subSeq_vs_archaeaNCBI.blastn
 	SSEQ=BLASTN/silvaSSU119.topHits.fasta
 
-	perl extractSubSeq.pl -query -blast $T1BLAST -f $FASTA -o $SSEQ
+	perl extractSubSeq.pl -query -blast $T1BLAST -f $SCAFFOLD -o $SSEQ
 
 	blastn -query $SSEQ -db $path2bact -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads ${threads}
 	blastn -query $SSEQ -db $path2arch -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads ${threads}
@@ -91,9 +91,9 @@ for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
 
     mkdir -p PhyloSift
     if [ -d $path2markers ]; then
-	phylosift all --disable_updates --output PhyloSift/Whole_Assembly $FASTA
+	phylosift all --disable_updates --output PhyloSift/Whole_Assembly $SCAFFOLD
     else
-	phylosift all --output PhyloSift/Whole_Assembly $FASTA
+	phylosift all --output PhyloSift/Whole_Assembly $SCAFFOLD
     fi
 
     echo -e "[`date`]\tFinished with ${i}"
