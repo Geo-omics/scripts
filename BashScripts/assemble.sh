@@ -58,6 +58,8 @@ for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
     echo -e "[`date`]\tAssembling ${i} at $PWD"
     idba_ud -o ${assembly} -r *_int.fasta --num_threads ${threads} --mink $mink --maxk $maxk --step $step &> idba_${assembly}.log
 
+    FASTA=${assembly}/scaffold.fa
+
     echo -e "[`date`]\tProducing assembly stats for ${i}"
     $QUAST -f --meta -T ${threads} -l "Scaffolds, Contigs" ${assembly}/scaffold.fa ${assembly}/contig.fa &> quast.log
 
@@ -72,7 +74,6 @@ for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
 	echo -e "[`date`]\tLook up top hits from 16S search for complete genomes in NCBI"
 	BBLAST=BLASTN/${i}_subSeq_vs_bactNCBI.blastn
 	ABLAST=BLASTN/${i}_subSeq_vs_archaeaNCBI.blastn
-	FASTA=${assembly}/scaffold.fa
 	SSEQ=BLASTN/silvaSSU119.topHits.fasta
 
 	perl extractSubSeq.pl -query -blast $T1BLAST -f $FASTA -o $SSEQ
