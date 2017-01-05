@@ -37,6 +37,7 @@ threads=15
 ##### DO NOT MAKE ANY CHANGES BEYOND THIS LINE #####
 #####     unless you know what you're doing    #####
 ####################################################
+QUAST="/usr/bin/python $(which quast.py)"
 version=1.7.3
 echo -e "[`date`]\tAssembled using $0 version: $version"
 for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
@@ -58,7 +59,7 @@ for i in $(find -maxdepth 1 -type d -name "Sample_*"); do
     idba_ud -o ${assembly} -r *_int.fasta --num_threads ${threads} --mink $mink --maxk $maxk --step $step &> idba_${assembly}.log
 
     echo -e "[`date`]\tProducing assembly stats for ${i}"
-    quast.py -f --meta -T ${threads} -l "Scaffolds, Contigs" ${assembly}/scaffold.fa ${assembly}/contig.fa &> quast.log
+    $QUAST -f --meta -T ${threads} -l "Scaffolds, Contigs" ${assembly}/scaffold.fa ${assembly}/contig.fa &> quast.log
 
     echo -e "[`date`]\tSearch for scaffolds with 16S"
     mkdir -p BLASTN
