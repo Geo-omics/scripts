@@ -1,4 +1,4 @@
-#!/user/bin/perl -w
+#!/usr/bin/perl -w
 =head1 DESCRIPTION
 
 	Dereplicates a Fasta file at 100% identity over 100% coverage. Picks a first sequence as the representative for the cluster.
