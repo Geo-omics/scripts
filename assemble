@@ -246,5 +246,6 @@ ln "$scaf" "$WORK_DIR"/scaffold.fa
 info "[assembly done]"
 # gmb: input: dt_int.fasta
 # gmb: output: scaffold.fa
-# gmb: args: --cpus {{ CPUS }} --no-color
-# gmb: cpus: CPUS
+# gmb: args: --cpus {{ cpus }} --no-color
+# gmb: cpus_min: 1
+# gmb: cpus_max: CPUS
