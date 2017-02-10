@@ -71,20 +71,21 @@ SCRIPT_NAME=$(basename "$0")
 PATH2SILVA="/omics/PublicDB/silva/release_123/SILVA_123_SSURef_tax_silva.fasta"
 PATH2BACT="/omics/PublicDB/NCBI/Bacteria/latest_16S.fasta"
 PATH2ARCH="/omics/PublicDB/NCBI/Archaea/latest_16S.fasta"
-PATH2MARKERS="~/share/phylosift"
+PATH2MARKERS="${HOME}/share/phylosift"
 PATH2SCRIPTS="/geomicro/data1/COMMON/scripts"
 # IDBA Parameters
 MINK=52
 MAXK=92
 STEP=8
 
+# other scripts
 QUAST="/usr/bin/python $(which quast.py)"
+TOP5="perl $PATH2SCRIPTS/BlastTools/top5.pl"
+EXTRACT_SUB_SEQ="perl $PATH2SCRIPTS/SeqTools/extractSubSeq.pl"
 #
 CLEAN_ONLY=false
 #
 CPUS=4
-#
-TOP5="perl $PATH2SCRIPTS/BlastTools/top5.pl"
 #
 WORK_DIR=$(pwd)
 # default verbosity level
@@ -179,7 +180,7 @@ fi
 ####################################
 # check presence of necessary tools
 ####################################
-for i in idba_ud; do
+for i in idba_ud quast.py; do
     which $i > /dev/null 2>&1 || abort "$i command is not available."
 done
 
@@ -206,18 +207,44 @@ fi
 
 mkdir $V -p ASSEMBLY
 mkdir $V -p ASSEMBLY/BLASTN
+mkdir $V -p ASSEMBLY/PhyloSift
 cd ASSEMBLY
 
 info "Assembling..."
 idba_ud -o $spec -r ../dt_int.fasta --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP &> $spec.log
+
 info "Making assembly stats..."
-$QUAST -f --meta -T $CPUS -l "Scaffolds, Contigs" $scaf $spec/contig.fa &> quast.log
+$QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa &> quast.log
+
 info "Searching for scaffolds with 16S..."
-blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out BLASTN/sample_vs_silva.blastn -num_threads $CPUS
-$TOP5 -t 1 -b BLASTN/sample_vs_silva.blastn -o BLASTN/silva_top_hits.blastn
+T1BLAST=BLASTN/sample_vs_silvaSSU119.topHits.blastn
+BBLAST=BLASTN/sample_subSeq_vs_bactNCBI.blastn
+ABLAST=BLASTN/sample_subSeq_vs_archaeaNCBI.blastn
+SSEQ=BLASTN/silvaSSU119.topHits.fasta
+mkdir -p BLASTN
+blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out $T1BLAST -num_threads "$CPUS"
+if [ ! -s BLASTN/sample_vs_silvaSSU119.blastn ]; then
+    info "Looking up top hits from 16S search for complete genomes in NCBI..."
+    $TOP5 -t 1 -b BLASTN/sample_vs_silva.blastn -o $T1BLAST
+    $EXTRACT_SUB_SEQ -query -blast $T1BLAST -f $scaf -o $SSEQ
+    blastn -query $SSEQ -db $PATH2BACT -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads "$CPUS"
+    blastn -query $SSEQ -db $PATH2ARCH -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads "$CPUS"
+    $TOP5 -t 1 -b $BBLAST -o ${BBLAST/%blastn/top_hits.blastn}
+    $TOP5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
+fi
 
+info "Running PyloSift..."
+if [ -d "$PATH2MARKERS" ]; then
+    phylosift all --disable_updates --output PhyloSift/Whole_Assembly $scaf
+else
+    warning "--- running PyloSift in update mode ---"
+    phylosift all --output PhyloSift/Whole_Assembly $scaf
+fi
 
+ln "$scaf" "$WORK_DIR"/scaffold.fa
 
+info "[assembly done]"
 # gmb: input: dt_int.fasta
-# gmb: args: --cpus {{ CPUS }}
+# gmb: output: scaffold.fa
+# gmb: args: --cpus {{ CPUS }} --no-color
 # gmb: cpus: CPUS
