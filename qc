@@ -195,17 +195,21 @@ info "pre-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 fwd.fastq rev.fastq &> FASTQC/fastqc.log &
 info "dereplicating..."
 $DEREPLICATE -fq fwd.fastq -o derep_fwd.fastq &
-$DEREPLICATE -fq fwd.fastq -o derep_rev.fastq
+$DEREPLICATE -fq rev.fastq -o derep_rev.fastq
+wait
 info "adapter trimming..."
 scythe -a $ADAPTERS -q sanger -m derep_fwd.matches.fastq -o derep_scythe_fwd.fastq derep_fwd.fastq &
 scythe -a $ADAPTERS -q sanger -m derep_rev.matches.fastq -o derep_scythe_rev.fastq derep_rev.fastq
+wait
 info "quality score trimming..."
 sickle se -t sanger -f derep_scythe_fwd.fastq -o derep_scythe_sickle_fwd.fastq &
 sickle se -t sanger -f derep_scythe_rev.fastq -o derep_scythe_sickle_rev.fastq
+wait
 info "post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_*_fastq &>> FASTQC/fastqc.log &
+fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_{fwd,rev}.fastq &>> FASTQC/fastqc.log &
 info "interleaving..."
 $INTERLEAVE -fastq -outfmt fasta -fwd derep_scythe_sickle_fwd.fastq -rev derep_scythe_sickle_rev.fastq -o dt
+wait
 info "Done!"
 
 
