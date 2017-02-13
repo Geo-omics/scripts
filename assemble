@@ -217,14 +217,14 @@ info "Making assembly stats..."
 $QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa &> quast.log
 
 info "Searching for scaffolds with 16S..."
-T1BLAST=BLASTN/sample_vs_silvaSSU119.topHits.blastn
+T1BLAST=BLASTN/sample_vs_silvaSSU.topHits.blastn
 BBLAST=BLASTN/sample_subSeq_vs_bactNCBI.blastn
 ABLAST=BLASTN/sample_subSeq_vs_archaeaNCBI.blastn
 SSEQ=BLASTN/silvaSSU119.topHits.fasta
 mkdir -p BLASTN
 blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out $T1BLAST -num_threads "$CPUS"
 $TOP5 -t 1 -b BLASTN/sample_vs_silva.blastn -o $T1BLAST
-if [ ! -s BLASTN/sample_vs_silvaSSU119.blastn ]; then
+if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
     info "Looking up top hits from 16S search for complete genomes in NCBI..."
     $EXTRACT_SUB_SEQ -query -blast $T1BLAST -f $scaf -o $SSEQ
     blastn -query $SSEQ -db $PATH2BACT -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads "$CPUS"
