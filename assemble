@@ -220,9 +220,9 @@ info "Searching for scaffolds with 16S..."
 T1BLAST=BLASTN/sample_vs_silvaSSU.topHits.blastn
 BBLAST=BLASTN/sample_subSeq_vs_bactNCBI.blastn
 ABLAST=BLASTN/sample_subSeq_vs_archaeaNCBI.blastn
-SSEQ=BLASTN/silvaSSU119.topHits.fasta
+SSEQ=BLASTN/silvaSSU.topHits.fasta
 mkdir -p BLASTN
-blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out $T1BLAST -num_threads "$CPUS"
+blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out BLASTN/sample_vs_silva.blastn -num_threads "$CPUS"
 $TOP5 -t 1 -b BLASTN/sample_vs_silva.blastn -o $T1BLAST
 if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
     info "Looking up top hits from 16S search for complete genomes in NCBI..."
