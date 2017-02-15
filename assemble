@@ -214,7 +214,7 @@ info "Assembling..."
 idba_ud -o $spec -r ../dt_int.fasta --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP &> $spec.log
 
 info "Making assembly stats..."
-$QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa &> quast.log
+$QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa --output-dir quast_results
 
 info "Searching for scaffolds with 16S..."
 T1BLAST=BLASTN/sample_vs_silvaSSU.topHits.blastn
