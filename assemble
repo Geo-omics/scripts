@@ -211,7 +211,7 @@ mkdir $V -p ASSEMBLY/PhyloSift
 cd ASSEMBLY
 
 info "Assembling..."
-idba_ud -o $spec -r ../dt_int.fasta --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP &> $spec.log
+idba_ud -o $spec -r ../dt_int.fasta --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP 2>&1 | tee $spec.log
 
 info "Making assembly stats..."
 $QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa --output-dir quast_results
