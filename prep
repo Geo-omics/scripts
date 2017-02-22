@@ -9,7 +9,7 @@
 usage() {
     if [ "$VERBOSITY" -ge 1 ]; then
 	echo "
-USAGE: $SCRIPT_NAME [-h|--help|--no-color|-v|verbosity n]
+USAGE: $SCRIPT_NAME [-h|--help|--no-color|-v|verbosity n] <fastq.gz>...
 "
     fi
 }
