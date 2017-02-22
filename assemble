@@ -241,7 +241,7 @@ else
     phylosift all --output PhyloSift/Whole_Assembly $scaf
 fi
 
-ln "$scaf" "$WORK_DIR"/scaffold.fa
+ln $V "ASSEMBLY/$scaf" "$WORK_DIR"/scaffold.fa
 
 info "[assembly done]"
 # gmb: input: dt_int.fasta
