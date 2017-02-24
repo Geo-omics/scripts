@@ -25,7 +25,6 @@ CPUS=4
 PATH2SILVA="/omics/PublicDB/silva/release_123/SILVA_123_SSURef_tax_silva.fasta"
 PATH2BACT="/omics/PublicDB/NCBI/Bacteria/latest_16S.fasta"
 PATH2ARCH="/omics/PublicDB/NCBI/Archaea/latest_16S.fasta"
-PATH2MARKERS="${HOME}/share/phylosift"
 PATH2SCRIPTS="/geomicro/data1/COMMON/scripts"
 # IDBA Parameters
 MINK=52
@@ -105,14 +104,6 @@ if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
     blastn -query $SSEQ -db $PATH2ARCH -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads "$CPUS"
     $TOP5 -t 1 -b $BBLAST -o ${BBLAST/%blastn/top_hits.blastn}
     $TOP5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
-fi
-
-info "Running PyloSift..."
-if [ -d "$PATH2MARKERS" ]; then
-    phylosift all --disable_updates --output PhyloSift/Whole_Assembly $scaf
-else
-    warning "--- running PyloSift in update mode ---"
-    phylosift all --output PhyloSift/Whole_Assembly $scaf
 fi
 
 ln $V "ASSEMBLY/$scaf" "$WORK_DIR"/scaffold.fa
