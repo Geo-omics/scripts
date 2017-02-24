@@ -1,0 +1,128 @@
+#!/bin/bash
+#
+# Copyright (c) 2017 Regents of The University of Michigan.
+# All Rights Reserved.
+#
+# Author: Robert <heinro@med.umich.edu>
+#
+
+USAGE="[--cpus <n>] [--scaffolds <file>] [--fwd-read <file> [--rev-reads <file>]]"
+HELP="mapping script"
+ARG_HELP="
+    --scaffolds <file> Fasta file with scaffold
+    --fwd-reads <file> Fastq file with forward reads or single-end reads
+    --rev-reads <file> Fastq file with reverse reads
+    --cpus <n>
+"
+LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,scaffolds:
+CHECK_PROGS="bwa genomeCoverageBed samtools"
+
+##########################
+# default variable values
+##########################
+
+COVERAGE_PER_SCAFFOLD="perl $PATH_TO_SCRIPTS/coveragePerScaffold.pl"
+
+CPUS=4
+
+FWD_READS=fwd.fastq
+
+PATH_TO_SCRIPTS="/geomicro/data1/COMMON/scripts/BamTools"
+
+REV_READS=rev.fastq
+
+SCAF=scaffold.fa
+
+
+handle_options () {
+    if [ "$#" -gt 0 ]; then
+	case "$1" in
+	    (--cpus)
+	        CPUS="$2"
+	        return 2;;
+	    (--fwd-reads)
+	        FWD_READS="$2"
+	        return 2;;
+	    (--rev-reads)
+	        REV_READS="$2"
+	        return 2;;
+	    (--sacffolds)
+	        SCAF="$2"
+	        return 2;;
+        esac
+    fi
+}
+
+# shellcheck source=../lib/liba.sh
+# shellcheck disable=SC1091
+. "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
+
+
+# handle non-option parameters
+if [ "$#" -gt 0 ]; then
+    abort "Unknown parameters: ${*}"
+fi
+
+#########################
+# some input sanitation
+#########################
+[ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
+[ -e "$SCAF" ] || abort "File does not exist: $SCAF"
+[ -e "$FWD_READS" ] || abort "File does not exist: $FWD_READS"
+
+
+#################################
+# do stuff
+################################
+
+name=$(basename "${SCAF%.*}")  # the filename without suffix
+
+alnSam=${name}_aligned.sam
+alnSamLog=${name}.aln.log
+sam2bam=${name}_fixmate.bam
+sortBam=${name}_sorted.bam
+nameSortBam=${name}_name_sorted.bam
+readGroup="@RG\\tID:group_${1}\\tSM:Sample_${1}\\tPL:illumina\\tLB:lib_${1}\\tPU:unit_${1}"
+bedOut=${name}.genomeCovBed.tsv
+scafCov=${name}.cov
+
+#######################################
+#########      PIPELINE       #########
+#######################################
+info "Indexing Database..."
+bwa index "$SCAF"
+
+info "Aligning FWD and REV reads using 'bwa mem'..."
+info "[NOTE] Using Read Group ${readGroup}"
+if [ -e "$REV_READS" ]; then
+	info "[NOTE] Read Pairs detected.  Starting paired-end mapping..."
+	bwa mem -M -R "$readGroup" -t "$CPUS" "$SCAF" "$FWD_READS" "$REV_READS" 1> "$alnSam" 2> "$alnSamLog";
+else
+	info "[NOTE] Single-end Reads detected.  Starting single-end mapping..."
+	bwa mem -M -R "$readGroup" -t "$CPUS" "$SCAF" "$FWD_READS" 1> "$alnSam" 2> "$alnSamLog";
+fi
+
+info "Fixing alignment artifacts and converting SAM to BAM..."
+samtools fixmate -O bam "$alnSam" "$sam2bam"
+
+info "Sorting BAM by Name..."
+samtools sort -n -m 50G -@ "$CPUS" -O bam -o "$nameSortBam" -T samSort.tmp "$sam2bam"
+
+info "Sorting BAM by Position..."
+samtools sort -m 50G -@ "$CPUS" -O bam -o "$sortBam" -T samSort.tmp "$sam2bam"
+
+info "Indexing Sorted BAM..."
+samtools index "$sortBam"
+
+info "Calculating Coverage..."
+echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
+genomeCoverageBed -ibam "$sortBam" -g "$SCAF" | grep -v "^__" >> "$bedOut"
+
+info "Calculating Coverage Per Scaffold..."
+$COVERAGE_PER_SCAFFOLD -bed "$bedOut" > "$scafCov"
+
+info "Mapping done"
+# gmb: input: scaffold.fa fwd.fastq rev.fastq
+# gmb: output:
+# gmb: args: --cpus {{ cpus }} --no-color
+# gmb: cpus_max: CPUS
