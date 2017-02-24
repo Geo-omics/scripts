@@ -106,7 +106,7 @@ if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
     $TOP5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
 fi
 
-ln $V "ASSEMBLY/$scaf" "$WORK_DIR"/scaffold.fa
+ln $V "$scaf" "$WORK_DIR"/scaffold.fa
 
 info "[assembly done]"
 # gmb: input: dt_int.fasta
