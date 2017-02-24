@@ -6,64 +6,41 @@
 # Author: Robert <heinro@med.umich.edu>
 #
 
-usage() {
-    if [ "$VERBOSITY" -ge 1 ]; then
-	echo "
-USAGE: $SCRIPT_NAME [-h|--help|--no-color|-v|verbosity n] <fastq.gz>...
-"
-    fi
-}
-
-user_help() {
-    echo "$SCRIPT_NAME - Inflate a sample's fastq files."
-    usage
-    echo "Command line parameters:
-    --force	Overwrite existing files
-    --working-dir <path>  Where to store files
+# shellcheck disable=SC2034
+USAGE="[-h|--help|--no-color|-v|verbosity n] <fastq.gz>..."
+# shellcheck disable=SC2034
+HELP="Inflate a sample's fastq files."
+# shellcheck disable=SC2034
+ARG_HELP="    --force	Overwrite existing files
     --sample <name>
     --lane <Lnnn>   e.g. --lane L007
     --use-tmp	    Use fast temporary storage for output.
--h  --help          Print this help.
-    --no-color      Disable colorful output.
--v                  Verbosity: use multiple -v to increase output.
-    --verbosity <n> Set level verbosity.
 "
-}
+# shellcheck disable=SC2034
+LONG_OPTIONS=force,lane:,sample:,use-tmp
+# shellcheck disable=SC2034
+CHECK_PROGS="gunzip"
 
-exception () {
-    echo "[${RED}ERROR${ENDCOLOR}] at line $1; error code $2"
-}
-
-debug() {
-    [ "$VERBOSITY" -ge 3 ] && echo "[$SCRIPT_NAME] [DEBUG] $1"
-}
-
-info() {
-    [ "$VERBOSITY" -ge 1 ] && echo "[$SCRIPT_NAME] $1"
-}
-
-warning() {
-    [ "$VERBOSITY" -ge 1 ] && echo -e "[$SCRIPT_NAME] [${ORANGE}WARNING${ENDCOLOR}] $1"
-}
-
-error() {
-    [ "$VERBOSITY" -ge -1 ] && >&2 echo -e "[$SCRIPT_NAME] [${RED}ERROR${ENDCOLOR}] $1"
-}
-
-abort() {
-    # write an error message and exit.  If the last positional parameter is 'usage' then also print the usage text.
-    >&2 echo -e "[$SCRIPT_NAME] [${RED}ABORT${ENDCOLOR}] $1"
-    if [ "$VERBOSITY" -ge 0 ]; then
-	if [ $# -ge 0 ]; then
-	    [ "${!#}" == "usage" ] && usage
-	fi
+handle_options () {
+    if [ "$#" -gt 0 ]; then
+	case "$1" in
+	    (--force)
+	        FORCE=true
+	        return 1;;
+	    (--lane)
+	        LANE="${2}"
+	        return 2;;
+	    (--sample)
+	        SAMPLE="$2"
+		return 2;;
+	    (--use-tmp)
+	        USE_TMP=YES
+	        return 1;;
+        esac
+    else
+        return 0
     fi
-    exit 1
 }
-
-
-# get name of this script
-SCRIPT_NAME=$(basename "$0")
 
 ##########################
 # default variable values
@@ -73,98 +50,17 @@ SCRIPT_NAME=$(basename "$0")
 FORCE=false
 # no lane specified by default
 LANE=
-# where to store inflated files
-WORK_DIR=$(pwd)
-# default verbosity level
-VERBOSITY=1
-# Enable colorful output by default
-USE_COLOR=true
 # Use fast temp directory, no by default
 USE_TMP=NO
 # TMP root to use
 TMP_ROOT=/dev/shm
 
-###################################3
-# command line parameter handling
-###################################
-GETOPT_SHORT=hv
-GETOPT_LONG=force,help,lane:,no-color,working-dir:,sample:,use-tmp,verbosity:
-if which getopt >/dev/null 2>&1; then
-    getopt -T
-    if [ "$?" == 4 ]; then
-        # GNU getopt available 
-        _getopt=$(getopt -o "$GETOPT_SHORT" --long "$GETOPT_LONG" --name "$SCRIPT_NAME" -- "$@")
-        if [ "$?" != 0 ]; then usage; exit 1; fi
-    else
-	# for non-GNU getopt (on MacOSX?)
-	# try best effort without handling long options
-	# TODO: this path needs testing
-        _getopt=$(getopt -o "$GETOPT_SHORT" --name "$SCRIPT_NAME" -- "$@")
-        if [ "$?" != 0 ]; then usage; exit 1; fi
-    fi
-    # reset $n parameters
-    eval set -- "$_getopt"
-fi
+# shellcheck source=../lib/liba.sh
+# shellcheck disable=SC1091
+. "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
 
-# handle options arguments / should work with/without getopt
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-	(--force)
-	    FORCE=true
-	    ;;
-	(--lane)
-	    LANE="${2}"
-            shift
-	    ;;
-	(--working-dir)
-	    WORK_DIR="$2"
-            shift
-	    ;;
-	(--sample)
-	    SAMPLE="$2"
-            shift
-	    ;;
-	(--use-tmp)
-	    USE_TMP=YES
-	    ;;
-	(-h|--help) user_help; exit 0;;
-	(--no-color) USE_COLOR=false;;
-	(-v) VERBOSITY=$((VERBOSITY+1));;
-	(--verbosity)
-	    VERBOSITY="$2"
-	    [[ "$VERBOSITY" =~ ^[[:digit:]]+$ ]] || abort "Verbosity level must be a positive integer." usage 
-	    shift
-	    ;;
-	(--) shift; break;;
-	(-|-*) abort "invalid command line option: $1" usage;;
-	(*) break;; # getopt failure? assume this and following are non-option args
-    esac
-    shift
-done
-
-##########################################################
-# color output
-#
-# for color codes see:
-# https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
-#
-# 
-if [ "$USE_COLOR" == true ]; then
-    if which tput >/dev/null 2>&1 && [ "$(tput colors)" -ge 8 ]; then
-	RED=$(tput setaf 1)
-	ORANGE=$(tput bold)$(tput setaf 1)
-	ENDCOLOR=$(tput sgr0)
-    fi
-fi
-
-debug "command line options: $_getopt"
-debug "verbosity set to: $VERBOSITY"
-# set bash script debugging
-[ "$VERBOSITY" -ge 4 ] && set -x
-# forward verbosity to other commands
-[ "$VERBOSITY" -ge 2 ] && VERBOSE_FLAG=-v
-
-# handle non-option parameters
+# shellcheck source=../lib/liba.sh
+# handle non-option (positional) parameters
 declare -a FASTQ_GZ
 if [ "$#" -gt 0 ]; then
     FASTQ_GZ=("${@}")
@@ -183,29 +79,16 @@ else
     [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not a directory."
 fi
 
-mkdir $VERBOSE_FLAG -p "$WORK_DIR"
-
-
 for i in "${FASTQ_GZ[@]}"; do
     [ -r "$i" ] || abort "Cannot read $i"
 done
 
-####################################
-# check presence of necessary tools
-####################################
-for i in gunzip; do
-    which $i > /dev/null 2>&1 || abort "$i command is not available."
-done
-
-###############################
-# enable error trapping
-###############################
-set -e
-trap 'exception $LINENO $?' ERR
-
 #################################
 # do stuff
 ################################
+
+# shellcheck disable=SC2086
+mkdir $VERBOSE_FLAG -p "$WORK_DIR"
 
 for direct in 1 2; do
     if [ $direct == 1 ]; then
@@ -217,6 +100,7 @@ for direct in 1 2; do
     [ ! -e "$out" ] || $FORCE || abort "$out already exist.  Clean up output directory before continuing."
     for i in "${FASTQ_GZ[@]}"; do
        	if echo "$i" | grep -F "_R${direct}_" > /dev/null; then
+	    # shellcheck disable=SC2086
             gunzip $VERBOSE_FLAG -c "$i" >> "$WORK_DIR/$out"
 	fi
     done
