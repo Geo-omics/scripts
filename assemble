@@ -12,7 +12,7 @@ ARG_HELP="    --cpus <n>  How many CPUs/threads to use.
     --clean-only  Remove previously created file and stop.
 "
 CHECK_PROGS="idba_ud quast.py"
-LONG_OPTIONS="--cpus:,--clean_only"
+LONG_OPTIONS=cpus:,clean-only
 
 ##########################
 # default variable values
