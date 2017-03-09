@@ -1,4 +1,4 @@
-#!bash
+#!bash #shebang for editor/syntax highlighting only, include with source builtin, dont run on its own
 # shellcheck disable=SC2034
 #
 # Copyright (c) 2017 Regents of The University of Michigan.
@@ -7,38 +7,42 @@
 
 ##############################################################################
 #
-#                     ### library for bash scripts ###
+#                     ### a library for bash scripts ###
 #
 # How to use:
 #
 # At the top of you script, define variables USAGE, HELP, ARG_HELP,
 # CHECK_PROGS, SHORT_OPTIONS, and LONG_OPTION and the function handle_options,
-# as required, and then source this library.  Like this:
+# as needed, and then source this library, followed by the main part of your
+# script.  For example:
 #
-# USAGE="[--help|-h|--some-arg|-a] [--other-arg <foo>]"
-# HELP="myprog is a script to do such and such"
-# ARG_HELP="    --some-arg -a   Enable something
-#      --other-arg <foo>   Use a foo for bla bla
-# "
-# CHECK_PROGS="gunzip idba_ud fastqc"
-# SHORT_OPTIONS=a
-# LONG_OPTION=--some-arg,--other-arg:
-# handle_options () {
-#     if [ "$#" -gt 0 ]; then
-# 	case "$1" in
-# 	    (--some-arg|-a)
-# 	        ENABLE_BAR=true
-# 	        return 1;;
-# 	    (--other-arg)
-# 	        FOO="${2}"
-# 	        return 2;;
-#         esac
-#     else
-#         return 0
-#     fi
-# }
+#    #!/bin/bash
+#    USAGE="[--help|-h|--some-arg|-a] [--other-arg <foo>]"
+#    HELP="myprog is a script to do such and such"
+#    ARG_HELP="    --some-arg -a   Enable something
+#         --other-arg <foo>   Use a foo for bla bla
+#    "
+#    CHECK_PROGS="gunzip idba_ud fastqc"
+#    SHORT_OPTIONS=so:
+#    LONG_OPTION=--some-arg,--other-arg:
+#    handle_options () {
+#        if [ "$#" -gt 0 ]; then
+#    	case "$1" in
+#    	    (--some-arg|-s)
+#    	        SOME_ARG=true
+#    	        return 1;;
+#    	    (--other-arg|-o)
+#    	        OTHER_ARG="${2}"
+#    	        return 2;;
+#            esac
+#        else
+#            return 0
+#        fi
+#    }
+#   
+#    . "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
 #
-# . "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
+#    # your script comes here --->
 #
 # The return code of handle_options is the number of consumed arguments,
 # so usually 1 or 2. Positional parameters are still stored in $@.
