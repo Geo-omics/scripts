@@ -1,0 +1,37 @@
+#%Module1.0
+
+#set version "1"
+
+proc ModulesHelp { } {
+    puts stderr "Load this module to use the geo-omics scripts."
+}
+
+module-whatis "All-in-one omics module"
+
+if { [module-info mode load] } {
+    # Load standard software packages
+    module load AnacondaPython3
+    module load Scythe
+    module load blast
+    module load PhyloSift
+    module load idba/1.1.1_maxk512
+    module load QUAST
+    module load bwa
+    module load samtools
+    module load bedtools
+    
+    if { [is-loaded idba/1.1.1_maxk512] } {
+        # pass
+    } else {
+        puts stderr "[module] idba maxk512 unavailable, trying alternative version"
+        module load idba
+    }
+}
+
+set GEOMICS_ROOT /geomicro/data2/heinro/geomics_root
+
+append-path PATH $GEOMICS_ROOT/bin
+append-path MANPATH $GEOMICS_ROOT/share/man
+append-path PYTHONPATH $GEOMICS_ROOT/lib/python3.5/site-packages
+
+setenv PYTHONUSERBASE $GEOMICS_ROOT
