@@ -1,2 +1,0 @@
-## Script Descriptions
-* **extractContigReads.pl**	
