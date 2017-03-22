@@ -11,3 +11,7 @@ config.status
 configure
 Makefile
 Makefile.in
+
+# make-generated files
+scripts/*.1
+geo-omics-scripts*.tar.gz
