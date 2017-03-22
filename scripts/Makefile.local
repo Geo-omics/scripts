@@ -1,0 +1,56 @@
+# Makefile fragment
+# include at end of Makefile.in after running autoreconf
+# remove the include before re-running autoreconf
+#
+# perl scripts for which pod2man fails
+bad_pods = \
+	calcN50.pl\
+	createFastq.pl\
+	curateDB.pl\
+	derep_getReadAbundance.pl\
+	embl2picture.pl\
+	extractSeqs.pl\
+	folderLevelSize.pl\
+	genomeCheck.pl\
+	getGISummary.pl\
+	getMasterList.pl\
+	getMyContigs.pl\
+	GI_info_XMLParser.pl\
+	iClust.pl\
+	kmerFreq.pl\
+	patchBlastLineage.pl\
+	plotCoverage.pl\
+	removeBlastSubj.pl\
+	removeCommentLines.pl\
+	tally.pl\
+	U2T.pl\
+	weave.pl\
+
+# compute names for manpages
+bad_re = $(foreach i,$(bad_pods),"-F $(i)")
+perl_scripts_all = $(shell file * | grep -i perl| cut -d ':' -f 1)
+perl_scripts_good = $(filter-out $(bad_pods),$(perl_scripts_all))
+man_pages = $(foreach i,$(perl_scripts_good),$(i).1)
+
+.PHONY: debug
+debug:
+	@echo good Perl scripts found:
+	@echo $(perl_scripts_good)
+	@echo
+	@echo Corresponding man pages:
+	@echo $(man_pages)
+	@echo
+	@echo Bad pods grep args:
+	@echo $(bad_re)
+
+$(man_pages): name = $(subst .1,,$@)
+$(man_pages):
+	pod2man --center $(name) $(name) $@ 
+
+.PHONY: man
+man: $(man_pages)
+
+all: man
+# assume man-making machinery is in place in including Makefile
+man_MANS = $(man_pages)
+MAN = $(man_MANS)
