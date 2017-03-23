@@ -1,4 +1,4 @@
-#! usr/bin/perl
+#!/usr/bin/perl
 #USAGE: perl iClust.pl <inputFile> <id1> <id2>
 #	INPUT FILE: should contain a list of file names of individual genomes. each name should be in a newline.
 

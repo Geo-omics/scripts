@@ -1,4 +1,4 @@
-#!/user/bin/perl -w
+#!/usr/bin/perl -w
 =head1 DESCRIPTION
 
 	Check length of each sequence and only print those that clear the minimum threshold of x (default=60) bases;
