@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # USAGE: ./assemble.sh
 # Make sure you're running this from the same directory

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Usage: ./mapping.sh Sample#
 # Assumption1: Sample# == Dir name which contains a fwd.fastq, rev.fastq and reference fasta
 # Assumption2: Reference Name == scaffold.fasta
