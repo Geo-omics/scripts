@@ -14,18 +14,11 @@ if { [module-info mode load] } {
     module load Scythe
     module load blast
     module load PhyloSift
-    module load idba/1.1.1_maxk512
+    module load idba
     module load QUAST
     module load bwa
     module load samtools
     module load bedtools
-    
-    if { [is-loaded idba/1.1.1_maxk512] } {
-        # pass
-    } else {
-        puts stderr "[module] idba maxk512 unavailable, trying alternative version"
-        module load idba
-    }
 }
 
 set GEOMICS_ROOT /geomicro/data2/heinro/geomics_root
