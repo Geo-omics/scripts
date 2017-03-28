@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-expandGFF.pl -- Take the GFF file attribute column and split it into multiple columns.
+expandGFF -- Take the GFF file attribute column and split it into multiple columns.
 
 =head1 USAGE
 
-perl expandGFF.pl -gff -out
+expandGFF -gff -out
 
 =head2 Options
 

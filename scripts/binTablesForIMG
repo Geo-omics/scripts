@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-binTablesForIMG.pl -- Given a list of Contigs reformat it to upload to IMG Scaffold workspace.
+binTablesForIMG -- Given a list of Contigs reformat it to upload to IMG Scaffold workspace.
 
 =head1 USAGE
 
-perl binTablesForIMG.pl
+binTablesForIMG
 
 =head2 Options
 

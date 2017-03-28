@@ -5,11 +5,11 @@ use Getopt::Long;
 
 =head1 USAGE
 
-	perl derep+alias.pl -l gi.list -d gi.data -abs 75
+	derep+alias -l gi.list -d gi.data -abs 75
 	OR
-	perl derep+alias.pl -l gi.list -d gi.data -percent 75
+	derep+alias -l gi.list -d gi.data -percent 75
 	OR
-	perl derep+alias.pl -l gi.list -d gi.data -all
+	derep+alias -l gi.list -d gi.data -all
 
 =head2 Options
 

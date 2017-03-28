@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 ##
-##       extractContigReads.pl
+##       extractContigReads
 ##
 ##       Copyright 2009 Daniel Zerbino <zerbino@ebi.ac.uk>
 ##
@@ -22,7 +22,7 @@
 ##       A script to split out a single contig's reads from an LastGraph file
 ##       produced by the Velvet assembler.  The output is in fasta format.
 ##
-##       Usage:  ./extractContigReads.pl <contig number> <directory> 
+##       Usage:  extractContigReads <contig number> <directory> 
 ##
 ##
 ##       Where:  <contig number> is the number of the contig of interest.
@@ -31,7 +31,7 @@
 ######################################################################
 =head1 Usage:
 
-	perl extractContigReads.pl -l list_of_Original_contig_Names.txt -dir assembly_directory -o output -r list of reads
+	extractContigReads -l list_of_Original_contig_Names.txt -dir assembly_directory -o output -r list of reads
 
 	-summary	when you only wish to see the # of reads in each contig and NOT the names.
 	-metav	if you've used metavelvet on your data.

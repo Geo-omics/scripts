@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-	extractGenomes.pl - extract genomes from NCBI databases (nr/nt) by Taxa curate and concatenate them to form your owm customized database.
+	extractGenomes - extract genomes from NCBI databases (nr/nt) by Taxa curate and concatenate them to form your owm customized database.
 
 =head2 PREPARATION.
 
@@ -18,7 +18,7 @@
 	
 =head2 USAGE
 
-	perl extractGenomes.pl [-i File from IMG] [-o Your Database Name] [-c NCBI Taxon ID Column Number] [-outdir database directory]
+	extractGenomes [-i File from IMG] [-o Your Database Name] [-c NCBI Taxon ID Column Number] [-outdir database directory]
 				
 =head2 OPTIONS
 
@@ -83,7 +83,7 @@ my $concat='y';
 my $faa='n';
 my @taxids;
 
-my $version="extractGenomes.pl\tv0.0.9";
+my $version="extractGenomes\tv0.0.9";
 GetOptions(
 	'i|in:s'=>\$listFile,
 	'd|database:s' => \$db,

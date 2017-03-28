@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-	countInstances.pl: count the number of times a value is seen in a column
+	countInstances count the number of times a value is seen in a column
 
 =head1 USAGE
 
-	perl countInstances.pl -in tab-delimited-input.txt -out output-filename.txt -col column-number
+	countInstances -in tab-delimited-input.txt -out output-filename.txt -col column-number
 
 =head2 Options
 

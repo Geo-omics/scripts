@@ -110,15 +110,8 @@ close SPACER;
 print "Repeats Found:\t$numRepeats\n";
 print "Spacers Found:\t$numSpacers\n";
 
-if (-e "extractSubSeq.pl"){
-	system("perl extractSubSeq.pl -f $contigs -t $spacerFile -o $prefix.spacers.fasta -start 2 -stop 3");
-}
-elsif(-e "/geomicro/data1/COMMON/scripts/extractSubSeq.pl"){
-	system("perl /geomicro/data1/COMMON/scripts/extractSubSeq.pl -f $contigs -t $spacerFile -o $prefix.spacers.fasta -start 2 -stop 3");
-}
-else{
-	warn "Conldn't find the extractSubSeqs.pl script.\nIf you need the fasta file for your spacer sequences, please run the script on your contigs and spacer.coords file\n";
-}
+system("extractSubSeq -f $contigs -t $spacerFile -o $prefix.spacers.fasta -start 2 -stop 3") == 0
+    or die "Error running the extractSubSeqs script.\nIf you need the fasta file for your spacer sequences, please run the script on your contigs and spacer.coords file\n";
 
 exit 0;
 ###########################################################################################

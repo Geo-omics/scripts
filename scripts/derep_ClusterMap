@@ -2,7 +2,7 @@
 
 =head1 MOTIVATION
 
-	In a dereplicated file genererated by my 'dereplicate.pl' script, each sequences may be a representative of a cluster of sequences.
+	In a dereplicated file genererated by my 'dereplicate' script, each sequences may be a representative of a cluster of sequences.
 	If you've used the dereplicated file for your Blasts, you may wish to find out the actual number of sequences that 'would have' gotten
 	the same result had the file not been dereplicated. By using this script you can get to that number	by simply multiplying this
 	result to your blast output.
@@ -34,7 +34,7 @@ my $log;
 my $mapped;
 my $clustF;
 my $out=$$.".derep.map";
-my $version= "derep_ClusterMap.pl v 0.1.9";
+my $version= "derep_ClusterMap v 0.1.9";
 GetOptions(
 	'l|log=s'=>\$log,
 	'm|mapped=s'=>\$mapped,

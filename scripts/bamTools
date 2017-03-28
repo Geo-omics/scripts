@@ -17,7 +17,7 @@
 
 =head2 Usage
 
-	perl bamTools.pl -f reference.fasta -b sorted.bam -l contigNames.list [-out processID.bamstats]
+	bamTools -f reference.fasta -b sorted.bam -l contigNames.list [-out processID.bamstats]
 
 =head2 Options
 

@@ -9,7 +9,7 @@ use Getopt::Long;
 	
 =head2 Description
 
-	 perl U2T.pl -in <input fasta file> -out <output fasta file>
+	 U2T -in <input fasta file> -out <output fasta file>
 
 =cut
 

@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-ani.pl -- This program calculates Average Nucleotide Identity (ANI) for a pair of bacterial genomes.
+ani  -- This program calculates Average Nucleotide Identity (ANI) for a pair of bacterial genomes.
 NOTE: Requires an older version of blast. Tested on version 2.2.20
 =head1 USAGE
 
-perl ani.pl -blast path to blast binaries -query genome -subj the other strain genome -outdir output directory
+ani -blast path to blast binaries -query genome -subj the other strain genome -outdir output directory
 	
 =head2 Example
 
@@ -45,7 +45,7 @@ use List::Util qw(min);
 use Cwd qw(abs_path);
 
 my $help;
-my $version="ani.pl\tv0.0.3b";
+my $version="ani\tv0.0.3b";
 my ($q, $s, $outDir, $path_to_blast_bin, $num_threads);
 GetOptions(
     "query:s" => \$q,

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
  
-# file: embl2picture.pl
+# file: embl2picture
 # This is code example 6 in the Graphics-HOWTO
 # Author: Lincoln Stein
  
@@ -19,7 +19,7 @@ Usage: $0 <file>
    rendered.
  
 Example to try:
-   embl2picture.pl factor7.embl | display -
+   embl2picture factor7.embl | display -
  
 END
  

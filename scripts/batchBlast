@@ -13,13 +13,13 @@
 =head1 USAGE
 
 	Start multiple instances of blast at once:
-		batchblast.pl [-p blast type] [-l list of query files]
+		batchBlast [-p blast type] [-l list of query files]
 	OR
 	Start a single instance of blast:
-		batchblast.pl [-p blast type] [-q single query fasta file]
+		batchBlast [-p blast type] [-q single query fasta file]
 	OR
 	Check if any type of blast was performed on the query file:
-		batchBlast.pl [-check] [-q query fasta file]
+		batchBlast [-check] [-q query fasta file]
 
 =head2 Options
 

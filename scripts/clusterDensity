@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-clusterDensity.pl -- Do this.
+clusterDensity -- Do this.
 
 =head1 USAGE
 
-perl clusterDensity.pl
+clusterDensity
 
 =head2 Options
 

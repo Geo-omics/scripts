@@ -2,16 +2,16 @@
 
 =head1 DESCRIPTION
 
-	changeClasses.pl -- Edit the *.cls file to change the class numbers for a given list of contig names.
+	changeClasses -- Edit the *.cls file to change the class numbers for a given list of contig names.
 
 =head1 USAGE
 
-	perl changeClasses.pl -cls esom.cls -names esom.names -list contigs.list -o output.cls
+	changeClasses -cls esom.cls -names esom.names -list contigs.list -o output.cls
 
 =head2 Options
 
-	-cls	<CHARACTERS>	*.cls file produced by the esomWrapper.pl script
-	-names	<CHARACTERS>	*.names file produced by the esomWrapper.pl script
+	-cls	<CHARACTERS>	*.cls file produced by the esomWrapper script
+	-names	<CHARACTERS>	*.names file produced by the esomWrapper script
 	-list	<CHARACTERS>	list of contig names(replace all special chracters with '_')
 	-tag	<CHARACTERS>	new class name/number to be assigned.[default=next available class number]
 	-out	<CHARACTERS>	new class file. default: esom_edited.cls
@@ -39,7 +39,7 @@ use File::Basename;
 
 my($cls, $names, $list, $tag, $out);
 my $help;
-my $version="changeClasses.pl\tv0.1.1";
+my $version="changeClasses\tv0.1.1";
 GetOptions(
 	'c|cls:s'=>\$cls,
 	'n|names:s'=>\$names,

@@ -2,15 +2,15 @@
 
 =head1 DESCRIPTION
 
-coveragePerBin.pl -- Do this.
+coveragePerBin -- Do this.
 
 =head1 USAGE
 
-perl coveragePerBin.pl
+coveragePerBin
 
 =head2 Options
 
-    -conf   <FILE>      Concatenated confidence file. # make sure you've used the loyalty scores in getClassFasta.pl.
+    -conf   <FILE>      Concatenated confidence file. # make sure you've used the loyalty scores in getClassFasta.
                         # This script won't handle scaffold mapping to multiple bins.
     -cov    <FILE>      Sample Scaffold file.
     -prefix <TEXT>      Prefix that should be used for scaffold names in the `-cov` file.
@@ -80,7 +80,7 @@ if (scalar(keys %errorTrigger) > 0) {
     my $error=("-" x $numOfChar)."\n";
     $error.="[ERROR] Scaffold assigned to multiple bins!\n";
     $error.="Can't decide which bin to add it to.\n";
-    $error.="Use the `getClassFasta.pl' script with a loyalty value >= 51 (recommend: 60)\n";
+    $error.="Use the `getClassFasta' script with a loyalty value >= 51 (recommend: 60)\n";
     $error.="Here are the offending scaffolds and their bins:\n";
     foreach my $scaffold(keys %errorTrigger){
         $error.="$scaffold";

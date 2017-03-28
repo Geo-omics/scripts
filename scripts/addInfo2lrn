@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-	addInfo2lrn.pl -- Adds additional columns of data to the LRN files. You may want to add data like bin coverage, GC etc.
+	addInfo2lrn -- Adds additional columns of data to the LRN files. You may want to add data like bin coverage, GC etc.
 
 =head1 USAGE
 
-	perl addInfo2lrn.pl -info scaffolds.info -lrn esom.lrn -names esom.names -out file_with_additional_data.lrn
+	addInfo2lrn -info scaffolds.info -lrn esom.lrn -names esom.names -out file_with_additional_data.lrn
 
 =head2 Options
 
@@ -40,7 +40,7 @@ use strict;
 use Getopt::Long;
 
 my $help;
-my $version="addInfo2lrn.pl\tv0.0.4";
+my $version="addInfo2lrn\tv0.0.4";
 my ($info, $lrn, $names, $out, $map);
 GetOptions(
 	'map:s'=>\$map,

@@ -2,13 +2,13 @@
 
 =head1 DESCRIPTION
 
-	chopper.pl - chops a Fasta/Fastq file into a defined number of portions.
+	chopper - chops a Fasta/Fastq file into a defined number of portions.
 
 =head1 USAGE
 
-	perl chopper.pl [-f fasta_Filename.fasta]
+	chopper [-f fasta_Filename.fasta]
 	OR
-	perl chopper.pl [-fq fastq_Filename.fastq]
+	chopper [-fq fastq_Filename.fastq]
 
 =head2 Optional
 

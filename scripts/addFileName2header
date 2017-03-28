@@ -6,7 +6,7 @@
 
 =head1 USAGE
 
-	perl addFileName2header.pl -path Folder_Path -ext extension_of_files
+	addFileName2header -path Folder_Path -ext extension_of_files
 
 =head2 Options
 

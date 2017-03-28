@@ -2,7 +2,7 @@
 
 =head1 DESCRIPTION
 
-	blastDensityPlot.pl -- Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
+	blastDensityPlot -- Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
 	
 =head2 NOTE
 
@@ -12,7 +12,7 @@
 
 =head1 USAGE
 
-	perl blastDensityPlot.pl -b path_to_all_blast_files -e extension_of_all_blast_files -prefix output_prefix
+	blastDensityPlot -b path_to_all_blast_files -e extension_of_all_blast_files -prefix output_prefix
 
 =head2 Options
 
@@ -53,7 +53,7 @@ use File::Basename;
 my($blast, $perc,$bs,$aln,$eval, $scaled, $keep_tmp, $verbose, $table, $help, $ani);
 my $ext="blastn";
 my $prefix=$$;
-my $version="blastDensityPlot.pl\tv0.1.5";
+my $version="blastDensityPlot\tv0.1.5";
 GetOptions(
 	'b|blast:s'=>\$blast,
 	't|table:s'=>\$table,

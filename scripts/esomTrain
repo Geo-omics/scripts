@@ -2,7 +2,7 @@
 
 =head1 Description
 
-	esomTrain.pl - Given tetramer frequency script output files, the script will normalize the files and train the ESOM.
+	esomTrain - Given tetramer frequency script output files, the script will normalize the files and train the ESOM.
 
 =head2 Dependencies
 
@@ -10,9 +10,9 @@
 
 =head1 Usage
 
-	perl esomTrain.pl -lrn esom.lrn -cls esom.cls -rows #1 -cols #2
+	esomTrain -lrn esom.lrn -cls esom.cls -rows #1 -cols #2
 	OR
-	perl esomTrain.pl -lrn esom.lrn -cls esom.cls -rows #1 -cols #2 -info file.info -names esom.names -scripts /path/to/other/scripts
+	esomTrain -lrn esom.lrn -cls esom.cls -rows #1 -cols #2 -info file.info -names esom.names
 
 =head2 Required options
 
@@ -36,7 +36,6 @@
 
 =head3 Advance Options
 
-	-scripts	[characters]	path to the "addInfo2lrn.pl" script. [default=current working directory]
 	-k	[float]		k for k-Batch as percentage of data set.[default is 15% written as = 0.15]
 				Percentage of all data vectors that is processed between map updates.
 	-algorithm	[characters]	training algorithm; possible choices:
@@ -70,8 +69,8 @@ my $ALGO="kbatch";
 my $K=0.15;
 my $epochs=20;
 my $dist="euc";
-my ($startRadius,$endRadius,$norm,$info,$names,$DEBUG, $CMD,$scripts);
-my $version="esomTrain.pl\tv0.0.17b";
+my ($startRadius,$endRadius,$norm,$info,$names,$DEBUG, $CMD);
+my $version="esomTrain\tv0.0.17b";
 GetOptions(
 	'lrn=s'=>\$lrn,
 	'cls=s'=>\$CLS,
@@ -87,7 +86,6 @@ GetOptions(
 	'norm:s'=>\$norm,
 	'i|info:s'=>\$info,
 	'n|names:s'=>\$names,
-	'scripts:s'=>\$scripts,
 	'cmd'=>\$CMD,
 	'debug'=>\$DEBUG,
 	'v|version'=>sub{print $version."\n"; exit;},
@@ -143,14 +141,8 @@ else{
 
 ### MAIN ###
 if (-e $info){
-	if (! $scripts){
-		$scripts="./";
-	}
-	my $info2lrn=catfile($scripts, "addInfo2lrn.pl");
-	
-	die "[FATAL] Script 'addInfo2lrn.pl' not found. Please use the '-scripts' flag to point to the location.\n" unless (-e $info2lrn);
 	my $tmpLrn=$prefix.".lrn";
-	system("perl $info2lrn -names $names -lrn $lrn -info $info -o $tmpLrn");
+	system("addInfo2lrn -names $names -lrn $lrn -info $info -o $tmpLrn") == 0 or die "Failed running addInfo2lrn script";
 	$lrn=$tmpLrn;
 }
 

@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-	changePGDBattribs.pl -- Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
+	changePGDBattribs -- Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
 
 =head1 USAGE
 
-	perl changePGDBattribs.pl -list project_names.list
+	changePGDBattribs -list project_names.list
 
 =head2 Options
 
@@ -39,7 +39,7 @@ use File::Spec;
 use File::Copy;
 
 my $help;
-my $version="changePGDBattribs.pl\tv0.0.2b";
+my $version="changePGDBattribs\tv0.0.2b";
 my ($list, $keepBkp, $prefix);
 my $dataLoc="/opt/packages/pathway-tools/data/";
 

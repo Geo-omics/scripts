@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-createNodes.pl -- Do this.
+createNodes -- Do this.
 
 =head1 USAGE
 
-perl createNodes.pl
+createNodes
 
 =head2 Options
 

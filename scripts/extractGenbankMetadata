@@ -10,7 +10,7 @@ extractGenbankMetaData -- Extract Meta data and protein translations from a Genb
 
 =head1 USAGE
 
-    perl extractGenbankMetadata.pl -gbk in.gbk -faa out.faa -meta out.meta -list geneTags.list
+    extractGenbankMetadata -gbk in.gbk -faa out.faa -meta out.meta -list geneTags.list
 
 =head2 Options
 

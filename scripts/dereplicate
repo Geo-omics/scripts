@@ -7,11 +7,11 @@
 
 =head2 USAGE
 	
-	perl dereplicate.pl -f fasta_File -out output.fasta
+	dereplicate -f fasta_File -out output.fasta
 	OR
-	perl dereplicate.pl -fq fastq_File -out output.fastq 
+	dereplicate -fq fastq_File -out output.fastq 
 	OR
-	perl dereplicate.pl -fq fastq_File -out output.fasta -outfmt fasta
+	dereplicate -fq fastq_File -out output.fasta -outfmt fasta
 	
 =head2 Options
 
@@ -67,7 +67,7 @@ my $phredOffset=33;
 my $out;
 my $outfmt;
 my $n=10;
-my $version="dereplicate.pl v0.6.2";
+my $version="dereplicate v0.6.2";
 GetOptions(
 	'f:s'=>\$fasta,
 	'fq:s'=>\$fastq,
