@@ -15,7 +15,7 @@ ARG_HELP="
     --clean-only  Delete previously created files and stop.
 "
 # shellcheck disable=SC2034
-CHECK_PROGS="fastqc scythe sickle"
+CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 
 ##########################
 # default variable values
@@ -26,11 +26,6 @@ ADAPTERS=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
 #
 CLEAN_ONLY=false
 #
-DEREPLICATE="perl /geomicro/data1/COMMON/scripts/SeqTools/dereplicate.pl"
-#DEREPLICATE=/geomicro/data2/heinro/scripts/SeqTools/dereplicate.pl
-#
-INTERLEAVE=/geomicro/data1/COMMON/scripts/SeqTools/interleave.pl
-
 # shellcheck disable=SC2034
 LONG_OPTION=--clean-only
 
@@ -79,8 +74,8 @@ mkdir $V FASTQC
 info "pre-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 fwd.fastq rev.fastq &> FASTQC/fastqc.log &
 info "dereplicating..."
-$DEREPLICATE -fq fwd.fastq -o derep_fwd.fastq &
-$DEREPLICATE -fq rev.fastq -o derep_rev.fastq
+dereplicate -fq fwd.fastq -o derep_fwd.fastq &
+dereplicate -fq rev.fastq -o derep_rev.fastq
 wait
 info "adapter trimming..."
 scythe -a $ADAPTERS -q sanger -m derep_fwd.matches.fastq -o derep_scythe_fwd.fastq derep_fwd.fastq &
@@ -93,7 +88,7 @@ wait
 info "post-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_{fwd,rev}.fastq &>> FASTQC/fastqc.log &
 info "interleaving..."
-$INTERLEAVE -fastq -outfmt fasta -fwd derep_scythe_sickle_fwd.fastq -rev derep_scythe_sickle_rev.fastq -o dt
+interleave -fastq -outfmt fasta -fwd derep_scythe_sickle_fwd.fastq -rev derep_scythe_sickle_rev.fastq -o dt
 wait
 info "Done!"
 

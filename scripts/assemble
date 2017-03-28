@@ -11,7 +11,7 @@ HELP="Assemble one Sample's fastq data"
 ARG_HELP="    --cpus <n>  How many CPUs/threads to use.
     --clean-only  Remove previously created file and stop.
 "
-CHECK_PROGS="idba_ud quast.py"
+CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 LONG_OPTIONS=cpus:,clean-only
 
 ##########################
@@ -25,7 +25,6 @@ CPUS=4
 PATH2SILVA="/omics/PublicDB/silva/release_123/SILVA_123_SSURef_tax_silva.fasta"
 PATH2BACT="/omics/PublicDB/NCBI/Bacteria/latest_16S.fasta"
 PATH2ARCH="/omics/PublicDB/NCBI/Archaea/latest_16S.fasta"
-PATH2SCRIPTS="/geomicro/data1/COMMON/scripts"
 # IDBA Parameters
 MINK=52
 MAXK=92
@@ -33,8 +32,6 @@ STEP=8
 
 # other scripts
 QUAST="/usr/bin/python $(which quast.py)"
-TOP5="perl $PATH2SCRIPTS/BlastTools/top5.pl"
-EXTRACT_SUB_SEQ="perl $PATH2SCRIPTS/SeqTools/extractSubSeq.pl"
 #
 
 handle_options () {
@@ -96,14 +93,14 @@ ABLAST=BLASTN/sample_subSeq_vs_archaeaNCBI.blastn
 SSEQ=BLASTN/silvaSSU.topHits.fasta
 mkdir -p BLASTN
 blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out BLASTN/sample_vs_silva.blastn -num_threads "$CPUS"
-$TOP5 -t 1 -b BLASTN/sample_vs_silva.blastn -o $T1BLAST
+top5 -t 1 -b BLASTN/sample_vs_silva.blastn -o $T1BLAST
 if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
     info "Looking up top hits from 16S search for complete genomes in NCBI..."
-    $EXTRACT_SUB_SEQ -query -blast $T1BLAST -f $scaf -o $SSEQ
+    extractSubSeq -query -blast $T1BLAST -f $scaf -o $SSEQ
     blastn -query $SSEQ -db $PATH2BACT -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads "$CPUS"
     blastn -query $SSEQ -db $PATH2ARCH -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads "$CPUS"
-    $TOP5 -t 1 -b $BBLAST -o ${BBLAST/%blastn/top_hits.blastn}
-    $TOP5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
+    top5 -t 1 -b $BBLAST -o ${BBLAST/%blastn/top_hits.blastn}
+    top5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
 fi
 
 ln $V "$scaf" "$WORK_DIR"/scaffold.fa

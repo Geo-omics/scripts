@@ -15,7 +15,7 @@ ARG_HELP="
     --cpus <n>
 "
 LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,scaffolds:
-CHECK_PROGS="bwa genomeCoverageBed samtools"
+CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 
 ##########################
 # default variable values
@@ -24,10 +24,6 @@ CHECK_PROGS="bwa genomeCoverageBed samtools"
 CPUS=4
 
 FWD_READS=fwd.fastq
-
-PATH_TO_SCRIPTS="/geomicro/data1/COMMON/scripts/BamTools"
-
-COVERAGE_PER_SCAFFOLD="perl $PATH_TO_SCRIPTS/coveragePerScaffold.pl"
 
 REV_READS=rev.fastq
 
@@ -119,7 +115,7 @@ echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" 
 genomeCoverageBed -ibam "$sortBam" -g "$SCAF" | grep -v "^__" >> "$bedOut"
 
 info "Calculating Coverage Per Scaffold..."
-$COVERAGE_PER_SCAFFOLD -bed "$bedOut" > "$scafCov"
+coveragePerScaffold -bed "$bedOut" > "$scafCov"
 
 info "Mapping done"
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
