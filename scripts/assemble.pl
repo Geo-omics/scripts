@@ -12,14 +12,11 @@
 	Oases 0.2.01 or above
 	MetaVelvet or 1.0.01 or above
 
-=head3 Scripts - all the required scripts can be found in the 'SeqTools' directory
+=head3 Scripts
 
-	-scripts: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/SeqTools
-	
-	interleave.pl - to interleave the forward and reverse fastq/fasta files
-	limit2length.pl	- to generate general statistics of the final assembly
-	calcN50.pl - to generate the N50 and L50 statistics of the final assembly
-	findStretchesOfNs.pl - to find the stretches of Ns longer than k-mer
+	interleave - to interleave the forward and reverse fastq/fasta files
+	calcN50 - to generate the N50 and L50 statistics of the final assembly
+	findStretchesOfNs - to find the stretches of Ns longer than k-mer
 	
 =head2 Usage
 
@@ -106,7 +103,6 @@ my($intlv, $fwd, $rev, @singles, $KMER, $INS, $OUTDIR, $transcripts, $trim, $der
 my $INS_SD= 13;
 my $version= "assemble.pl\tv0.0.10";
 my $interval=10;
-my $scripts;
 my $minLen=1999;
 my $min_contig_len=200;
 GetOptions(
@@ -130,7 +126,6 @@ GetOptions(
 	'amos'=>\$amos,
 	'interval'=>\$interval,
 	'log:s'=>\$LOG,
-	'scripts:s'=>\$scripts,
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub {system('perldoc', $0); exit;},
 );
@@ -193,21 +188,6 @@ elsif($intlv){
 elsif(! $fwd && ! $rev && @singles){
 	$usage="singles";
 }
-
-####
-if ((! $scripts) || (! -d $scripts)){
-	if (-d "/geomicro/data1/COMMON/scripts/SeqTools"){
-		$scripts="/geomicro/data1/COMMON/scripts/SeqTools";	
-	}
-	elsif((-e "interleave.pl") && ($pair)){
-		$scripts=`pwd`;
-		chomp $scripts;
-	}
-	else{
-		die "[ERROR: $0] Could not locate helper scripts: 'interleave.pl', 'limit2length.pl', 'findStretchesOfNs.pl' and 'calcN50.pl', please provide the location using '-scripts' flag\n";
-	}
-}
-###
 
 #######################
 ## GLOBAL
@@ -290,7 +270,7 @@ sub assemble{
 	else{
 		if (! $pair && ! $intlv && ($sCount==0)){die "[ERROR: $0] Check Singleton files\n"; }
 		system("echo **************************** VELVETH ************************** >> $LOG");
-		my $pid=&run("perl ".$scripts."usageStats.pl -i $interval -o usageStats_K$KMER.tsv");
+		my $pid=&run("usageStats -i $interval -o usageStats_K$KMER.tsv");
 		system("velveth $OUTDIR $KMER $useCase{$usage} >> $LOG");
 		system("echo **************************** VELVETG ************************** >> $LOG");
 		if ($usage eq "paired"){
@@ -323,28 +303,22 @@ sub assemble{
 
 
 sub interleave{
-	my $script=File::Spec->catfile( $scripts, "interleave.pl");
 	print "Creating Output Directory: $OUTDIR\n";
 	mkdir $OUTDIR || die "[ERROR $0] $!: $OUTDIR\n";
 	my $out=File::Spec->catfile( $OUTDIR, $prefix );
-	if (-e $script){
-		print "Interleaving files:\t$fwd \; and\n\t$rev\n";
-		if ($fasta){
-			system("perl $script -fwd $fwd -rev $rev -prefix $out");
-			print "perl $script -fwd $fwd -rev $rev -prefix $out\n";
-		}
-		else{
-			system("perl $script -fwd $fwd -rev $rev -prefix $out -fastq");
-			print "perl $script -fwd $fwd -rev $rev -prefix $out -fastq\n";
-		}
-		$intPair=$out."_int.".$seqType;
-		push (@singles, $out."_sfwd.".$seqType, $out."_srev.".$seqType);
-		$sCount++;
-		return;
+	print "Interleaving files:\t$fwd \; and\n\t$rev\n";
+	if ($fasta){
+		print "interleave  -fwd $fwd -rev $rev -prefix $out\n";
+		system("interleave -fwd $fwd -rev $rev -prefix $out") == 0 or die "Failed running interleave script";
 	}
 	else{
-		die "[ERROR: $0] ".$script.": Not Found!\n";
+		print "interleave  -fwd $fwd -rev $rev -prefix $out -fastq\n";
+		system("interleave  -fwd $fwd -rev $rev -prefix $out -fastq") or die "Failed running interleave script";
 	}
+	$intPair=$out."_int.".$seqType;
+	push (@singles, $out."_sfwd.".$seqType, $out."_srev.".$seqType);
+	$sCount++;
+	return;
 }
 
 sub getStats{
@@ -373,31 +347,22 @@ sub getStats{
 	print LOG "# All relevant files can be found in:\t$cwd\n";
 	print LOG "# Assembly Directory:\t$OUTDIR\n";
 
-	my $lim2len=File::Spec->catfile( $scripts, "limit2Length.pl");
-	if (-e $lim2len){
-		print LOG "\n# Helpful Stats for your sequences:\n";
-		print "Calculating stats...\n";
-		system("perl $lim2len -f $contigs -l $minLen -o $minLenFile >> $out");
-		print LOG "\n";
-	}
+	print LOG "\n# Helpful Stats for your sequences:\n";
+	print "Calculating stats...\n";
+	system("limit2Length -f $contigs -l $minLen -o $minLenFile >> $out") or die "Failed running limit2Length script";
+	print LOG "\n";
 
-	my $calcN50=File::Spec->catfile( $scripts, "calcN50.pl");
-	if (-e $calcN50){
-		print LOG "# N50 stats before setting the $minLen limit:\n";
-		system("perl $calcN50 $contigs >> $out");
-		print LOG "\n";
-		
-		print LOG "# N50 stats after setting the $minLen limit:\n";
-		system("perl $calcN50 $minLenFile >> $out");
-		print LOG "\n";
-	}
+	print LOG "# N50 stats before setting the $minLen limit:\n";
+	system("calcN50 $contigs >> $out") == 0 or die "Failed running calcN50";
+	print LOG "\n";
 	
-	my $searchNs=File::Spec->catfile( $scripts, "findStretchesOfNs.pl");
+	print LOG "# N50 stats after setting the $minLen limit:\n";
+	system("calcN50 $minLenFile >> $out") or die "Failed running calcN50";
+	print LOG "\n";
+	
 	my $searchNsOut=File::Spec->catfile( $OUTDIR, "stretchesOfN_k".$KMER.".out");
-	if (-e $searchNs){
-		print "# Finding long stretches of Ns...\n";
-		print LOG `perl $searchNs -f $contigs -o $searchNsOut`;
-	}
+	print "# Finding long stretches of Ns...\n";
+	print LOG `findStretchesOfNs -f $contigs -o $searchNsOut`;
 	system("mail -s 'Job: $OUTDIR Completed!' $email < $out");
 }
 

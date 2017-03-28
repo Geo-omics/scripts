@@ -2,13 +2,13 @@
 
 =head1 DESCRIPTION
 
-genomicFluidity.pl -- Do this.
+genomicFluidity -- Do this.
 # aai -- http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1236649/
 # Genomic Fluidity -- http://www.biomedcentral.com/1471-2164/12/32 [(conserved1+conserved2)/(Total1+Total2)] * 100
 
 =head1 USAGE
 
-perl genomicFluidity.pl
+genomicFluidity
 
 =head2 Options
 
@@ -43,7 +43,7 @@ use File::Basename;
 use File::Spec;
 
 my $help;
-my $version="genomicFluidity.pl\tv0.2.0";
+my $version="genomicFluidity\tv0.2.0";
 my ($ref, $postBlast, $map, $genomeDir);
 my $setCov=70;
 my $setPerc=30;

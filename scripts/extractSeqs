@@ -8,11 +8,11 @@
 
 =head2 Examples
 	
-	extractSeqs.pl -l <list of sequences names> -f <fasta file> -o output.fasta
+	extractSeqs -l <list of sequences names> -f <fasta file> -o output.fasta
 	OR
-	extractSeqs.pl -l <list of sequences names> -fq <fastq file> -o output.fastq
+	extractSeqs -l <list of sequences names> -fq <fastq file> -o output.fastq
 	OR
-	extractSeqs.pl -l <list of sequences names> -fq <fastq file> -o output.fasta -outfmt fasta
+	extractSeqs -l <list of sequences names> -fq <fastq file> -o output.fasta -outfmt fasta
 	
 =head2 Optional
 
@@ -52,7 +52,7 @@ my $excl;
 my $fuzzy;
 my $out;
 my $outfmt;
-my $version="extractSeqs.pl v0.4.5";
+my $version="extractSeqs v0.4.5";
 
 GetOptions(
 	"l|list:s"	=>	\$listOfNames,

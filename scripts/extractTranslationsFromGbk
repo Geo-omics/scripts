@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-	extractTranslationsFromGbk.pl -- Do this.
+	extractTranslationsFromGbk -- Do this.
 
 =head1 USAGE
 
-	perl extractTranslationsFromGbk.pl -list prophage_tbl.txt.list -gbk corresponding_genbank.gbk
+	extractTranslationsFromGbk -list prophage_tbl.txt.list -gbk corresponding_genbank.gbk
 
 =head2 Options
 
@@ -37,7 +37,7 @@ use Getopt::Long;
 
 my ($gbk,$meta, $list, $fasta);
 my $help;
-my $version="extractTranslationsFromGbk.pl\tv2.0.5";
+my $version="extractTranslationsFromGbk\tv2.0.5";
 GetOptions(
 	'list:s'=>\$list,
 	'gbk:s'=>\$gbk,

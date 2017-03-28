@@ -2,7 +2,7 @@
 
 =head1 USAGE
 
-	perl findStretchesOfNs.pl -f infile.fasta -coord outfile.tsv [OPTIONS]
+	findStretchesOfNs -f infile.fasta -coord outfile.tsv [OPTIONS]
 
 =head2 OPTIONS
 
@@ -15,7 +15,7 @@
 	
 =head3 Example
 
-	perl findStretchesOfNs.pl -f test.fasta -o test.coord -min 1 -split test_split_l20.fasta -len 20
+	findStretchesOfNs -f test.fasta -o test.coord -min 1 -split test_split_l20.fasta -len 20
 
 =head1 Author
 
@@ -45,7 +45,7 @@ GetOptions(
 	"len:i"=>\$minLen,
 	"h|help"=>sub{system('perldoc', $0); exit;},
 );
-print "# findStretchesOfNs.pl $version\n";
+print "# findStretchesOfNs $version\n";
 die "[ERROR] Choose an output type, either '-coord' or '-split'. See '-h' for more options.\n" if(! $coord) && (! $split);
 
 my $find=quotemeta "$nuc";

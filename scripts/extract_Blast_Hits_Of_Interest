@@ -13,7 +13,7 @@
 
 =head1 Usage
 
-	perl extract_Blast_Hits_Of_Interest.pl -b <blast output file> -l <list of hits of interest>
+	extract_Blast_Hits_Of_Interest -b <blast output file> -l <list of hits of interest>
 
 =head1 Options
 

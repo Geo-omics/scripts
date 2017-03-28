@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-	fileChopper.pl - chops a file into a defined number of portions.
+	fileChopperpl - chops a file into a defined number of portions.
 
 =head1 USAGE
 
-	perl fileChopper.pl [-f Filename]
+	fileChopper [-f Filename]
 
 =head2 Optional
 

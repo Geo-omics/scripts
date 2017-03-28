@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-gbk2fna.pl -- Read Genbank to Nucleotide Fasta file.
+gbk2fna -- Read Genbank to Nucleotide Fasta file.
 
 =head1 USAGE
 
-perl gbk2fna.pl
+gbk2fna
 
 =head2 Options
 

@@ -2,11 +2,11 @@
 
 =head1 Usage
 
-	perl extractSubSeq.pl -f <fasta file> -tsv <custom tab-delimited file>
+	extractSubSeq -f <fasta file> -tsv <custom tab-delimited file>
 	OR
-	perl extractSubSeq.pl -f <fasta file> -blast <blast file> -query
+	extractSubSeq -f <fasta file> -blast <blast file> -query
 	OR
-	perl extractSubSeq.pl -f <fasta file> -gff <gff3 file>
+	extractSubSeq -f <fasta file> -gff <gff3 file>
 
 =head2 Optional
 
@@ -52,7 +52,7 @@ my $setLen=0;
 my $setBS=0;
 my $setPid=0;
 my $out = $$."_subSeqs.fasta";
-my $version="extractSubSeqs.pl\tv0.3.1";
+my $version="extractSubSeqs\tv0.3.1";
 
 GetOptions(
 	'f|fasta:s'=>\$fasta,
