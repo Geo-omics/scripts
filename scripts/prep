@@ -1,0 +1,111 @@
+#!/bin/bash
+#
+# Copyright (c) 2016 Regents of The University of Michigan.
+# All Rights Reserved.
+#
+# Author: Robert <heinro@med.umich.edu>
+#
+
+# shellcheck disable=SC2034
+USAGE="[-h|--help|--no-color|-v|verbosity n] <fastq.gz>..."
+# shellcheck disable=SC2034
+HELP="Inflate a sample's fastq files."
+# shellcheck disable=SC2034
+ARG_HELP="    --force	Overwrite existing files
+    --sample <name>
+    --lane <Lnnn>   e.g. --lane L007
+    --use-tmp	    Use fast temporary storage for output.
+"
+# shellcheck disable=SC2034
+LONG_OPTIONS=force,lane:,sample:,use-tmp
+# shellcheck disable=SC2034
+CHECK_PROGS="gunzip"
+
+handle_options () {
+    if [ "$#" -gt 0 ]; then
+	case "$1" in
+	    (--force)
+	        FORCE=true
+	        return 1;;
+	    (--lane)
+	        LANE="${2}"
+	        return 2;;
+	    (--sample)
+	        SAMPLE="$2"
+		return 2;;
+	    (--use-tmp)
+	        USE_TMP=YES
+	        return 1;;
+        esac
+    else
+        return 0
+    fi
+}
+
+##########################
+# default variable values
+##########################
+
+# by default abort when output files exists
+FORCE=false
+# no lane specified by default
+LANE=
+# Use fast temp directory, no by default
+USE_TMP=NO
+# TMP root to use
+TMP_ROOT=/dev/shm
+
+# shellcheck source=../lib/liba.sh
+# shellcheck disable=SC1091
+. "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
+
+# shellcheck source=../lib/liba.sh
+# handle non-option (positional) parameters
+declare -a FASTQ_GZ
+if [ "$#" -gt 0 ]; then
+    FASTQ_GZ=("${@}")
+else
+    abort "Please provide paths of gzipped fastq files." usage
+fi
+
+#########################
+# some input sanitation
+#########################
+if [ $USE_TMP == YES ]; then
+    [ -n "$SAMPLE" ] || abort "Specify sample name with --sample <name>" usage
+    WORK_DIR=$TMP_ROOT/$USER/${SAMPLE}_${LANE}
+    info "All data is stored at $WORK_DIR"
+else
+    [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not a directory."
+fi
+
+for i in "${FASTQ_GZ[@]}"; do
+    [ -r "$i" ] || abort "Cannot read $i"
+done
+
+#################################
+# do stuff
+################################
+
+# shellcheck disable=SC2086
+mkdir $VERBOSE_FLAG -p "$WORK_DIR"
+
+for direct in 1 2; do
+    if [ $direct == 1 ]; then
+	direct_str=fwd
+    else
+	direct_str=rev
+    fi
+    out="$direct_str.fastq"
+    [ ! -e "$out" ] || $FORCE || abort "$out already exist.  Clean up output directory before continuing."
+    for i in "${FASTQ_GZ[@]}"; do
+       	if echo "$i" | grep -F "_R${direct}_" > /dev/null; then
+	    # shellcheck disable=SC2086
+            gunzip $VERBOSE_FLAG -c "$i" >> "$WORK_DIR/$out"
+	fi
+    done
+done
+
+# gmb: output: fwd.fastq
+# gmb: output: rev.fastq
+# gmb: args: --force {{ sample_fastq_gz }}
