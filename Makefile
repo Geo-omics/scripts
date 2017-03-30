@@ -19,8 +19,18 @@ EXTRA_DIST = \
 	README.md \
 	VERSION
 
-export dist_dir = $(package_name)-$(version)
+doc_files = COPYRIGHT README.md
+
+dist_dir = $(package_name)-$(version)
 tarball = $(dist_dir).tar.gz
+html_dirs = \
+		  html \
+		  html/_sources \
+		  html/_static \
+		  html/_static/fonts \
+		  html/_static/css \
+		  html/_static/js \
+
 
 INSTALL = /usr/bin/install
 INSTALL_PROGRAM = $(INSTALL)
@@ -62,8 +72,18 @@ vondamm-test:
 	    make && \
 	    DESTDIR=/tmp/heinro/dest make install"
 
+# install sphinx-generated docs and file in doc_files
+install-docs: dest = $(DESTDIR)$(docdir)/$(package_name)
+install-docs: html_dirs = $(shell cd docs/_build && find html -type d)
+install-docs: html_files = $(shell cd docs/_build && find html -type f)
 install-docs:
-	@echo TODO: install sphinx generated docs
+	mkdir -p $(dest)
+	$(INSTALL_DATA) $(doc_files) $(dest)
+	for i in $(html_dirs); do mkdir -p "$(dest)/$$i"; done
+	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
+
+	mkdir -p $(DESTDIR)$(man7dir)
+	$(INSTALL_DATA) docs/_build/man/geomics.7 $(DESTDIR)$(man7dir)
 
 install: install-docs
 	cd lib && $(MAKE) install
