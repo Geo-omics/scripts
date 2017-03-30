@@ -2,6 +2,8 @@ export
 package_name = geo-omics-scripts
 version = $(strip $(shell cat VERSION))
 
+.SILENT:
+
 prefix = 
 datadir = $(prefix)/share
 docdir = $(datadir)/doc
@@ -52,19 +54,22 @@ scripts-man:
 
 distdir:
 	mkdir -p $(dist_dir)
-	cp -a $(EXTRA_DIST) $(dist_dir)
 	cd lib && $(MAKE) $@
 	cd scripts && $(MAKE) $@
-
-
+	$(info Copying extra files ...)
+	cp -a $(EXTRA_DIST) $(dist_dir)
 
 dist: distdir
+	$(info Creating $(dist_dir).tar.gz)
 	tar czhf $(dist_dir).tar.gz $(dist_dir)
+	$(info Cleaning up temporary dist directory ...)
 	$(RM) -r $(dist_dir)
 	#$(call increment_version)
 
 vondamm-test:
+	$(info Copying tarball to $(host) ...)
 	scp -p $(tarball) vondamm.geo.lsa.umich.edu:/tmp/heinro/
+	$(info Installing remotely ...)
 	ssh vondamm.geo.lsa.umich.edu "\
 	    cd /tmp/heinro/ && \
 	    tar xfz $(tarball) && \
@@ -77,11 +82,14 @@ install-docs: dest = $(DESTDIR)$(docdir)/$(package_name)
 install-docs: html_dirs = $(shell cd docs/_build && find html -type d)
 install-docs: html_files = $(shell cd docs/_build && find html -type f)
 install-docs:
+	$(info Creating directories ...)
 	mkdir -p $(dest)
-	$(INSTALL_DATA) $(doc_files) $(dest)
 	for i in $(html_dirs); do mkdir -p "$(dest)/$$i"; done
+	$(info Installing html files ...)
 	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
-
+	$(info Installing other documentation ...)
+	$(INSTALL_DATA) $(doc_files) $(dest)
+	$(info Installing manual page ...)
 	mkdir -p $(DESTDIR)$(man7dir)
 	$(INSTALL_DATA) docs/_build/man/geomics.7 $(DESTDIR)$(man7dir)
 
@@ -90,10 +98,12 @@ install: install-docs
 	cd scripts && $(MAKE) install
 
 clean:
+	$(info Cleaning sphinx-generated documentation ...)
 	cd docs && $(MAKE) clean
 	cd scripts && $(MAKE) clean
 
 distclean: clean
+	$(info Removing tarballs ...)
 	$(RM) $(package_name)-*.tar.gz
 
 debug:

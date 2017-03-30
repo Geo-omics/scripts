@@ -176,13 +176,15 @@ man_pages = $(foreach i,$(perl_scripts_good),$(i).1)
 
 $(man_pages): name = $(subst .1,,$@)
 $(man_pages):
-	pod2man --center $(name) $(name) $@ 
+	@pod2man --center $(name) $(name) $@
+	$(info manpage for $(name))
 
 man: $(man_pages)
 
 all: man
 
 distdir:
+	$(info Copying scripts ...)
 	mkdir -p ../$(dist_dir)/scripts
 	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) ../$(dist_dir)/scripts/
 
@@ -190,16 +192,21 @@ install: install-scripts install-man
 
 install-scripts:
 	mkdir -p $(DESTDIR)$(bindir)
+	$(info Installing perl scripts ...)
 	$(INSTALL_PROGRAM) $(PERL_SCRIPTS) $(DESTDIR)$(bindir)
+	$(info Installing other executable scripts ...)
 	$(INSTALL_PROGRAM) $(OTHER_EXECUTABLES) $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datadir)/$(package_name)
+	$(info Installing non-executable scripts ...)
 	$(INSTALL_DATA) $(NON_EXECUTABLES) $(DESTDIR)$(datadir)/$(package_name)
 
 install-man: man
+	$(info Installing man pages for perl scripts ...)
 	mkdir -p $(DESTDIR)$(man1dir)
 	$(INSTALL_DATA) $(man_pages) $(DESTDIR)$(man1dir)
 
 clean:
+	$(info Removing generated man pages ...)
 	$(RM) *.1
 
 debug:
