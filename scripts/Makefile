@@ -205,6 +205,12 @@ install-man: man
 	mkdir -p -- "$(DESTDIR)$(man1dir)"
 	$(INSTALL_DATA) $(man_pages) $(DESTDIR)$(man1dir)
 
+uninstall:
+	$(info Removing executable scripts...)
+	cd $(DESTDIR)$(bindir) && $(RM) -f -- $(PERL_SCRIPTS) $(OTHER_EXECUTABLES)
+	$(info Removing executable perl script man pages...)
+	cd $(DESTDIR)$(man1dir) && $(RM) -f -- $(man_pages)
+
 clean:
 	$(info Removing generated man pages ...)
 	$(RM) -- *.1

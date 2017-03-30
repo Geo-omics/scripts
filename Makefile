@@ -126,6 +126,13 @@ install: install-docs
 	cd lib && $(MAKE) install
 	cd scripts && $(MAKE) install
 
+uninstall:
+	$(info Removing documentation...)
+	$(RM) -r -- $(DESTDIR)/$(docdir)/$(package_name)
+	$(info Removing package data...)
+	$(RM) -r -- $(DESTDIR)/$(datadir)/$(package_name)
+	cd scripts && $(MAKE) $@
+
 clean:
 	$(info Cleaning sphinx-generated documentation ...)
 ifeq ($(shell hostname),csheikMP)
