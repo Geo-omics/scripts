@@ -103,24 +103,24 @@ remote-clean:
 	    $(RM) -r -- $(pkg_stage_dir)/$(package_name)-*"
 
 # install sphinx-generated docs and file in doc_files
-ifeq ($(shell hostname),csheikMP)
 install-docs: dest = $(DESTDIR)$(docdir)/$(package_name)
+ifeq ($(shell hostname),csheikMP)
 install-docs: html_dirs = $(shell cd docs/_build && find html -type d)
 install-docs: html_files = $(shell cd docs/_build && find html -type f)
+endif
 install-docs:
 	$(info Creating directories ...)
 	mkdir -p -- "$(dest)"
+ifeq ($(shell hostname),csheikMP)
 	for i in $(html_dirs); do mkdir -p -- "$(dest)/$$i"; done
 	$(info Installing html files ...)
 	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
-	$(info Installing other documentation ...)
-	$(INSTALL_DATA) $(doc_files) $(dest)
 	$(info Installing manual page ...)
 	mkdir -p -- "$(DESTDIR)$(man7dir)"
 	$(INSTALL_DATA) docs/_build/man/geomics.7 $(DESTDIR)$(man7dir)
-else
-install-docs: ;
 endif
+	$(info Installing other documentation ...)
+	$(INSTALL_DATA) $(doc_files) $(dest)
 
 install: install-docs
 	cd lib && $(MAKE) install
