@@ -54,7 +54,12 @@ endif
 scripts-man:
 	cd scripts && $(MAKE) man
 
-#increment_version = $(file > VERSION,)
+# version arithmetic
+major_version = $(word 1,$(subst ., ,$(version)))
+minor_version = $(word 2,$(subst ., ,$(version)))
+patch_version = $(word 3,$(subst ., ,$(version)))
+inc_patch_version = $(shell echo $(patch_version)+1 | bc)
+inc_version = $(major_version).$(minor_version).$(inc_patch_version)
 
 distdir:
 	mkdir -p $(dist_dir)
@@ -68,7 +73,9 @@ dist: distdir
 	tar czhf $(dist_dir).tar.gz $(dist_dir)
 	$(info Cleaning up temporary dist directory ...)
 	$(RM) -r $(dist_dir)
-	#$(call increment_version)
+release: dist
+	$(info Incrementing minor version to $(inc_version))
+	$(info ${shell echo $(inc_version) > VERSION})
 
 vondamm-install: host = $(vondamm_host)
 vondamm-install: pkg_stage_dir = $(vondamm_pkg_stage_dir)
