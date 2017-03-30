@@ -185,29 +185,29 @@ all: man
 
 distdir:
 	$(info Copying scripts ...)
-	mkdir -p ../$(dist_dir)/scripts
+	mkdir -p -- "../$(dist_dir)/scripts"
 	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) ../$(dist_dir)/scripts/
 
 install: install-scripts install-man
 
 install-scripts:
-	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p -- "$(DESTDIR)$(bindir)"
 	$(info Installing perl scripts ...)
 	$(INSTALL_PROGRAM) $(PERL_SCRIPTS) $(DESTDIR)$(bindir)
 	$(info Installing other executable scripts ...)
 	$(INSTALL_PROGRAM) $(OTHER_EXECUTABLES) $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(datadir)/$(package_name)
+	mkdir -p -- "$(DESTDIR)$(datadir)/$(package_name)"
 	$(info Installing non-executable scripts ...)
 	$(INSTALL_DATA) $(NON_EXECUTABLES) $(DESTDIR)$(datadir)/$(package_name)
 
 install-man: man
 	$(info Installing man pages for perl scripts ...)
-	mkdir -p $(DESTDIR)$(man1dir)
+	mkdir -p -- "$(DESTDIR)$(man1dir)"
 	$(INSTALL_DATA) $(man_pages) $(DESTDIR)$(man1dir)
 
 clean:
 	$(info Removing generated man pages ...)
-	$(RM) *.1
+	$(RM) -- *.1
 
 debug:
 	@echo good Perl scripts found:

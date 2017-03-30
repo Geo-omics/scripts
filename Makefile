@@ -62,7 +62,7 @@ inc_patch_version = $(shell echo $(patch_version)+1 | bc)
 inc_version = $(major_version).$(minor_version).$(inc_patch_version)
 
 distdir:
-	mkdir -p $(dist_dir)
+	mkdir -p -- "$(dist_dir)"
 	cd lib && $(MAKE) $@
 	cd scripts && $(MAKE) $@
 	$(info Copying extra files ...)
@@ -72,7 +72,7 @@ dist: distdir
 	$(info Creating $(dist_dir).tar.gz)
 	tar czhf $(dist_dir).tar.gz $(dist_dir)
 	$(info Cleaning up temporary dist directory ...)
-	$(RM) -r $(dist_dir)
+	$(RM) -r -- "$(dist_dir)"
 release: dist
 	$(info Incrementing minor version to $(inc_version))
 	$(info ${shell echo $(inc_version) > VERSION})
@@ -108,14 +108,14 @@ install-docs: html_dirs = $(shell cd docs/_build && find html -type d)
 install-docs: html_files = $(shell cd docs/_build && find html -type f)
 install-docs:
 	$(info Creating directories ...)
-	mkdir -p $(dest)
-	for i in $(html_dirs); do mkdir -p "$(dest)/$$i"; done
+	mkdir -p -- "$(dest)"
+	for i in $(html_dirs); do mkdir -p -- "$(dest)/$$i"; done
 	$(info Installing html files ...)
 	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
 	$(info Installing other documentation ...)
 	$(INSTALL_DATA) $(doc_files) $(dest)
 	$(info Installing manual page ...)
-	mkdir -p $(DESTDIR)$(man7dir)
+	mkdir -p -- "$(DESTDIR)$(man7dir)"
 	$(INSTALL_DATA) docs/_build/man/geomics.7 $(DESTDIR)$(man7dir)
 
 install: install-docs
@@ -129,7 +129,7 @@ clean:
 
 distclean: clean
 	$(info Removing tarballs ...)
-	$(RM) $(package_name)-*.tar.gz
+	$(RM) -- $(package_name)-*.tar.gz
 
 debug:
 	@echo "share: $(datadir) bin: $(bindir)"
