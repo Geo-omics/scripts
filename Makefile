@@ -100,7 +100,7 @@ remote-install:
 remote-clean:
 	$(info Clean up remote test installation at $(host):$(remote_test_dest) ...)
 	ssh $(host) "\
-	    $(RM) -r $(pkg_stage_dir)/$(package_name)-*"
+	    $(RM) -r -- $(pkg_stage_dir)/$(package_name)-*"
 
 # install sphinx-generated docs and file in doc_files
 install-docs: dest = $(DESTDIR)$(docdir)/$(package_name)
