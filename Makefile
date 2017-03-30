@@ -138,9 +138,9 @@ distclean: clean
 	$(RM) -- $(package_name)-*.tar.gz
 
 debug:
-	@echo "share: $(datadir) bin: $(bindir)"
-	@echo "install: $(INSTALL)"
-	@echo $(MAKE)
-	@echo $(LDCONFIG)
-	@echo $(TEX)
+	$(info "share: $(datadir) bin: $(bindir)")
+	$(info Version: $(version))
+	$(info "patch versions: $(patch_version) $(inc_patch_version)")
+	$(info incremented version: $(inc_version))
 
+.PHONY: all sphinx-docs distdir dist release scripts-man vondamm-install vondamm-clean remote-install remote-clean install-docs install clean distclean debug
