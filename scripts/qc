@@ -43,7 +43,7 @@ handle_options () {
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
-. "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || echo "Failed to source script library" && exit 1
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
