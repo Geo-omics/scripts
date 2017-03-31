@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-getGeneClusters.pl -- Do this.
+getGeneClusters -- Do this.
 
 =head1 USAGE
 
-perl getGeneClusters.pl
+getGeneClusters
 
 =head2 Options
 

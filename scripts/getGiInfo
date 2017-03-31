@@ -68,7 +68,7 @@
 
 =head1
 
-	perl getGiInfo.pl -d [nucleotide/protein] -o [outputFileName] -l [list of GI numbers]
+	getGiInfo -d [nucleotide/protein] -o [outputFileName] -l [list of GI numbers]
 
 =cut
 

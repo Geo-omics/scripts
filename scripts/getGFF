@@ -2,11 +2,11 @@
 
 =head1 DESCRIPTION
 
-	getGFF.pl -- Given a list of contig names extract GFF data.
+	getGFF -- Given a list of contig names extract GFF data.
 
 =head1 USAGE
 
-	perl getGFF.pl -list contig_names.list -gff annotated_metagenome.gff
+	getGFF -list contig_names.list -gff annotated_metagenome.gff
 
 =head2 Options
 
@@ -37,7 +37,7 @@ use Getopt::Long;
 use File::Basename;
 
 my $help;
-my $version="getGFF.pl\tv0.1.0";
+my $version="getGFF\tv0.1.0";
 my ($list, $gff);
 my $col=1;
 GetOptions(

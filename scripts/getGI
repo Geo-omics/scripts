@@ -2,7 +2,7 @@
 
 =head1 NAME
 	
-	getGI.pl -- returns GI numbers from a user specified NCBI database and search term
+	getGI -- returns GI numbers from a user specified NCBI database and search term
 
 =head2 Description
 
@@ -37,7 +37,7 @@
 
 =head2 Usage
 
-	perl getGI.pl -d <name of the database as it appears in NCBI> -t <search term> -o <output file>
+	getGI -d <name of the database as it appears in NCBI> -t <search term> -o <output file>
 
 =head2 Author
 

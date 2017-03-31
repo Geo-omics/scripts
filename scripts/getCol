@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 =head1 DESCRIPTION
 
-	getCol.pl - extract the desired column number from a tab delimited file.
+	getCol - extract the desired column number from a tab delimited file.
 	
 =head2 USAGE
 
-	perl getCol.pl -i <tab delimited file>
+	getCol -i <tab delimited file>
 	
 =head3 Optional
 
@@ -18,10 +18,10 @@
 =head3 Example
 
 	For UNIQUE values in the column:
-		perl getCol.pl -i fileWithManyColumns.txt -o fileWithOneColumnOfUniques.txt -c 2 -u
+		getCol -i fileWithManyColumns.txt -o fileWithOneColumnOfUniques.txt -c 2 -u
 
 	For ALL values in the column, in order of appearence.
-		perl getCol.pl -i fileWithManyColumns.txt -o fileWithOneColumn.txt -c 2
+		getCol -i fileWithManyColumns.txt -o fileWithOneColumn.txt -c 2
 
 =head2 AUTHOR
 

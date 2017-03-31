@@ -68,7 +68,7 @@
 
 =head1
 
-	perl getFastaFromAccNos.pl -list Accession_number.list -db protein -out output.fasta
+	getFastaFromAccNos -list Accession_number.list -db protein -out output.fasta
 
 =cut
 
