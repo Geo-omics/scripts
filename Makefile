@@ -104,7 +104,7 @@ flux-clean: remote-clean
 remote-install:
 	$(info Copying tarball to $(host) ...)
 	scp -p $(tarball) $(host):$(pkg_stage_dir)
-	$(info Installing remotely ...)
+	$(info Installing remotely to $(host):$(DESTDIR) ...)
 	ssh $(host) "\
 	    cd $(pkg_stage_dir) && \
 	    tar xfz $(tarball) && \
@@ -112,7 +112,7 @@ remote-install:
 	    make && \
 	    DESTDIR=$(DESTDIR) make install"
 remote-clean:
-	$(info Clean up remote test installation at $(host):$(remote_test_dest) ...)
+	$(info Clean up remote installation at $(host):$(DESTDIR) ...)
 	ssh $(host) "\
 	    $(RM) -r -- $(pkg_stage_dir)/$(package_name)-*"
 
