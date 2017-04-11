@@ -69,27 +69,27 @@ if $CLEAN_ONLY; then
     exit 0
 fi
 
-
 mkdir $V FASTQC
 info "pre-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 fwd.fastq rev.fastq &> FASTQC/fastqc.log &
 info "dereplicating..."
 dereplicate -fq fwd.fastq -o derep_fwd.fastq &
 dereplicate -fq rev.fastq -o derep_rev.fastq
-wait
+wait %dereplicate
 info "adapter trimming..."
 scythe -a $ADAPTERS -q sanger -m derep_fwd.matches.fastq -o derep_scythe_fwd.fastq derep_fwd.fastq &
 scythe -a $ADAPTERS -q sanger -m derep_rev.matches.fastq -o derep_scythe_rev.fastq derep_rev.fastq
-wait
+wait %scythe
 info "quality score trimming..."
 sickle se -t sanger -f derep_scythe_fwd.fastq -o derep_scythe_sickle_fwd.fastq &
 sickle se -t sanger -f derep_scythe_rev.fastq -o derep_scythe_sickle_rev.fastq
-wait
+wait %sickle
 info "post-QC fastqc run..."
+wait %fastqc
 fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_{fwd,rev}.fastq &>> FASTQC/fastqc.log &
 info "interleaving..."
 interleave -fastq -outfmt fasta -fwd derep_scythe_sickle_fwd.fastq -rev derep_scythe_sickle_rev.fastq -o dt
-wait
+wait %fastqc
 info "Done!"
 
 
