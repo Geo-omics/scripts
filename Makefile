@@ -3,7 +3,7 @@ version = $(strip $(shell cat VERSION))
 
 vondamm_host = vondamm.geo.lsa.umich.edu
 vondamm_pkg_stage_dir = /tmp/heinro
-vondamm_DESTDIR = /tmp/heinro/test_install_root
+vondamm_DESTDIR = /geomicro/data2/heinro/geomics_root/
 
 export
 .SILENT:
