@@ -5,6 +5,10 @@ vondamm_host = vondamm.geo.lsa.umich.edu
 vondamm_pkg_stage_dir = /tmp/heinro
 vondamm_DESTDIR = /geomicro/data2/heinro/geomics_root/
 
+flux_host = vondamm.geo.lsa.umich.edu
+flux_pkg_stage_dir = /schmidt-lab/heinro/packaging
+flux_DESTDIR = /schmidt-lab/heinro/geomicro_root/
+
 export
 .SILENT:
 
@@ -86,6 +90,16 @@ vondamm-clean: host = $(vondamm_host)
 vondamm-clean: pkg_stage_dir = $(vondamm_pkg_stage_dir)
 vondamm-clean: DESTDIR = $(vondamm_DESTDIR)
 vondamm-clean: remote-clean
+
+flux-install: host = $(flux_host)
+flux-install: pkg_stage_dir = $(flux_pkg_stage_dir)
+flux-install: DESTDIR = $(flux_DESTDIR)
+flux-install: remote-install
+
+flux-clean: host = $(flux_host)
+flux-clean: pkg_stage_dir = $(flux_pkg_stage_dir)
+flux-clean: DESTDIR = $(flux_DESTDIR)
+flux-clean: remote-clean
 
 remote-install:
 	$(info Copying tarball to $(host) ...)
