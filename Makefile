@@ -1,14 +1,6 @@
 package_name = geo-omics-scripts
 version = $(strip $(shell cat VERSION))
 
-vondamm_host = vondamm.geo.lsa.umich.edu
-vondamm_pkg_stage_dir = /tmp/heinro
-vondamm_DESTDIR = /geomicro/data2/heinro/geomics_root/
-
-flux_host = vondamm.geo.lsa.umich.edu
-flux_pkg_stage_dir = /schmidt-lab/heinro/packaging
-flux_DESTDIR = /schmidt-lab/heinro/geomicro_root/
-
 export
 .SILENT:
 
@@ -80,41 +72,6 @@ dist: distdir
 release: dist
 	$(info Incrementing minor version to $(inc_version))
 	$(info ${shell echo $(inc_version) > VERSION})
-
-vondamm-install: host = $(vondamm_host)
-vondamm-install: pkg_stage_dir = $(vondamm_pkg_stage_dir)
-vondamm-install: DESTDIR = $(vondamm_DESTDIR)
-vondamm-install: remote-install
-
-vondamm-clean: host = $(vondamm_host)
-vondamm-clean: pkg_stage_dir = $(vondamm_pkg_stage_dir)
-vondamm-clean: DESTDIR = $(vondamm_DESTDIR)
-vondamm-clean: remote-clean
-
-flux-install: host = $(flux_host)
-flux-install: pkg_stage_dir = $(flux_pkg_stage_dir)
-flux-install: DESTDIR = $(flux_DESTDIR)
-flux-install: remote-install
-
-flux-clean: host = $(flux_host)
-flux-clean: pkg_stage_dir = $(flux_pkg_stage_dir)
-flux-clean: DESTDIR = $(flux_DESTDIR)
-flux-clean: remote-clean
-
-remote-install:
-	$(info Copying tarball to $(host) ...)
-	scp -p $(tarball) $(host):$(pkg_stage_dir)
-	$(info Installing remotely to $(host):$(DESTDIR) ...)
-	ssh $(host) "\
-	    cd $(pkg_stage_dir) && \
-	    tar xfz $(tarball) && \
-	    cd $(dist_dir) && \
-	    make && \
-	    DESTDIR=$(DESTDIR) make install"
-remote-clean:
-	$(info Clean up remote installation at $(host):$(DESTDIR) ...)
-	ssh $(host) "\
-	    $(RM) -r -- $(pkg_stage_dir)/$(package_name)-*"
 
 # install sphinx-generated docs and file in doc_files
 install-docs: dest = $(DESTDIR)$(docdir)/$(package_name)
