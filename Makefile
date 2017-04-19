@@ -1,17 +1,17 @@
 package_name = geo-omics-scripts
-version = $(strip $(shell cat VERSION))
+version ::= $(strip $(shell cat VERSION))
 
 export
 .SILENT:
 
 prefix = 
-datadir = $(prefix)/share
-docdir = $(datadir)/doc
-bindir = $(prefix)/bin
-mandir = $(datadir)/man
-man1dir = $(mandir)/man1
-man5dir = $(mandir)/man5
-man7dir = $(mandir)/man7
+datadir ::= $(prefix)/share
+docdir ::= $(datadir)/doc
+bindir ::= $(prefix)/bin
+mandir ::= $(datadir)/man
+man1dir ::= $(mandir)/man1
+man5dir ::= $(mandir)/man5
+man7dir ::= $(mandir)/man7
 
 EXTRA_DIST = \
 	COPYRIGHT \
@@ -35,8 +35,8 @@ html_dirs = \
 
 
 INSTALL = /usr/bin/install
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL) -m 644
+INSTALL_PROGRAM ::= $(INSTALL)
+INSTALL_DATA ::= $(INSTALL) -m 644
 
 all: sphinx-docs scripts-man
 
@@ -51,11 +51,11 @@ scripts-man:
 	cd scripts && $(MAKE) man
 
 # version arithmetic
-major_version = $(word 1,$(subst ., ,$(version)))
-minor_version = $(word 2,$(subst ., ,$(version)))
-patch_version = $(word 3,$(subst ., ,$(version)))
-inc_patch_version = $(shell echo $(patch_version)+1 | bc)
-inc_version = $(major_version).$(minor_version).$(inc_patch_version)
+major_version ::= $(word 1,$(subst ., ,$(version)))
+minor_version ::= $(word 2,$(subst ., ,$(version)))
+patch_version ::= $(word 3,$(subst ., ,$(version)))
+inc_patch_version ::= $(shell echo $(patch_version)+1 | bc)
+inc_version ::= $(major_version).$(minor_version).$(inc_patch_version)
 
 distdir:
 	mkdir -p -- "$(dist_dir)"
@@ -74,10 +74,10 @@ release: dist
 	$(info ${shell echo $(inc_version) > VERSION})
 
 # install sphinx-generated docs and file in doc_files
-install-docs: dest = $(DESTDIR)$(docdir)/$(package_name)
+install-docs: dest ::= $(DESTDIR)$(docdir)/$(package_name)
 ifeq ($(shell hostname),csheikMP)
-install-docs: html_dirs = $(shell cd docs/_build && find html -type d)
-install-docs: html_files = $(shell cd docs/_build && find html -type f)
+install-docs: html_dirs ::= $(shell cd docs/_build && find html -type d)
+install-docs: html_files ::= $(shell cd docs/_build && find html -type f)
 endif
 install-docs:
 	$(info Creating directories ...)
