@@ -2,7 +2,7 @@ package_name = geo-omics-scripts
 # get version from  VERSION file is available
 # else use `git describe`
 # but override with $VERSION in environment
-version ::= $(strip $(if \
+version := $(strip $(if \
 	$(VERSION), \
 	$(VERSION), \
 	$(shell cat VERSION 2>/dev/null \
@@ -17,13 +17,13 @@ export
 .NOTPARALLEL:
 
 prefix = 
-datadir ::= $(prefix)/share
-docdir ::= $(datadir)/doc
-bindir ::= $(prefix)/bin
-mandir ::= $(datadir)/man
-man1dir ::= $(mandir)/man1
-man5dir ::= $(mandir)/man5
-man7dir ::= $(mandir)/man7
+datadir := $(prefix)/share
+docdir := $(datadir)/doc
+bindir := $(prefix)/bin
+mandir := $(datadir)/man
+man1dir := $(mandir)/man1
+man5dir := $(mandir)/man5
+man7dir := $(mandir)/man7
 
 EXTRA_DIST = \
 	COPYRIGHT \
@@ -45,8 +45,8 @@ html_dirs = \
 
 
 INSTALL = /usr/bin/install
-INSTALL_PROGRAM ::= $(INSTALL)
-INSTALL_DATA ::= $(INSTALL) -m 644
+INSTALL_PROGRAM := $(INSTALL)
+INSTALL_DATA := $(INSTALL) -m 644
 
 all: sphinx-docs scripts-man
 
@@ -65,15 +65,15 @@ scripts-man:
 #    with 1.2.3 sematic versioning tags
 git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+)?$$"
 version_pat = "^\d+\.\d+\.\d+$$"
-_good_version ::= $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: $(version)))
+_good_version := $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: $(version)))
 # 1. extract semantic version numbers
-_sem_versions ::= $(subst ., ,$(subst -, ,$(_good_version)))
-major_version ::= $(word 1,$(_sem_versions))
-minor_version ::= $(word 2,$(_sem_versions))
-patch_version ::= $(word 3,$(_sem_versions))
+_sem_versions := $(subst ., ,$(subst -, ,$(_good_version)))
+major_version := $(word 1,$(_sem_versions))
+minor_version := $(word 2,$(_sem_versions))
+patch_version := $(word 3,$(_sem_versions))
 # 2. increment patch level
-inc_patch_version ::= $(shell echo $(patch_version)+1 | bc)
-inc_version ::= $(major_version).$(minor_version).$(inc_patch_version)
+inc_patch_version := $(shell echo $(patch_version)+1 | bc)
+inc_version := $(major_version).$(minor_version).$(inc_patch_version)
 
 distdir:
 	mkdir -p -- "$(dist_dir)"
@@ -91,7 +91,7 @@ dist: distdir
 	$(RM) -r -- "$(dist_dir)"
 
 inc-version-tag:
-	$(eval version ::= $(inc_version))
+	$(eval version := $(inc_version))
 	! git status --porcelain | grep -q '^A' && \
 	git tag -a "$(version)" -m "Release version $(version)"
 	$(info Version incremented to $(version))
@@ -99,10 +99,10 @@ inc-version-tag:
 release: inc-version-tag dist
 
 # install sphinx-generated docs and file in doc_files
-install-docs: dest ::= $(DESTDIR)$(docdir)/$(package_name)
+install-docs: dest := $(DESTDIR)$(docdir)/$(package_name)
 ifeq ($(shell hostname),csheikMP)
-install-docs: html_dirs ::= $(shell cd docs/_build && find html -type d)
-install-docs: html_files ::= $(shell cd docs/_build && find html -type f)
+install-docs: html_dirs := $(shell cd docs/_build && find html -type d)
+install-docs: html_files := $(shell cd docs/_build && find html -type f)
 endif
 install-docs:
 	$(info Creating directories ...)
