@@ -35,14 +35,13 @@ EXTRA_DIST = \
 doc_files = COPYRIGHT README.md
 
 dist_dir = $(package_name)-$(version)
-tarball = $(dist_dir).tar.gz
 html_dirs = \
-		  html \
-		  html/_sources \
-		  html/_static \
-		  html/_static/fonts \
-		  html/_static/css \
-		  html/_static/js \
+	html \
+	html/_sources \
+	html/_static \
+	html/_static/fonts \
+	html/_static/css \
+	html/_static/js
 
 
 INSTALL = /usr/bin/install
@@ -147,4 +146,4 @@ debug:
 	$(info "patch versions: $(patch_version) $(inc_patch_version)")
 	$(info incremented version: $(inc_version))
 
-.PHONY: all sphinx-docs distdir dist release scripts-man vondamm-install vondamm-clean remote-install remote-clean install-docs install clean distclean debug
+.PHONY: all sphinx-docs scripts-man distdir dist inc_version_tag release install-docs install uninstall clean distclean debug
