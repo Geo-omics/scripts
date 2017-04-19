@@ -1,5 +1,15 @@
 package_name = geo-omics-scripts
-version ::= $(strip $(shell cat VERSION))
+# get version from  VERSION file is available
+# else use `git describe`
+# but override with $VERSION in environment
+version ::= $(strip $(if \
+	$(VERSION), \
+	$(VERSION), \
+	$(shell cat VERSION 2>/dev/null \
+		|| git describe 2>/dev/null \
+		|| echo 1>&2 "Failed to get version information, no VERSION file and no git tags!" \
+	) \
+))
 
 export
 .SILENT:
@@ -18,8 +28,7 @@ EXTRA_DIST = \
 	docs \
 	Makefile \
 	modulefiles \
-	README.md \
-	VERSION
+	README.md
 
 doc_files = COPYRIGHT README.md
 
@@ -50,10 +59,18 @@ endif
 scripts-man:
 	cd scripts && $(MAKE) man
 
-# version arithmetic
-major_version ::= $(word 1,$(subst ., ,$(version)))
-minor_version ::= $(word 2,$(subst ., ,$(version)))
-patch_version ::= $(word 3,$(subst ., ,$(version)))
+# version arithmetic:
+# 0. check $version is compatible with `git describe` output
+#    with 1.2.3 sematic versioning tags
+git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+)?$$"
+version_pat = "^\d+\.\d+\.\d+$$"
+_good_version ::= $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: $(version)))
+# 1. extract semantic version numbers
+_sem_versions ::= $(subst ., ,$(subst -, ,$(_good_version)))
+major_version ::= $(word 1,$(_sem_versions))
+minor_version ::= $(word 2,$(_sem_versions))
+patch_version ::= $(word 3,$(_sem_versions))
+# 2. increment patch level
 inc_patch_version ::= $(shell echo $(patch_version)+1 | bc)
 inc_version ::= $(major_version).$(minor_version).$(inc_patch_version)
 
@@ -61,6 +78,8 @@ distdir:
 	mkdir -p -- "$(dist_dir)"
 	cd lib && $(MAKE) $@
 	cd scripts && $(MAKE) $@
+	$(info Making VERSION file with content: $(version))
+	echo "$(version)" > $(dist_dir)/VERSION
 	$(info Copying extra files ...)
 	cp -a $(EXTRA_DIST) $(dist_dir)
 
@@ -69,9 +88,14 @@ dist: distdir
 	tar czhf $(dist_dir).tar.gz $(dist_dir)
 	$(info Cleaning up temporary dist directory ...)
 	$(RM) -r -- "$(dist_dir)"
-release: dist
-	$(info Incrementing minor version to $(inc_version))
-	$(info ${shell echo $(inc_version) > VERSION})
+
+inc-version-tag:
+	$(eval version ::= $(inc_version))
+	! git status --porcelain | grep -q '^A' && \
+	git tag -a "$(version)" -m "Release version $(version)"
+	$(info Version incremented to $(version))
+
+release: inc-version-tag dist
 
 # install sphinx-generated docs and file in doc_files
 install-docs: dest ::= $(DESTDIR)$(docdir)/$(package_name)
