@@ -1,0 +1,36 @@
+#%Module1.0
+# 
+# to be installed as /dept/geology/geomicro/data9/flux/modulefiles/geomicro/geomics/1
+#
+# this module's maintainer's email: heinro@umich.edu
+# 
+proc ModulesHelp { } {
+    puts stderr "Load this module to use the geo-omics scripts."
+}
+
+module-whatis "All-in-one omics module"
+
+if { [module-info mode load] } {
+    # prerequsites for quast module
+    module load python-anaconda2
+    module load boost
+    # Load standard software packages
+    # (required for geo-omics scripts)
+    module load python-anaconda3
+    module load geomicro/scythe
+    module load ncbi-blast
+    module load phylosift
+    module load geomicro/idba
+    module load quast
+    module load bwa
+    module load samtools
+    module load bedtools2
+}
+
+set GEOMICS_ROOT /dept/geology/geomicro/data2/heinro/geomics_root
+
+append-path PATH $GEOMICS_ROOT/bin
+append-path MANPATH $GEOMICS_ROOT/share/man
+append-path PYTHONPATH $GEOMICS_ROOT/lib/python3.5/site-packages
+
+setenv PYTHONUSERBASE $GEOMICS_ROOT
