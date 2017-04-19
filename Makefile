@@ -14,6 +14,8 @@ version ::= $(strip $(if \
 export
 .SILENT:
 
+.NOTPARALLEL:
+
 prefix = 
 datadir ::= $(prefix)/share
 docdir ::= $(datadir)/doc
