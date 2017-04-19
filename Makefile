@@ -141,9 +141,12 @@ distclean: clean
 	$(RM) -- $(package_name)-*.tar.gz
 
 debug:
-	$(info "share: $(datadir) bin: $(bindir)")
+	$(info share: $(datadir) bin: $(bindir))
 	$(info Version: $(version))
-	$(info "patch versions: $(patch_version) $(inc_patch_version)")
+	$(info major version: $(major_version))
+	$(info minor version: $(minor_version))
+	$(info patch versions: $(patch_version) --> $(inc_patch_version))
 	$(info incremented version: $(inc_version))
+	$(info dist_dir: $(dist_dir))
 
 .PHONY: all sphinx-docs scripts-man distdir dist inc_version_tag release install-docs install uninstall clean distclean debug
