@@ -24,7 +24,7 @@ if { [module-info mode load] } {
     module load bedtools
 }
 
-set GEOMICS_ROOT /geomicro/data2/heinro/geomics_root
+set GEOMICS_ROOT /geomicro/data9/flux/apps/geomics_root
 
 append-path PATH $GEOMICS_ROOT/bin
 append-path MANPATH $GEOMICS_ROOT/share/man
