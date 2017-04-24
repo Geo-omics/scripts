@@ -11,6 +11,9 @@ version := $(strip $(if \
 	) \
 ))
 
+# give status 0 if there are uncommited changes
+all_committed := ! git status --porcelain | grep -q -v '^??'
+
 export
 .SILENT:
 
@@ -76,6 +79,7 @@ inc_patch_version := $(shell echo $(patch_version)+1 | bc)
 inc_version := $(major_version).$(minor_version).$(inc_patch_version)
 
 distdir:
+	$(all_committed) || echo "Warning: git reports uncommitted changes; will be included in distribution!"
 	mkdir -p -- "$(dist_dir)"
 	cd lib && $(MAKE) $@
 	cd scripts && $(MAKE) $@
@@ -148,5 +152,6 @@ debug:
 	$(info patch versions: $(patch_version) --> $(inc_patch_version))
 	$(info incremented version: $(inc_version))
 	$(info dist_dir: $(dist_dir))
+	if $(all_committed); then echo "git: all changed committed"; else echo "git: there are uncommitted changes"; fi
 
 .PHONY: all sphinx-docs scripts-man distdir dist inc_version_tag release install-docs install uninstall clean distclean debug
