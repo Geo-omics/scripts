@@ -7,12 +7,15 @@
 #
 
 # shellcheck disable=SC2034
-USAGE="[-h|--help|--no-color|-v|verbosity n]"
+USAGE="[-ahv] [--no-color] [--clean-only]"
 # shellcheck disable=SC2034
 HELP="quality control for a sample's fastq files"
 # shellcheck disable=SC2034
 ARG_HELP="
     --clean-only  Delete previously created files and stop.
+    -a --adapters Path to Trimmomatic adapters file. On flux/vondamm/cayman the
+                  script will try to find the file.  Use this option if the
+		  automatic search fails.
 "
 # shellcheck disable=SC2034
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
@@ -21,17 +24,25 @@ CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 # default variable values
 ##########################
 
-#
-ADAPTERS=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
+# Set adapter file depending on server
+ADAPTERS_FLUX=/sw/lsa/centos7/trimmomatic/0.36/adapters/TruSeq3-PE-2.fa
+ADAPTERS_VONDAMM=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
+if [ -r $ADAPTERS_FLUX ]; then ADAPTERS=$ADAPTERS_FLUX; else ADAPTERS=$ADAPTERS_VONDAMM; fi
+
 #
 CLEAN_ONLY=false
 #
 # shellcheck disable=SC2034
-LONG_OPTION=--clean-only
+SHORT_OPTIONS=a:
+# shellcheck disable=SC2034
+LONG_OPTIONS=clean-only,adapters:
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
+	    (-a|--adapters)
+		ADAPTERS=$2
+		return 2;;
 	    (--clean-only)
 	        CLEAN_ONLY=true
 	        return 1;;
@@ -54,6 +65,7 @@ fi
 # some input sanitation
 #########################
 [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
+[ -r "$ADAPTERS" ] || abort "Adapters file not found: $ADAPTERS"
 
 #################################
 # do stuff
