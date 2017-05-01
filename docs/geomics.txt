@@ -1,0 +1,15 @@
+======================
+The ``geomics`` module
+======================
+
+This document describe the ``geomics`` module.  To activate the module on
+``flux``
+run::
+    
+    module load geomicr/geomics
+
+On the ``vondamm`` or ``cayman`` servers run::
+
+    module load geomics
+
+
