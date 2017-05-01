@@ -1,0 +1,223 @@
+===========================================
+Geomicro Illumina Reads processing Pipeline
+===========================================
+:Info: Also available as `google doc`_
+:Maintainer: Robert <heinro@umich.edu>
+
+Prerequisites: 
+==============
+    1. *-nix command line.
+    2. Programming/Scripting language (optional)
+    3. Access to:
+	1. /geomicro/data1/COMMON/scripts/wrappers/Assembly/         (Preferred)
+	OR
+	1. https://github.com/Geo-omics/scripts/tree/master/wrappers/Assembly
+
+
+Illumina Data
+=============
+
+1. Importing the raw sequence data:
+"""""""""""""""""""""""""""""""""""
+Data will generally be available from the UMich Sequencing core via FTP. In
+order to download the data, first make sure you have sufficient disk space. As
+of October 2015, one lane of Illumina HiSeq 2500 data takes about 45GB. Next,
+use the FTP protocol to download this data. Here is the command that has
+worked for me::
+
+    wget -m --ask-password --user=PI-LOGIN ftp://ruddle.brcf.med.umich.edu/Run_####
+
+2. What does it look like?
+""""""""""""""""""""""""""
+Rather than providing us one FASTQ giant file for each read direction, the reads are chopped into FASTQ files containing 4 million reads each. The file names looked like this:
+
+    9068_NoIndex_L007_R1_008.fastq
+
+In this example, L007 refers to the 7th lane, R1 means forward directionality (R2 is reverse), and 008 means this is the 8th file in the series of chopped FASTQ files with forward directionality. 
+
+The Pipeline
+============
+
+Raw sequencing data should be analyzed and transformed before it can be applied in a scientific context. The following pipeline will take you through the steps involved in transforming the data:
+
+    Steps:
+	1. Quality Control (QC)
+	2. Assembly
+	3. Mapping
+	4. Binning
+	5. Bin QC and Chimera Removal
+
+Quality control module - qc
+===========================
+
+To ensure a computationally manageable assembly an acceptable level of quality the pipeline detailed below can be used:
+  
+1.        Concatenate Reads
+"""""""""""""""""""""""""""
+Ideally, we want all the chopped fwd and rev fastq files concatenated in a single fwd and single rev file.
+
+2.        Initial quality assessment.
+"""""""""""""""""""""""""""""""""""""
+Before we start the QC it is important to see how good/bad the reads were to begin with. FASTQC is a tool that automates this step. the pipeline runs this process in the background twice, once before making any changes to the reads file and once in the end to see if there was any improvement in the overall quality of the data.
+
+3.        Dereplicate the data:
+"""""""""""""""""""""""""""""""
+After concatenating the 'fastq' files, we dereplicate the fastq to compress the size of the file. We do this using the 'dereplicate.pl' script. This script goes through the 'fastq' file and clusters together identical sequences such that all sequences that are 100% identical over 100% lengths form 1 cluster. The script also makes the sequence in a cluster that has the highest quality score the 'representative' for the cluster.
+
+Output:
+
+
+The script will create 2 files as its output, the ".clust" and the ".clust.list". These files are explained below.
+The ".clust" file:
+This file contains the cluster number, cluster size and the names of all sequences in that particular cluster. The third column in the file is the representative for each cluster. The file is tab-delimited.
+The ".clust.list" file:
+This file contains a list of all representative sequences in the fastq file. The file is tab-delimited.
+
+4.        Adapter Removal
+"""""""""""""""""""""""""
+Adapters used at the library prep stage often make their way into the final reads. Since these read fragments are not real biological signals, it becomes important to screen them out. This is where adapter removal comes handy. if you already know the adapters that were used, make a file called “adapters.fa”. If the pipeline doesn’t find such a file, it’ll automatically create one based on data available from Illumina. The tool “Scythe” is used to screen for adapters.
+
+5.        Trim the data:
+""""""""""""""""""""""""
+Illumina reads often contain regions of low quality which can negatively impact assembly. Sickle is an adaptive read trimmer which uses a windowed approach to remove regions of low quality from all reads. 
+
+6.        Final Quality assessment.
+"""""""""""""""""""""""""""""""""""
+Now that we’ve removed all the data with questionable quality from our dataset, we need to measure how much (if any) of an improvement was made. So, we run FastQC again in the background while we move on to the next steps.
+
+7.        Interleaving: (assembler dependent)
+"""""""""""""""""""""""""""""""""""""""""""""
+This is an optional, assembler dependent step. Current assembly pipeline requires an interleaved FASTA file. this portion of the pipeline simply pairs a forward and its corresponding reverse sequences such that they occur one after the other in a single file. In other words, if nth sequence is forward then it’s reverse pair should be the (n+1)th sequence.
+
+Running the QC module:
+^^^^^^^^^^^^^^^^^^^^^^
+
+This concludes our QC module of the pipeline. To run the qc module:
+   1. Change into the directory that contains the “Sample_####” folder. It should be in the data that you’ve just downloaded from the Sequencing core.
+   2. Load the latest modules for: scythe
+   3. Run the qc.sh module::
+
+    sh qc.sh Sample_##### &> Sample_####.qc.log
+
+
+Assembly Module -- assemble
+=====================================
+
+Assemblies can take a lot of computational time and resources. This script was written such that once you have QC-ed all your samples, you may run this module once and it’ll step through each of your Samples assembling them individually along the way. This module ensures that your assembles will run with the maximum possible resources and with least possible downtime between assemblies. 
+
+
+1.        Assemble
+""""""""""""""""""
+As of October 2015, IDBA_UD remains the assembler of choice. Once the data is interleaved, IDBA uses just the interleaved reads for assembly. One merit of using IDBA_UD over other assemblers such as velvet is that, you may provide IDBA with a range of kmers (k58-92) and a step size (s8). This will make IDBA assemble your data at k-mer(52), increase the k-mer size by the step size (52+8=60) and assemble the data again for the next k-mer (60). Once IDBA had cycled through each of your k-mers it combines all the assemblies into one super assembly. Although, IDBA produces a number of output files, we use “scaffolds.fa” as the final output for this step.
+
+
+2.        Quality Check
+"""""""""""""""""""""""
+Once we’ve assembled our reads into scaffolds, we need to see how well we did? This is where QUAST comes in. Quast reads the assembled files and creates a report depicting how good the assembly was. It calculates the N50 (higher the better), the L50 (lower the better), number of unique genes and produces some interactive plots as well.
+
+
+3.        Silva Blast
+"""""""""""""""""""""
+One of the more important reasons why we prefer de novo  assembly over read mapping to references is that, the assembly gives us an opportunity to find novel organisms. In order to see if what we’ve assembled, we can compare our sequences to a curated database like the SILVA SSU using BlastN. This shows us in a quantitative manner 16Ss that might be novel or simply may be of interest. Another reason for such blasts is to select references genomes for ESOM. So we can seed the ESOM with known organisms thus helping in the binning of the unknowns
+
+
+4.        NCBI Blast
+""""""""""""""""""""
+Servers the same purpose as Silva Database but with a more expansive NCBI database.
+
+
+5.        Phylosift
+"""""""""""""""""""
+Generates a taxonomic profile of the metagenome based on not just the 16s data (like SILVA or NCBI Blasts) but using a curated marker set database. This is helpful especially because 16S regions can be notoriously difficult to assemble. Using Phylosift allows us to look at the phylogenetic distribution of the metagenome even if a 16S was not assembled.
+Running the Assembly module:
+   1. Wait for all the QC’s to finish.
+   2. Load the latest modules for: idba, QUAST, blast and PhyloSift
+   3. Change to directory where you launched the “qc.sh” pipeline.
+   4. Run the “assemble.sh” module::
+
+    sh assemble.sh &> assemble.log &
+
+
+Mapping
+=======
+
+After performing an assembly, we can align the reads used to the create the assembly with the contigs produced by the assembly. This allows us to calculate how many reads recruit to each contig and is the first step in visualizing our data via IGV. Suppose that we have just finished an assembly and have the following files available:
+oases.fasta - This is a FASTA file containing the contigs generated by our assembly.
+oases.original.fwd.fastq - This is the original FASTQ file containing the forward reads used in our assembly.
+oases.original.rev.fastq - This is the original FASTQ file containing the reverse reads used in our assembly.
+These files will be used as input to the BWA alignment process, and the output will be in the form of a SAM file.
+
+
+To perform a paired-end alignment with BWA's default parameters, use the following commands in the stated order:
+
+1. Load the module for bwa::
+
+    module load bwa/0.6.2
+
+2. Index the reference file::
+
+    bwa index oases.fasta
+
+3. Align the forward reads to the reference file::
+
+    bwa aln -t # -f oases.fwd.sai oases.fasta oases.original.fwd.fastq
+
+4. Align the reverse reads to the reference file::
+
+    bwa aln -t # -f oases.rev.sai oases.fasta oases.original.rev.fastq
+
+5. Map both, the forward and reverse reads to the reference fasta::
+
+    bwa sampe -f oases.sam oases.fasta oases.fwd.sai oases.rev.sai oases.original.fwd.fastq oases.original.rev.fastq
+
+ 
+For further information consult the bwa manual: http://bio-bwa.sourceforge.net/bwa.shtml
+
+The output of this process is the oases.sam file, which can be analyzed with the idxstats command in Samtools to calculate reads per contig (see How to Extract Reads per Contig from SAM file) or converted to a BAM file for use with IGV (see How to View a SAM File in IGV).
+
+For more information on BWA and its configuration options, see the BWA Manual.
+
+
+How to Extract Reads per Contig from SAM file
+=============================================
+
+After performing an assembly, it is often desirable to determine how many reads recruit to each assembled contig. To accomplish this, we first must perform an alignment--for example with BWA (see BWA Alignment Tutorial). Commonly, alignments will produce a SAM file as output which can be mined to determine the number of reads which map to each contig. Suppose that we have the following file available:
+oases.sam - This is a SAM file generated by aligning a set of reads to the contigs created by assembling them using an aligner such as BWA or Bowtie.
+To get a file containing the name of each contig along with the number of reads recruiting to it, follow these steps:
+
+1. Make sure you have loaded the samtools module::
+
+    module load samtools/0.1.17
+
+2. Convert the SAM file to the binary BAM format::
+
+    samtools view -bS -o oases.bam oases.sam
+
+3. Sort the resulting BAM file::
+
+    samtools sort oases.bam oases.sorted
+
+4. Index the sorted BAM file::
+
+    samtools index oases.sorted.bam
+
+  a. At this point if you wish to extract a list of reads mapping to a particular contig::
+
+	samtools view -F0x4 oases.sorted.bam contigName | cut -f 1 > contigName_mappedReads.list
+ 
+  OR
+
+  b. If wish to extract mapped reads for multiple Contigs and you don't want to type the above command over and over again. You may use a script called ``getBwaMappedReads.pl`` in ``/geomicro/data1/COMMON/scripts``
+
+5. Generate the stats::
+
+    samtools idxstats oases.sorted.bam > oases.stats
+
+6. Extract the columns of interests from that stats file::
+
+    awk < oases.stats -F'\t' '{ print $1, "\t", $3 }' > reads_per_contig.txt
+
+The desired output is now contained within the ``reads_per_contig.txt`` file.
+
+.. _google doc: <https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing>
+
