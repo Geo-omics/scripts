@@ -4,3 +4,4 @@
 # make-generated files
 scripts/*.1
 geo-omics-scripts*.tar.gz
+docs/_build
