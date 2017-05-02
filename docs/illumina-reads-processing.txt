@@ -4,14 +4,13 @@ Geomicro Illumina Reads processing Pipeline
 :Info: Also available as `google doc`_
 :Maintainer: Robert <heinro@umich.edu>
 
-Prerequisites: 
-==============
-    1. *-nix command line.
-    2. Programming/Scripting language (optional)
-    3. Access to:
-	1. /geomicro/data1/COMMON/scripts/wrappers/Assembly/         (Preferred)
-	OR
-	1. https://github.com/Geo-omics/scripts/tree/master/wrappers/Assembly
+Prerequisites
+=============
+
+    #. Have a user account on flux, vondamm, or cayman
+    #. Have access to long-term data storage
+    #. Log into a terminal session on one of the servers
+    #. Have the :doc:`geomics <geomics>` module loaded
 
 
 Illumina Data
