@@ -26,6 +26,14 @@ worked for me::
 
     wget -m --ask-password --user=PI-LOGIN ftp://ruddle.brcf.med.umich.edu/Run_####
 
+The raw data should be stored in a permanent place and be read-only.  You may
+want to write-protect it with a command like::
+
+    chmod -w *.fastq.gz
+
+to protect against accidental deletion.  Consider making a separate backup
+copy on a different storage medium, possibly off-line.
+
 What does it look like?
 """"""""""""""""""""""""""
 Rather than providing us one FASTQ giant file for each read direction, the reads are chopped into FASTQ files containing 4 million reads each. The file names looked like this:
