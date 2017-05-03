@@ -36,15 +36,16 @@ copy on a different storage medium, possibly off-line.
 
 What does it look like?
 """"""""""""""""""""""""""
-Rather than providing us one FASTQ giant file for each read direction, the
+The raw data is a collection of :command:`gzip`-compressed FASTQ files.  Sometimes,
+rather than providing us one FASTQ giant file for each read direction, the
 reads are chopped into FASTQ files containing 4 million reads each. The file
-names looked like this::
+names looked like this:
 
-    9068_NoIndex_L007_R1_008.fastq
+    :file:`9068_NoIndex_L007_R1_008.fastq.gz`
 
-In this example, L007 refers to the 7th lane, R1 means forward directionality
-(R2 is reverse), and 008 means this is the 8th file in the series of chopped
-FASTQ files with forward directionality.
+In this example, 9068 identifies the sample, L007 refers to the 7th lane, R1
+means forward directionality (R2 is reverse), and 008 means this is the 8th
+file in the series of chopped FASTQ files with forward directionality.
 
 The Pipeline
 ============
