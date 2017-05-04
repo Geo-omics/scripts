@@ -3,7 +3,7 @@
 ===========================================
 Geomicro Illumina Reads processing Pipeline
 ===========================================
-:Info: Also available as `google doc`_
+:Online version: available as `google doc`_
 :Maintainer: Robert <heinro@umich.edu>
 
 Prerequisites
@@ -329,5 +329,4 @@ reads recruiting to it, follow these steps:
 The desired output is now contained within the ``reads_per_contig.txt`` file.
 
 
-.. _google doc: <https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing>
-
+.. _google doc: https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing
