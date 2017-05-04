@@ -328,11 +328,14 @@ latex_documents = [
 man_pages = [
     ('geomics', 'geomics', 'geo-omics-scripts Documentation',
      [author], 7),
+    ('illumina-reads-processing', 'illumina-reads-processing',
+     'Geomicro Illumina Reads Processing Pipeline',
+     [author], 7),
 ]
 
 # If true, show URL addresses after external links.
 #
-# man_show_urls = False
+man_show_urls = True
 
 
 # -- Options for Texinfo output -------------------------------------------
