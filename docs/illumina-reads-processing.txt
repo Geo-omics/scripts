@@ -1,3 +1,5 @@
+.. highlight:: bash
+
 ===========================================
 Geomicro Illumina Reads processing Pipeline
 ===========================================
