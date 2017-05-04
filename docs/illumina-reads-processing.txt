@@ -82,30 +82,26 @@ files and put them into appropriately named directories::
     cd <work directory>
     prep --fastq-dir <raw data directory>
 
-Quality control module - qc
-===========================
 
-To ensure a computationally manageable assembly an acceptable level of quality
-the pipeline detailed below can be used:
-  
-1.        Concatenate Reads
-"""""""""""""""""""""""""""
-Ideally, we want all the chopped fwd and rev fastq files concatenated in a
-single fwd and single rev file.
+Quality control module - :program:`qc`
+======================================
 
-2.        Initial quality assessment.
+To ensure a computationally manageable assembly at Van acceptable level of
+quality the pipeline detailed below can be used.
+
+1.        Initial quality assessment.
 """""""""""""""""""""""""""""""""""""
-Before we start the QC it is important to see how good/bad the reads were to
-begin with. FASTQC is a tool that automates this step. the pipeline runs this
-process in the background twice, once before making any changes to the reads
-file and once in the end to see if there was any improvement in the overall
-quality of the data.
+Before improving the quality it is important to see how good/bad the reads
+were to begin with. `FastQC`_ is a tool that automates this step. the pipeline
+runs this process in the background twice, once before making any changes to
+the reads file and once in the end to see if there was any improvement in the
+overall quality of the data.
 
-3.        Dereplicate the data:
-"""""""""""""""""""""""""""""""
-After concatenating the 'fastq' files, we dereplicate the fastq to compress
-the size of the file. We do this using the 'dereplicate.pl' script. This
-script goes through the 'fastq' file and clusters together identical sequences
+2.        Dereplicate Reads
+"""""""""""""""""""""""""""
+After concatenating the fastq files, we dereplicate the fastq to compress
+the size of the file. We do this using the :program:`dereplicate` script. This
+script goes through the fastq file and clusters together identical sequences
 such that all sequences that are 100% identical over 100% lengths form 1
 cluster. The script also makes the sequence in a cluster that has the highest
 quality score the 'representative' for the cluster.
@@ -113,8 +109,8 @@ quality score the 'representative' for the cluster.
 Output:
 
 
-The script will create 2 files as its output, the ".clust" and the
-".clust.list". These files are explained below.
+The script :program:`dereplicate` will create 2 files as its output, the
+".clust" and the ".clust.list". These files are explained below.
 
 :The ".clust" file:
     This file contains the cluster number, cluster size and the names of all
@@ -125,47 +121,49 @@ The script will create 2 files as its output, the ".clust" and the
     This file contains a list of all representative sequences in the fastq
     file. The file is tab-delimited.
 
-4.        Adapter Removal
+3.        Adapter Removal
 """""""""""""""""""""""""
 Adapters used at the library prep stage often make their way into the final
 reads. Since these read fragments are not real biological signals, it becomes
-important to screen them out. This is where adapter removal comes handy. if
-you already know the adapters that were used, make a file called
-“adapters.fa”. If the pipeline doesn’t find such a file, it’ll automatically
-create one based on data available from Illumina. The tool “Scythe” is used to
+important to screen them out. This is where adapter removal comes handy. If
+you know the adapters that were used, you can provide an adapter file and tell
+the :program:`qc` script to use it.  Otherwise a standand adapter file that is
+shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool is used to
 screen for adapters.
 
-5.        Trim the data:
-""""""""""""""""""""""""
+4.        Trim the Data
+"""""""""""""""""""""""
 Illumina reads often contain regions of low quality which can negatively
-impact assembly. Sickle is an adaptive read trimmer which uses a windowed
+impact assembly. `Sickle`_ is an adaptive read trimmer which uses a windowed
 approach to remove regions of low quality from all reads.
 
-6.        Final Quality assessment.
-"""""""""""""""""""""""""""""""""""
+5.        Final Quality Assessment
+""""""""""""""""""""""""""""""""""
 Now that we’ve removed all the data with questionable quality from our
 dataset, we need to measure how much (if any) of an improvement was made. So,
 we run FastQC again in the background while we move on to the next steps.
 
-7.        Interleaving: (assembler dependent)
-"""""""""""""""""""""""""""""""""""""""""""""
+6.        Interleaving (Assembler Dependent)
+""""""""""""""""""""""""""""""""""""""""""""
 This is an optional, assembler dependent step. Current assembly pipeline
-requires an interleaved FASTA file. this portion of the pipeline simply pairs
-a forward and its corresponding reverse sequences such that they occur one
-after the other in a single file. In other words, if nth sequence is forward
-then it’s reverse pair should be the (n+1)th sequence.
+requires an interleaved FASTA file. This portion of the pipeline simply pairs
+a forward and its corresponding reverse sequence such that they occur one
+after the other in a single file. In other words, if the nth sequence is
+forward then its reverse counterpart should be the (n+1)th sequence.
 
-Running the QC module:
-""""""""""""""""""""""
+Running the QC Module
+"""""""""""""""""""""
 
-This concludes our QC module of the pipeline. To run the qc module:
+Assuming :program:`prep` was run as above, the :program:`qc` script is run for
+each sample::
 
-    1. Change into the directory that contains the “Sample_####” folder. It
-       should be in the data that you’ve just downloaded from the Sequencing core.
-    2. Load the latest modules for: scythe
-    3. Run the qc.sh module::
+    cd <working directory>/<sample id>
+    qc
 
-	sh qc.sh Sample_##### &> Sample_####.qc.log
+You can easily process multiple samples by doing something like::
+
+    cd <working directory>
+    for i in *; do (cd $i && qc); done
 
 
 Assembly Module -- assemble
@@ -349,3 +347,7 @@ The desired output is now contained within the ``reads_per_contig.txt`` file.
 
 
 .. _google doc: https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing
+.. _FastQC: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+.. _Scythe: https://github.com/vsbuffalo/scythe
+.. _Sickle: https://github.com/najoshi/sickle
+.. _Trimmomatic: http://www.usadellab.org/cms/index.php?page=trimmomatic
