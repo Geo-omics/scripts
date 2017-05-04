@@ -53,9 +53,15 @@ INSTALL_DATA := $(INSTALL) -m 644
 
 all: sphinx-docs scripts-man
 
+sphinx-docs: custom_style = _static/css/custom.css
+sphinx-docs: stylesheet = _build/html/_static/css/theme.css
 sphinx-docs:
 	if which sphinx-build >/dev/null; then \
 	    cd docs && $(MAKE) html man; \
+	    if ! grep -q noredcode ${stylesheet}; then \
+	        echo "Fixing style..."; \
+	        cat ${custom_style} >> ${stylesheet}; \
+	    fi; \
 	else \
 	    echo "[WARNING] sphinx-build not available, skipping sphinx-based documentation"; \
 	fi

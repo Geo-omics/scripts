@@ -1,0 +1,5 @@
+/* noredcode: hack to avoid red inline code or literals
+ * Sphinx should allow one to amend themes somehow but who knows,
+ * so append this file to theme.css of the rtd-theme
+ */
+code.samp span.pre, code.literal span.pre {color: #444;}
