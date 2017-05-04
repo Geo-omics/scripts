@@ -166,8 +166,8 @@ You can easily process multiple samples by doing something like::
     for i in *; do (cd $i && qc); done
 
 
-Assembly Module -- assemble
-=====================================
+Assembly Module -- :program:`assemble`
+======================================
 
 Assemblies can take a lot of computational time and resources. This script was
 written such that once you have QC-ed all your samples, you may run this
@@ -179,61 +179,70 @@ assemblies.
 
 1.        Assemble
 """"""""""""""""""
-As of October 2015, IDBA_UD remains the assembler of choice. Once the data is
+As of October 2015, `IDBA_UD`_ remains the assembler of choice. Once the data is
 interleaved, IDBA uses just the interleaved reads for assembly. One merit of
 using IDBA_UD over other assemblers such as velvet is that, you may provide
-IDBA with a range of kmers (k58-92) and a step size (s8). This will make IDBA
-assemble your data at k-mer(52), increase the k-mer size by the step size
-(52+8=60) and assemble the data again for the next k-mer (60). Once IDBA had
-cycled through each of your k-mers it combines all the assemblies into one
+IDBA with a range of *k*-mer sizes (default: 58 <= *k* <= 92) and a step size
+*s* (default: *s* = 8). This will make IDBA
+assemble your data using 52-mers, increase the *k* by the step size
+(52+8=60) and assemble the data again for the next *k*-mer (60). Once IDBA has
+cycled through each *k* it combines all the assemblies into one
 super assembly. Although, IDBA produces a number of output files, we use
-“scaffolds.fa” as the final output for this step.
+:file:`scaffolds.fa` as the final output for this step.
 
 
 2.        Quality Check
 """""""""""""""""""""""
 Once we’ve assembled our reads into scaffolds, we need to see how well we did?
-This is where QUAST comes in. Quast reads the assembled files and creates a
-report depicting how good the assembly was. It calculates the N50 (higher the
-better), the L50 (lower the better), number of unique genes and produces some
-interactive plots as well.
+This is where `QUAST`_ comes in. Quast reads the assembled sequences and
+creates a report depicting how good the assembly was. It calculates the N50
+(higher is better), the L50 (lower is better), number of unique genes and
+produces some interactive plots as well.
 
 
 3.        Silva Blast
 """""""""""""""""""""
-One of the more important reasons why we prefer de novo  assembly over read
+One of the more important reasons why we prefer de novo assembly over read
 mapping to references is that, the assembly gives us an opportunity to find
 novel organisms. In order to see if what we’ve assembled, we can compare our
-sequences to a curated database like the SILVA SSU using BlastN. This shows us
-in a quantitative manner 16Ss that might be novel or simply may be of
+sequences to a curated database like the `SILVA`_ SSU using BlastN. This shows us
+in a quantitative manner 16S genes that might be novel or simply may be of
 interest. Another reason for such blasts is to select references genomes for
 ESOM. So we can seed the ESOM with known organisms thus helping in the binning
-of the unknowns
+of the unknowns.
 
 
 4.        NCBI Blast
 """"""""""""""""""""
-Servers the same purpose as Silva Database but with a more expansive NCBI
+Like searching SILVA above but with a more expansive NCBI
 database.
 
 
 5.        Phylosift
 """""""""""""""""""
-Generates a taxonomic profile of the metagenome based on not just the 16s data
+Generates a taxonomic profile of the metagenome based not just on the 16S data
 (like SILVA or NCBI Blasts) but using a curated marker set database. This is
 helpful especially because 16S regions can be notoriously difficult to
-assemble. Using Phylosift allows us to look at the phylogenetic distribution
+assemble. Using `Phylosift`_ allows us to look at the phylogenetic distribution
 of the metagenome even if a 16S was not assembled.
 
-Running the Assembly module:
+Running the Assembly Module:
 """"""""""""""""""""""""""""
 
-    1. Wait for all the QC’s to finish.
-    2. Load the latest modules for: idba, QUAST, blast and PhyloSift
-    3. Change to directory where you launched the “qc.sh” pipeline.
-    4. Run the “assemble.sh” module::
+You may assemble each sample individually or assemble some or all of your samples
+together.  To assemble the reads of a single sample do::
 
-	sh assemble.sh &> assemble.log &
+    cd <working directory>/<sample id>
+    assemble
+
+To assemble all your samples do something like this::
+
+    cd <working directory>
+    assemble *
+
+The glob :samp:`*` will expand to a list of all sample directories i.e. the sample
+ids, as made with the :program:`prep` script.  You can replace the ``*`` with
+a subset of sample ids that shall go into the assembly.
 
 
 Mapping
@@ -348,6 +357,10 @@ The desired output is now contained within the ``reads_per_contig.txt`` file.
 
 .. _google doc: https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing
 .. _FastQC: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+.. _IDBA_UD: https://i.cs.hku.hk/~alse/hkubrg/projects/idba_ud/
+.. _Phylosift: https://phylosift.wordpress.com/
+.. _QUAST: http://quast.sourceforge.net/
 .. _Scythe: https://github.com/vsbuffalo/scythe
 .. _Sickle: https://github.com/najoshi/sickle
+.. _SILVA: https://www.arb-silva.de/
 .. _Trimmomatic: http://www.usadellab.org/cms/index.php?page=trimmomatic
