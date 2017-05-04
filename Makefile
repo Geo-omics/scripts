@@ -54,11 +54,11 @@ INSTALL_DATA := $(INSTALL) -m 644
 all: sphinx-docs scripts-man
 
 sphinx-docs:
-ifeq ($(shell hostname),csheikMP)
-	cd docs && $(MAKE) html man
-else
-	@echo "-- skipping sphinx-based documentation --"
-endif
+	if which sphinx-build >/dev/null; then \
+	    cd docs && $(MAKE) html man; \
+	else \
+	    echo "[WARNING] sphinx-build not available, skipping sphinx-based documentation"; \
+	fi
 
 scripts-man:
 	cd scripts && $(MAKE) man
