@@ -57,11 +57,30 @@ applied in a scientific context. The following pipeline will take you through
 the steps involved in transforming the data:
 
     Steps:
+	0. Preparation
 	1. Quality Control (QC)
 	2. Assembly
 	3. Mapping
 	4. Binning
 	5. Bin QC and Chimera Removal
+
+Preparation
+===========
+
+Input data for the pipeline and intermediate files should be stored temporarly
+in a fast, sufficiently large storage area.  This is not necessarily where you
+keep your raw data.  It is recommended to create and use a work directory such
+as :file:`/fast/{username}` on vondamm and cayman and
+:file:`/scratch/{flux_allocation}/{username}` on flux.  These directories
+should be cleaned up after use so other users have the space available.
+
+The QC step assumes the raw data to be available in uncompressed FASTQ format,
+one file per read direction and each sample's data in its own directory.  The
+:program:`prep` script will decompress and (if needed) concatenate split fastq
+files and put them into appropriately named directories::
+
+    cd <work directory>
+    prep --fastq-dir <raw data directory>
 
 Quality control module - qc
 ===========================
