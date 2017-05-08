@@ -2,14 +2,23 @@
 The ``geomics`` module
 ======================
 
-This document describe the ``geomics`` module.  To activate the module on
-``flux``
-run::
+This document describe the ``geomics`` module.
+
+Getting started
+===============
+
+To activate the module on ``flux`` run::
     
     module load geomicr/geomics
 
 On the ``vondamm`` or ``cayman`` servers run::
 
     module load geomics
+
+Available Tools
+===============
+
+This part provides information of the available programms and tools of
+``geomics``.
 
 
