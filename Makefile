@@ -110,21 +110,17 @@ release: inc-version-tag dist
 
 # install sphinx-generated docs and file in doc_files
 install-docs: dest := $(DESTDIR)$(docdir)/$(package_name)
-ifeq ($(shell hostname),csheikMP)
 install-docs: html_dirs := $(shell cd docs/_build && find html -type d)
 install-docs: html_files := $(shell cd docs/_build && find html -type f)
-endif
 install-docs:
 	$(info Creating directories ...)
 	mkdir -p -- "$(dest)"
-ifeq ($(shell hostname),csheikMP)
 	for i in $(html_dirs); do mkdir -p -- "$(dest)/$$i"; done
 	$(info Installing html files ...)
 	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
 	$(info Installing manual page ...)
 	mkdir -p -- "$(DESTDIR)$(man7dir)"
 	$(INSTALL_DATA) docs/_build/man/geomics.7 $(DESTDIR)$(man7dir)
-endif
 	$(info Installing other documentation ...)
 	$(INSTALL_DATA) $(doc_files) $(dest)
 
@@ -141,9 +137,9 @@ uninstall:
 
 clean:
 	$(info Cleaning sphinx-generated documentation ...)
-ifeq ($(shell hostname),csheikMP)
-	cd docs && $(MAKE) clean
-endif
+	if which sphinx-build >/dev/null; then \
+	    cd docs && $(MAKE) clean; \
+	fi
 	cd scripts && $(MAKE) clean
 
 distclean: clean
