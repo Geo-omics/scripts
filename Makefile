@@ -57,7 +57,7 @@ sphinx-docs: custom_style = _static/css/custom.css
 sphinx-docs: stylesheet = _build/html/_static/css/theme.css
 sphinx-docs:
 	if which sphinx-build >/dev/null; then \
-	    cd docs && $(MAKE) html man; \
+	    cd docs && $(MAKE) html man latexpdf; \
 	    if ! grep -q noredcode ${stylesheet}; then \
 	        echo "Fixing style..."; \
 	        cat ${custom_style} >> ${stylesheet}; \
@@ -116,6 +116,7 @@ install-docs: html_dirs := $(shell cd docs/_build && find . -type d -path "./htm
 install-docs: html_files := $(shell cd docs/_build && find . -type f -path "./html*")
 install-docs: man_1_pages := $(shell find docs/_build -type f -path "docs/_build/man/*.1")
 install-docs: man_7_pages := $(shell find docs/_build -type f -path "docs/_build/man/*.7")
+install-docs: pdfs := $(shell find docs/_build -type f -path "docs/_build/latex/*.pdf")
 install-docs:
 	$(info Creating directories ...)
 	mkdir -p -- "$(dest)"
@@ -129,6 +130,7 @@ install-docs:
 	$(INSTALL_DATA) ${man_7_pages} $(DESTDIR)$(man7dir)
 	$(info Installing other documentation ...)
 	$(INSTALL_DATA) $(doc_files) $(dest)
+	$(INSTALL_DATA) $(pdfs) $(dest)
 
 install: install-docs
 	cd lib && $(MAKE) install
