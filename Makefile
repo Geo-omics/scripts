@@ -109,9 +109,13 @@ inc-version-tag:
 release: inc-version-tag dist
 
 # install sphinx-generated docs and file in doc_files
+# html files remain in their directory structure
+# all others go flat into their directory $(dest) or man dir
 install-docs: dest := $(DESTDIR)$(docdir)/$(package_name)
-install-docs: html_dirs := $(shell cd docs/_build && find html -type d)
-install-docs: html_files := $(shell cd docs/_build && find html -type f)
+install-docs: html_dirs := $(shell cd docs/_build && find . -type d -path "./html*")
+install-docs: html_files := $(shell cd docs/_build && find . -type f -path "./html*")
+install-docs: man_1_pages := $(shell find docs/_build -type f -path "docs/_build/man/*.1")
+install-docs: man_7_pages := $(shell find docs/_build -type f -path "docs/_build/man/*.7")
 install-docs:
 	$(info Creating directories ...)
 	mkdir -p -- "$(dest)"
@@ -119,8 +123,10 @@ install-docs:
 	$(info Installing html files ...)
 	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
 	$(info Installing manual page ...)
+	# mkdir -p -- "$(DESTDIR)$(man1dir)"
+	# $(INSTALL_DATA) ${man_1_pages} $(DESTDIR)$(man1dir)
 	mkdir -p -- "$(DESTDIR)$(man7dir)"
-	$(INSTALL_DATA) docs/_build/man/geomics.7 $(DESTDIR)$(man7dir)
+	$(INSTALL_DATA) ${man_7_pages} $(DESTDIR)$(man7dir)
 	$(info Installing other documentation ...)
 	$(INSTALL_DATA) $(doc_files) $(dest)
 
