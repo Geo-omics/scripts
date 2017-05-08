@@ -286,6 +286,10 @@ latex_elements = {
 latex_documents = [
     (master_doc, 'geo-omics-scripts.tex', 'geo-omics-scripts Documentation',
      'Regents of the University of Michigan', 'manual'),
+    ('illumina-reads-processing',
+     'Geomicro-Illumina-Reads-Processing-Pipeline.tex',
+     'Geomicro Illumina Reads processing Pipeline',
+     'Regents of the University of Michigan', 'howto'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
