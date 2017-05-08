@@ -152,7 +152,7 @@ clean:
 
 distclean: clean
 	$(info Removing tarballs ...)
-	$(RM) -- $(package_name)-*.tar.gz
+	$(RM) -r -- $(package_name)-*
 
 debug:
 	$(info share: $(datadir) bin: $(bindir))
