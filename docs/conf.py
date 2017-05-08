@@ -273,7 +273,7 @@ latex_elements = {
 
      # Additional stuff for the LaTeX preamble.
      #
-     # 'preamble': '',
+     'preamble': '\\batchmode',
 
      # Latex figure (float) alignment
      #
