@@ -5,19 +5,28 @@
 #
 # Author: Robert <heinro@med.umich.edu>
 #
-
+set -e
 # shellcheck disable=SC2034
-USAGE="[-h|--help|--no-color|-v|verbosity n] <fastq.gz>..."
+USAGE="[OPTIONS]... [--sample <id>] [--lane <nnn>] | [FASTQGZ]..."
 # shellcheck disable=SC2034
 HELP="Inflate a sample's fastq files."
 # shellcheck disable=SC2034
-ARG_HELP="    --force	Overwrite existing files
-    --sample <name>
-    --lane <Lnnn>   e.g. --lane L007
-    --use-tmp	    Use fast temporary storage for output.
+
+ARG_HELP="$SCRIPTNAME prepares raw meta-geomic sequencing data in fastq.gz format for processing
+
+$SCRIPTNAME is part of the geo-omics tool chain
+
+Usage:
+    $SCRIPTNAME [OPTIONS]... [RAWDATA]...
+
+Options:
+
+    --force             Allow overwrite existing files
+    RAWDATA             List of fastq.gz files or path to directory containing them
+			By default this is the current directory
 "
 # shellcheck disable=SC2034
-LONG_OPTIONS=force,lane:,sample:,use-tmp
+LONG_OPTIONS=force,lane:,sample:
 # shellcheck disable=SC2034
 CHECK_PROGS="gunzip"
 
@@ -26,15 +35,6 @@ handle_options () {
 	case "$1" in
 	    (--force)
 	        FORCE=true
-	        return 1;;
-	    (--lane)
-	        LANE="${2}"
-	        return 2;;
-	    (--sample)
-	        SAMPLE="$2"
-		return 2;;
-	    (--use-tmp)
-	        USE_TMP=YES
 	        return 1;;
         esac
     else
@@ -48,61 +48,62 @@ handle_options () {
 
 # by default abort when output files exists
 FORCE=false
-# no lane specified by default
-LANE=
-# Use fast temp directory, no by default
-USE_TMP=NO
-# TMP root to use
-TMP_ROOT=/dev/shm
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
-# shellcheck source=../lib/liba.sh
 # handle non-option (positional) parameters
-declare -a FASTQ_GZ
+declare -a RAWDATA
 if [ "$#" -gt 0 ]; then
-    FASTQ_GZ=("${@}")
+    RAWDATA=("${@}")
 else
-    abort "Please provide paths of gzipped fastq files." usage
+    # default
+    RAWDATA=($PWD)
 fi
 
-#########################
-# some input sanitation
-#########################
-if [ $USE_TMP == YES ]; then
-    [ -n "$SAMPLE" ] || abort "Specify sample name with --sample <name>" usage
-    WORK_DIR=$TMP_ROOT/$USER/${SAMPLE}_${LANE}
-    info "All data is stored at $WORK_DIR"
-else
-    [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not a directory."
+if [ ${#RAWDATA[@]} -eq 1 ] && [ -d "${RAWDATA[0]}" ]; then
+    raw_home=${RAWDATA[0]}
+    RAWDATA=($(find "$raw_home" -name "*.fastq" -or -name "*.fastq.gz" | sort))
 fi
 
-for i in "${FASTQ_GZ[@]}"; do
-    [ -r "$i" ] || abort "Cannot read $i"
-done
+unique_ids=($(for i in "${RAWDATA[@]}"; do basename "$i" | sed -r 's/(_L[0-9]+).*/\1/; s/_.*_/_/'; done | sort -u))
+unique_ids_no_lane=($(for i in "${RAWDATA[@]}"; do basename "$i" | cut -d _ -f 1; echo; done | sort -u))
+if [ "$(echo "${unique_ids[@]}" | wc -w)" -gt "$(echo "${unique_ids_no_lane[@]}" | wc -w)" ]; then
+    use_lane=true
+    if [ "$VERBOSITY" -gt 1 ]; then info "Using lane to uniquly identify samples"; fi
+else
+    use_lane=false
+fi
 
-#################################
-# do stuff
-################################
-
-# shellcheck disable=SC2086
-mkdir $VERBOSE_FLAG -p "$WORK_DIR"
-
-for direct in 1 2; do
-    if [ $direct == 1 ]; then
-	direct_str=fwd
+for id in "${unique_ids[@]}"; do
+    samp_id=${id/%_*/}
+    lane=${id/#*_/}
+    if [ "$VERBOSITY" -gt 2 ]; then info "unique id: $id, sample: ${samp_id}, lane: $lane"; fi
+    if $use_lane; then
+        sample_dir=$WORK_DIR/$id
     else
-	direct_str=rev
+	# remove underscore and lane
+	sample_dir=$WORK_DIR/${samp_id}
     fi
-    out="$direct_str.fastq"
-    [ ! -e "$out" ] || $FORCE || abort "$out already exist.  Clean up output directory before continuing."
-    for i in "${FASTQ_GZ[@]}"; do
-       	if echo "$i" | grep -F "_R${direct}_" > /dev/null; then
-	    # shellcheck disable=SC2086
-            gunzip $VERBOSE_FLAG -c "$i" >> "$WORK_DIR/$out"
-	fi
+    # shellcheck disable=SC2086
+    mkdir $VERBOSE_FLAG -p "$sample_dir"
+    for dir in fwd rev; do
+        if [ $dir == fwd ]; then
+	    dirnum=1
+        else
+	    dirnum=2
+        fi
+        out="$sample_dir/$dir.fastq"
+        [ ! -e "$out" ] || $FORCE || abort "$out already exist.  Clean up output directory before continuing."
+        for file in "${RAWDATA[@]}"; do
+	    # Note: order of files determined by RAWDATA.  If a directory was given, it got sorted to a sane order
+	    # but user could give fastq files on command line in any order.  But order *should not* matter!
+	    if [[ $file =~ /${samp_id}.*_S[0-9]+_${lane}_R${dirnum}_[0-9]+\.fastq ]]; then
+		# shellcheck disable=SC2086
+		gunzip $VERBOSE_FLAG -c "$file" >> "$out"
+	    fi
+	done
     done
 done
 
