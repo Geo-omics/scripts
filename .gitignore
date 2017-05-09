@@ -1,7 +1,10 @@
 *~
-.*swp
+.*sw[op]
 
 # make-generated files
 scripts/*.1
 geo-omics-scripts*.tar.gz
 docs/_build
+
+# contains hard-link to liba.sh, to allow running scripts in dev environment
+share/
