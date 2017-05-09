@@ -80,7 +80,7 @@ one file per read direction and each sample's data in its own directory.  The
 files and put them into appropriately named directories::
 
     cd <work directory>
-    prep --fastq-dir <raw data directory>
+    prep <raw data directory>
 
 
 Quality control module - :program:`qc`
