@@ -1,30 +1,27 @@
 #!/bin/bash
 #
-# Copyright (c) 2016 Regents of The University of Michigan.
+# Copyright (c) 2017 Regents of The University of Michigan.
 # All Rights Reserved.
 #
 # Author: Robert <heinro@med.umich.edu>
 #
 set -e
 # shellcheck disable=SC2034
-USAGE="[OPTIONS]... [--sample <id>] [--lane <nnn>] | [FASTQGZ]..."
+USAGE="[OPTIONS]... [RAWDATA]..."
 # shellcheck disable=SC2034
-HELP="Inflate a sample's fastq files."
+HELP="Prepare fastq files for processing with Geomicro Illumina Reads Pipeline"
 # shellcheck disable=SC2034
-
-ARG_HELP="$SCRIPTNAME prepares raw meta-geomic sequencing data in fastq.gz format for processing
-
-$SCRIPTNAME is part of the geo-omics tool chain
-
-Usage:
-    $SCRIPTNAME [OPTIONS]... [RAWDATA]...
-
-Options:
-
+ARG_HELP="
     --force             Allow overwrite existing files
     RAWDATA             List of fastq.gz files or path to directory containing them
 			By default this is the current directory
 "
+MORE_HELP="
+$SCRIPTNAME prepares raw meta-geomic sequencing data in fastq.gz format for processing
+
+$SCRIPTNAME is part of the geomics (1) tool chain
+"
+
 # shellcheck disable=SC2034
 LONG_OPTIONS=force,lane:,sample:
 # shellcheck disable=SC2034
