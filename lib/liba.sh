@@ -65,6 +65,11 @@
 #   info
 #   warning
 #
+# Defined variables for common tools:
+#
+#   RM CP MKDIR GUNZIP MV
+#
+#
 ##############################################################################
 set -e
 trap 'exception $LINENO $?' ERR
@@ -216,3 +221,22 @@ for i in $CHECK_PROGS; do
     which "$i" > /dev/null 2>&1 || abort "$i command is not available."
 done
 
+##########################
+# common programs
+##########################
+if [ "$VERBOSITY" -gt 2 ]; then
+    RM="rm -v"
+    MKDIR="mkdir -v"
+    CP="cp -v"
+    MV="mv -v"
+    GUNZIP="gunzip -v"
+else
+    # shellcheck disable=SC2034
+    {
+	RM=rm
+	MKDIR=mkdir
+	CP=cp
+	MV=mv
+	GUNZIP=gunzip
+    }
+fi
