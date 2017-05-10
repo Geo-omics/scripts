@@ -11,16 +11,17 @@
 #
 # How to use:
 #
-# At the top of you script, define variables USAGE, HELP, ARG_HELP,
+# At the top of you script, define variables USAGE, HELP, ARG_HELP, MORE_HELP
 # CHECK_PROGS, SHORT_OPTIONS, and LONG_OPTION and the function handle_options,
 # as needed, and then source this library, followed by the main part of your
 # script.  For example:
 #
 #    #!/bin/bash
-#    USAGE="[--help|-h|--some-arg|-a] [--other-arg <foo>]"
+#    USAGE="[--help|-h|--some-arg|-a] [--other-arg=FOO]"
 #    HELP="myprog is a script to do such and such"
-#    ARG_HELP="    --some-arg -a   Enable something
-#         --other-arg <foo>   Use a foo for bla bla
+#    ARG_HELP="
+#      -a, --some-arg         Enable something
+#          --other-arg=FOO    Use a foo for bla bla
 #    "
 #    CHECK_PROGS="gunzip idba_ud fastqc"
 #    SHORT_OPTIONS=so:
@@ -28,7 +29,7 @@
 #    handle_options () {
 #        if [ "$#" -gt 0 ]; then
 #    	case "$1" in
-#    	    (--some-arg|-s)
+#    	    (-a|--some-arg)
 #    	        SOME_ARG=true
 #    	        return 1;;
 #    	    (--other-arg|-o)
@@ -39,6 +40,9 @@
 #            return 0
 #        fi
 #    }
+#
+#    # Define defaults for cmdline options here
+#    OTHER_ARG=foobar
 #   
 #    . "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
 #
@@ -76,13 +80,15 @@ USAGE: $SCRIPT_NAME $USAGE
 user_help() {
     echo "$SCRIPT_NAME - $HELP"
     usage
-    echo "Command line parameters:
-    --working-dir <path>  Where to retrieve and store files
--h  --help          Print this help.
-    --no-color      Disable colorful output.
--v                  Verbosity: use multiple -v to increase output.
-    --verbosity <n> Set level verbosity.
-    $ARG_HELP
+    echo "Command line parameters:"
+    echo "$ARG_HELP
+     --working-dir=DIR  Directory where to retrieve and store files
+ -h, --help             Print this help.
+     --no-color         Disable colorful output.
+ -v                     Verbosity: use multiple -v to increase output.
+     --verbosity=N      Set level verbosity.
+
+$MORE_HELP
 "
 }
 
