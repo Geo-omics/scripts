@@ -71,7 +71,6 @@ fi
 #########################
 # some input sanitation
 #########################
-[ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
 [ -r "$ADAPTERS" ] || abort "Adapters file not found: $ADAPTERS"
 [ -r "$FWD_FASTQ" ] || abort "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort "Reverse reads file not found: $REV_FASTQ"
@@ -79,7 +78,6 @@ fi
 #################################
 # do stuff
 ################################
-cd "$WORK_DIR"
 
 # get root of input file names
 fwd=$(basename "$FWD_FASTQ" .fastq)

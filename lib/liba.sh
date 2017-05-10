@@ -240,3 +240,5 @@ else
 	GUNZIP=gunzip
     }
 fi
+
+cd "$WORK_DIR" || abort "$WORK_DIR is not accessible."
