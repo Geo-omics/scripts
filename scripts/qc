@@ -6,6 +6,7 @@
 # Author: Robert <heinro@med.umich.edu>
 #
 
+set -e
 # shellcheck disable=SC2034
 {
 USAGE="[OPTIONS]..."
