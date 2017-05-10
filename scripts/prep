@@ -11,9 +11,9 @@ set -e
 USAGE="[OPTIONS]... [RAWDATA]..."
 HELP="Prepare fastq files for processing with Geomicro Illumina Reads Pipeline"
 ARG_HELP="
-    --force             Allow overwrite existing files
-    RAWDATA             List of fastq.gz files or path to directory containing them
+    RAWDATA...          List of fastq.gz files or path to directory containing them
 			By default this is the current directory
+    --force             Allow overwrite existing files
 "
 MORE_HELP="
 $SCRIPTNAME prepares raw meta-geomic sequencing data in fastq.gz format for processing

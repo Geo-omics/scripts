@@ -93,8 +93,7 @@ user_help() {
  -v                     Verbosity: use multiple -v to increase output.
      --verbosity=N      Set level verbosity.
 
-$MORE_HELP
-"
+$MORE_HELP"
 }
 
 exception () {
