@@ -87,13 +87,13 @@ rev=$(basename "$REV_FASTQ" .fastq)
 [ "$fwd" != "$rev" ] || abort "Forward and reverse reads filenames are equal?"
 
 # clean up
-rm $V -rf FASTQC
-rm $V -f derep* 
-rm $V -f dt_{int,"$fwd","$rev"}.fasta
-rm $V -f {"$fwd","$rev"}.clust{.list,}
+$RM -rf FASTQC
+$RM -f derep*
+$RM -f dt_{int,"$fwd","$rev"}.fasta
+$RM -f {"$fwd","$rev"}.clust{.list,}
 ! $CLEAN_ONLY || exit 0
 
-mkdir $V FASTQC
+$MKDIR FASTQC
 info "pre-QC fastqc running..."
 fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 info "dereplicating..."

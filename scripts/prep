@@ -82,7 +82,7 @@ for id in "${unique_ids[@]}"; do
 	sample_dir=$WORK_DIR/${samp_id}
     fi
     # shellcheck disable=SC2086
-    mkdir $VERBOSE_FLAG -p "$sample_dir"
+    $MKDIR -p "$sample_dir"
     for dir in fwd rev; do
         if [ $dir == fwd ]; then
 	    dirnum=1
@@ -96,7 +96,7 @@ for id in "${unique_ids[@]}"; do
 	    # but user could give fastq files on command line in any order.  But order *should not* matter!
 	    if [[ $file =~ /${samp_id}.*_S[0-9]+_${lane}_R${dirnum}_[0-9]+\.fastq ]]; then
 		# shellcheck disable=SC2086
-		gunzip $VERBOSE_FLAG -c "$file" >> "$out"
+		$GUNZIP -c "$file" >> "$out"
 	    fi
 	done
     done
