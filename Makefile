@@ -124,8 +124,8 @@ install-docs:
 	$(info Installing html files ...)
 	for i in $(html_files); do $(INSTALL_DATA) "docs/_build/$$i" $(dest)/$$(dirname $$i); done
 	$(info Installing manual page ...)
-	# mkdir -p -- "$(DESTDIR)$(man1dir)"
-	# $(INSTALL_DATA) ${man_1_pages} $(DESTDIR)$(man1dir)
+	mkdir -p -- "$(DESTDIR)$(man1dir)"
+	$(INSTALL_DATA) ${man_1_pages} $(DESTDIR)$(man1dir)
 	mkdir -p -- "$(DESTDIR)$(man7dir)"
 	$(INSTALL_DATA) ${man_7_pages} $(DESTDIR)$(man7dir)
 	$(info Installing other documentation ...)

@@ -335,6 +335,8 @@ man_pages = [
     ('illumina-reads-processing', 'illumina-reads-processing',
      'Geomicro Illumina Reads Processing Pipeline',
      [author], 7),
+    ('prep', 'prep', 'prepare compressed fastq data for processing',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.
