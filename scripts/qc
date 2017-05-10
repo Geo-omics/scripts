@@ -8,22 +8,30 @@
 
 # shellcheck disable=SC2034
 {
-USAGE="[-ahv] [--no-color] [--clean-only]"
+USAGE="[OPTIONS]..."
 HELP="quality control for a sample's fastq files"
 ARG_HELP="
-    --clean-only  Delete previously created files and stop.
-    -a --adapters Path to Trimmomatic adapters file. On flux/vondamm/cayman the
-                  script will try to find the file.  Use this option if the
-		  automatic search fails.
+  -f, --fwd             Fastq file with forward reads, default is fwd.fastq
+  -r, --rev             Fastq file with reverse reads default is rev.fastq
+      --clean-only      Delete previously created files and stop.
+  -a, --adapters=FILE   Specifies the adapters file to be used.  By default the
+                        Illumina adapter file TruSeq3-PE-2.fa as distributed by
+			the Trimmomatic project will be used.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
-SHORT_OPTIONS=a:
-LONG_OPTIONS=clean-only,adapters:
+SHORT_OPTIONS=a:,f:,r:
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:
 }
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
+	    (-f|--fwd)
+		FWD_FASTQ=$2
+		return 2;;
+	    (-r|--rev)
+		REV_FASTQ=$2
+		return 2;;
 	    (-a|--adapters)
 		ADAPTERS=$2
 		return 2;;
@@ -44,6 +52,10 @@ handle_options () {
 ADAPTERS_FLUX=/sw/lsa/centos7/trimmomatic/0.36/adapters/TruSeq3-PE-2.fa
 ADAPTERS_VONDAMM=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
 if [ -r $ADAPTERS_FLUX ]; then ADAPTERS=$ADAPTERS_FLUX; else ADAPTERS=$ADAPTERS_VONDAMM; fi
+
+# default input files as produced by prep script
+FWD_FASTQ=fwd.fastq
+REV_FASTQ=rev.fastq
 #
 CLEAN_ONLY=false
 
@@ -61,41 +73,46 @@ fi
 #########################
 [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
 [ -r "$ADAPTERS" ] || abort "Adapters file not found: $ADAPTERS"
+[ -r "$FWD_FASTQ" ] || abort "Forward reads file not found: $FWD_FASTQ"
+[ -r "$REV_FASTQ" ] || abort "Reverse reads file not found: $REV_FASTQ"
 
 #################################
 # do stuff
 ################################
 cd "$WORK_DIR"
 
+# get root of input file names
+fwd=$(basename "$FWD_FASTQ" .fastq)
+rev=$(basename "$REV_FASTQ" .fastq)
+[ "$fwd" != "$rev" ] || abort "Forward and reverse reads filenames are equal?"
+
 # clean up
 rm $V -rf FASTQC
 rm $V -f derep* 
-rm $V -f dt_{int,fwd,rev}.fasta
-rm $V -f fwd.clust{.list,}
-if $CLEAN_ONLY; then
-    exit 0
-fi
+rm $V -f dt_{int,"$fwd","$rev"}.fasta
+rm $V -f {"$fwd","$rev"}.clust{.list,}
+! $CLEAN_ONLY || exit 0
 
 mkdir $V FASTQC
-info "pre-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 fwd.fastq rev.fastq &> FASTQC/fastqc.log &
+info "pre-QC fastqc running..."
+fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 info "dereplicating..."
-dereplicate -fq fwd.fastq -o derep_fwd.fastq &
-dereplicate -fq rev.fastq -o derep_rev.fastq
+dereplicate -fq "$FWD_FASTQ" -o "derep_$fwd.fastq" &
+dereplicate -fq "$REV_FASTQ" -o "derep_$rev.fastq"
 wait %dereplicate
 info "adapter trimming..."
-scythe -a $ADAPTERS -q sanger -m derep_fwd.matches.fastq -o derep_scythe_fwd.fastq derep_fwd.fastq &
-scythe -a $ADAPTERS -q sanger -m derep_rev.matches.fastq -o derep_scythe_rev.fastq derep_rev.fastq
+scythe -a "$ADAPTERS" -q sanger -m "derep_$fwd.matches.fastq" -o "derep_scythe_$fwd.fastq" "derep_$fwd.fastq" &
+scythe -a "$ADAPTERS" -q sanger -m "derep_$rev.matches.fastq" -o "derep_scythe_$rev.fastq" "derep_$rev.fastq"
 wait %scythe
 info "quality score trimming..."
-sickle se -t sanger -f derep_scythe_fwd.fastq -o derep_scythe_sickle_fwd.fastq &
-sickle se -t sanger -f derep_scythe_rev.fastq -o derep_scythe_sickle_rev.fastq
+sickle se -t sanger -f "derep_scythe_$fwd.fastq" -o "derep_scythe_sickle_$fwd.fastq" &
+sickle se -t sanger -f "derep_scythe_$rev.fastq" -o "derep_scythe_sickle_$rev.fastq"
 wait %sickle
 info "post-QC fastqc run..."
 wait %fastqc
-fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_{fwd,rev}.fastq &>> FASTQC/fastqc.log &
+fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_{"$fwd","$rev"}.fastq &>> FASTQC/fastqc.log &
 info "interleaving..."
-interleave -fastq -outfmt fasta -fwd derep_scythe_sickle_fwd.fastq -rev derep_scythe_sickle_rev.fastq -o dt
+interleave -fastq -outfmt fasta -fwd "derep_scythe_sickle_$fwd.fastq" -rev "derep_scythe_sickle_$rev.fastq" -o dt
 wait %fastqc
 info "Done!"
 
