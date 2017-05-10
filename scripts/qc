@@ -97,6 +97,7 @@ $RM -rf FASTQC
 $RM -f derep*
 $RM -f dt_{int,"$fwd","$rev"}.fasta
 $RM -f {"$fwd","$rev"}.clust{.list,}
+$RM -f dt_s{fwd,rev}.fasta  # what are these?
 ! $CLEAN_ONLY || exit 0
 
 $MKDIR FASTQC
