@@ -1,5 +1,5 @@
-#!bash #shebang for editor/syntax highlighting only, include with source builtin, dont run on its own
-# shellcheck disable=SC2034
+# shellcheck disable=SC2148
+# shellcheck shell=bash
 #
 # Copyright (c) 2017 Regents of The University of Michigan.
 # All Rights Reserved.
@@ -200,6 +200,7 @@ debug "verbosity set to: $VERBOSITY"
 [ "$VERBOSITY" -ge 4 ] && set -x
 # forward verbosity to other commands
 [ "$VERBOSITY" -ge 2 ] && VERBOSE_FLAG=-v
+# shellcheck disable=SC2034
 V=$VERBOSE_FLAG
 
 ####################################

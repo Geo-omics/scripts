@@ -7,17 +7,15 @@
 #
 
 # shellcheck disable=SC2034
+{
 USAGE="[-ahv] [--no-color] [--clean-only]"
-# shellcheck disable=SC2034
 HELP="quality control for a sample's fastq files"
-# shellcheck disable=SC2034
 ARG_HELP="
     --clean-only  Delete previously created files and stop.
     -a --adapters Path to Trimmomatic adapters file. On flux/vondamm/cayman the
                   script will try to find the file.  Use this option if the
 		  automatic search fails.
 "
-# shellcheck disable=SC2034
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 
 ##########################
@@ -36,6 +34,7 @@ CLEAN_ONLY=false
 SHORT_OPTIONS=a:
 # shellcheck disable=SC2034
 LONG_OPTIONS=clean-only,adapters:
+}
 
 handle_options () {
     if [ "$#" -gt 0 ]; then

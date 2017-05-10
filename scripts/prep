@@ -7,10 +7,9 @@
 #
 set -e
 # shellcheck disable=SC2034
+{
 USAGE="[OPTIONS]... [RAWDATA]..."
-# shellcheck disable=SC2034
 HELP="Prepare fastq files for processing with Geomicro Illumina Reads Pipeline"
-# shellcheck disable=SC2034
 ARG_HELP="
     --force             Allow overwrite existing files
     RAWDATA             List of fastq.gz files or path to directory containing them
@@ -22,10 +21,9 @@ $SCRIPTNAME prepares raw meta-geomic sequencing data in fastq.gz format for proc
 $SCRIPTNAME is part of the geomics (1) tool chain
 "
 
-# shellcheck disable=SC2034
 LONG_OPTIONS=force,lane:,sample:
-# shellcheck disable=SC2034
 CHECK_PROGS="gunzip"
+}
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
