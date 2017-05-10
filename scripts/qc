@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2016 Regents of The University of Michigan.
+# Copyright (c) 2017 Regents of The University of Michigan.
 # All Rights Reserved.
 #
 # Author: Robert <heinro@med.umich.edu>
@@ -17,22 +17,7 @@ ARG_HELP="
 		  automatic search fails.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
-
-##########################
-# default variable values
-##########################
-
-# Set adapter file depending on server
-ADAPTERS_FLUX=/sw/lsa/centos7/trimmomatic/0.36/adapters/TruSeq3-PE-2.fa
-ADAPTERS_VONDAMM=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
-if [ -r $ADAPTERS_FLUX ]; then ADAPTERS=$ADAPTERS_FLUX; else ADAPTERS=$ADAPTERS_VONDAMM; fi
-
-#
-CLEAN_ONLY=false
-#
-# shellcheck disable=SC2034
 SHORT_OPTIONS=a:
-# shellcheck disable=SC2034
 LONG_OPTIONS=clean-only,adapters:
 }
 
@@ -50,6 +35,17 @@ handle_options () {
         return 0
     fi
 }
+
+##########################
+# default variable values
+##########################
+
+# Set adapter file depending on server
+ADAPTERS_FLUX=/sw/lsa/centos7/trimmomatic/0.36/adapters/TruSeq3-PE-2.fa
+ADAPTERS_VONDAMM=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
+if [ -r $ADAPTERS_FLUX ]; then ADAPTERS=$ADAPTERS_FLUX; else ADAPTERS=$ADAPTERS_VONDAMM; fi
+#
+CLEAN_ONLY=false
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
