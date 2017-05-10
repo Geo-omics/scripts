@@ -16,9 +16,9 @@ ARG_HELP="
     --force             Allow overwrite existing files
 "
 MORE_HELP="
-$SCRIPTNAME prepares raw meta-geomic sequencing data in fastq.gz format for processing
+prep prepares raw meta-geomic sequencing data in fastq.gz format for processing
 
-$SCRIPTNAME is part of the geomics (1) tool chain
+prep is part of the geomics (1) tool chain
 "
 
 LONG_OPTIONS=force,lane:,sample:
