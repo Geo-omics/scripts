@@ -19,6 +19,13 @@ ARG_HELP="
                         Illumina adapter file TruSeq3-PE-2.fa as distributed by
 			the Trimmomatic project will be used.
 "
+MORE_HELP="
+qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
+invocation qc will clean the directory of what the script thinks are previously
+generated files.
+
+qc is part of the geomics (1) tool chain.
+"
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
 LONG_OPTIONS=clean-only,adapters:,fwd:,rev:
