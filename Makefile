@@ -101,7 +101,13 @@ dist: distdir
 	$(RM) -r -- "$(dist_dir)"
 
 inc-version-tag:
-	$(eval version := $(inc_version))
+	# increment patch version unless $(VERSION) was provided
+	# This way we can use
+	#    VERSION=1.0.0 make release
+	# To make a new major release and
+	#    make release
+	# to make patch releases.
+	$(if $(VERSION),,$(eval version := $(inc_version)))
 	! git status --porcelain | grep -q '^A' && \
 	git tag -a "$(version)" -m "Release version $(version)"
 	$(info Version incremented to $(version))
