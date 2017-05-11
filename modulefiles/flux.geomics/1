@@ -12,19 +12,22 @@ module-whatis "All-in-one omics module"
 
 if { [module-info mode load] } {
     # prerequsites for quast module
-    module load python-anaconda2
     module load boost
+    module load python-anaconda2
+    # prerequisite for bedtools2 module
+    module load samtools
     # Load standard software packages
     # (required for geo-omics scripts)
-    module load python-anaconda3
+    module load bedtools2
+    module load bwa
+    module load fastqc
+    module load geomicro/idba
     module load geomicro/scythe
     module load ncbi-blast
     module load phylosift
-    module load geomicro/idba
+    module load python-anaconda3
     module load quast
-    module load bwa
-    module load samtools
-    module load bedtools2
+    module load sickle
 }
 
 set GEOMICS_ROOT /dept/geology/geomicro/data9/flux/apps/geomics_root
