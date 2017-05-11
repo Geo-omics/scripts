@@ -1,0 +1,80 @@
+.. program:: qc
+
+===================================================
+qc - quality control for metagenomic Illumina reads
+===================================================
+
+Synopsis
+========
+
+:program:`qc` [OPTIONS]...
+
+
+Description
+===========
+
+The :program:`qc` script takes a pair of fastq-formatted files (forward and
+reverse reads) and runs them past quality assessment (FastQC), dereplication,
+adapter removal (Scythe), and quality-trimming (Sickle) steps and then
+prepares a FASTA-formatted interleaved reads file that can be used as input
+for the IDBA assembler.  A second run of FastQC allows a before-after
+comparison to see if these steps led to an improvement in the quality of the
+data.
+
+
+Options
+=======
+
+.. option:: -f, --fwd=FILE
+
+    fastq-formatted file with forward reads, by default this is ``fwd.fastq``
+    as saved by the :program:`prep` script
+
+.. option:: -r, --rev=FILE
+
+    fastq-formatted file with reverse reads, by default this is ``rev.fastq``
+    as saved by the :program:`prep` script
+
+.. option:: --clean-only
+
+    Remove all files made by a previously run of :program:`qc` and exit.
+
+.. option:: -a, --adapters=FILE
+
+    Specify the adapters file used in the adpater trimming step.  By default
+    the Illumina adapter file TruSeq3-PE-2.fa as distributed by the Trimmomatic
+    project will be used.
+
+.. option::  --working-dir=DIR
+
+    Directory under which output is stored. By default this is the current
+    directory.
+
+.. option:: -h, --help
+
+    Print help.
+
+.. option:: --no-color
+
+    Disable colorful output.
+
+.. option:: -v, --verbosity=N
+
+    Use one or multiple ``-v`` to increase verbosity of output or set a
+    level of verbosity with ``--verbosity=N``.  By default the verbosity
+    level is 1.  Setting verbosity to 0 silences the program.  A level of
+    3 prints debugging info.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`prep(1)`, :manpage:`geomics(7)`, :manpage:`illumina-reads-processing(7)`
+

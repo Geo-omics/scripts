@@ -337,6 +337,8 @@ man_pages = [
      [author], 7),
     ('prep', 'prep', 'prepare compressed fastq data for processing',
      [author], 1),
+    ('qc', 'qc', 'run quality control steps on metagenomic Illumina reads',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.
