@@ -44,7 +44,7 @@
 #    # Define defaults for cmdline options here
 #    OTHER_ARG=foobar
 #   
-#    . "$(dirname "$0")/../lib/liba.sh" || echo "Failed to source script library"
+#    . "$(dirname "$0")/../lib/liba.sh" || (echo "Failed to source script library"; exit 1)
 #
 #    # your script comes here --->
 #
