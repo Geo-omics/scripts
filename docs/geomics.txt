@@ -18,7 +18,13 @@ On the ``vondamm`` or ``cayman`` servers run::
 Available Tools
 ===============
 
-This part provides information of the available programms and tools of
+TODO: This part provides information of the available programms and tools of
 ``geomics``.
 
+.. only:: man
+
+    See also
+    ========
+
+    :manpage:`illumina-reads-processing(7)`, :manpage:`prep(1)`, :manpage:`qc(1)`
 
