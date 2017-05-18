@@ -1,0 +1,60 @@
+#!/bin/bash
+#
+#
+# Download RefSeq rna sequences and create blast db
+#
+#
+set -eE
+# shellcheck disable=SC2034
+{
+USAGE="[OPTIONS]..."
+HELP="download archaeal and bacterial NCBI RefSeq RNA sequences and build BLAST DBs"
+ARG_HELP="
+"
+CHECK_PROGS="makeblastdb"
+}
+# shellcheck disable=SC1090
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+
+URL=ftp://ftp.ncbi.nih.gov/refseq/release
+
+if [ "$VERBOSITY" -ge 2 ]; then
+    CURL=curl
+else
+    CURL="curl --silent"
+fi
+
+echo -n "Getting current RefSeq release number... "
+refseq_release=$($CURL $URL/RELEASE_NUMBER)
+echo "$refseq_release"
+[[ $refseq_release =~ [0-9]+ ]] || (echo "Failed to get RefSeq release number, got: ${refseq_release}"; exit 1)
+
+out_dir="$WORK_DIR/refseq$refseq_release"
+$MKDIR "$out_dir" || (echo "Directory exists alread: $out_dir"; exit 1)
+
+log=$out_dir/refseq-rna.log
+
+files_installed=$URL/release-catalog/release${refseq_release}.files.installed
+curl --silent "$files_installed" | grep -o -P '(archaea|bacteria).[0-9]+\.rna\.fna\.gz' | sort -n |
+    while read -r i; do
+	echo -n "Getting $i... "
+	kingdom=${i%%.*}
+	url=$URL/$kingdom/$i
+	out=$out_dir/$kingdom.rna.fasta
+	$CURL "$url"  | gunzip -c >> "$out"
+	echo "Appending $url to $out" >> "$log"
+	echo "done"
+    done
+
+for i in archaea bacteria; do
+    echo -n "Making blast db for $i... "
+    makeblastdb -in "$out_dir/$i.rna.fasta" -dbtype nucl >> "$log"
+    echo "done"
+done
+
+echo -n "Finishing... "
+# no need to ever touch these files again
+chmod -R -w "$out_dir"
+
+$RM -f latest && $LN -s "$(basename "$out_dir")" latest
+echo "done"

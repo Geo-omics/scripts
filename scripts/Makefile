@@ -133,8 +133,10 @@ OTHER_EXECUTABLES = \
         qc \
         qc_no_derep \
         qc_no_derep_no_interleave \
+	refseq-rna \
         remove_space_from_filenames \
-        setup_metapathways
+        setup_metapathways \
+	silva-db \
 
 NON_EXECUTABLES = \
         parseTinySeqXML.xslt\

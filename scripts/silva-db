@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+#
+# Download SILVA SSU/LSU rRNA data and create blast db
+#
+#
+set -eE
+# shellcheck disable=SC2034
+{
+USAGE="[OPTIONS]..."
+HELP="download SILVA SSU/LSU rRNA sequences and build BLAST DBs"
+ARG_HELP="
+"
+CHECK_PROGS="makeblastdb"
+}
+# shellcheck disable=SC1090
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+
+URL=ftp://ftp.arb-silva.de
+
+if [ "$VERBOSITY" -ge 2 ]; then
+    CURL=curl
+else
+    CURL="curl --silent"
+fi
+
+echo -n "Getting current SIVLA db release number... "
+# slash after url makes curl list directory in complex format, -> indicates a symlink
+release=$($CURL $URL/ | grep -o "current.*" | sed -r 's/current -> release_//')
+[[ $release =~ [0-9]+ ]] || (echo; echo "Failed to get current SIVLA db release number, got: ${release}"; exit 1)
+echo "$release"
+
+out_dir="$WORK_DIR/release_$release"
+$MKDIR "$out_dir" || (echo "Directory exists alread: $out_dir"; exit 1)
+
+log=$out_dir/silva-db.log
+
+(
+    cd "$out_dir"
+
+    echo -n "Downloading SIVLA SSU/LSU db..."
+    $CURL -O "$URL/current/Exports/SILVA_${release}_{SSU,LSU}Ref_tax_silva.fasta.gz"
+    echo "done"
+
+    echo -n "Decompressing... "
+    $GUNZIP -- SILVA_"${release}"_{SSU,LSU}Ref_tax_silva.fasta.gz
+    echo "done"
+)
+
+for i in SSU LSU; do
+    echo -n "Making $i BLAST db... "
+    makeblastdb -in "$out_dir/SILVA_${release}_${i}Ref_tax_silva.fasta" -dbtype nucl >> "$log"
+    echo "done"
+done
+
+echo -n "Finishing... "
+# no need to ever touch these files again
+chmod -R -w "$out_dir"
+
+$RM -f latest && $LN -s "$(basename "$out_dir")" latest
+echo "done"
