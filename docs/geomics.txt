@@ -9,7 +9,7 @@ Getting started
 
 To activate the module on ``flux`` run::
     
-    module load geomicr/geomics
+    module load geomicro/geomics
 
 On the ``vondamm`` or ``cayman`` servers run::
 
