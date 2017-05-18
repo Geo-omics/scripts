@@ -1,66 +1,114 @@
 #!/bin/bash
 #
-# Copyright (c) 2016 Regents of The University of Michigan.
+# Copyright (c) 2017 Regents of The University of Michigan.
 # All Rights Reserved.
 #
 # Author: Robert <heinro@med.umich.edu>
 #
+set -e
 
-USAGE="[-h|--help|--no-color|-v|verbosity n]"
-HELP="Assemble one Sample's fastq data"
-ARG_HELP="    --cpus <n>  How many CPUs/threads to use.
-    --clean-only  Remove previously created file and stop.
+# shellcheck disable=SC2034
+{
+USAGE="[OPTIONS]... [SAMPLE_DIRS]..."
+HELP="Assemble a metagenome, and analyse assembly"
+ARG_HELP="
+      --assembly-only  Stop after finishing the assembly
+      --cpus N      How many CPUs/threads to use
+      --force       Overwrite existing files, default is to abort when output files exist already
+      --maxk N      IDBA min k parameter, default is 52
+      --mink N      IDBA max k parameter, default is 92
+      --out PATH    Directory to which output is saved, default is the working directory
+      --reads FILE  Interleaved reads file, by default this is 'dt_int.fasta'
+      --steps N     IDBA steps parameter, default is 8
 "
-CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
-LONG_OPTIONS=cpus:,clean-only
-
-##########################
-# default variable values
-##########################
-
-CLEAN_ONLY=false
-CPUS=4
-
-# Required Databases
-PATH2SILVA="/omics/PublicDB/silva/release_123/SILVA_123_SSURef_tax_silva.fasta"
-PATH2BACT="/omics/PublicDB/NCBI/Bacteria/latest_16S.fasta"
-PATH2ARCH="/omics/PublicDB/NCBI/Archaea/latest_16S.fasta"
-# IDBA Parameters
-MINK=52
-MAXK=92
-STEP=8
-
-# other scripts
-QUAST="/usr/bin/python $(which quast.py)"
-#
+#CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
+LONG_OPTIONS=assembly-only,cpus:,force,maxk:,mink:,out:,reads:,step:
+}
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
-	(--clean-only)
-	    CLEAN_ONLY=true
+	(--assembly-only)
+	    ASSEMBLY_ONLY=true
 	    return 1;;
 	(--cpus)
 	    CPUS="$2"
-	    shift
+	    return 2;;
+	(--force)
+	    ASSEMBLY_ONLY=true
+	    return 1;;
+	(--maxk)
+	    MAXK="$2"
+	    return 2;;
+	(--mink)
+	    MINK="$2"
+	    return 2;;
+	(--out)
+	    OUTDIR="$2"
+	    return 2;;
+	(--reads)
+	    READS="$2"
+	    return 2;;
+	(--step)
+	    STEP="$2"
 	    return 2;;
         esac
     fi
 }
 
+##########################
+# default variable values
+##########################
+
+# Stop after finishing assembly when set to `true`
+ASSEMBLY_ONLY=false
+# Number of CPUs to use in parallel
+CPUS=4
+# Overwrite existing files if `true`
+FORCE=false
+# interleaved reads as made by qc script
+READS=dt_int.fasta
+
+# common path to reference data / c.f. flux switch below
+REF_DATA_DIR=/geomicro/data9/flux/reference-data
+
+# by default this is the working woriectory
+SAMPLE_DIRS=(
+    ./
+)
+
+if [ -d /dept/geology/geomicro ]; then
+    # for flux
+    ref_data_home=/dept/geology/$REF_DATA_DIR
+else
+    # for cayman / vondamm
+    ref_data_home=$REF_DATA_DIR
+fi
+
+# Required Databases
+PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_123_SSURef_tax_silva.fasta"
+PATH2BACT="$ref_data_home/NCBI_RefSeq_RNA/latest/bacteria.rna.fasta"
+PATH2ARCH="$ref_data_home/NCBI_RefSeq_RNA/latest/archaea.rna.fasta"
+# default IDBA Parameters
+MINK=52
+MAXK=92
+STEP=8
+
+# other scripts
+if which quast.py &> /dev/null; then
+    QUAST="/usr/bin/python $(which quast.py)"
+fi
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
+# default output path is the working directory, which is only defined after sourcing liba.sh
+[ ! -z "$OUTDIR" ] || OUTDIR=$WORK_DIR
+
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    abort "Unknown parameters: ${*}"
+    SAMPLE_DIRS=($@)
 fi
-
-#########################
-# some input sanitation
-#########################
-[ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
 
 #################################
 # do stuff
@@ -68,25 +116,47 @@ fi
 spec=k${MINK}_${MAXK}_s${STEP}
 scaf=$spec/scaffold.fa
 
-cd "$WORK_DIR"
+# check if reads exists before doing anything
+for i in "${SAMPLE_DIRS[@]}"; do
+    [ -d "$i" ] || abort "is not a directory: $i"
+    [ -r "$i/$READS" ] || abort "interleaved reads file not found: $i/$READS"
+done
 
-rm $V -rf ASSEMBLY
-if $CLEAN_ONLY; then
-    exit 0
+if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
+    echo "Concatenating reads..."
+    reads=$READS.cat.fasta
+    if [ -e $reads ]; then
+	$FORCE || abort "File $reads exists.  Use --force to overwrite."
+	$RM "$reads"
+    fi
+    for i in "${SAMPLE_DIRS[@]}"; do
+	cat "$i/$READS" >> $reads
+	echo "  $i/$READS"
+    done
+else
+    # descend into sample directory, output goes here
+    cd "${SAMPLE_DIRS[0]}"
+    reads=$READS
 fi
 
-mkdir $V -p ASSEMBLY
-mkdir $V -p ASSEMBLY/BLASTN
-mkdir $V -p ASSEMBLY/PhyloSift
-cd ASSEMBLY
+if [ -d "$OUTDIR" ]; then
+    $FORCE || abort "Output directory $OUTDIR exists,  Use --force to overwrite or --out to specify a different location"
+    $RM -rf "$OUTDIR"
+fi
+
+$MKDIR -p "$OUTDIR"
+cd "$OUTDIR"
 
 info "Assembling..."
-idba_ud -o $spec -r ../dt_int.fasta --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP 2>&1 | tee $spec.log
+idba_ud -o $spec -r "$reads" --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP 2>&1 | tee $spec.log
+
+! $ASSEMBLY_ONLY || exit 0
 
 info "Making assembly stats..."
 $QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa --output-dir quast_results
 
 info "Searching for scaffolds with 16S..."
+$MKDIR -p "BLASTN"
 T1BLAST=BLASTN/sample_vs_silvaSSU.topHits.blastn
 BBLAST=BLASTN/sample_subSeq_vs_bactNCBI.blastn
 ABLAST=BLASTN/sample_subSeq_vs_archaeaNCBI.blastn
@@ -103,7 +173,10 @@ if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
     top5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
 fi
 
-ln $V "$scaf" "$WORK_DIR"/scaffold.fa
+$MKDIR -p "PhyloSift"
+# do phylosift?
+
+$LN "$scaf" scaffold.fa
 
 info "[assembly done]"
 # gmb: input: dt_int.fasta
