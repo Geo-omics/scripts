@@ -67,7 +67,7 @@
 #
 # Defined variables for common tools:
 #
-#   RM CP MKDIR GUNZIP MV
+#   RM CP MKDIR GUNZIP MV LN
 #
 #
 ##############################################################################
@@ -229,6 +229,7 @@ if [ "$VERBOSITY" -ge 2 ]; then
     CP="cp -v"
     MV="mv -v"
     GUNZIP="gunzip -v"
+    LN="ln -v"
 else
     # shellcheck disable=SC2034
     {
@@ -237,6 +238,7 @@ else
 	CP=cp
 	MV=mv
 	GUNZIP=gunzip
+	LN=ln
     }
 fi
 
