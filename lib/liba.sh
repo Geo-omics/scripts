@@ -223,7 +223,7 @@ done
 ##########################
 # common programs
 ##########################
-if [ "$VERBOSITY" -gt 2 ]; then
+if [ "$VERBOSITY" -ge 2 ]; then
     RM="rm -v"
     MKDIR="mkdir -v"
     CP="cp -v"
