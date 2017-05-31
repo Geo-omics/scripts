@@ -1,4 +1,14 @@
 package_name = geo-omics-scripts
+
+# shell fragment to give status 0 if all changes are commited
+all_committed := ! git status --porcelain | grep -q -v '^??'
+
+git_version := $(shell git describe 2>/dev/null)
+
+# date part of version if there are uncommitted changes
+date := $(shell date +%Y%m%d-%H%M)
+date_version_appendix := $(shell $(all_committed) || echo -n -$(date))
+
 # get version from  VERSION file is available
 # else use `git describe`
 # but override with $VERSION in environment
@@ -6,13 +16,10 @@ version := $(strip $(if \
 	$(VERSION), \
 	$(VERSION), \
 	$(shell cat VERSION 2>/dev/null \
-		|| git describe 2>/dev/null \
+		|| echo $(git_version)$(date_version_appendix) \
 		|| echo 1>&2 "Failed to get version information, no VERSION file and no git tags!" \
 	) \
 ))
-
-# give status 0 if there are uncommited changes
-all_committed := ! git status --porcelain | grep -q -v '^??'
 
 export
 .SILENT:
@@ -72,9 +79,10 @@ scripts-man:
 # version arithmetic:
 # 0. check $version is compatible with `git describe` output
 #    with 1.2.3 sematic versioning tags
-git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+)?$$"
+#    or appended date-time
+git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+|-[0-9]{8}-[0-9]{4})?$$"
 version_pat = "^\d+\.\d+\.\d+$$"
-_good_version := $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: $(version)))
+_good_version := $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: "$(version)"))
 # 1. extract semantic version numbers
 _sem_versions := $(subst ., ,$(subst -, ,$(_good_version)))
 major_version := $(word 1,$(_sem_versions))
