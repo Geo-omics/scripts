@@ -1,7 +1,7 @@
 package_name = geo-omics-scripts
 
 # shell fragment to give status 0 if all changes are commited
-all_committed := ! git status --porcelain | grep -q -v '^??'
+all_committed := ! git status --porcelain 2>/dev/null | grep -q -v '^??'
 
 git_version := $(shell git describe 2>/dev/null)
 
