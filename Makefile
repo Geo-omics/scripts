@@ -80,7 +80,7 @@ scripts-man:
 # 0. check $version is compatible with `git describe` output
 #    with 1.2.3 sematic versioning tags
 #    or appended date-time
-git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+|-[0-9]{8}-[0-9]{4})?$$"
+git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+)?(-[0-9]{8}-[0-9]{4})?$$"
 version_pat = "^\d+\.\d+\.\d+$$"
 _good_version := $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: "$(version)"))
 # 1. extract semantic version numbers
