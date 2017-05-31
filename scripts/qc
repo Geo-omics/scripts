@@ -18,6 +18,8 @@ ARG_HELP="
   -a, --adapters=FILE   Specifies the adapters file to be used.  By default the
                         Illumina adapter file TruSeq3-PE-2.fa as distributed by
 			the Trimmomatic project will be used.
+      --less-mem        Use less memory during de-replication at the expense of
+                        computing time
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -28,7 +30,7 @@ qc is part of the geomics (1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,less-mem
 }
 
 handle_options () {
@@ -45,6 +47,9 @@ handle_options () {
 		return 2;;
 	    (--clean-only)
 	        CLEAN_ONLY=true
+	        return 1;;
+	    (--less-mem)
+	        LESSMEM=true
 	        return 1;;
         esac
     else
@@ -66,6 +71,8 @@ FWD_FASTQ=fwd.fastq
 REV_FASTQ=rev.fastq
 #
 CLEAN_ONLY=false
+# parallelize dereplicate calls
+LESSMEM=false
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -104,7 +111,10 @@ $MKDIR FASTQC
 info "pre-QC fastqc running..."
 fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 info "dereplicating..."
+! $LESSMEM || set -m
 dereplicate -fq "$FWD_FASTQ" -o "derep_$fwd.fastq" &
+! $LESSMEM || fg 2>/dev/null || true  # no parallel execution to preserve memory
+! $LESSMEM || set +m
 dereplicate -fq "$REV_FASTQ" -o "derep_$rev.fastq"
 wait %dereplicate
 info "adapter trimming..."
