@@ -111,12 +111,15 @@ $MKDIR FASTQC
 info "pre-QC fastqc running..."
 fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 info "dereplicating..."
+# With LESSMEM the calls to dereplicate are sequential.  To do that bash
+# monitor mode is enabled, so that fg works and puts the first job to the
+# foreground before starting the second job.  
 ! $LESSMEM || set -m
 dereplicate -fq "$FWD_FASTQ" -o "derep_$fwd.fastq" &
 ! $LESSMEM || fg 2>/dev/null || true  # no parallel execution to preserve memory
 ! $LESSMEM || set +m
 dereplicate -fq "$REV_FASTQ" -o "derep_$rev.fastq"
-wait %dereplicate
+$LESSMEM || wait %dereplicate
 info "adapter trimming..."
 scythe -a "$ADAPTERS" -q sanger -m "derep_$fwd.matches.fastq" -o "derep_scythe_$fwd.fastq" "derep_$fwd.fastq" &
 scythe -a "$ADAPTERS" -q sanger -m "derep_$rev.matches.fastq" -o "derep_scythe_$rev.fastq" "derep_$rev.fastq"
