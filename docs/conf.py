@@ -330,7 +330,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('geomics', 'geomics', 'geo-omics-scripts Documentation',
+    ('omics', 'omics', 'Documentation for the omics module',
      [author], 7),
     ('illumina-reads-processing', 'illumina-reads-processing',
      'Geomicro Illumina Reads Processing Pipeline',
@@ -352,8 +352,8 @@ man_show_urls = True
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'geomics', 'geo-omics-scripts Documentation',
-     author, 'geomics', 'Geo-omics data processing tools',
+    (master_doc, 'omics', 'Documentation for the omics module',
+     author, 'omics', 'Omics data processing tools',
      'Miscellaneous'),
 ]
 
