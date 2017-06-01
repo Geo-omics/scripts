@@ -45,6 +45,11 @@ Options
     the Illumina adapter file TruSeq3-PE-2.fa as distributed by the Trimmomatic
     project will be used.
 
+.. option:: --less-mem
+
+    This option will reduce the dominating memory requirements for the
+    de-replication step by half, typically, and double the computation time.
+
 .. option::  --working-dir=DIR
 
     Directory under which output is stored. By default this is the current
