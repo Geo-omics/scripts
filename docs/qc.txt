@@ -81,5 +81,5 @@ Exits with non-zero upon encountering an error.
     See Also
     ========
 
-    :manpage:`prep(1)`, :manpage:`geomics(7)`, :manpage:`illumina-reads-processing(7)`
+    :manpage:`prep(1)`, :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`
 

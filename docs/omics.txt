@@ -1,25 +1,25 @@
 ======================
-The ``geomics`` module
+The ``omics`` module
 ======================
 
-This document describe the ``geomics`` module.
+This document describe the ``omics`` module.
 
 Getting started
 ===============
 
 To activate the module on ``flux`` run::
     
-    module load geomicro/geomics
+    module load geomicro/omics
 
 On the ``vondamm`` or ``cayman`` servers run::
 
-    module load geomics
+    module load omics
 
 Available Tools
 ===============
 
 TODO: This part provides information of the available programms and tools of
-``geomics``.
+``omics``.
 
 .. only:: man
 

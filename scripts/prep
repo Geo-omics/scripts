@@ -18,7 +18,7 @@ ARG_HELP="
 MORE_HELP="
 prep prepares raw meta-geomic sequencing data in fastq.gz format for processing
 
-prep is part of the geomics (1) tool chain
+prep is part of the omics(1) tool chain
 "
 
 LONG_OPTIONS=force,lane:,sample:

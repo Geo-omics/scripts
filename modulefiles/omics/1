@@ -1,12 +1,12 @@
 #%Module1.0
 #
-# to be installed as /geomicro/data9/flux/modulefiles/geomicro/geomics/1
+# to be installed as /geomicro/data9/flux/modulefiles/geomicro/omics/1
 #
 # this module's maintainer's email: heinro@umich.edu
 #
 
 proc ModulesHelp { } {
-    puts stderr "Load this module to use the geo-omics scripts."
+    puts stderr "Load this module to use the (geo-)omics scripts."
 }
 
 module-whatis "All-in-one omics module"
@@ -24,10 +24,10 @@ if { [module-info mode load] } {
     module load bedtools
 }
 
-set GEOMICS_ROOT /geomicro/data9/flux/apps/geomics_root
+set OMICS_ROOT /geomicro/data9/flux/apps/omics_root
 
-append-path PATH $GEOMICS_ROOT/bin
-append-path MANPATH $GEOMICS_ROOT/share/man
-append-path PYTHONPATH $GEOMICS_ROOT/lib/python3.5/site-packages
+append-path PATH $OMICS_ROOT/bin
+append-path MANPATH $OMICS_ROOT/share/man
+append-path PYTHONPATH $OMICS_ROOT/lib/python3.5/site-packages
 
-setenv PYTHONUSERBASE $GEOMICS_ROOT
+setenv PYTHONUSERBASE $OMICS_ROOT

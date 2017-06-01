@@ -12,7 +12,7 @@ Prerequisites
     #. Have a user account on flux, vondamm, or cayman
     #. Have access to long-term data storage
     #. Log into a terminal session on one of the servers
-    #. Have the :doc:`geomics <geomics>` module loaded
+    #. Have the :doc:`omics <omics>` module loaded
 
 
 Illumina Data
