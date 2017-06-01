@@ -1,6 +1,6 @@
 #%Module1.0
 #
-# to be installed as /geomicro/data9/flux/modulefiles/geomicro/omics/1
+# to be installed as /usr/share/Modules/modulefiles/omics/1 on vondamm, cayman
 #
 # this module's maintainer's email: heinro@umich.edu
 #
