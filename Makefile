@@ -120,7 +120,11 @@ inc-version-tag:
 	git tag -a "$(version)" -m "Release version $(version)"
 	$(info Version incremented to $(version))
 
-release: inc-version-tag dist
+# make a new release:
+# 1. increment the version and set as git tag
+# 2. build stuff as needed for a release, i.e. sphinx docs
+# 3. build the tarball
+release: inc-version-tag sphinx-docs dist
 
 # install sphinx-generated docs and file in doc_files
 # html files remain in their directory structure
