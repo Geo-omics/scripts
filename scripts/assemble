@@ -5,24 +5,30 @@
 #
 # Author: Robert <heinro@med.umich.edu>
 #
-set -e
+set -eE
 
 # shellcheck disable=SC2034
 {
 USAGE="[OPTIONS]... [SAMPLE_DIRS]..."
 HELP="Assemble a metagenome, and analyse assembly"
 ARG_HELP="
-      --assembly-only  Stop after finishing the assembly
-      --cpus N      How many CPUs/threads to use
-      --force       Overwrite existing files, default is to abort when output files exist already
-      --maxk N      IDBA min k parameter, default is 52
-      --mink N      IDBA max k parameter, default is 92
-      --out PATH    Directory to which output is saved, default is the working directory
-      --reads FILE  Interleaved reads file, by default this is 'dt_int.fasta'
-      --steps N     IDBA steps parameter, default is 8
+      --assembly-only     Stop after finishing the assembly
+      --contigs FILE      Skip assembly step and process the provided contigs / scaffolds.
+      --cpus N	          How many CPUs/threads to use
+      --force             Overwrite existing files, default is to abort when output files exist already
+      --maxk N            IDBA min k parameter, default is 52
+      --mink N            IDBA max k parameter, default is 92
+      --step N            IDBA steps parameter, default is 8
+      --level LEVEL       Specifies the assembly level to use for doenstream analysis.
+                          Can be either scaffold (the default) or contig.
+      --out PATH          Directory to which output is saved, default is the working directory
+      --reads FILE        Interleaved reads file, by default this is 'dt_int.fasta'
+      --skip-blast        Skip classification steps, by default run blast
+      --skip-quast        Skip QUAST analysis, by default QUAST is run
 "
-#CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
-LONG_OPTIONS=assembly-only,cpus:,force,maxk:,mink:,out:,reads:,step:
+CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
+# shellcheck disable=SC2100
+LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,mink:,out:,reads:,step:,skip-blast,skip-quast
 }
 
 handle_options () {
@@ -31,17 +37,23 @@ handle_options () {
 	(--assembly-only)
 	    ASSEMBLY_ONLY=true
 	    return 1;;
+	(--contigs)
+	    CONTIGS="$2"
+	    return 2;;
 	(--cpus)
 	    CPUS="$2"
 	    return 2;;
 	(--force)
-	    ASSEMBLY_ONLY=true
+	    FORCE=true
 	    return 1;;
 	(--maxk)
 	    MAXK="$2"
 	    return 2;;
 	(--mink)
 	    MINK="$2"
+	    return 2;;
+	(--level)
+	    ASSEMBLY_LEVEL="$2"
 	    return 2;;
 	(--out)
 	    OUTDIR="$2"
@@ -52,6 +64,12 @@ handle_options () {
 	(--step)
 	    STEP="$2"
 	    return 2;;
+	(--skip-blast)
+	    RUN_BLAST=false
+	    return 1;;
+	(--skip-quast)
+	    RUN_QUAST=false
+	    return 1;;
         esac
     fi
 }
@@ -60,14 +78,21 @@ handle_options () {
 # default variable values
 ##########################
 
+#
+ASSEMBLY_LEVEL=scaffold
 # Stop after finishing assembly when set to `true`
 ASSEMBLY_ONLY=false
+# Do assembly step by default
+CONTIGS=
 # Number of CPUs to use in parallel
 CPUS=4
 # Overwrite existing files if `true`
 FORCE=false
 # interleaved reads as made by qc script
 READS=dt_int.fasta
+#
+RUN_BLAST=true
+RUN_QUAST=true
 
 # common path to reference data / c.f. flux switch below
 REF_DATA_DIR=/geomicro/data9/flux/reference-data
@@ -86,7 +111,7 @@ else
 fi
 
 # Required Databases
-PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_123_SSURef_tax_silva.fasta"
+PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_128_SSURef_tax_silva.fasta"
 PATH2BACT="$ref_data_home/NCBI_RefSeq_RNA/latest/bacteria.rna.fasta"
 PATH2ARCH="$ref_data_home/NCBI_RefSeq_RNA/latest/archaea.rna.fasta"
 # default IDBA Parameters
@@ -103,7 +128,7 @@ fi
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 # default output path is the working directory, which is only defined after sourcing liba.sh
-[ ! -z "$OUTDIR" ] || OUTDIR=$WORK_DIR
+[ ! -z "$OUTDIR" ] || OUTDIR="ASSEMBLY"
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
@@ -114,69 +139,110 @@ fi
 # do stuff
 ################################
 spec=k${MINK}_${MAXK}_s${STEP}
-scaf=$spec/scaffold.fa
+out="$OUTDIR/$spec"
 
-# check if reads exists before doing anything
-for i in "${SAMPLE_DIRS[@]}"; do
-    [ -d "$i" ] || abort "is not a directory: $i"
-    [ -r "$i/$READS" ] || abort "interleaved reads file not found: $i/$READS"
-done
+run_assembly=true
+if [ -n "$CONTIGS" ]; then
+    if [ -f "$CONTIGS" ]; then
+	assembly=$CONTIGS
+	out=$(WORK_DIR)
+	run_assembly=false
+    else
+	abort "File not found: $CONTIGS"
+    fi
+else
+    # check if reads exists before doing anything
+    for i in "${SAMPLE_DIRS[@]}"; do
+        [ -d "$i" ] || abort "is not a directory: $i"
+        [ -r "$i/$READS" ] || abort "interleaved reads file not found: $i/$READS"
+    done
 
-if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
-    echo "Concatenating reads..."
-    reads=$READS.cat.fasta
-    if [ -e $reads ]; then
+    if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
+        echo "Concatenating reads..."
+        reads=$READS.cat.fasta
+        if [ -e $reads ]; then
 	$FORCE || abort "File $reads exists.  Use --force to overwrite."
 	$RM "$reads"
-    fi
-    for i in "${SAMPLE_DIRS[@]}"; do
+        fi
+        for i in "${SAMPLE_DIRS[@]}"; do
 	cat "$i/$READS" >> $reads
 	echo "  $i/$READS"
-    done
-else
-    # descend into sample directory, output goes here
-    cd "${SAMPLE_DIRS[0]}"
-    reads=$READS
+        done
+    else
+        # descend into single sample directory, output goes here, too
+        cd "${SAMPLE_DIRS[0]}"
+        reads=$READS
+    fi
+
+
+    if [ -d "$out" ]; then
+	if [ -f "$out/scaffold.fa" ] && [ -f "$out/contig.fa" ]; then
+	    if $FORCE; then
+		info "Erasing $out per --force option..."
+		$RM -rf -- "$out"
+	    else
+		# keep existing assembly
+		info "Using existing assembly at $out, use --force to overwrite with a new assembly."
+		run_assembly=false
+	    fi
+	else
+	    # partial output from previous run?
+	    if $FORCE; then
+		warning "$out exists and may be overwritten per --force option"
+	    else
+		abort "Output directory $out exists, use --force to override this check or --out to specify a different output directory."
+	    fi
+	fi
+    fi
+
+    assembly=$out/$ASSEMBLY_LEVEL.fa
 fi
 
-if [ -d "$OUTDIR" ]; then
-    $FORCE || abort "Output directory $OUTDIR exists,  Use --force to overwrite or --out to specify a different location"
-    $RM -rf "$OUTDIR"
+if $run_assembly; then
+    $MKDIR -p "$out"
+
+    info "Assembling..."
+    echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+    idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
 fi
-
-$MKDIR -p "$OUTDIR"
-cd "$OUTDIR"
-
-info "Assembling..."
-idba_ud -o $spec -r "$reads" --num_threads "$CPUS" --mink $MINK --maxk $MAXK --step $STEP 2>&1 | tee $spec.log
 
 ! $ASSEMBLY_ONLY || exit 0
 
-info "Making assembly stats..."
-$QUAST -f --meta -T "$CPUS" -l "Scaffolds, Contigs" $scaf $spec/contig.fa --output-dir quast_results
+if $RUN_QUAST; then
+    info "Making assembly stats..."
+    if $run_assembly; then
+        quast_opts=(-l "Scaffolds, Contigs" "$out/scaffold.fa" "$out/contig.fa")
+    else
+        quast_opts=(-l "Assembly" "$assembly")
+    fi
+    $QUAST -f --meta -T "$CPUS" "${quast_opts[@]}" --output-dir "$out/quast_results"
+fi
 
-info "Searching for scaffolds with 16S..."
-$MKDIR -p "BLASTN"
-T1BLAST=BLASTN/sample_vs_silvaSSU.topHits.blastn
-BBLAST=BLASTN/sample_subSeq_vs_bactNCBI.blastn
-ABLAST=BLASTN/sample_subSeq_vs_archaeaNCBI.blastn
-SSEQ=BLASTN/silvaSSU.topHits.fasta
-mkdir -p BLASTN
-blastn -query $scaf -db $PATH2SILVA -outfmt "7 std qlen stitle" -out BLASTN/sample_vs_silva.blastn -num_threads "$CPUS"
-top5 -t 1 -b BLASTN/sample_vs_silva.blastn -o $T1BLAST
-if [ ! -s BLASTN/sample_vs_silvaSSU.blastn ]; then
-    info "Looking up top hits from 16S search for complete genomes in NCBI..."
-    extractSubSeq -query -blast $T1BLAST -f $scaf -o $SSEQ
-    blastn -query $SSEQ -db $PATH2BACT -outfmt "7 std qlen qcovs stitle" -out $BBLAST -num_threads "$CPUS"
-    blastn -query $SSEQ -db $PATH2ARCH -outfmt "7 std qlen qcovs stitle" -out $ABLAST -num_threads "$CPUS"
-    top5 -t 1 -b $BBLAST -o ${BBLAST/%blastn/top_hits.blastn}
-    top5 -t 1 -b $ABLAST -o ${ABLAST/%blastn/top_hits.blastn}
+if $RUN_BLAST; then
+    info "Searching for scaffolds with 16S..."
+    blast_out="$out/BLASTN"
+    $MKDIR -p "$blast_out"
+    T1BLAST=$blast_out/sample_vs_silvaSSU.topHits.blastn
+    BBLAST=$blast_out/sample_subSeq_vs_bactNCBI.blastn
+    ABLAST=$blast_out/sample_subSeq_vs_archaeaNCBI.blastn
+    SSEQ=$blast_out/silvaSSU.topHits.fasta
+
+    blastn -query "$assembly" -db "$PATH2SILVA" -outfmt "7 std qlen stitle" -out "$blast_out/sample_vs_silva.blastn" -num_threads "$CPUS"
+    top5 -t 1 -b "$blast_out/sample_vs_silva.blastn" -o "$T1BLAST"
+    if [ ! -s "$blast_out/sample_vs_silvaSSU.blastn" ]; then
+        info "Looking up top hits from 16S search for complete genomes in NCBI..."
+        extractSubSeq -query -blast "$T1BLAST" -f "$assembly" -o "$SSEQ"
+        blastn -query "$SSEQ" -db $PATH2BACT -outfmt "7 std qlen qcovs stitle" -out "$BBLAST" -num_threads "$CPUS"
+        blastn -query "$SSEQ" -db $PATH2ARCH -outfmt "7 std qlen qcovs stitle" -out "$ABLAST" -num_threads "$CPUS"
+        top5 -t 1 -b "$BBLAST" -o "${BBLAST/%blastn/top_hits.blastn}"
+        top5 -t 1 -b "$ABLAST" -o "${ABLAST/%blastn/top_hits.blastn}"
+    fi
 fi
 
 $MKDIR -p "PhyloSift"
 # do phylosift?
 
-$LN "$scaf" scaffold.fa
+$LN -f "$assembly" $ASSEMBLY_LEVEL.fa
 
 info "[assembly done]"
 # gmb: input: dt_int.fasta
