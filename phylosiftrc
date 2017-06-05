@@ -1,0 +1,15 @@
+# PhyloSift run control file
+#
+# see also:
+# https://phylosift.wordpress.com/tutorials/running-phylosift/phylosift-run-control-file/
+#
+
+
+my $ref_data_path = "/geomicro/data9/flux/reference-data/phylosift";
+if (! -d $ref_data_path) {
+    $ref_data_path = "/dept/geology$ref_data_path";
+}
+
+$marker_path = "$ref_data_path";
+$ncbi_path = "$ref_data_path";
+

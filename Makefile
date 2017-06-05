@@ -40,7 +40,10 @@ EXTRA_DIST = \
 	docs \
 	Makefile \
 	modulefiles \
-	README.md
+	README.md \
+
+data_files = \
+	phylosiftrc \
 
 doc_files = COPYRIGHT README.md
 
@@ -99,8 +102,8 @@ distdir:
 	cd scripts && $(MAKE) $@
 	$(info Making VERSION file with content: $(version))
 	echo "$(version)" > $(dist_dir)/VERSION
-	$(info Copying extra files ...)
-	cp -a $(EXTRA_DIST) $(dist_dir)
+	$(info Copying files ...)
+	cp -a $(EXTRA_DIST) $(data_files) $(dist_dir)
 
 dist: distdir
 	$(info Creating $(dist_dir).tar.gz)
@@ -126,6 +129,12 @@ inc-version-tag:
 # 3. build the tarball
 release: inc-version-tag sphinx-docs dist
 
+install-data: installdir = $(DESTDIR)$(datadir)/$(package_name)
+install-data:
+	$(info Installing data files ...)
+	mkdir -p -- "$(installdir)"
+	$(INSTALL_DATA) -t $(installdir) $(data_files)
+
 # install sphinx-generated docs and file in doc_files
 # html files remain in their directory structure
 # all others go flat into their directory $(dest) or man dir
@@ -150,7 +159,7 @@ install-docs:
 	$(INSTALL_DATA) $(doc_files) $(dest)
 	$(INSTALL_DATA) $(pdfs) $(dest)
 
-install: install-docs
+install: install-docs install-data
 	cd lib && $(MAKE) install
 	cd scripts && $(MAKE) install
 
