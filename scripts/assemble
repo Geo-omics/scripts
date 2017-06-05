@@ -22,13 +22,15 @@ ARG_HELP="
       --level LEVEL       Specifies the assembly level to use for doenstream analysis.
                           Can be either scaffold (the default) or contig.
       --out PATH          Directory to which output is saved, default is the working directory
+      --phylosiftrc FILE  Specify a custom PhyloSift configuration file
       --reads FILE        Interleaved reads file, by default this is 'dt_int.fasta'
       --skip-blast        Skip classification steps, by default run blast
+      --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
       --skip-quast        Skip QUAST analysis, by default QUAST is run
 "
 CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,mink:,out:,reads:,step:,skip-blast,skip-quast
+LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,mink:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
 
 handle_options () {
@@ -58,6 +60,9 @@ handle_options () {
 	(--out)
 	    OUTDIR="$2"
 	    return 2;;
+	(--phylosiftrc)
+	    PHYLOSIFTRC="$2"
+	    return 2;;
 	(--reads)
 	    READS="$2"
 	    return 2;;
@@ -66,6 +71,9 @@ handle_options () {
 	    return 2;;
 	(--skip-blast)
 	    RUN_BLAST=false
+	    return 1;;
+	(--skip-phylosift)
+	    RUN_PHYLOSIFT=false
 	    return 1;;
 	(--skip-quast)
 	    RUN_QUAST=false
@@ -88,10 +96,13 @@ CONTIGS=
 CPUS=4
 # Overwrite existing files if `true`
 FORCE=false
+# PhyloSift run control file
+PHYLOSIFTRC="$(dirname "$0")/../share/geo-omics-scripts/phylosiftrc"
 # interleaved reads as made by qc script
 READS=dt_int.fasta
 #
 RUN_BLAST=true
+RUN_PHYLOSIFT=true
 RUN_QUAST=true
 
 # common path to reference data / c.f. flux switch below
@@ -239,8 +250,16 @@ if $RUN_BLAST; then
     fi
 fi
 
-$MKDIR -p "PhyloSift"
-# do phylosift?
+if $RUN_PHYLOSIFT; then
+    [ -f "$PHYLOSIFTRC" ] || abort "Missing Phylosift configuration file, file not found: $PHYLOSIFTRC -- use --phylosiftrc to specify an alternative configuration that tells Phylosift where to find its reference data"
+    psout="$out/PS"
+    if [ -d "$psout" ]; then
+	info "Erasing previous PhyloSift results..."
+	$RM -r -- "$psout"
+    fi
+    info "Running PyloSift..."
+    phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
+fi
 
 $LN -f "$assembly" $ASSEMBLY_LEVEL.fa
 
