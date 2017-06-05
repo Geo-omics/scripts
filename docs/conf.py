@@ -339,6 +339,8 @@ man_pages = [
      [author], 1),
     ('qc', 'qc', 'run quality control steps on metagenomic Illumina reads',
      [author], 1),
+    ('assemble', 'assemble', 'assemble metagenomic Illumina reads, check quality and classify contigs',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.

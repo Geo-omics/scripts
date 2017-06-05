@@ -1,0 +1,73 @@
+.. program:: assemble
+
+============================================
+assemble - assemble metagenomes with IDBA_UD
+============================================
+
+Synopsis
+========
+
+:program:`assemble` [OPTIONS]... [SAMPLE_DIR]...
+
+
+Description
+===========
+
+This script implements the assembly step of the Geomicro Illumina Reads
+processing Pipeline.  It uses :command:`idba_ud` for the assembly and
+parameters for k-mer range and step size can be passed along.  The script will
+check the quality of the assembly with QUAST and attempt to classify contigs.
+
+
+Options
+=======
+
+.. option:: --mink=N
+
+    idba_ud parameter for minimum k-mer size
+
+.. option:: --maxk=N
+
+    idba_ud parameter for maximum k-mer size
+
+.. option:: --step=N
+
+    idba_ud parameter for step size for increasing k-mer values
+
+.. option:: --clean-only
+
+    Remove all files made by a previously run of :program:`qc` and exit.
+
+.. option::  --working-dir=DIR
+
+    Directory under which output is stored. By default this is the current
+    directory.
+
+.. option:: -h, --help
+
+    Print help.
+
+.. option:: --no-color
+
+    Disable colorful output.
+
+.. option:: -v, --verbosity=N
+
+    Use one or multiple ``-v`` to increase verbosity of output or set a
+    level of verbosity with ``--verbosity=N``.  By default the verbosity
+    level is 1.  Setting verbosity to 0 silences the program.  A level of
+    3 prints debugging info.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`prep(1)`, :manpage:`qc(1)`, :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`
+
