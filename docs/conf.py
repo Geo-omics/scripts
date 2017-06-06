@@ -341,6 +341,8 @@ man_pages = [
      [author], 1),
     ('assemble', 'assemble', 'assemble metagenomic Illumina reads, check quality and classify contigs',
      [author], 1),
+    ('mapping', 'mapping', 'map reads to assembly',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.

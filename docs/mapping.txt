@@ -1,0 +1,74 @@
+.. program:: mapping
+
+============================================
+mapping - mapping reads to assembly
+============================================
+
+Synopsis
+========
+
+:program:`mapping` [OPTIONS]...
+
+
+Description
+===========
+
+This script implements the mapping step of the Geomicro Illumina Reads Processing
+Pipline.
+
+
+Options
+=======
+
+.. option:: -a, --assembly FILE
+
+    Specify assembly i.e. a fasta file of contigs or scaffolds, by default
+    this is :file:`assembly.fa`
+
+.. option:: -f, --fwd-reads FILE
+
+    Fastq file with either forward reads or single-end reads, by default this
+    is :file:`fwd.fastq`
+
+.. option:: -r, --rev-reads FILE
+
+    Fastq file with reverse reads, by default this is :file:`rev.fastq`
+
+.. option:: --cpus N
+
+    Specify how many CPUs to use for parallel execution
+
+.. option::  --working-dir=DIR
+
+    Directory under which output is stored. By default this is the current
+    directory.
+
+.. option:: -h, --help
+
+    Print help.
+
+.. option:: --no-color
+
+    Disable colorful output.
+
+.. option:: -v, --verbosity=N
+
+    Use one or multiple ``-v`` to increase verbosity of output or set a
+    level of verbosity with ``--verbosity=N``.  By default the verbosity
+    level is 1.  Setting verbosity to 0 silences the program.  A level of
+    3 prints debugging info.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`prep(1)`, :manpage:`qc(1)`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`, :manpage:`assemble(1)`
+
