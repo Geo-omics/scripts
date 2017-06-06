@@ -266,7 +266,7 @@ if $RUN_PHYLOSIFT; then
     info "done: PhyloSift results at $psout"
 fi
 
-$LN -f "$assembly" $ASSEMBLY_LEVEL.fa
+$LN -f "$assembly" assembly.fa
 
 debug "[assemble script done]"
 # gmb: input: dt_int.fasta
