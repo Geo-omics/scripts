@@ -215,6 +215,7 @@ if $run_assembly; then
     info "Assembling..."
     echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
     idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+    info "done: Assembly at $assembly"
 fi
 
 ! $ASSEMBLY_ONLY || exit 0
@@ -226,7 +227,9 @@ if $RUN_QUAST; then
     else
         quast_opts=(-l "Assembly" "$assembly")
     fi
-    $QUAST -f --meta -T "$CPUS" "${quast_opts[@]}" --output-dir "$out/quast_results"
+    quast_out="$out/QUAST_RESULTS"
+    $QUAST -f --meta -T "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
+    info "done: Quast results at $quast_out"
 fi
 
 if $RUN_BLAST; then
@@ -248,6 +251,7 @@ if $RUN_BLAST; then
         top5 -t 1 -b "$BBLAST" -o "${BBLAST/%blastn/top_hits.blastn}"
         top5 -t 1 -b "$ABLAST" -o "${ABLAST/%blastn/top_hits.blastn}"
     fi
+    info "done: classification results at $blast_out"
 fi
 
 if $RUN_PHYLOSIFT; then
@@ -259,11 +263,12 @@ if $RUN_PHYLOSIFT; then
     fi
     info "Running PyloSift..."
     phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
+    info "done: PhyloSift results at $psout"
 fi
 
 $LN -f "$assembly" $ASSEMBLY_LEVEL.fa
 
-info "[assembly done]"
+debug "[assemble script done]"
 # gmb: input: dt_int.fasta
 # gmb: output: scaffold.fa
 # gmb: args: --cpus {{ cpus }} --no-color
