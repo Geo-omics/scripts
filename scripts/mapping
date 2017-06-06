@@ -6,16 +6,20 @@
 # Author: Robert <heinro@med.umich.edu>
 #
 
-USAGE="[--cpus <n>] [--assembly <file>] [--fwd-read <file> [--rev-reads <file>]]"
+# shellcheck disable=SC2034
+{
+USAGE="[--cpus N] [--assembly FILE] [--fwd-read FILE [--rev-reads FILE]]"
 HELP="mapping script"
 ARG_HELP="
-    --assembly <file>  Fasta file assembly i.e. contigs or scaffolds
-    --fwd-reads <file> Fastq file with forward reads or single-end reads
-    --rev-reads <file> Fastq file with reverse reads
-    --cpus <n>
+  -a, --assembly FILE  Fasta file assembly i.e. contigs or scaffolds
+  -f, --fwd-reads FILE Fastq file with forward reads or single-end reads
+  -r, --rev-reads FILE Fastq file with reverse reads
+      --cpus N         Number of CPUs to use for parallel processing
 "
+SHORT_OPTIONS=afr
 LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,assembly:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
+}
 
 ##########################
 # default variable values
@@ -36,10 +40,10 @@ handle_options () {
 	    (--cpus)
 	        CPUS="$2"
 	        return 2;;
-	    (--fwd-reads)
+	    (-f|--fwd-reads)
 	        FWD_READS="$2"
 	        return 2;;
-	    (--rev-reads)
+	    (-r|--rev-reads)
 	        REV_READS="$2"
 	        return 2;;
 	    (-a|--assembly)
@@ -64,7 +68,7 @@ fi
 #########################
 [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
 [ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
-[ -e "$FWD_READS" ] || abort "File does not exist: $FWD_READS"
+[ -e "$FWD_READS" ] || abort "Reads file does not exist: $FWD_READS"
 
 
 #################################
