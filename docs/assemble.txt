@@ -16,11 +16,30 @@ Description
 This script implements the assembly step of the Geomicro Illumina Reads
 processing Pipeline.  It uses :command:`idba_ud` for the assembly and
 parameters for k-mer range and step size can be passed along.  The script will
-check the quality of the assembly with QUAST and attempt to classify contigs.
+check the quality of the assembly with QUAST, attempt to classify contigs, and
+run PhyloSift on the assembly.
 
 
 Options
 =======
+
+.. option:: --assembly-only
+
+    Stop after finishing the assembly
+
+.. option:: --contigs FILE
+
+    Skip the assembly step and but continue downstream analysis steps with the
+    provided assembly (can be contigs or scaffold stage)
+
+.. option:: --cpus N
+
+    Specify how many CPUs to use for parallel execution
+
+.. option:: --force
+
+    Overwrite existing results, by default will exit with an error message when
+    the output file exist.
 
 .. option:: --mink=N
 
@@ -34,9 +53,34 @@ Options
 
     idba_ud parameter for step size for increasing k-mer values
 
-.. option:: --clean-only
+.. option:: --level LEVEL
 
-    Remove all files made by a previously run of :program:`qc` and exit.
+    Specifies the assembly level to use for doenstream analysis.  Can be either
+    scaffold (the default) or contig.
+
+.. option:: --out PATH
+
+    The directory to which output is saved.  The default value is :file:`ASSEMBLY`
+
+.. option:: --phylosiftrc FILE
+
+    Allows to specify a custom PhyloSift configuration file.
+
+.. option:: --reads FILE
+
+    Interleaved reads file, by default this is :file:`dt_int.fasta` which is the output of :program:`qc`
+
+.. option:: --skip-blast
+
+    Skip classification steps, by default run blast
+
+.. option:: --skip-phylosift
+
+    Skip PhyloSift run, by default PhyloSift is run
+
+.. option:: --skip-quast
+
+    Skip QUAST analysis, by default QUAST is run
 
 .. option::  --working-dir=DIR
 
