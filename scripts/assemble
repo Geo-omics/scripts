@@ -257,7 +257,11 @@ if $RUN_BLAST; then
 fi
 
 if $RUN_PHYLOSIFT; then
-    [ -f "$PHYLOSIFTRC" ] || abort "Missing Phylosift configuration file, file not found: $PHYLOSIFTRC -- use --phylosiftrc to specify an alternative configuration that tells Phylosift where to find its reference data"
+    if [ -f "$PHYLOSIFTRC" ]; then
+	info "Will use $PHYLOSIFTRC as config file for PhyloSift"
+    else
+	abort "Missing Phylosift configuration file, file not found: $PHYLOSIFTRC -- use --phylosiftrc to specify an alternative configuration that tells Phylosift where to find its reference data"
+    fi
     psout="$out/PS"
     if [ -d "$psout" ]; then
 	info "Erasing previous PhyloSift results..."
