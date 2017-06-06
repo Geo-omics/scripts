@@ -6,15 +6,15 @@
 # Author: Robert <heinro@med.umich.edu>
 #
 
-USAGE="[--cpus <n>] [--scaffolds <file>] [--fwd-read <file> [--rev-reads <file>]]"
+USAGE="[--cpus <n>] [--assembly <file>] [--fwd-read <file> [--rev-reads <file>]]"
 HELP="mapping script"
 ARG_HELP="
-    --scaffolds <file> Fasta file with scaffold
+    --assembly <file>  Fasta file assembly i.e. contigs or scaffolds
     --fwd-reads <file> Fastq file with forward reads or single-end reads
     --rev-reads <file> Fastq file with reverse reads
     --cpus <n>
 "
-LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,scaffolds:
+LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,assembly:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 
 ##########################
@@ -27,7 +27,7 @@ FWD_READS=fwd.fastq
 
 REV_READS=rev.fastq
 
-SCAF=scaffold.fa
+ASSEMBLY=assembly.fa
 
 
 handle_options () {
@@ -42,8 +42,8 @@ handle_options () {
 	    (--rev-reads)
 	        REV_READS="$2"
 	        return 2;;
-	    (--sacffolds)
-	        SCAF="$2"
+	    (-a|--assembly)
+	        ASSEMBLY="$2"
 	        return 2;;
         esac
     fi
@@ -63,7 +63,7 @@ fi
 # some input sanitation
 #########################
 [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
-[ -e "$SCAF" ] || abort "File does not exist: $SCAF"
+[ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
 [ -e "$FWD_READS" ] || abort "File does not exist: $FWD_READS"
 
 
@@ -71,7 +71,7 @@ fi
 # do stuff
 ################################
 
-name=$(basename "${SCAF%.*}")  # the filename without suffix
+name=$(basename "${ASSEMBLY%.*}")  # the filename without suffix
 
 alnSam=${name}_aligned.sam
 alnSamLog=${name}.aln.log
@@ -86,16 +86,16 @@ scafCov=${name}.cov
 #########      PIPELINE       #########
 #######################################
 info "Indexing Database..."
-bwa index "$SCAF"
+bwa index "$ASSEMBLY"
 
 info "Aligning FWD and REV reads using 'bwa mem'..."
 info "[NOTE] Using Read Group ${readGroup}"
 if [ -e "$REV_READS" ]; then
 	info "[NOTE] Read Pairs detected.  Starting paired-end mapping..."
-	bwa mem -M -R "$readGroup" -t "$CPUS" "$SCAF" "$FWD_READS" "$REV_READS" 1> "$alnSam" 2> "$alnSamLog";
+	bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$FWD_READS" "$REV_READS" 1> "$alnSam" 2> "$alnSamLog";
 else
 	info "[NOTE] Single-end Reads detected.  Starting single-end mapping..."
-	bwa mem -M -R "$readGroup" -t "$CPUS" "$SCAF" "$FWD_READS" 1> "$alnSam" 2> "$alnSamLog";
+	bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$FWD_READS" 1> "$alnSam" 2> "$alnSamLog";
 fi
 
 info "Fixing alignment artifacts and converting SAM to BAM..."
@@ -112,7 +112,7 @@ samtools index "$sortBam"
 
 info "Calculating Coverage..."
 echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
-genomeCoverageBed -ibam "$sortBam" -g "$SCAF" | grep -v "^__" >> "$bedOut"
+genomeCoverageBed -ibam "$sortBam" -g "$ASSEMBLY" | grep -v "^__" >> "$bedOut"
 
 info "Calculating Coverage Per Scaffold..."
 coveragePerScaffold -bed "$bedOut" > "$scafCov"
