@@ -50,6 +50,14 @@ Options
     This option will reduce the dominating memory requirements for the
     de-replication step by half, typically, and double the computation time.
 
+.. option:: --no-dereplicate
+
+    Option to skip the de-replication step
+
+.. option:: --no-interleave
+
+    Option to skip building the interleaved reads file
+
 .. option::  --working-dir=DIR
 
     Directory under which output is stored. By default this is the current
