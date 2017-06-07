@@ -21,6 +21,7 @@ ARG_HELP="
       --less-mem        Use less memory during de-replication at the expense of
                         computing time
       --no-dereplicate  Skip the de-replication step
+      --no-interleave   Skip building the interleaved reads file
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -31,7 +32,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,less-mem,no-dereplicate
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,less-mem,no-dereplicate,no-interleave
 }
 
 handle_options () {
@@ -54,6 +55,9 @@ handle_options () {
 	        return 1;;
 	    (--no-dereplicate)
 	        DEREPLICATION=false
+	        return 1;;
+	    (--no-interleave)
+	        INTERLEAVE=false
 	        return 1;;
         esac
     else
@@ -79,6 +83,7 @@ CLEAN_ONLY=false
 LESSMEM=false
 #
 DEREPLICATION=true
+INTERLEAVE=true
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -151,8 +156,10 @@ wait %sickle
 info "post-QC fastqc run..."
 wait %fastqc
 fastqc -o FASTQC -f fastq -t 2 ${base}{"$fwd","$rev"}.fastq &>> FASTQC/fastqc.log &
-info "interleaving..."
-interleave -fastq -outfmt fasta -fwd "$base$fwd.fastq" -rev "$base$rev.fastq" -o dt
+if $INTERLEAVE; then
+    info "interleaving..."
+    interleave -fastq -outfmt fasta -fwd "$base$fwd.fastq" -rev "$base$rev.fastq" -o dt
+fi
 wait %fastqc
 info "Done!"
 
