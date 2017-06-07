@@ -20,6 +20,7 @@ ARG_HELP="
 			the Trimmomatic project will be used.
       --less-mem        Use less memory during de-replication at the expense of
                         computing time
+      --no-dereplicate  Skip the de-replication step
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -30,7 +31,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,less-mem
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,less-mem,no-dereplicate
 }
 
 handle_options () {
@@ -50,6 +51,9 @@ handle_options () {
 	        return 1;;
 	    (--less-mem)
 	        LESSMEM=true
+	        return 1;;
+	    (--no-dereplicate)
+	        DEREPLICATION=false
 	        return 1;;
         esac
     else
@@ -73,6 +77,8 @@ REV_FASTQ=rev.fastq
 CLEAN_ONLY=false
 # parallelize dereplicate calls
 LESSMEM=false
+#
+DEREPLICATION=true
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -101,38 +107,52 @@ rev=$(basename "$REV_FASTQ" .fastq)
 
 # clean up
 $RM -rf FASTQC
-$RM -f derep*
+$RM -f derep_*.fastq
+$RM -f scythe_*.fastq
+$RM -f {"$fwd","$rev"}.matches.fastq
 $RM -f dt_{int,"$fwd","$rev"}.fasta
 $RM -f {"$fwd","$rev"}.clust{.list,}
 $RM -f dt_s{fwd,rev}.fasta  # what are these?
 ! $CLEAN_ONLY || exit 0
 
-$MKDIR FASTQC
+$MKDIR -p FASTQC
 info "pre-QC fastqc running..."
 fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
-info "dereplicating..."
-# With LESSMEM the calls to dereplicate are sequential.  To do that bash
-# monitor mode is enabled, so that fg works and puts the first job to the
-# foreground before starting the second job.  
-! $LESSMEM || set -m
-dereplicate -fq "$FWD_FASTQ" -o "derep_$fwd.fastq" &
-! $LESSMEM || fg 2>/dev/null || true  # no parallel execution to preserve memory
-! $LESSMEM || set +m
-dereplicate -fq "$REV_FASTQ" -o "derep_$rev.fastq"
-$LESSMEM || wait %dereplicate
+
+# basename for files
+base=""
+
+if $DEREPLICATION; then
+    info "dereplicating..."
+    base="derep_${base}"
+    # With LESSMEM the calls to dereplicate are sequential.  To do that bash
+    # monitor mode is enabled, so that fg works and puts the first job to the
+    # foreground before starting the second job.
+    ! $LESSMEM || set -m
+    dereplicate -fq "$FWD_FASTQ" -o "$base$fwd.fastq" &
+    ! $LESSMEM || fg 2>/dev/null || true  # no parallel execution to preserve memory
+    ! $LESSMEM || set +m
+    dereplicate -fq "$REV_FASTQ" -o "$base$rev.fastq"
+    $LESSMEM || wait %dereplicate
+fi
+
 info "adapter trimming..."
-scythe -a "$ADAPTERS" -q sanger -m "derep_$fwd.matches.fastq" -o "derep_scythe_$fwd.fastq" "derep_$fwd.fastq" &
-scythe -a "$ADAPTERS" -q sanger -m "derep_$rev.matches.fastq" -o "derep_scythe_$rev.fastq" "derep_$rev.fastq"
+oldbase=$base
+base="${base}scythe_"
+scythe -a "$ADAPTERS" -q sanger -m "$oldbase$fwd.matches.fastq" -o "$base$fwd.fastq" "$oldbase$fwd.fastq" &
+scythe -a "$ADAPTERS" -q sanger -m "$oldbase$rev.matches.fastq" -o "$base$rev.fastq" "$oldbase$rev.fastq"
 wait %scythe
 info "quality score trimming..."
-sickle se -t sanger -f "derep_scythe_$fwd.fastq" -o "derep_scythe_sickle_$fwd.fastq" &
-sickle se -t sanger -f "derep_scythe_$rev.fastq" -o "derep_scythe_sickle_$rev.fastq"
+oldbase=$base
+base="${base}sickle_"
+sickle se -t sanger -f "$oldbase$fwd.fastq" -o "$base$fwd.fastq" &
+sickle se -t sanger -f "$oldbase$rev.fastq" -o "$base$rev.fastq"
 wait %sickle
 info "post-QC fastqc run..."
 wait %fastqc
-fastqc -o FASTQC -f fastq -t 2 derep_scythe_sickle_{"$fwd","$rev"}.fastq &>> FASTQC/fastqc.log &
+fastqc -o FASTQC -f fastq -t 2 ${base}{"$fwd","$rev"}.fastq &>> FASTQC/fastqc.log &
 info "interleaving..."
-interleave -fastq -outfmt fasta -fwd "derep_scythe_sickle_$fwd.fastq" -rev "derep_scythe_sickle_$rev.fastq" -o dt
+interleave -fastq -outfmt fasta -fwd "$base$fwd.fastq" -rev "$base$rev.fastq" -o dt
 wait %fastqc
 info "Done!"
 
