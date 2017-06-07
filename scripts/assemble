@@ -207,7 +207,6 @@ else
     fi
 
     assembly=$out/$ASSEMBLY_LEVEL.fa
-    $LN -f "$assembly" assembly.fa
 
 fi
 
@@ -217,6 +216,8 @@ if $run_assembly; then
     info "Assembling..."
     echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
     idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+    # make convenience link
+    $LN -f "$assembly" assembly.fa
     info "done: Assembly at $assembly"
 fi
 
