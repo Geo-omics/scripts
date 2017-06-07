@@ -131,8 +131,6 @@ OTHER_EXECUTABLES = \
     oasesPaired_pipe \
     prep \
     qc \
-    qc_no_derep \
-    qc_no_derep_no_interleave \
     refseq-rna \
     remove_space_from_filenames \
     setup_metapathways \
