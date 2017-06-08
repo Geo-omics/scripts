@@ -110,15 +110,27 @@ fwd=$(basename "$FWD_FASTQ" .fastq)
 rev=$(basename "$REV_FASTQ" .fastq)
 [ "$fwd" != "$rev" ] || abort "Forward and reverse reads filenames are equal?"
 
-# clean up
-$RM -rf FASTQC
-$RM -f derep_*.fastq
-$RM -f scythe_*.fastq
-$RM -f {"$fwd","$rev"}.matches.fastq
-$RM -f dt_{int,"$fwd","$rev"}.fasta
-$RM -f {"$fwd","$rev"}.clust{.list,}
-$RM -f dt_s{fwd,rev}.fasta  # what are these?
-! $CLEAN_ONLY || exit 0
+clean_all () {
+    clean_intermediates
+    # clean final results
+    $RM -rf -- FASTQC
+    $RM -f -- {"$fwd","$rev"}{_derep,}_scythe_sickle.fastq
+    $RM -f -- dt_int.fast{a,q}
+}
+
+clean_intermediates () {
+    # clean up intermediate results
+    $RM -f -- {"$fwd","$rev"}_derep.fastq
+    $RM -f -- {"$fwd","$rev"}{_derep,}_scythe.fastq
+    $RM -f -- {"$fwd","$rev"}{_derep,}_matches.fastq
+    $RM -f -- {"$fwd","$rev"}.clust{.list,}
+    $RM -f -- dt_s{fwd,rev}.fast{a,q}
+    
+}
+
+
+clean_all
+! $CLEAN_ONLY || exit
 
 $MKDIR -p FASTQC
 info "pre-QC fastqc running..."
@@ -129,36 +141,43 @@ base=""
 
 if $DEREPLICATION; then
     info "dereplicating..."
-    base="derep_${base}"
+    base="_derep"
     # With LESSMEM the calls to dereplicate are sequential.  To do that bash
     # monitor mode is enabled, so that fg works and puts the first job to the
     # foreground before starting the second job.
     ! $LESSMEM || set -m
-    dereplicate -fq "$FWD_FASTQ" -o "$base$fwd.fastq" &
+    dereplicate -fq "$FWD_FASTQ" -o "$fwd$base.fastq" &
     ! $LESSMEM || fg 2>/dev/null || true  # no parallel execution to preserve memory
     ! $LESSMEM || set +m
-    dereplicate -fq "$REV_FASTQ" -o "$base$rev.fastq"
+    dereplicate -fq "$REV_FASTQ" -o "$rev$base.fastq"
     $LESSMEM || wait %dereplicate
+
+    cur_fwd=$fwd$base.fastq
+    cur_rev=$rev$base.fastq
+else
+    base=""
+    cur_fwd=$FWD_FASTQ
+    cur_rev=$REV_FASTQ
 fi
 
 info "adapter trimming..."
 oldbase=$base
-base="${base}scythe_"
-scythe -a "$ADAPTERS" -q sanger -m "$oldbase$fwd.matches.fastq" -o "$base$fwd.fastq" "$oldbase$fwd.fastq" &
-scythe -a "$ADAPTERS" -q sanger -m "$oldbase$rev.matches.fastq" -o "$base$rev.fastq" "$oldbase$rev.fastq"
+base="${base}_scythe"
+scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}_matches.fastq" -o "$fwd$base.fastq" "$cur_fwd" &
+scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}_matches.fastq" -o "$rev$base.fastq" "$cur_rev"
 wait %scythe
 info "quality score trimming..."
 oldbase=$base
-base="${base}sickle_"
-sickle se -t sanger -f "$oldbase$fwd.fastq" -o "$base$fwd.fastq" &
-sickle se -t sanger -f "$oldbase$rev.fastq" -o "$base$rev.fastq"
+base="${base}_sickle"
+sickle se -t sanger -f "$fwd$oldbase.fastq" -o "$fwd$base.fastq" &
+sickle se -t sanger -f "$rev$oldbase.fastq" -o "$rev$base.fastq"
 wait %sickle
 info "post-QC fastqc run..."
 wait %fastqc
-fastqc -o FASTQC -f fastq -t 2 ${base}{"$fwd","$rev"}.fastq &>> FASTQC/fastqc.log &
+fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log &
 if $INTERLEAVE; then
     info "interleaving..."
-    interleave -fastq -outfmt fasta -fwd "$base$fwd.fastq" -rev "$base$rev.fastq" -o dt
+    interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
 fi
 wait %fastqc
 info "Done!"
