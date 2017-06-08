@@ -18,6 +18,8 @@ ARG_HELP="
   -a, --adapters=FILE   Specifies the adapters file to be used.  By default the
                         Illumina adapter file TruSeq3-PE-2.fa as distributed by
 			the Trimmomatic project will be used.
+      --keep-all	Keep all intermediate files, by default some not-so-important
+			intermediate results will be deleted to save disk space
       --less-mem        Use less memory during de-replication at the expense of
                         computing time
       --no-dereplicate  Skip the de-replication step
@@ -32,7 +34,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,less-mem,no-dereplicate,no-interleave
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-interleave
 }
 
 handle_options () {
@@ -49,6 +51,9 @@ handle_options () {
 		return 2;;
 	    (--clean-only)
 	        CLEAN_ONLY=true
+	        return 1;;
+	    (--keep-all)
+	        KEEPALL=true
 	        return 1;;
 	    (--less-mem)
 	        LESSMEM=true
@@ -79,6 +84,8 @@ FWD_FASTQ=fwd.fastq
 REV_FASTQ=rev.fastq
 #
 CLEAN_ONLY=false
+# Remove intermediate results by default
+KEEPALL=false
 # parallelize dereplicate calls
 LESSMEM=false
 #
@@ -180,6 +187,7 @@ if $INTERLEAVE; then
     interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
 fi
 wait %fastqc
+$KEEPALL || clean_intermediates
 info "Done!"
 
 
