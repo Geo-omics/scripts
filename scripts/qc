@@ -185,6 +185,8 @@ fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log 
 if $INTERLEAVE; then
     info "interleaving..."
     interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
+    interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt
+    wait %interleave
 fi
 wait %fastqc
 $KEEPALL || clean_intermediates
