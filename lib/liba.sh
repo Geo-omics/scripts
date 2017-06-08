@@ -149,8 +149,8 @@ if which getopt >/dev/null 2>&1; then
     getopt -T || getopt_test="$?"
     if [ "$getopt_test" == 4 ]; then
         # GNU getopt available 
-        _getopt=$(getopt -o "$GETOPT_SHORT" --long "$GETOPT_LONG" --name "$SCRIPT_NAME" -- "$@")
-        if [ "$?" != 0 ]; then usage; exit 1; fi
+        _getopt=$(getopt -o "$GETOPT_SHORT" --long "$GETOPT_LONG" --name "$SCRIPT_NAME" -- "$@") \
+	    || (usage; exit 1)
     else
 	# for non-GNU getopt (on MacOSX?)
 	# try best effort without handling long options
