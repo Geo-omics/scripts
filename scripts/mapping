@@ -16,7 +16,7 @@ ARG_HELP="
   -r, --rev-reads FILE Fastq file with reverse reads
       --cpus N         Number of CPUs to use for parallel processing
 "
-SHORT_OPTIONS=afr
+SHORT_OPTIONS=a:f:r:
 LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,assembly:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 }
