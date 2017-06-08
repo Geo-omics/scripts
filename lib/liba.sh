@@ -97,7 +97,7 @@ $MORE_HELP"
 }
 
 exception () {
-    echo "[${RED}ERROR${ENDCOLOR}] at line $1; error code $2"
+    echo "[${RED}ERROR${ENDCOLOR}] $SCRIPT_NAME at line $1; error code $2"
 }
 
 debug() {
