@@ -5,50 +5,71 @@
 #
 # Author: Robert <heinro@med.umich.edu>
 #
+set -eE
 
 # shellcheck disable=SC2034
 {
-USAGE="[--cpus N] [--assembly FILE] [--fwd-read FILE [--rev-reads FILE]]"
+USAGE="[OPTIONS]..."
 HELP="mapping script"
 ARG_HELP="
-  -a, --assembly FILE  Fasta file assembly i.e. contigs or scaffolds
-  -f, --fwd-reads FILE Fastq file with forward reads or single-end reads
-  -r, --rev-reads FILE Fastq file with reverse reads
-      --cpus N         Number of CPUs to use for parallel processing
+  -a, --assembly FILE   Fasta file assembly i.e. contigs or scaffolds
+      --cpus N          Number of CPUs to use for parallel processing
+  -f, --fwd-reads FILE  Fastq file with forward reads
+  -r, --rev-reads FILE  Fastq file with reverse reads, in same order
+  -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
+                        can also be single-paired reads,
+			The default is dt_int.fastq
+  -o, --out-dir DIR     Name of output directory, default: MAPPING
 "
-SHORT_OPTIONS=a:f:r:
-LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,assembly:
+SHORT_OPTIONS=a:f:i:o:r:
+LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,assembly:,out-dir:,int-reads:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 }
 
 ##########################
 # default variable values
 ##########################
-
+#
 CPUS=4
-
-FWD_READS=fwd.fastq
-
-REV_READS=rev.fastq
-
+# no defaults needed
+FWD_READS=
+REV_READS=
+#
+INT_READS=dt_int.fastq
+#
 ASSEMBLY=assembly.fa
+#
+OUT_DIR=MAPPING
 
+# option parsing state variables
+opts_fwd=false
+opts_rev=false
+opts_int=false
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
+	    (-a|--assembly)
+	        ASSEMBLY="$2"
+	        return 2;;
 	    (--cpus)
 	        CPUS="$2"
 	        return 2;;
 	    (-f|--fwd-reads)
 	        FWD_READS="$2"
+		opts_fwd=true
 	        return 2;;
 	    (-r|--rev-reads)
 	        REV_READS="$2"
+		opts_rev=true
 	        return 2;;
-	    (-a|--assembly)
-	        ASSEMBLY="$2"
+	    (-i|--int-reads)
+	        INT_READS="$2"
+		opts_int=true
 	        return 2;;
+	    (-o|--out-dir)
+		OUT_DIR="$2"
+		return 2;;
         esac
     fi
 }
@@ -63,19 +84,59 @@ if [ "$#" -gt 0 ]; then
     abort "Unknown parameters: ${*}"
 fi
 
+# more options checking
+if $opts_int; then
+    ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
+    use_int_reads=true
+else
+    if $opts_fwd; then
+	$opts_rev || abort "Use --rev-reads to also specify reverse reads" usage
+	use_int_reads=false
+    elif $opts_rev; then
+	abort usage "Use --fwd-reads to also specify reverse reads"
+    else
+	use_int_reads=true
+    fi
+fi
+
 #########################
 # some input sanitation
 #########################
 [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
 [ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
-[ -e "$FWD_READS" ] || abort "Reads file does not exist: $FWD_READS"
+
+# find read files
+if $use_int_reads; then
+    [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
+else
+    [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
+    [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
+fi
 
 
 #################################
 # do stuff
 ################################
+if [ -d "$OUT_DIR" ]; then
+    if $FORCE; then
+	$RM -rf -- "$OUT_DIR"
+    else
+	abort "Output directory exists, use --force to overwrite"
+    fi
+fi
 
-name=$(basename "${ASSEMBLY%.*}")  # the filename without suffix
+$MKDIR -p "$OUT_DIR"
+assembly=$(basename "$ASSEMBLY")
+$LN -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
+if $use_int_reads; then
+    int_reads=$(readlink -f "$INT_READS")
+else
+    fwd_reads=$(readlink -f "$FWD_READS")
+    rev_reads=$(readlink -f "$REV_READS")
+fi
+cd "$OUT_DIR"
+
+name="${assembly%.*}"  # the filename without suffix
 
 alnSam=${name}_aligned.sam
 alnSamLog=${name}.aln.log
@@ -90,16 +151,17 @@ scafCov=${name}.cov
 #########      PIPELINE       #########
 #######################################
 info "Indexing Database..."
-bwa index "$ASSEMBLY"
+bwa index "$assembly"
 
-info "Aligning FWD and REV reads using 'bwa mem'..."
+info "Aligning reads using 'bwa mem'..."
 info "[NOTE] Using Read Group ${readGroup}"
-if [ -e "$REV_READS" ]; then
-	info "[NOTE] Read Pairs detected.  Starting paired-end mapping..."
-	bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$FWD_READS" "$REV_READS" 1> "$alnSam" 2> "$alnSamLog";
+if $use_int_reads; then
+	info "[NOTE] Using $int_reads for reads"
+	bwa mem -M -R "$readGroup" -t "$CPUS" -p "$assembly" "$int_reads" 1> "$alnSam" 2> "$alnSamLog";
 else
-	info "[NOTE] Single-end Reads detected.  Starting single-end mapping..."
-	bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$FWD_READS" 1> "$alnSam" 2> "$alnSamLog";
+	info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
+	echo bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$fwd_reads" "$rev_reads" REDIR "$alnSam" REDIR "$alnSamLog";
+	bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$fwd_reads" "$rev_reads" 1> "$alnSam" 2> "$alnSamLog";
 fi
 
 info "Fixing alignment artifacts and converting SAM to BAM..."
@@ -116,12 +178,12 @@ samtools index "$sortBam"
 
 info "Calculating Coverage..."
 echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
-genomeCoverageBed -ibam "$sortBam" -g "$ASSEMBLY" | grep -v "^__" >> "$bedOut"
+genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
 
 info "Calculating Coverage Per Scaffold..."
 coveragePerScaffold -bed "$bedOut" > "$scafCov"
 
-info "Mapping done"
+info "Mapping done, find results in $(readlink -f "$OUT_DIR")"
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
 # gmb: output:
 # gmb: args: --cpus {{ cpus }} --no-color
