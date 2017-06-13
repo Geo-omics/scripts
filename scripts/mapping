@@ -31,6 +31,10 @@ CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 ##########################
 #
 CPUS=4
+# Maximum memory per thread used for some samtools commands with -m option
+# On a flux high-mem node we could use 25G but on cayman/vondamm we calculate
+# 512GB / 32 CPUs
+MEM_PER_THREAD=16G
 # no defaults needed
 FWD_READS=
 REV_READS=
@@ -168,10 +172,10 @@ info "Fixing alignment artifacts and converting SAM to BAM..."
 samtools fixmate -O bam "$alnSam" "$sam2bam"
 
 info "Sorting BAM by Name..."
-samtools sort -n -m 50G -@ "$CPUS" -O bam -o "$nameSortBam" -T samSort.tmp "$sam2bam"
+samtools sort -n -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$nameSortBam" -T samSort.tmp "$sam2bam"
 
 info "Sorting BAM by Position..."
-samtools sort -m 50G -@ "$CPUS" -O bam -o "$sortBam" -T samSort.tmp "$sam2bam"
+samtools sort -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$sortBam" -T samSort.tmp "$sam2bam"
 
 info "Indexing Sorted BAM..."
 samtools index "$sortBam"
