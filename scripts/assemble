@@ -156,7 +156,7 @@ run_assembly=true
 if [ -n "$CONTIGS" ]; then
     if [ -f "$CONTIGS" ]; then
 	assembly=$CONTIGS
-	out=$(WORK_DIR)
+	out=${WORK_DIR}
 	run_assembly=false
     else
 	abort "Existing assembly not found: $CONTIGS"
