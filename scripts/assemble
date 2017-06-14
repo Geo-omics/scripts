@@ -231,8 +231,15 @@ if $RUN_QUAST; then
     else
         quast_opts=(-l "Assembly" "$assembly")
     fi
+    if $QUAST --version 2>&1 | grep -q '^QUAST v4'; then
+	# Quast version >= 4 available
+	QUAST_T_OPT=-t
+    else
+	# assume Quast version 2 or so available (on vondamm only?)
+	QUAST_T_OPT=-T
+    fi
     quast_out="$out/QUAST_RESULTS"
-    $QUAST -f --meta -T "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
+    $QUAST -f --meta $QUAST_T_OPT "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
     info "done: Quast results at $quast_out"
 fi
 
