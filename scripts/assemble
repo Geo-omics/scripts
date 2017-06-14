@@ -132,7 +132,8 @@ STEP=8
 
 # other scripts
 if which quast.py &> /dev/null; then
-    QUAST="/usr/bin/python $(which quast.py)"
+    # this works on vondamm/cayman and flux
+    QUAST="$(which python2) $(which quast.py)"
 fi
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
