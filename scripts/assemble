@@ -159,7 +159,7 @@ if [ -n "$CONTIGS" ]; then
 	out=$(WORK_DIR)
 	run_assembly=false
     else
-	abort "File not found: $CONTIGS"
+	abort "Existing assembly not found: $CONTIGS"
     fi
 else
     # check if reads exists before doing anything
