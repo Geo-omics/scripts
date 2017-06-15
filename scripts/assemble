@@ -115,7 +115,7 @@ SAMPLE_DIRS=(
 
 if [ -d /dept/geology/geomicro ]; then
     # for flux
-    ref_data_home=/dept/geology/$REF_DATA_DIR
+    ref_data_home=/dept/geology$REF_DATA_DIR
 else
     # for cayman / vondamm
     ref_data_home=$REF_DATA_DIR
