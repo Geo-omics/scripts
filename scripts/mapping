@@ -125,7 +125,7 @@ if [ -d "$OUT_DIR" ]; then
     if $FORCE; then
 	$RM -rf -- "$OUT_DIR"
     else
-	abort "Output directory exists, use --force to overwrite"
+	abort "Output directory $(readlink -f "$OUT_DIR") exists, use --force to overwrite"
     fi
 fi
 
