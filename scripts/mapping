@@ -139,6 +139,7 @@ else
     rev_reads=$(readlink -f "$REV_READS")
 fi
 cd "$OUT_DIR"
+info "Output / working directory is $(readlink -f "$OUT_DIR")"
 
 name="${assembly%.*}"  # the filename without suffix
 
@@ -159,6 +160,7 @@ bwa index "$assembly"
 
 info "Aligning reads using 'bwa mem'..."
 info "[NOTE] Using Read Group ${readGroup}"
+info "[NOTE] bwa mem run is logged to $alnSamLog"
 if $use_int_reads; then
 	info "[NOTE] Using $int_reads for reads"
 	bwa mem -M -R "$readGroup" -t "$CPUS" -p "$assembly" "$int_reads" 1> "$alnSam" 2> "$alnSamLog";
