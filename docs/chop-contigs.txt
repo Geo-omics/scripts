@@ -1,0 +1,66 @@
+.. program:: chop-contigs
+
+====================================
+chop-contigs
+====================================
+
+Synopsis
+========
+
+:program:`chop-contigs` [OPTIONS]... [-i <input-file>]
+
+
+Description
+===========
+
+Chop up an assemblies contigs to fixes sizes.
+
+
+Options
+=======
+.. option:: -h, --help
+
+    show this help message and exit
+
+.. option:: --chunk-size SIZE
+
+    Size of chunk into which contigs are divided. Default is 10000
+
+.. option:: -i, --input FILE
+
+    input, fasta-formatted file with contigs, if not given stdin is used.
+
+.. option:: -o, --output FILE
+
+    Output file
+
+.. option:: --wrap
+
+    Wrap output sequences to line of length 60.
+
+.. option:: --no-dot-zero
+
+    Do not add a .0 to a fasta header of a short sequence that didnot need to
+    be chopped up. This option make the output compatible with CONCOCT's
+    cut_up_fasta.py script.
+
+.. option:: --debug
+
+    Print stack trace on errors.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`binning(1)`,
+    :manpage:`mapping(1)`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+
+

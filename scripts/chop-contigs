@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""
+Chop up contigs of a metagenomic assembly in preparation tun run CONCOCT
+"""
+
+import argparse
+import sys
+
+CHUNK_SIZE = 10000
+""" Default chunk size """
+
+WRAP_WIDTH = 60
+""" Width of a sequence """
+
+
+def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
+         no_dot_zero=False):
+    """
+    Chop up given contigs to chunk_size length
+
+    :param file infile: Input file handle
+    :param file outfile: Output file handle
+    :param int chunk_size: Size of chunks, by default 10000 bases
+
+    Tha last chunk if a sequence larger than chunk_size is larger than
+    chunk_size and smaller than twice the chunk_size.
+    """
+    sequence = None
+    header = None
+    while True:
+        line = infile.readline()
+        if line.startswith('>') or line == '':
+            # '' is EOF
+            if header is not None and sequence is not None:
+                _write_chunks(
+                    outfile,
+                    header,
+                    _chop(sequence, size=chunk_size),
+                    wrap=wrap,
+                    no_dot_zero=no_dot_zero,
+                )
+            elif header is None and sequence is None:
+                pass
+            else:
+                raise RuntimeError('illegal program state reached')
+
+            if line == '':
+                # EOF
+                break
+
+            header = line.strip()
+            sequence = ''
+        else:
+            if sequence is None:
+                raise RuntimeError(
+                    'Failed to parse input ({}): does not start with a fasta '
+                    'header: {}'.format(infile, line)
+                )
+            sequence += line.strip()
+
+
+def _chop(sequence, size):
+    """
+    Helper function to chop up sequences
+    """
+    if len(sequence) >= 2 * size:
+        return [sequence[:size]] + _chop(sequence[size:], size)
+    else:
+        return [sequence]
+
+
+def _write_chunks(outfile, header, chunks, wrap, no_dot_zero):
+    """
+    Write chunks to file
+    """
+    for i in range(len(chunks)):
+        if wrap:
+            chunk = _wrap(chunks[i])
+        else:
+            chunk = chunks[i]
+
+        if no_dot_zero and len(chunks) == 1:
+            suffix = ''
+        else:
+            suffix = '.{}'.format(i)
+
+        outfile.write('{}{}\n{}\n'.format(header, suffix, chunk))
+
+
+def _wrap(sequence, width=WRAP_WIDTH):
+    """
+    Wrap string at given width, i.e. insert newlines.
+    """
+    if len(sequence) > width:
+        return sequence[:width] + '\n' + _wrap(sequence[width:], width)
+    else:
+        return sequence
+
+
+if __name__ == '__main__':
+
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        '--chunk-size',
+        type=int,
+        default=CHUNK_SIZE,
+        metavar='SIZE',
+        help='Size of chunk into which contigs are divided.  Default is {}'
+             ''.format(CHUNK_SIZE),
+    )
+    argp.add_argument(
+        '-i', '--input',
+        metavar='FILE',
+        type=argparse.FileType('r'),
+        nargs='?',
+        default=sys.stdin,
+        help='input, fasta-formatted file with contigs, '
+             'if not given stdin is used.'
+    )
+    argp.add_argument(
+        '-o', '--output',
+        metavar='FILE',
+        type=argparse.FileType('w'),
+        nargs='?',
+        default=sys.stdout,
+        help='Output file'
+    )
+    argp.add_argument(
+        '--wrap',
+        action='store_true',
+        help='Wrap output sequences to line of length {}.'.format(WRAP_WIDTH)
+    )
+    argp.add_argument(
+        '--no-dot-zero',
+        action='store_true',
+        help='Do not add a .0 to a fasta header of a short sequence that did'
+             'not need to be chopped up.  This option make the output '
+             'compatible with CONCOCT\'s cut_up_fasta.py script.'
+    )
+    argp.add_argument(
+        '--debug',
+        action='store_true',
+        help='Print stack trace on errors.'
+    )
+    args = argp.parse_args()
+
+    try:
+        chop(
+            args.input,
+            args.output,
+            chunk_size=args.chunk_size,
+            wrap=args.wrap,
+            no_dot_zero=args.no_dot_zero,
+        )
+    except Exception as e:
+        if args.debug:
+            raise
+        else:
+            print(
+                'An error occurred: {}: {}'.format(e.__class__.__name__, e),
+                file=sys.stderr,
+            )
+            sys.exit(1)

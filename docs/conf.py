@@ -343,6 +343,8 @@ man_pages = [
      'quality and classify contigs', [author], 1),
     ('mapping', 'mapping', 'map reads to assembly',
      [author], 1),
+    ('chop-contigs', 'chop-contigs', 'chop up long contigs of an assembly',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.

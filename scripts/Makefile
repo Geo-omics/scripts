@@ -117,6 +117,7 @@ OTHER_EXECUTABLES = \
     antiSmash_summary \
     assemble \
     assemblyModules \
+    chop-contigs \
     createPhgDB \
     do2folder \
     do2list \
