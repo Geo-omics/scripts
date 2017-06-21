@@ -118,6 +118,7 @@ OTHER_EXECUTABLES = \
     assemble \
     assemblyModules \
     chop-contigs \
+    combine-coverage \
     createPhgDB \
     do2folder \
     do2list \

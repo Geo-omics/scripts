@@ -1,0 +1,58 @@
+.. program:: combine-coverage
+
+====================================
+combine-coverage
+====================================
+
+Synopsis
+========
+
+:program:`combine-coverage` [OPTIONS]... <input file>...
+
+
+Description
+===========
+
+Combines the per-sample coverage tables made with :program:`mapping` into on
+file suitable as input file for :program:`concoct`.
+
+
+Options
+=======
+.. option:: -h, --help
+
+    show help message and exit
+
+.. option:: -a, --assembly FILE
+
+    The assembly file. This is to be compatible with the CONCOCT workflow. If
+    used then contigs not covered by any sample will appear in the output with
+    zeros (unlike the output of bedtool's genomeCoverageBed.)
+
+.. option:: -o, --out FILE
+
+    Output file. By default stdout is used.
+
+.. option:: --debug
+
+    Print stack trace on errors.
+
+.. option:: --length
+
+    Insert column with contig length. The default is not to insert lengths.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`binning(1)`, :manpage:`mapping(1)`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+
+

@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""
+Make a table of coverage per contig per sample suitable for input to CONCOCT
+"""
+import argparse
+from collections import OrderedDict
+from itertools import chain, groupby
+from pathlib import Path
+import sys
+
+
+def read_tsv(file):
+    """
+    Generate list of list from tab-separated data.
+
+    :param iterable file: Iterable of lines of tab-separated data
+    """
+    for line in file:
+        yield line.strip().split('\t')
+
+
+def main(assembly, outfile, *inputfiles, with_length=False):
+    header = ['contig']
+    if with_length:
+        header.append('length')
+    for i in inputfiles:
+        header.append(Path(i.name).parts[0])
+
+    if len(header[2:]) != len(set(header[2:])):
+        raise RuntimeError('Ambiguous sample identifiers: {}'
+                           ''.format(header[2:]))
+
+    print(*header, sep='\t', file=outfile)
+
+    # read headers
+    for i in inputfiles:
+        line = i.readline().strip().split('\t')
+        if not line == ['Contig', 'Depth', 'bases_with_depth',
+                        'contigLen', 'fraction_bases_with_depth']:
+            raise RuntimeError('Failed to parse header in {}'.format(i.name))
+
+    data = OrderedDict([
+        (i, {
+            contig: list(it)
+            for contig, it in groupby(
+                sorted(read_tsv(i), key=lambda x: x[0]),
+                lambda x: x[0]
+            )
+        })
+        for i in inputfiles
+    ])
+    if assembly is None:
+        contigs = sorted(set(chain.from_iterable(data.values())))
+    else:
+        contigs = sorted([
+            i.strip().lstrip('>').split()[0]
+            for i in assembly
+            if i.startswith('>')
+        ])
+
+    for contig in contigs:
+        length = None
+        cov_means = []
+
+        for inf, groups in data.items():
+
+            if contig in groups:
+                cov_bases = 0
+                for line in groups[contig]:
+
+                    # sanity check
+                    if len(line) != 5:
+                        raise RuntimeError(
+                            'Wrong number of items in line: {}, file: {}'
+                            ''.format(line, inf.name)
+                        )
+
+                    # more sanity checks
+                    try:
+                        this_length = int(line[3])
+                    except ValueError as e:
+                        raise RuntimeError(
+                            'Failed to parse length field, not a number?: '
+                            'line: {}, file: {}'.format(line, inf)
+                        )
+
+                    if length is None:
+                        length = this_length
+                    else:
+                        if this_length != length:
+                            raise RuntimeError(
+                                'Unexpected contig length found: {}\nwhole '
+                                'line: {}\nfile: {}'
+                                ''.format(line[3], line, i.name)
+                            )
+
+                    try:
+                        cov_bases += int(line[1]) * int(line[2])
+                    except ValueError as e:
+                        raise RuntimeError(
+                            'Field contents is not a number: line: {}, file: '
+                            '{}'.format(line, inf.name)
+                        )
+
+                # add mean coverage
+                cov_means.append(cov_bases / length)
+            else:
+                cov_means.append(0.0)
+
+        cov_means = ['{:.6f}'.format(i) for i in cov_means]
+        # TODO: get length from assembly or so if missing
+        out = [contig]
+        if with_length:
+            out.append(length or 0)
+        out += cov_means
+        print(*out, sep='\t', file=outfile)
+
+
+if __name__ == '__main__':
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        '-a', '--assembly',
+        metavar='FILE',
+        nargs='?',
+        type=argparse.FileType('r'),
+        default=None,
+        help='The assembly file.  This is to be compatible with the CONCOCT '
+             'workflow.  If used then contigs not covered by any sample will '
+             'appear in the output with zeros (unlike the output of bedtool\'s'
+             ' genomeCoverageBed.)'
+    )
+    argp.add_argument(
+        'inputfiles',
+        metavar='FILE',
+        nargs='+',
+        type=argparse.FileType('r'),
+        help='List of input coverage files.  Files should be in different '
+             'directories.  The first component of each path is taken to '
+             'identify the sample.'
+    )
+    argp.add_argument(
+        '-o', '--out',
+        metavar='FILE',
+        nargs='?',
+        type=argparse.FileType('w'),
+        default=sys.stdout,
+        help='Output file. By default stdout is used.'
+    )
+    argp.add_argument(
+        '--debug',
+        action='store_true',
+        help='Print stack trace on errors.'
+    )
+    argp.add_argument(
+        '--length',
+        action='store_true',
+        help='Insert column with contig length. The default is not to insert '
+             'lengths.'
+    )
+    args = argp.parse_args()
+
+    try:
+        if args.length:
+            print('WARNING: using assembly file, length of not covered contigs'
+                  ' is not shown correctly. (implementation missing)',
+                  file=sys.stderr)
+        main(
+            args.assembly,
+            args.out,
+            *args.inputfiles,
+            with_length=args.length
+        )
+    except Exception as e:
+        if args.debug:
+            raise
+        else:
+            print(
+                'An error occurred: {}: {}'.format(e.__class__.__name__, e),
+                file=sys.stderr,
+            )
+            sys.exit(1)
