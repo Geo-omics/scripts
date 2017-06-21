@@ -117,6 +117,7 @@ OTHER_EXECUTABLES = \
     antiSmash_summary \
     assemble \
     assemblyModules \
+    binning \
     chop-contigs \
     combine-coverage \
     createPhgDB \

@@ -1,0 +1,69 @@
+.. program:: binning
+
+====================================
+binning - bin metagenomic assemblies
+====================================
+
+Synopsis
+========
+
+:program:`binning` [OPTIONS]...
+
+
+Description
+===========
+
+The :program:`binning` script implements the binning step for the Geomicro
+Illumina Reads Pipeline.
+
+Options
+=======
+
+.. option:: -a, --assembly FILE
+
+    Fasta-formatted file containing the assembled contigs, by default this is
+    :file:`contigs.fa`
+
+.. option:: --force
+
+    Overwrite existing data
+
+.. option:: -o, --out-dir PATH
+
+    Path to output directory, by dafault this is :file:`BINNING`
+
+.. option::  --working-dir=DIR
+
+    Directory under which output is stored. By default this is the current
+    directory.
+
+.. option:: -h, --help
+
+    Print help.
+
+.. option:: --no-color
+
+    Disable colorful output.
+
+.. option:: -v, --verbosity=N
+
+    Use one or multiple ``-v`` to increase verbosity of output or set a
+    level of verbosity with ``--verbosity=N``.  By default the verbosity
+    level is 1.  Setting verbosity to 0 silences the program.  A level of
+    3 prints debugging info.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`prep(1)`, :manpage:`qc(1)`, :manpage:`assemble(1)`,
+    :manpage:`mapping(1)`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+

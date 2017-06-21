@@ -1,0 +1,91 @@
+#!/bin/bash
+set -eE
+
+# shellcheck disable=SC2034
+{
+USAGE="[OPTIONS]... [SAMPLEDIRS]..."
+HELP="Implementation of the binning step of the Geomicro Illumina Reads Pipeline"
+ARG_HELP="
+  -a, --assembly FILE       The fasta file containing the assembled contigs
+      --coverage-file PATH  Path to coverage files relative to each sample directory;
+                            the default is MAPPING/assembly.chop.genomeCovBed.tsv.
+			    These files are made by the mapping script and correspond
+			    to the asm_pair-smds.bam files made by CONCOCTs
+			    map-bowtie2-markduplicates.sh
+
+"
+#CHECK_PROGS="concoct chop-contigs"
+CHECK_PROGS="chop-contigs"
+SHORT_OPTIONS=a:o:
+LONG_OPTION=assembly:,out-dir:
+}
+handle_options () {
+    if [ "$#" -gt 0 ]; then
+	case "$1" in
+	(-a|--assembly)
+	    ASSEMBLY="$2"
+	    return 2;;
+	(--coverage-file)
+	    COV_FILE="$2"
+	    return 2;;
+	(--force)
+	    FORCE=true
+	    return 1;;
+	(-o|--out-dir)
+	    OUTDIR="$2"
+	    return 2;;
+        esac
+    else
+        return 0
+    fi
+}
+
+# Define defaults for cmdline options here
+ASSEMBLY=contigs.fa
+FORCE=false
+OUTDIR=BINNING
+# 
+COV_FILE=MAPPING/assembly.chop.genomeCovBed.tsv
+
+# shellcheck source=../lib/liba.sh
+# shellcheck disable=SC1091
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+
+# handle non-option parameters
+if [ "$#" -gt 0 ]; then
+    SAMPLE_DIRS=($@)
+fi
+
+# check if input data exists before doing anything
+for i in "${SAMPLE_DIRS[@]}"; do
+    [ -d "$i" ] || abort "is not a directory: $i"
+    [ -r "$i/$COV_FILE" ] || abort "coverage file not found: $i/$COV_FILE"
+done
+
+
+# your script comes here --->
+assembly=$(readlink -f "$ASSEMBLY")
+outdir=$(readlink -f "$OUTDIR")
+
+name=$(basename "$assembly")
+name="${name%.*}"  # the filename without suffix
+
+[ -r "$assembly" ] || abort "Failed to read assembly file: $assembly"
+if [ -d "$outdir" ]; then
+    if $FORCE; then
+	$RM -rf -- "$outdir"
+    else
+	abort "Output directory $outdir exists, use --force to overwrite"
+    fi
+else
+    $MKDIR -p -- "$outdir"
+fi
+
+info "Collecting coverage data..."
+cov_file=$outdir/${name}.cov
+# shellcheck disable=SC2046
+combine-coverage -a "$assembly" $(for i in "${SAMPLE_DIRS[@]}"; do echo -n " $i/$COV_FILE"; done) > "$cov_file"
+
+info "Running CONCOCT..."
+concoct -c 40 --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+
