@@ -14,6 +14,8 @@ ARG_HELP="
     RAWDATA...          List of fastq.gz files or path to directory containing them
 			By default this is the current directory
     --force             Allow overwrite existing files
+    --lane              Add lane number to sample id, even if sample ids are unique
+                        without lane number
 "
 MORE_HELP="
 prep prepares raw meta-geomic sequencing data in fastq.gz format for processing
@@ -21,7 +23,7 @@ prep prepares raw meta-geomic sequencing data in fastq.gz format for processing
 prep is part of the omics(1) tool chain
 "
 
-LONG_OPTIONS=force,lane:,sample:
+LONG_OPTIONS=force,lane,sample:
 CHECK_PROGS="gunzip"
 }
 
@@ -30,6 +32,9 @@ handle_options () {
 	case "$1" in
 	    (--force)
 	        FORCE=true
+	        return 1;;
+	    (--lane)
+	        USE_LANE=true
 	        return 1;;
         esac
     else
@@ -43,6 +48,7 @@ handle_options () {
 
 # by default abort when output files exists
 FORCE=false
+USE_LANE=false
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -64,9 +70,9 @@ fi
 
 unique_ids=($(for i in "${RAWDATA[@]}"; do basename "$i" | sed -r 's/(_L[0-9]+).*/\1/; s/_.*_/_/'; done | sort -u))
 unique_ids_no_lane=($(for i in "${RAWDATA[@]}"; do basename "$i" | cut -d _ -f 1; echo; done | sort -u))
-if [ "$(echo "${unique_ids[@]}" | wc -w)" -gt "$(echo "${unique_ids_no_lane[@]}" | wc -w)" ]; then
+if $USE_LANE || [ "$(echo "${unique_ids[@]}" | wc -w)" -gt "$(echo "${unique_ids_no_lane[@]}" | wc -w)" ]; then
     use_lane=true
-    if [ "$VERBOSITY" -gt 1 ]; then info "Using lane to uniquly identify samples"; fi
+    if [ "$VERBOSITY" -gt 1 ]; then info "Using lane to uniquely identify samples"; fi
 else
     use_lane=false
 fi

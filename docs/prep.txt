@@ -26,6 +26,11 @@ Options
 
     Allow overwriting existing files.
 
+.. option:: --lane
+
+    Add lane number to sample id, even if sample ids are unique without lane
+    number.
+
 .. option::  --working-dir=DIR
 
     Directory under which output is stored. By default this is the current
