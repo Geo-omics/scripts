@@ -339,8 +339,8 @@ man_pages = [
      [author], 1),
     ('qc', 'qc', 'run quality control steps on metagenomic Illumina reads',
      [author], 1),
-    ('assemble', 'assemble', 'assemble metagenomic Illumina reads, check quality and classify contigs',
-     [author], 1),
+    ('assemble', 'assemble', 'assemble metagenomic Illumina reads, check '
+     'quality and classify contigs', [author], 1),
     ('mapping', 'mapping', 'map reads to assembly',
      [author], 1),
 ]
