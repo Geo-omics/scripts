@@ -119,7 +119,6 @@ OTHER_EXECUTABLES = \
     assemblyModules \
     binning \
     chop-contigs \
-    combine-coverage \
     createPhgDB \
     do2folder \
     do2list \
@@ -129,6 +128,7 @@ OTHER_EXECUTABLES = \
     getGIAnnotation \
     getGISummary \
     mapping \
+    merge-coverage \
     mVelvetPipe_paired \
     mVelvetPipe_singles \
     oasesPaired_pipe \

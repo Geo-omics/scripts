@@ -345,7 +345,7 @@ man_pages = [
      [author], 1),
     ('binning', 'binning', 'bin meta-genomic assemblies',
      [author], 1),
-    ('combine-coverage', 'combine-coverage', 'combine coverage tables',
+    ('merge-coverage', 'merge-coverage', 'merge coverage tables',
      [author], 1),
     ('chop-contigs', 'chop-contigs', 'chop up long contigs of an assembly',
      [author], 1),

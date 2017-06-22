@@ -1,13 +1,13 @@
-.. program:: combine-coverage
+.. program:: merge-coverage
 
 ====================================
-combine-coverage
+merge-coverage
 ====================================
 
 Synopsis
 ========
 
-:program:`combine-coverage` [OPTIONS]... <input file>...
+:program:`merge-coverage` [OPTIONS]... <input file>...
 
 
 Description
