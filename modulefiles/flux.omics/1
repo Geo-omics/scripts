@@ -28,6 +28,7 @@ if { [module-info mode load] } {
     module load python-anaconda3
     module load quast
     module load sickle
+    module load concoct
 }
 
 set OMICS_ROOT /dept/geology/geomicro/data9/flux/apps/omics_root
