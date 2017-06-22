@@ -130,19 +130,25 @@ if [ -d "$OUT_DIR" ]; then
     fi
 fi
 
-$MKDIR -p "$OUT_DIR"
-assembly=$(basename "$ASSEMBLY")
-$LN -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
 if $use_int_reads; then
     int_reads=$(readlink -f "$INT_READS")
 else
     fwd_reads=$(readlink -f "$FWD_READS")
     rev_reads=$(readlink -f "$REV_READS")
 fi
+
+$MKDIR -p "$OUT_DIR"
+
+# make local link for assembly
+assembly=$(basename "$ASSEMBLY")
+$LN -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
+
 cd "$OUT_DIR"
 info "Output / working directory is $OUT_DIR"
 
-name="${assembly%.*}"  # the filename without suffix
+# get a "name" from name of assembly file without suffix
+name=$(basename "$assembly")
+name=${name%.*}
 
 alnSam=${name}_aligned.sam
 alnSamLog=${name}.aln.log
