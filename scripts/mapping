@@ -121,11 +121,12 @@ fi
 #################################
 # do stuff
 ################################
+OUT_DIR=$(readlink -f "$OUT_DIR")
 if [ -d "$OUT_DIR" ]; then
     if $FORCE; then
 	$RM -rf -- "$OUT_DIR"
     else
-	abort "Output directory $(readlink -f "$OUT_DIR") exists, use --force to overwrite"
+	abort "Output directory $OUT_DIR exists, use --force to overwrite"
     fi
 fi
 
@@ -139,7 +140,7 @@ else
     rev_reads=$(readlink -f "$REV_READS")
 fi
 cd "$OUT_DIR"
-info "Output / working directory is $(readlink -f "$OUT_DIR")"
+info "Output / working directory is $OUT_DIR"
 
 name="${assembly%.*}"  # the filename without suffix
 
@@ -189,7 +190,7 @@ genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
 info "Calculating Coverage Per Scaffold..."
 coveragePerScaffold -bed "$bedOut" > "$scafCov"
 
-info "Mapping done, find results in $(readlink -f "$OUT_DIR")"
+info "Mapping done, find results in $OUT_DIR"
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
 # gmb: output:
 # gmb: args: --cpus {{ cpus }} --no-color
