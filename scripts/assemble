@@ -30,7 +30,7 @@ ARG_HELP="
 "
 CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,mink:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
 
 handle_options () {
