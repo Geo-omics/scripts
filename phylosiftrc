@@ -13,3 +13,9 @@ if (! -d $ref_data_path) {
 $marker_path = "$ref_data_path";
 $ncbi_path = "$ref_data_path";
 
+# prevent this:
+#     Error: requested HMM banded DP mx of 4749.29 Mb > 2500.00 Mb limit.
+#     Increase limit with --mxsize or tau with --tau.
+$cm_align_long_mxsize = "10000";
+$cm_align_short_mxsize = "10000";
+
