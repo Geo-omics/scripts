@@ -24,6 +24,8 @@ ARG_HELP="
                         computing time
       --no-dereplicate  Skip the de-replication step
       --no-interleave   Skip building the interleaved reads file
+      --no-fasta-interleave   Skip building the interleaved fasta file,
+                              interleaved fastq will still be build
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -34,7 +36,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-interleave
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-fasta-interleave,no-interleave
 }
 
 handle_options () {
@@ -64,6 +66,9 @@ handle_options () {
 	    (--no-interleave)
 	        INTERLEAVE=false
 	        return 1;;
+	    (--no-fasta-interleave)
+	        INTERLEAVE_FASTA=false
+	        return 1;;
         esac
     else
         return 0
@@ -91,6 +96,7 @@ LESSMEM=false
 #
 DEREPLICATION=true
 INTERLEAVE=true
+INTERLEAVE_FASTA=true
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -184,9 +190,11 @@ wait %fastqc
 fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log &
 if $INTERLEAVE; then
     info "interleaving..."
-    interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
+    if $INTERLEAVE_FASTA; then
+        interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
+    fi
     interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt
-    wait %interleave
+    ! $INTERLEAVE_FASTA || wait %interleave
 fi
 wait %fastqc
 $KEEPALL || clean_intermediates
