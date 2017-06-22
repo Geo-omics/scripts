@@ -25,6 +25,11 @@ Options
     Specify assembly i.e. a fasta file of contigs or scaffolds, by default
     this is :file:`assembly.fa`
 
+.. option:: -c, --chop
+
+    Chop up contigs of assembly before mapping.  This should be done before
+    binning with CONCOCT.
+
 .. option:: -f, --fwd-reads FILE
 
     Fastq file with either forward reads or single-end reads, by default this

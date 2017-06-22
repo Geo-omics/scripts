@@ -13,6 +13,8 @@ USAGE="[OPTIONS]..."
 HELP="mapping script"
 ARG_HELP="
   -a, --assembly FILE   Fasta file assembly i.e. contigs or scaffolds
+  -c, --chop		Chop up assembly contigs into even size before
+                        mapping
       --cpus N          Number of CPUs to use for parallel processing
   -f, --fwd-reads FILE  Fastq file with forward reads
   -r, --rev-reads FILE  Fastq file with reverse reads, in same order
@@ -21,14 +23,17 @@ ARG_HELP="
 			The default is dt_int.fastq
   -o, --out-dir DIR     Name of output directory, default: MAPPING
 "
-SHORT_OPTIONS=a:f:i:o:r:
-LONG_OPTIONS=cpus:,fwd-reads:,rev-reads:,assembly:,out-dir:,int-reads:
+SHORT_OPTIONS=a:cf:i:o:r:
+LONG_OPTIONS=chop,cpus:,fwd-reads:,rev-reads:,assembly:,out-dir:,int-reads:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 }
 
 ##########################
 # default variable values
 ##########################
+# chop up assembly into pieces of equal size,
+# should be done when using CONCOCT
+CHOP_ASSEMBLY=false
 #
 CPUS=4
 # Maximum memory per thread used for some samtools commands with -m option
@@ -56,6 +61,9 @@ handle_options () {
 	    (-a|--assembly)
 	        ASSEMBLY="$2"
 	        return 2;;
+	    (-c|--chop)
+		CHOP_ASSEMBLY=true
+		return 1;;
 	    (--cpus)
 	        CPUS="$2"
 	        return 2;;
@@ -149,6 +157,14 @@ info "Output / working directory is $OUT_DIR"
 # get a "name" from name of assembly file without suffix
 name=$(basename "$assembly")
 name=${name%.*}
+
+if $CHOP_ASSEMBLY; then
+    info "Chopping assembly into chunks..."
+    chunk_file=${name}.chop.fa
+    chop-contigs --input "$assembly" --output "$chunk_file"
+    assembly=$chunk_file
+    name=${name}.chop
+fi
 
 alnSam=${name}_aligned.sam
 alnSamLog=${name}.aln.log
