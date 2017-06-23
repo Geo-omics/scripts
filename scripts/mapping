@@ -16,6 +16,7 @@ ARG_HELP="
   -c, --chop		Chop up assembly contigs into even size before
                         mapping
       --cpus N          Number of CPUs to use for parallel processing
+      --force           Overwrite any previous results
   -f, --fwd-reads FILE  Fastq file with forward reads
   -r, --rev-reads FILE  Fastq file with reverse reads, in same order
   -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
@@ -25,7 +26,7 @@ ARG_HELP="
       --no-indexing     Do not index the assembly but existing index
 "
 SHORT_OPTIONS=a:cf:i:o:r:
-LONG_OPTIONS=chop,cpus:,fwd-reads:,rev-reads:,assembly:,no-indexing,out-dir:,int-reads:
+LONG_OPTIONS=chop,cpus:,fwd-reads:,force,rev-reads:,assembly:,no-indexing,out-dir:,int-reads:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 }
 
@@ -41,6 +42,8 @@ CPUS=4
 # On a flux high-mem node we could use 25G but on cayman/vondamm we calculate
 # 512GB / 32 CPUs
 MEM_PER_THREAD=16G
+#
+FORCE=false
 # no defaults needed
 FWD_READS=
 REV_READS=
@@ -74,6 +77,9 @@ handle_options () {
 	        FWD_READS="$2"
 		opts_fwd=true
 	        return 2;;
+	    (--force)
+	        FORCE=true
+	        return 1;;
 	    (-r|--rev-reads)
 	        REV_READS="$2"
 		opts_rev=true
@@ -136,12 +142,8 @@ fi
 # do stuff
 ################################
 OUT_DIR=$(readlink -f "$OUT_DIR")
-if [ -d "$OUT_DIR" ]; then
-    if $FORCE; then
-	$RM -rf -- "$OUT_DIR"
-    else
-	abort "Output directory $OUT_DIR exists, use --force to overwrite"
-    fi
+if [ -d "$OUT_DIR" ] && ! $FORCE; then
+    abort "Output directory $OUT_DIR exists, use --force to overwrite"
 fi
 
 if $use_int_reads; then
