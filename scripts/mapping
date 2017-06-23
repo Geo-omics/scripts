@@ -22,9 +22,10 @@ ARG_HELP="
                         can also be single-paired reads,
 			The default is dt_int.fastq
   -o, --out-dir DIR     Name of output directory, default: MAPPING
+      --no-indexing     Do not index the assembly but existing index
 "
 SHORT_OPTIONS=a:cf:i:o:r:
-LONG_OPTIONS=chop,cpus:,fwd-reads:,rev-reads:,assembly:,out-dir:,int-reads:
+LONG_OPTIONS=chop,cpus:,fwd-reads:,rev-reads:,assembly:,no-indexing,out-dir:,int-reads:
 CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
 }
 
@@ -43,6 +44,8 @@ MEM_PER_THREAD=16G
 # no defaults needed
 FWD_READS=
 REV_READS=
+# whether to run indexing
+INDEX=true
 #
 INT_READS=dt_int.fastq
 #
@@ -82,6 +85,9 @@ handle_options () {
 	    (-o|--out-dir)
 		OUT_DIR="$2"
 		return 2;;
+	    (--no-indexing)
+		INDEX=false
+		return 1;;
         esac
     fi
 }
@@ -178,8 +184,10 @@ scafCov=${name}.cov
 #######################################
 #########      PIPELINE       #########
 #######################################
-info "Indexing Database..."
-bwa index "$assembly"
+if $INDEX; then
+    info "Indexing Database..."
+    bwa index "$assembly"
+fi
 
 info "Aligning reads using 'bwa mem'..."
 info "[NOTE] Using Read Group ${readGroup}"
