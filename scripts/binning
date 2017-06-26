@@ -12,12 +12,13 @@ ARG_HELP="
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
+      --force               Overwrite existing output
 
 "
 #CHECK_PROGS="concoct chop-contigs"
-CHECK_PROGS="chop-contigs"
+CHECK_PROGS="chop-contigs merge-coverage concoct"
 SHORT_OPTIONS=a:o:
-LONG_OPTION=assembly:,out-dir:
+LONG_OPTIONS=assembly:,coverage-file:,force,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
