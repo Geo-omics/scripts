@@ -45,6 +45,11 @@ Options
     the Illumina adapter file TruSeq3-PE-2.fa as distributed by the Trimmomatic
     project will be used.
 
+.. option:: --keep-all
+
+    Keep all intermediate files, by default some not-so-important intermediate
+    results will be deleted to save disk space
+
 .. option:: --less-mem
 
     This option will reduce the dominating memory requirements for the
@@ -57,6 +62,11 @@ Options
 .. option:: --no-interleave
 
     Option to skip building the interleaved reads file
+
+.. option:: --no-fasta-interleave
+
+    Skip building the interleaved fasta file, interleaved fastq files will
+    still be build.
 
 .. option::  --working-dir=DIR
 

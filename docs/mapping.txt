@@ -39,9 +39,27 @@ Options
 
     Fastq file with reverse reads, by default this is :file:`rev.fastq`
 
+.. option:: -i, --int-reads FILE
+
+    Fastq file with paired-end, interleaved reads, can also be single-paired
+    reads, The default is dt_int.fastq
+
+.. option::  -o, --out-dir DIR
+
+    Name of output directory, default is :file:`MAPPING` in the working
+    directory
+
+.. option:: --no-indexing
+
+    Do not index the assembly but existing index
+
 .. option:: --cpus N
 
     Specify how many CPUs to use for parallel execution
+
+.. option:: --force
+
+    Overwrite any previous results.
 
 .. option::  --working-dir=DIR
 

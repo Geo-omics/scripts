@@ -13,8 +13,9 @@ Synopsis
 Description
 ===========
 
-Combines the per-sample coverage tables made with :program:`mapping` into on
-file suitable as input file for :program:`concoct`.
+Calculates the per-sample per-contig mean coverage from the per-sample coverage
+tables made with :program:`mapping` into on file suitable as input file for
+:program:`concoct`.
 
 
 Options
@@ -27,7 +28,7 @@ Options
 
     The assembly file. This is to be compatible with the CONCOCT workflow. If
     used then contigs not covered by any sample will appear in the output with
-    zeros (unlike the output of bedtool's genomeCoverageBed.)
+    zeros (unlike the output of bedtool's :program:`genomeCoverageBed`.)
 
 .. option:: -o, --out FILE
 
@@ -40,6 +41,10 @@ Options
 .. option:: --length
 
     Insert column with contig length. The default is not to insert lengths.
+
+..option:: -v, --verbose
+
+    Report progress to stderr.
 
 
 Exit Status

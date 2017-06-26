@@ -25,8 +25,9 @@ These are the tools that comprise the Geomicro Illumina Reads Pipeline.
 
 * :program:`prep`: Prepare raw fastq data for further processing
 * :program:`qc`: quality check
-* :program:`assemble`: assembly
-* :program:`mapping`: mapping
+* :program:`assemble`: Assembles the meta-genome
+* :program:`mapping`: Maps reads against an assembly
+* :program:`binning`: Bins contigs of assembly
 
 Assembly Tools
 ==============

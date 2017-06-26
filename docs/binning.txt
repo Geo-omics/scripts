@@ -24,13 +24,20 @@ Options
     Fasta-formatted file containing the assembled contigs, by default this is
     :file:`contigs.fa`
 
+.. option:: --coverage-file PATH
+
+    Path to coverage files relative to each sample directory; the default is
+    :file:`MAPPING/assembly.chop.genomeCovBed.tsv`.  These files are made by the
+    mapping script and correspond to the :file:`asm_pair-smds.bam` files made by
+    CONCOCTs :program:`map-bowtie2-markduplicates.sh`
+
 .. option:: --force
 
     Overwrite existing data
 
 .. option:: -o, --out-dir PATH
 
-    Path to output directory, by dafault this is :file:`BINNING`
+    Path to output directory, by default this is :file:`BINNING`
 
 .. option::  --working-dir=DIR
 
