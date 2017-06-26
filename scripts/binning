@@ -85,7 +85,7 @@ fi
 info "Collecting coverage data..."
 cov_file=$outdir/${name}.cov
 # shellcheck disable=SC2046
-merge-coverage -a "$assembly" $(for i in "${SAMPLE_DIRS[@]}"; do echo -n " $i/$COV_FILE"; done) > "$cov_file"
+merge-coverage "$VERBOSE_FLAG" -a "$assembly" $(for i in "${SAMPLE_DIRS[@]}"; do echo -n " $i/$COV_FILE"; done) > "$cov_file" 2> merge-coverage.log
 
 info "Running CONCOCT..."
 concoct -c 40 --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
