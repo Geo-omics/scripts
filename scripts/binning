@@ -7,7 +7,11 @@ USAGE="[OPTIONS]... [SAMPLEDIRS]..."
 HELP="Implementation of the binning step of the Geomicro Illumina Reads Pipeline"
 ARG_HELP="
   -a, --assembly FILE       The fasta file containing the assembled contigs
-      --coverage-file PATH  Path to coverage files relative to each sample directory;
+  -c, --coverage-file FILE  merged/shared per-sample-contig mean coverage file. If
+			    this option is not present, then this file will be
+			    compiled from the files found with the
+			    --coverage-path argument
+      --coverage-path PATH  Path to coverage files relative to each sample directory;
                             the default is MAPPING/assembly.chop.genomeCovBed.tsv.
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
@@ -17,8 +21,8 @@ ARG_HELP="
 "
 #CHECK_PROGS="concoct chop-contigs"
 CHECK_PROGS="chop-contigs merge-coverage concoct"
-SHORT_OPTIONS=a:o:
-LONG_OPTIONS=assembly:,coverage-file:,force,out-dir:
+SHORT_OPTIONS=a:c:o:
+LONG_OPTIONS=assembly:,coverage-file:,coverage-path:,force,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -26,8 +30,11 @@ handle_options () {
 	(-a|--assembly)
 	    ASSEMBLY="$2"
 	    return 2;;
-	(--coverage-file)
+	(-c|--coverage-file)
 	    COV_FILE="$2"
+	    return 2;;
+	(--coverage-path)
+	    COV_PATH="$2"
 	    return 2;;
 	(--force)
 	    FORCE=true
@@ -45,8 +52,10 @@ handle_options () {
 ASSEMBLY=contigs.fa
 FORCE=false
 OUTDIR=BINNING
-# 
-COV_FILE=MAPPING/assembly.chop.genomeCovBed.tsv
+# no default needed
+COV_FILE=
+# default as made by mapping script
+COV_PATH=MAPPING/assembly.chop.genomeCovBed.tsv
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -60,7 +69,7 @@ fi
 # check if input data exists before doing anything
 for i in "${SAMPLE_DIRS[@]}"; do
     [ -d "$i" ] || abort "is not a directory: $i"
-    [ -r "$i/$COV_FILE" ] || abort "coverage file not found: $i/$COV_FILE"
+    [ -r "$i/$COV_PATH" ] || abort "coverage file not found: $i/$COV_PATH"
 done
 
 
@@ -72,20 +81,27 @@ name=$(basename "$assembly")
 name="${name%.*}"  # the filename without suffix
 
 [ -r "$assembly" ] || abort "Failed to read assembly file: $assembly"
+
 if [ -d "$outdir" ]; then
     if $FORCE; then
-	$RM -rf -- "$outdir"
+	warning "Output directory $outdir exists, overwriting existing files"
     else
 	abort "Output directory $outdir exists, use --force to overwrite"
     fi
+fi
+$MKDIR -p -- "$outdir"
+
+if [ -z "$COV_FILE" ]; then
+    info "Collecting coverage data..."
+    cov_file=$outdir/${name}.cov
+    # shellcheck disable=SC2068
+    merge-coverage "$VERBOSE_FLAG" -a "$assembly" -o "$cov_file" ${SAMPLE_DIRS[@]/%//$COV_PATH}
+    info "Mean coverage data written to $cov_file, to be used with --coverage-file option in future invocations of binning"
 else
-    $MKDIR -p -- "$outdir"
+    cov_file=$(readlink -f "$COV_FILE")
 fi
 
-info "Collecting coverage data..."
-cov_file=$outdir/${name}.cov
-# shellcheck disable=SC2046
-merge-coverage "$VERBOSE_FLAG" -a "$assembly" $(for i in "${SAMPLE_DIRS[@]}"; do echo -n " $i/$COV_FILE"; done) > "$cov_file" 2> merge-coverage.log
+[ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
 
 info "Running CONCOCT..."
 concoct -c 40 --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
