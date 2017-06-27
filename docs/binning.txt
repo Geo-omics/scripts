@@ -24,12 +24,19 @@ Options
     Fasta-formatted file containing the assembled contigs, by default this is
     :file:`contigs.fa`
 
-.. option:: --coverage-file PATH
+.. option:: -c, --coverage-file FILE
+
+    Merged/shared per-sample-contig mean coverage file. If this option is not
+    present, then this file will be compiled from the files found with the
+    --coverage-path argument.
+
+.. option:: --coverage-path PATH
 
     Path to coverage files relative to each sample directory; the default is
     :file:`MAPPING/assembly.chop.genomeCovBed.tsv`.  These files are made by the
     mapping script and correspond to the :file:`asm_pair-smds.bam` files made by
-    CONCOCTs :program:`map-bowtie2-markduplicates.sh`
+    CONCOCTs :program:`map-bowtie2-markduplicates.sh`.  This option is
+    incopmpatible with the -c option.
 
 .. option:: --force
 
