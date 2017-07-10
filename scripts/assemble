@@ -115,10 +115,8 @@ RUN_QUAST=true
 # common path to reference data / c.f. flux switch below
 REF_DATA_DIR=/geomicro/data9/flux/reference-data
 
-# by default this is the working woriectory
-SAMPLE_DIRS=(
-    ./
-)
+# empty by default
+SAMPLE_DIRS=()
 
 if [ -d /dept/geology/geomicro ]; then
     # for flux
@@ -188,8 +186,7 @@ else
 	echo "  $i/$READS"
         done
     else
-        # descend into single sample directory, output goes here, too
-        cd "${SAMPLE_DIRS[0]}"
+        # descend into single sample directory or working directory, output goes here, too
         reads=$READS
     fi
 
