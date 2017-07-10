@@ -30,6 +30,7 @@ if { [module-info mode load] } {
     module load quast
     module load sickle
     module load concoct
+    module load megahit
 }
 
 set OMICS_ROOT /dept/geology/geomicro/data9/flux/apps/omics_root

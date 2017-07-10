@@ -23,6 +23,7 @@ if { [module-info mode load] } {
     module load bwa
     module load samtools
     module load bedtools
+    module load megahit
 }
 
 set OMICS_ROOT /geomicro/data9/flux/apps/omics_root
