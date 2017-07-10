@@ -19,7 +19,6 @@ ARG_HELP="
       --force               Overwrite existing output
 
 "
-#CHECK_PROGS="concoct chop-contigs"
 CHECK_PROGS="chop-contigs merge-coverage concoct"
 SHORT_OPTIONS=a:c:o:
 LONG_OPTIONS=assembly:,coverage-file:,coverage-path:,force,out-dir:
