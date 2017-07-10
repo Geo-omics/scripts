@@ -129,7 +129,7 @@ inc-version-tag:
 # 1. increment the version and set as git tag
 # 2. build stuff as needed for a release, i.e. sphinx docs
 # 3. build the tarball
-release: allcommtted inc-version-tag sphinx-docs dist
+release: allcommitted inc-version-tag sphinx-docs dist
 
 install-data: installdir = $(DESTDIR)$(datadir)/$(package_name)
 install-data:
