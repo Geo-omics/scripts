@@ -41,22 +41,26 @@ Options
     Overwrite existing results, by default will exit with an error message when
     the output file exist.
 
-.. option:: --mink=N
+.. option:: --mink=N, 
 
-    idba_ud parameter for minimum k-mer size
+    parameter for minimum k-mer size
 
 .. option:: --maxk=N
 
-    idba_ud parameter for maximum k-mer size
+    parameter for maximum k-mer size
 
 .. option:: --step=N
 
-    idba_ud parameter for step size for increasing k-mer values
+    parameter for step size for increasing k-mer values
 
 .. option:: --level LEVEL
 
     Specifies the assembly level to use for doenstream analysis.  Can be either
     scaffold (the default) or contig.
+
+.. option:: --megahit
+
+    Use the MEGAHIT assembler. The default is to use IDBA_UD.
 
 .. option:: --out PATH
 

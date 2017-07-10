@@ -16,11 +16,13 @@ ARG_HELP="
       --contigs FILE      Skip assembly step and process the provided contigs / scaffolds.
       --cpus N	          How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
-      --maxk N            IDBA min k parameter, default is 52
-      --mink N            IDBA max k parameter, default is 92
-      --step N            IDBA steps parameter, default is 8
+      --maxk N            min k parameter, default is 52, must be odd with --megahit
+      --mink N            max k parameter, default is 92, must be odd with --megahit
+      --step N            k steps parameter, default is 8, must be even with --megahit
       --level LEVEL       Specifies the assembly level to use for doenstream analysis.
-                          Can be either scaffold (the default) or contig.
+                          Can be either scaffold (the default) or contig.  This is
+			  ignored when using --megahit
+      --megahit           Use megahit assembler, default is to use IDBA_UD
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
       --reads FILE        Interleaved reads file, by default this is 'dt_int.fasta'
@@ -30,7 +32,7 @@ ARG_HELP="
 "
 CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
 
 handle_options () {
@@ -51,6 +53,9 @@ handle_options () {
 	(--maxk)
 	    MAXK="$2"
 	    return 2;;
+	(--megahit)
+	    MEGAHIT=true
+	    return 1;;
 	(--mink)
 	    MINK="$2"
 	    return 2;;
@@ -96,6 +101,8 @@ CONTIGS=
 CPUS=4
 # Overwrite existing files if `true`
 FORCE=false
+# Use megahit, if false, then use idba_ud (the default)
+MEGAHIT=false
 # PhyloSift run control file
 PHYLOSIFTRC="$(dirname "$0")/../share/geo-omics-scripts/phylosiftrc"
 # interleaved reads as made by qc script
@@ -215,8 +222,12 @@ if $run_assembly; then
     $MKDIR -p "$out"
 
     info "Assembling..."
-    echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-    idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+    if $MEGAHIT; then
+	megahit -o "$out" --12 "$reads" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
+    else
+	echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+	idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+    fi
     # make convenience link
     $LN -f "$assembly" assembly.fa
     info "done: Assembly at $assembly"
