@@ -13,7 +13,8 @@ module-whatis "All-in-one omics module"
 if { [module-info mode load] } {
     # prerequsites for quast module
     module load boost
-    module load python-anaconda2
+    # prerequsites for quast, concoct module
+    module load python-anaconda2/latest
     # prerequisite for bedtools2 module
     module load samtools
     # Load standard software packages
