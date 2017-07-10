@@ -111,6 +111,9 @@ dist: distdir
 	$(info Cleaning up temporary dist directory ...)
 	$(RM) -r -- "$(dist_dir)"
 
+allcommitted:
+	$(all_committed) || (echo "All changes must be committed to the git repo before making a release!"; exit 1)
+
 inc-version-tag:
 	# increment patch version unless $(VERSION) was provided
 	# This way we can use
@@ -119,7 +122,6 @@ inc-version-tag:
 	#    make release
 	# to make patch releases.
 	$(if $(VERSION),,$(eval version := $(inc_version)))
-	! git status --porcelain | grep -q '^A' && \
 	git tag -a "$(version)" -m "Release version $(version)"
 	$(info Version incremented to $(version))
 
@@ -127,7 +129,7 @@ inc-version-tag:
 # 1. increment the version and set as git tag
 # 2. build stuff as needed for a release, i.e. sphinx docs
 # 3. build the tarball
-release: inc-version-tag sphinx-docs dist
+release: allcommtted inc-version-tag sphinx-docs dist
 
 install-data: installdir = $(DESTDIR)$(datadir)/$(package_name)
 install-data:
