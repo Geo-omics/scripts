@@ -219,12 +219,13 @@ else
 fi
 
 if $run_assembly; then
-    $MKDIR -p "$out"
 
     info "Assembling..."
     if $MEGAHIT; then
+	$MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
 	megahit -o "$out" --12 "$reads" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
     else
+	$MKDIR -p "$out"
 	echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
 	idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
     fi
