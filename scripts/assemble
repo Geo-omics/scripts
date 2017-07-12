@@ -13,16 +13,17 @@ USAGE="[OPTIONS]... [SAMPLE_DIRS]..."
 HELP="Assemble a metagenome, and analyse assembly"
 ARG_HELP="
       --assembly-only     Stop after finishing the assembly
-      --contigs FILE      Skip assembly step and process the provided contigs / scaffolds.
+      --assembly FILE     Skip assembly step but continue down-stream analysis
+			  with the provided contigs / scaffolds.
       --cpus N	          How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
-      --maxk N            min k parameter, default is 52, must be odd with --megahit
-      --mink N            max k parameter, default is 92, must be odd with --megahit
-      --step N            k steps parameter, default is 8, must be even with --megahit
-      --level LEVEL       Specifies the assembly level to use for doenstream analysis.
-                          Can be either scaffold (the default) or contig.  This is
+      --maxk N            min k parameter, must be odd with --megahit
+      --mink N            max k parameter, must be odd with --megahit
+      --step N            k steps parameter, must be even with --megahit
+      --level LEVEL       Specifies the assembly level to use for downstream analysis.
+                          Can be either contig (the default) or scaffold.  This is
 			  ignored when using --megahit
-      --megahit           Use megahit assembler, default is to use IDBA_UD
+      --megahit           Use MEGAHIT assembler, default is to use IDBA_UD
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
       --reads FILE        Interleaved reads file, by default this is 'dt_int.fasta'
@@ -30,9 +31,12 @@ ARG_HELP="
       --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
       --skip-quast        Skip QUAST analysis, by default QUAST is run
 "
+MORE_HELP="
+The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for MEGAHIT.
+"
 CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,contigs:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+LONG_OPTIONS=assembly-only,assembly:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
 
 handle_options () {
@@ -41,8 +45,8 @@ handle_options () {
 	(--assembly-only)
 	    ASSEMBLY_ONLY=true
 	    return 1;;
-	(--contigs)
-	    CONTIGS="$2"
+	(--assembly)
+	    ASSEMBLY="$2"
 	    return 2;;
 	(--cpus)
 	    CPUS="$2"
@@ -91,12 +95,14 @@ handle_options () {
 # default variable values
 ##########################
 
+# Empty default ASSEMBLY triggers running the assembler
+ASSEMBLY=
 #
-ASSEMBLY_LEVEL=scaffold
+ASSEMBLY_LEVEL=contig
 # Stop after finishing assembly when set to `true`
 ASSEMBLY_ONLY=false
-# Do assembly step by default
-CONTIGS=
+# Name of the (link to the) finished assembly
+ASSEMBLY_LINK=assembly.fa
 # Number of CPUs to use in parallel
 CPUS=4
 # Overwrite existing files if `true`
@@ -130,10 +136,6 @@ fi
 PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_128_SSURef_tax_silva.fasta"
 PATH2BACT="$ref_data_home/NCBI_RefSeq_RNA/latest/bacteria.rna.fasta"
 PATH2ARCH="$ref_data_home/NCBI_RefSeq_RNA/latest/archaea.rna.fasta"
-# default IDBA Parameters
-MINK=52
-MAXK=92
-STEP=8
 
 # other scripts
 if which quast.py &> /dev/null; then
@@ -155,17 +157,30 @@ fi
 #################################
 # do stuff
 ################################
+
+if $MEGAHIT; then
+    # default MEGAHIT Parameters
+    [ -n "$MINK" ] || MINK=21
+    [ -n "$MAXK" ] || MAXK=141
+    [ -n "$STEP" ] || STEP=12
+else
+    # default IDBA Parameters
+    [ -n "$MINK" ] || MINK=52
+    [ -n "$MAXK" ] || MAXK=92
+    [ -n "$STEP" ] || STEP=8
+fi
+
 spec=k${MINK}_${MAXK}_s${STEP}
 out="$OUTDIR/$spec"
 
 run_assembly=true
-if [ -n "$CONTIGS" ]; then
-    if [ -f "$CONTIGS" ]; then
-	assembly=$CONTIGS
+if [ -n "$ASSEMBLY" ]; then
+    if [ -f "$ASSEMBLY" ]; then
+	assembly=$ASSEMBLY
 	out=${WORK_DIR}
 	run_assembly=false
     else
-	abort "Existing assembly not found: $CONTIGS"
+	abort "Existing assembly not found: $ASSEMBLY"
     fi
 else
     # check if reads exists before doing anything
@@ -190,33 +205,24 @@ else
         reads=$READS
     fi
 
-
     if [ -d "$out" ]; then
-	if [ -f "$out/scaffold.fa" ] && [ -f "$out/contig.fa" ]; then
-	    if $FORCE; then
-		info "Erasing $out per --force option..."
-		$RM -rf -- "$out"
-	    else
-		# keep existing assembly
-		info "Using existing assembly at $out, use --force to overwrite with a new assembly."
-		run_assembly=false
-	    fi
+	# partial output from previous run?
+	if $FORCE; then
+	    info "Erasing $out per --force option..."
+	    $RM -rf -- "$out"
 	else
-	    # partial output from previous run?
-	    if $FORCE; then
-		warning "$out exists and may be overwritten per --force option"
-	    else
-		abort "Output directory $out exists, use --force to override this check or --out to specify a different output directory."
-	    fi
+	    abort "Output directory $out exists, use --force to override this check or --out to specify a different output directory."
 	fi
     fi
 
-    assembly=$out/$ASSEMBLY_LEVEL.fa
-
+    if $MEGAHIT; then
+        assembly=$out/final.contigs.fa
+    else
+        assembly=$out/$ASSEMBLY_LEVEL.fa
+    fi
 fi
 
 if $run_assembly; then
-
     info "Assembling..."
     if $MEGAHIT; then
 	$MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
@@ -227,7 +233,7 @@ if $run_assembly; then
 	idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
     fi
     # make convenience link
-    $LN -f "$assembly" assembly.fa
+    $LN -f "$assembly" $ASSEMBLY_LINK
     info "done: Assembly at $assembly"
 fi
 
@@ -235,7 +241,7 @@ fi
 
 if $RUN_QUAST; then
     info "Making assembly stats..."
-    if $run_assembly; then
+    if $run_assembly && ! $MEGAHIT; then
         quast_opts=(-l "Scaffolds, Contigs" "$out/scaffold.fa" "$out/contig.fa")
     else
         quast_opts=(-l "Assembly" "$assembly")
