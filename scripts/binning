@@ -16,12 +16,13 @@ ARG_HELP="
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
+      --clusters            Number of clusters, sets CONCOCT's -c parameter.
       --force               Overwrite existing output
 
 "
 CHECK_PROGS="chop-contigs merge-coverage concoct"
 SHORT_OPTIONS=a:c:o:
-LONG_OPTIONS=assembly:,coverage-file:,coverage-path:,force,out-dir:
+LONG_OPTIONS=assembly:,clusters:,coverage-file:,coverage-path:,force,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -31,6 +32,9 @@ handle_options () {
 	    return 2;;
 	(-c|--coverage-file)
 	    COV_FILE="$2"
+	    return 2;;
+	(--clusters)
+	    CLUSTERS="$2"
 	    return 2;;
 	(--coverage-path)
 	    COV_PATH="$2"
@@ -49,6 +53,8 @@ handle_options () {
 
 # Define defaults for cmdline options here
 ASSEMBLY=contigs.fa
+# Empty be default, -c won't be set
+CLUSTERS=
 FORCE=false
 OUTDIR=BINNING
 # no default needed
@@ -71,6 +77,9 @@ for i in "${SAMPLE_DIRS[@]}"; do
     [ -r "$i/$COV_PATH" ] || abort "coverage file not found: $i/$COV_PATH"
 done
 
+if [[ -n "$CLUSTERS" ]]; then
+    [[ $CLUSTERS -gt 0 ]] || abort "Cluster parameter must be number greater than 0"
+fi
 
 # your script comes here --->
 assembly=$(readlink -f "$ASSEMBLY")
@@ -103,5 +112,10 @@ fi
 [ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
 
 info "Running CONCOCT..."
-concoct -c 40 --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+if [[ -n "$CLUSTERS" ]]; then
+    c_arg="-c $CLUSTERS"
+else
+    c_arg=
+fi
+concoct $c_arg --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
 
