@@ -16,13 +16,13 @@ ARG_HELP="
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
-      --clusters            Number of clusters, sets CONCOCT's -c parameter.
+      --max-clusters        Maximum number of clusters, sets CONCOCT's -c parameter.
       --force               Overwrite existing output
 
 "
 CHECK_PROGS="chop-contigs merge-coverage concoct"
 SHORT_OPTIONS=a:c:o:
-LONG_OPTIONS=assembly:,clusters:,coverage-file:,coverage-path:,force,out-dir:
+LONG_OPTIONS=assembly:,max-clusters:,coverage-file:,coverage-path:,force,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -33,8 +33,8 @@ handle_options () {
 	(-c|--coverage-file)
 	    COV_FILE="$2"
 	    return 2;;
-	(--clusters)
-	    CLUSTERS="$2"
+	(--max-clusters)
+	    MAX_CLUSTERS="$2"
 	    return 2;;
 	(--coverage-path)
 	    COV_PATH="$2"
@@ -54,7 +54,7 @@ handle_options () {
 # Define defaults for cmdline options here
 ASSEMBLY=contigs.fa
 # Empty be default, -c won't be set
-CLUSTERS=
+MAX_CLUSTERS=
 FORCE=false
 OUTDIR=BINNING
 # no default needed
@@ -77,8 +77,8 @@ for i in "${SAMPLE_DIRS[@]}"; do
     [ -r "$i/$COV_PATH" ] || abort "coverage file not found: $i/$COV_PATH"
 done
 
-if [[ -n "$CLUSTERS" ]]; then
-    [[ $CLUSTERS -gt 0 ]] || abort "Cluster parameter must be number greater than 0"
+if [[ -n "$MAX_CLUSTERS" ]]; then
+    [[ $MAX_CLUSTERS -gt 0 ]] || abort "max-cluster parameter must be number greater than 0"
 fi
 
 # your script comes here --->
@@ -112,8 +112,8 @@ fi
 [ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
 
 info "Running CONCOCT..."
-if [[ -n "$CLUSTERS" ]]; then
-    c_arg="-c $CLUSTERS"
+if [[ -n "$MAX_CLUSTERS" ]]; then
+    c_arg="-c $MAX_CLUSTERS"
 else
     c_arg=
 fi
