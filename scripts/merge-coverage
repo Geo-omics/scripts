@@ -172,7 +172,7 @@ if __name__ == '__main__':
     argp.add_argument(
         '-v', '--verbose',
         action='store_true',
-        help='Report progress'
+        help='Report progress to stderr.'
     )
     args = argp.parse_args()
 
