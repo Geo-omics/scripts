@@ -34,6 +34,7 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
     while True:
         line = infile.readline()
         if line.startswith('>') or line == '':
+            # reached end of a sequence, needs to be written
             # '' is EOF
             if header is not None and sequence is not None:
                 _write_chunks(
@@ -44,6 +45,7 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
                     no_dot_zero=no_dot_zero,
                 )
             elif header is None and sequence is None:
+                # at first line in file
                 pass
             else:
                 raise RuntimeError('illegal program state reached')
@@ -52,6 +54,7 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
                 # EOF
                 break
 
+            # process new header
             header = line.strip()
             if truncate_headers:
                 try:
@@ -59,8 +62,9 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
                 except AttributeError:
                     # no match, so be it
                     pass
-            sequence = ''
+            sequence = ''  # start new sequence
         else:
+            # line is continuation of sequence
             if sequence is None:
                 raise RuntimeError(
                     'Failed to parse input ({}): does not start with a fasta '
