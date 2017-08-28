@@ -26,6 +26,8 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
     Tha last chunk if a sequence larger than chunk_size is larger than
     chunk_size and smaller than twice the chunk_size.
     """
+    if chunk_size < 1:
+        raise ValueError('Chunk size must be larger than 0')
     head_id_pat = re.compile(r'>\S+')
     sequence = None
     header = None
