@@ -4,6 +4,7 @@ Chop up contigs of a metagenomic assembly in preparation tun run CONCOCT
 """
 
 import argparse
+import re
 import sys
 
 CHUNK_SIZE = 10000
@@ -14,7 +15,7 @@ WRAP_WIDTH = 60
 
 
 def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
-         no_dot_zero=False):
+         no_dot_zero=False, truncate_headers=True):
     """
     Chop up given contigs to chunk_size length
 
@@ -25,6 +26,7 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
     Tha last chunk if a sequence larger than chunk_size is larger than
     chunk_size and smaller than twice the chunk_size.
     """
+    head_id_pat = re.compile(r'>\S+')
     sequence = None
     header = None
     while True:
@@ -49,6 +51,12 @@ def chop(infile, outfile, chunk_size=CHUNK_SIZE, wrap=False,
                 break
 
             header = line.strip()
+            if truncate_headers:
+                try:
+                    header = re.match(head_id_pat, header).group()
+                except AttributeError:
+                    # no match, so be it
+                    pass
             sequence = ''
         else:
             if sequence is None:
@@ -138,6 +146,14 @@ if __name__ == '__main__':
              'compatible with CONCOCT\'s cut_up_fasta.py script.'
     )
     argp.add_argument(
+        '--no-truncate-headers',
+        action='store_false',
+        dest='truncate_headers',
+        help='Do not truncate FASTA headers. By default, headers get truncated'
+             ' at the first white-space character, assuming everthing up to '
+             'then uniquly identifies the contig.',
+    )
+    argp.add_argument(
         '--debug',
         action='store_true',
         help='Print stack trace on errors.'
@@ -151,6 +167,7 @@ if __name__ == '__main__':
             chunk_size=args.chunk_size,
             wrap=args.wrap,
             no_dot_zero=args.no_dot_zero,
+            truncate_headers=args.truncate_headers,
         )
     except Exception as e:
         if args.debug:
