@@ -44,6 +44,13 @@ Options
     be chopped up. This option make the output compatible with CONCOCT's
     cut_up_fasta.py script.
 
+.. option:: --no-truncate-headers
+
+    Do not further manipulate fasta headers beyond adding the chop numbers.  By
+    default, the header is truncated at the first whitespace character,
+    assuming this still uniquely identifies the contig.  This default behaviour
+    is needed for MEGAHIT assemblies and does no harm to IDBA assemblies.
+
 .. option:: --debug
 
     Print stack trace on errors.
