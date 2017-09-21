@@ -118,6 +118,7 @@ OTHER_EXECUTABLES = \
     assemble \
     assemblyModules \
     binning \
+    bins2fasta \
     chop-contigs \
     createPhgDB \
     do2folder \
