@@ -75,7 +75,7 @@ for line in args.contigs:
             del contigs[contig_id]
         except KeyError:
             pass
-        contig_id = line.strip().lstrip('>')
+        contig_id, _, _ = line.strip().lstrip('>').partition(' ')
 
     try:
         bin = contigs[contig_id]
