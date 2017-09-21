@@ -94,6 +94,8 @@ except KeyError:
     pass
 
 for i in files.values():
+    if i.tell() == 0:
+        print('WARNING: {} is empty'.format(i.name))
     i.close()
 print('done')
 
