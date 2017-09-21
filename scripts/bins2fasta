@@ -21,6 +21,11 @@ argp.add_argument(
     help='Fasta formatted contigs file'
 )
 argp.add_argument(
+    '-s', '--suffix',
+    default='fna',
+    help='Suffix for output files, default is .fna'
+)
+argp.add_argument(
     '-o', '--output-dir',
     default='.',
     help='Output directory, default is the current directory.'
@@ -61,7 +66,8 @@ print('Copying contigs...', end='', flush=True)
 # get output file handles
 files = {}
 for i in bins:
-    fname = 'bin_{}.fa'.format(i)
+    suffix = args.suffix.lstrip('.')
+    fname = 'bin_{}.{}'.format(i, suffix)
     files[i] = (outdir / fname).open('w')
 
 # write contigs
