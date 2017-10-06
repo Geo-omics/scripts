@@ -32,8 +32,8 @@ use FileHandle;
 
 my $version="crawler.pl\tv0.0.6";
 my $list="contents.list";
-my $path= "/geomicro/data1/COMMON/scripts/";
-my $sandbox="/geomicro/data1/COMMON/scripts/sandbox";
+my $path= "./";
+my $sandbox="./sandbox";
 
 GetOptions(
 	'p|path2scripts:s'=>\$path,

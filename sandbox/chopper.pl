@@ -133,7 +133,7 @@ sub chopFile{
 	my $partCount=1;
 	my $totalSeqs=0;
 	my ($volume,$directories,$fileName)=File::Spec->splitpath( $file );
-	my ($fName, @ext)= split(/\./, $fileName);
+	my ($fName, @ext)= split(/\.([^\.]+)$/, $fileName);
 	my $restOfName=join(".", @ext);
 	my $out=$fName.".0".$partCount.".".$restOfName;
 	my $fh;

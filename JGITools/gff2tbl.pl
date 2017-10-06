@@ -225,6 +225,7 @@ sub parseGFF3{
     my(@attributes)=split(/\;/, $attribs);
 
     my ($locusID, $ID, $Name,$Alias, $Parent, $Target, $Gap, $Derives_from, $Note, $Dbxref, $Onto, $repeat_type, $repeat_unit, $repeat_fam, $product);
+	my $repeatNumber=1;
     foreach my $att(@attributes){
 		$locusID=$1 if ($att=~/locus_tag\=(.*)/);
 		$ID= $1 if ($att=~/^ID\=(.*)/);
@@ -251,10 +252,13 @@ sub parseGFF3{
 			$locusID=$Parent."__exon"
 		}
 		elsif($type=~/repeat/){
+			# rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
 			$locusID=$ID."__".
 			($repeat_type ? "Type_".$repeat_type : "Type_Unknown")."__".
 			($repeat_unit ? "Unit_".$repeat_unit : "Unit_Unknown")."__".
-			($repeat_fam ? "Family_".$repeat_fam : "Family_Unknown"); # rpt_type=CRISPR;rpt_unit=13023..13055;rpt_family=blah
+			($repeat_fam ? "Family_".$repeat_fam : "Family_Unknown")."__".
+			"RepeatNum_".$repeatNumber;
+			$repeatNumber++;
         }
         else{
 			$locusID=$ID."__".$type;
