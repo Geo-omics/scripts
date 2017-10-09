@@ -9,7 +9,7 @@ Geomicro Illumina Reads processing Pipeline
 Prerequisites
 =============
 
-    #. Have a user account on flux, vondamm, or cayman
+    #. Have a user account on flux (with allocation), vondamm, or cayman
     #. Have access to long-term data storage
     #. Log into a terminal session on one of the servers
     #. Have the :doc:`omics <omics>` module loaded
@@ -82,6 +82,13 @@ files and put them into appropriately named directories::
     cd <work directory>
     prep <raw data directory>
 
+To make use of multiple CPUs replace the simple call to :program:`prep` with a line like::
+
+    for i in {0..9}; do prep /path/to/raw_reads/661${i}*.fastq & done
+
+to distribute the work across you available CPUs (10 in this example) that
+distributes processing samples whose filenames start with the same four digits
+to the same CPU.
 
 Quality control module - :program:`qc`
 ======================================
@@ -160,11 +167,15 @@ each sample::
     cd <working directory>/<sample id>
     qc
 
-You can easily process multiple samples by doing something like::
+You can easily process multiple samples in parallel by doing something like::
 
     cd <working directory>
-    for i in *; do (cd $i && qc); done
+    for i in *; do (cd $i && qc &); done
 
+The :program:`qc` script makes use of two CPUs in parallel so the above works
+best when the number of CPUs is twice the number of samples.  If there are more
+samples multiple `for` loops can be used with the globs (`*`) replaced with an
+apropriate number of sample ids.
 
 Assembly Module -- :program:`assemble`
 ======================================
