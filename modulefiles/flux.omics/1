@@ -5,7 +5,7 @@
 # this module's maintainer's email: heinro@umich.edu
 # 
 proc ModulesHelp { } {
-    puts stderr "Load this module to use the (geo-)omics scripts."
+    puts stderr "Load this module to use the 'omics scripts."
 }
 
 module-whatis "All-in-one omics module"
