@@ -17,12 +17,13 @@ ARG_HELP="
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
       --max-clusters        Maximum number of clusters, sets CONCOCT's -c parameter.
+      --cpus                Number of CPUs/threads
       --force               Overwrite existing output
 
 "
 CHECK_PROGS="chop-contigs merge-coverage concoct"
 SHORT_OPTIONS=a:c:o:
-LONG_OPTIONS=assembly:,max-clusters:,coverage-file:,coverage-path:,force,out-dir:
+LONG_OPTIONS=assembly:,cpus:,max-clusters:,coverage-file:,coverage-path:,force,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -45,6 +46,9 @@ handle_options () {
 	(-o|--out-dir)
 	    OUTDIR="$2"
 	    return 2;;
+        (--cpus)
+            CPUS="$2"
+            return 2;;
         esac
     else
         return 0
@@ -112,10 +116,8 @@ fi
 [ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
 
 info "Running CONCOCT..."
-if [[ -n "$MAX_CLUSTERS" ]]; then
-    c_arg="-c $MAX_CLUSTERS"
-else
-    c_arg=
-fi
+c_args=
+[[ -z $CPUS ]] || c_arg="$c_args -t $CPUS"
+[[ -z $MAX_CLUSTERS ]] || c_arg="$c_args -c $MAX_CLUSTERS"
 concoct $c_arg --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
 
