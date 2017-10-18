@@ -134,6 +134,7 @@ OTHER_EXECUTABLES = \
     mVelvetPipe_singles \
     oasesPaired_pipe \
     prep \
+    omics-init \
     qc \
     refseq-rna \
     remove_space_from_filenames \

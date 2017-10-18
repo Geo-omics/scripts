@@ -4,6 +4,9 @@ Package to support geo-omics-scripts
 from pathlib import Path
 
 
+OMICS_DIR = '.omics'
+CONFIG_FILE = 'config'
+CONF_SECTION_PROJECT = 'project'
 SCRIPT_PREFIX = 'omics-'
 
 
