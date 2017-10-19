@@ -1,5 +1,6 @@
 *~
 .*sw[op]
+*.pyc
 
 # make-generated files
 scripts/*.1
