@@ -37,7 +37,6 @@ man7dir := $(mandir)/man7
 
 EXTRA_DIST = \
 	COPYRIGHT \
-	docs \
 	Makefile \
 	modulefiles \
 	README.md \
@@ -95,15 +94,25 @@ patch_version := $(word 3,$(_sem_versions))
 inc_patch_version := $(shell echo $(patch_version)+1 | bc)
 inc_version := $(major_version).$(minor_version).$(inc_patch_version)
 
-distdir:
-	$(all_committed) || echo "Warning: git reports uncommitted changes; will be included in distribution!"
+distmkdir:
 	mkdir -p -- "$(dist_dir)"
+
+distdocs:
+	for p in docs docs/_static/css; do \
+	    mkdir -p -- "$(dist_dir)/$$p"; \
+	    for i in $$(find $$p -type f -not -name '*~'); do \
+	        cp -p $$i "$(dist_dir)/$$p"; \
+	    done; \
+	done
+
+distdir: distmkdir distdocs
+	$(all_committed) || echo "Warning: git reports uncommitted changes; will be included in distribution!"
 	cd lib && $(MAKE) $@
 	cd scripts && $(MAKE) $@
 	$(info Making VERSION file with content: $(version))
 	echo "$(version)" > $(dist_dir)/VERSION
 	$(info Copying files ...)
-	cp -a $(EXTRA_DIST) $(data_files) $(dist_dir)
+	cp -rp $(EXTRA_DIST) $(data_files) $(dist_dir)
 
 dist: distdir
 	$(info Creating $(dist_dir).tar.gz)
