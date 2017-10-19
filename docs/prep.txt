@@ -1,4 +1,4 @@
-.. program:: prep
+.. program:: omics prep
 
 ============================================================
 prep - prepare compressed fastq files for further processing
@@ -7,7 +7,7 @@ prep - prepare compressed fastq files for further processing
 Synopsis
 ========
 
-:program:`omics-prep` [OPTIONS]... [RAWDATA]...
+:program:`omics prep` [OPTIONS]... [RAWDATA]...
 
 
 Description
@@ -16,7 +16,7 @@ Description
 To several tools of the Geomicro Illumina Reads Processing Pipeline assume
 that raw or intermediate data is available in files following certain naming
 conventions and formats and directory layout.  To get started the script
-:program:`omics-prep` will help following these conventions.  
+:program:`omics prep` will help following these conventions.  
 
 
 Options

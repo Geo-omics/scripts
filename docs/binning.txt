@@ -1,4 +1,4 @@
-.. program:: binning
+.. program:: omics binning
 
 ====================================
 binning - bin metagenomic assemblies
@@ -7,13 +7,13 @@ binning - bin metagenomic assemblies
 Synopsis
 ========
 
-:program:`omics-binning` [OPTIONS]...
+:program:`omics binning` [OPTIONS]...
 
 
 Description
 ===========
 
-The :program:`binning` script implements the binning step for the Geomicro
+The :program:`omics binning` script implements the binning step for the Geomicro
 Illumina Reads Pipeline.
 
 Options

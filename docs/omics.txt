@@ -23,11 +23,11 @@ Main Pipeline Tool
 
 These are the tools that comprise the Geomicro Illumina Reads Pipeline.
 
-* :program:`omics-prep`: Prepare raw fastq data for further processing
-* :program:`omics-qc`: quality check
-* :program:`omics-assemble`: Assembles the meta-genome
-* :program:`omics-mapping`: Maps reads against an assembly
-* :program:`omics-binning`: Bins contigs of assembly
+* :program:`omics prep`: Prepare raw fastq data for further processing
+* :program:`omics qc`: quality check
+* :program:`omics assemble`: Assembles the meta-genome
+* :program:`omics mapping`: Maps reads against an assembly
+* :program:`omics binning`: Bins contigs of assembly
 
 Assembly Tools
 ==============

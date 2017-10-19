@@ -1,4 +1,4 @@
-.. program:: qc
+.. program:: omics qc
 
 ===================================================
 qc - quality control for metagenomic Illumina reads
@@ -7,13 +7,13 @@ qc - quality control for metagenomic Illumina reads
 Synopsis
 ========
 
-:program:`omics-qc` [OPTIONS]...
+:program:`omics qc` [OPTIONS]...
 
 
 Description
 ===========
 
-The :program:`omics-qc` script takes a pair of fastq-formatted files (forward and
+The :program:`omics qc` script takes a pair of fastq-formatted files (forward and
 reverse reads) and runs them past quality assessment (FastQC), dereplication,
 adapter removal (Scythe), and quality-trimming (Sickle) steps and then
 prepares a FASTA-formatted interleaved reads file that can be used as input

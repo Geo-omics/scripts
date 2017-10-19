@@ -1,4 +1,4 @@
-.. program:: assemble
+.. program:: omics assemble
 
 ============================================
 assemble - assemble metagenomes with IDBA_UD
@@ -55,7 +55,7 @@ Options
 
 .. option:: --level LEVEL
 
-    Specifies the assembly level to use for doenstream analysis.  Can be either
+    Specifies the assembly level to use for downstream analysis.  Can be either
     scaffold (the default) or contig.
 
 .. option:: --megahit
@@ -72,7 +72,7 @@ Options
 
 .. option:: --reads FILE
 
-    Interleaved reads file, by default this is :file:`dt_int.fasta` which is the output of :program:`qc`
+    Interleaved reads file, by default this is :file:`dt_int.fasta` which is the output of :program:`omics qc`
 
 .. option:: --skip-blast
 

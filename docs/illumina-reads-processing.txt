@@ -76,13 +76,13 @@ should be cleaned up after use so other users have the space available.
 
 The QC step assumes the raw data to be available in uncompressed FASTQ format,
 one file per read direction and each sample's data in its own directory.  The
-:program:`omics-prep` script will decompress and (if needed) concatenate split
+:program:`omics prep` script will decompress and (if needed) concatenate split
 fastq files and put them into appropriately named directories::
 
     cd <work directory>
     omics prep <raw data directory>
 
-To make use of multiple CPUs replace the simple call to :program:`omics-prep`
+To make use of multiple CPUs replace the simple call to :program:`omics prep`
 with a line like::
 
     for i in {0..9}; do omics prep /path/to/raw_reads/661${i}*.fastq & done
@@ -135,7 +135,7 @@ Adapters used at the library prep stage often make their way into the final
 reads. Since these read fragments are not real biological signals, it becomes
 important to screen them out. This is where adapter removal comes handy. If you
 know the adapters that were used, you can provide an adapter file and tell the
-:program:`omics-qc` script to use it.  Otherwise a standand adapter file that
+:program:`omics qc` script to use it.  Otherwise a standand adapter file that
 is shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool is used to
 screen for adapters.
 
@@ -162,18 +162,18 @@ forward then its reverse counterpart should be the (n+1)th sequence.
 Running the QC Module
 """""""""""""""""""""
 
-Assuming :program:`omics-prep` was run as above, the :program:`omics-qc` script
+Assuming :program:`omics-prep` was run as above, the :program:`omics qc` script
 is run for each sample::
 
     cd <working directory>/<sample id>
-    qc
+    omics qc
 
 You can easily process multiple samples in parallel by doing something like::
 
     cd <working directory>
-    for i in *; do (cd $i && qc &); done
+    for i in *; do (cd $i && omics qc &); done
 
-The :program:`omics-qc` script makes use of two CPUs in parallel so the above
+The :program:`omics qc` script makes use of two CPUs in parallel so the above
 works best when the number of CPUs is twice the number of samples.  If there
 are more samples multiple `for` loops can be used with the globs (`*`) replaced
 with an apropriate number of sample ids.
@@ -245,15 +245,15 @@ You may assemble each sample individually or assemble some or all of your sample
 together.  To assemble the reads of a single sample do::
 
     cd <working directory>/<sample id>
-    assemble
+    omics assemble
 
 To assemble all your samples do something like this::
 
     cd <working directory>
-    assemble *
+    omics assemble *
 
 The glob :samp:`*` will expand to a list of all sample directories i.e. the
-sample ids, as made with the :program:`omics-prep` script.  You can replace the
+sample ids, as made with the :program:`omics prep` script.  You can replace the
 ``*`` with a subset of sample ids that shall go into the assembly.
 
 
@@ -277,7 +277,7 @@ for each sample.  Do this::
     # TODO: how to do separate indexing
     for i in sample_*; do
         cd $i
-        mapping --no-indexing --assembly assembly.chop.fa
+        omics mapping --no-indexing --assembly assembly.chop.fa
         cd ..
     done
 

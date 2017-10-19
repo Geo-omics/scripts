@@ -1,4 +1,4 @@
-.. program:: mapping
+.. program:: omics mapping
 
 ============================================
 mapping - mapping reads to assembly
@@ -7,7 +7,7 @@ mapping - mapping reads to assembly
 Synopsis
 ========
 
-:program:`omics-mapping` [OPTIONS]...
+:program:`omics mapping` [OPTIONS]...
 
 
 Description

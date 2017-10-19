@@ -14,7 +14,7 @@ Description
 ===========
 
 Calculates the per-sample per-contig mean coverage from the per-sample coverage
-tables made with :program:`mapping` into on file suitable as input file for
+tables made with :program:`omics mapping` into on file suitable as input file for
 :program:`concoct`.
 
 
