@@ -133,8 +133,8 @@ OTHER_EXECUTABLES = \
     mVelvetPipe_paired \
     mVelvetPipe_singles \
     oasesPaired_pipe \
-    prep \
     omics \
+    omics-prep \
     omics-init \
     qc \
     refseq-rna \
