@@ -76,15 +76,16 @@ should be cleaned up after use so other users have the space available.
 
 The QC step assumes the raw data to be available in uncompressed FASTQ format,
 one file per read direction and each sample's data in its own directory.  The
-:program:`prep` script will decompress and (if needed) concatenate split fastq
-files and put them into appropriately named directories::
+:program:`omics-prep` script will decompress and (if needed) concatenate split
+fastq files and put them into appropriately named directories::
 
     cd <work directory>
-    prep <raw data directory>
+    omics prep <raw data directory>
 
-To make use of multiple CPUs replace the simple call to :program:`prep` with a line like::
+To make use of multiple CPUs replace the simple call to :program:`omics-prep`
+with a line like::
 
-    for i in {0..9}; do prep /path/to/raw_reads/661${i}*.fastq & done
+    for i in {0..9}; do omics prep /path/to/raw_reads/661${i}*.fastq & done
 
 to distribute the work across you available CPUs (10 in this example) that
 distributes processing samples whose filenames start with the same four digits
@@ -132,10 +133,10 @@ The script :program:`dereplicate` will create 2 files as its output, the
 """""""""""""""""""""""""
 Adapters used at the library prep stage often make their way into the final
 reads. Since these read fragments are not real biological signals, it becomes
-important to screen them out. This is where adapter removal comes handy. If
-you know the adapters that were used, you can provide an adapter file and tell
-the :program:`qc` script to use it.  Otherwise a standand adapter file that is
-shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool is used to
+important to screen them out. This is where adapter removal comes handy. If you
+know the adapters that were used, you can provide an adapter file and tell the
+:program:`omics-qc` script to use it.  Otherwise a standand adapter file that
+is shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool is used to
 screen for adapters.
 
 4.        Trim the Data
@@ -161,8 +162,8 @@ forward then its reverse counterpart should be the (n+1)th sequence.
 Running the QC Module
 """""""""""""""""""""
 
-Assuming :program:`prep` was run as above, the :program:`qc` script is run for
-each sample::
+Assuming :program:`omics-prep` was run as above, the :program:`omics-qc` script
+is run for each sample::
 
     cd <working directory>/<sample id>
     qc
@@ -172,10 +173,10 @@ You can easily process multiple samples in parallel by doing something like::
     cd <working directory>
     for i in *; do (cd $i && qc &); done
 
-The :program:`qc` script makes use of two CPUs in parallel so the above works
-best when the number of CPUs is twice the number of samples.  If there are more
-samples multiple `for` loops can be used with the globs (`*`) replaced with an
-apropriate number of sample ids.
+The :program:`omics-qc` script makes use of two CPUs in parallel so the above
+works best when the number of CPUs is twice the number of samples.  If there
+are more samples multiple `for` loops can be used with the globs (`*`) replaced
+with an apropriate number of sample ids.
 
 Assembly Module -- :program:`assemble`
 ======================================
@@ -251,9 +252,9 @@ To assemble all your samples do something like this::
     cd <working directory>
     assemble *
 
-The glob :samp:`*` will expand to a list of all sample directories i.e. the sample
-ids, as made with the :program:`prep` script.  You can replace the ``*`` with
-a subset of sample ids that shall go into the assembly.
+The glob :samp:`*` will expand to a list of all sample directories i.e. the
+sample ids, as made with the :program:`omics-prep` script.  You can replace the
+``*`` with a subset of sample ids that shall go into the assembly.
 
 
 Mapping
@@ -286,7 +287,7 @@ Binning
 
 Do this::
 
-    binning --assembly assembly.chop.fa Sample_*
+    omics binning --assembly assembly.chop.fa Sample_*
 
 
 .. _google doc: https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing

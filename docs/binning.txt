@@ -7,7 +7,7 @@ binning - bin metagenomic assemblies
 Synopsis
 ========
 
-:program:`binning` [OPTIONS]...
+:program:`omics-binning` [OPTIONS]...
 
 
 Description
@@ -77,7 +77,7 @@ Exits with non-zero upon encountering an error.
     See Also
     ========
 
-    :manpage:`prep(1)`, :manpage:`qc(1)`, :manpage:`assemble(1)`,
-    :manpage:`mapping(1)`, :manpage:`omics(7)`,
+    :manpage:`omics-prep(1)`, :manpage:`omics-qc(1)`, :manpage:`omics-assemble(1)`,
+    :manpage:`omics-mapping(1)`, :manpage:`omics(7)`,
     :manpage:`illumina-reads-processing(7)`
 

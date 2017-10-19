@@ -115,9 +115,7 @@ PERL_SCRIPTS = \
 
 OTHER_EXECUTABLES = \
     antiSmash_summary \
-    assemble \
     assemblyModules \
-    binning \
     bins2fasta \
     chop-contigs \
     createPhgDB \
@@ -128,15 +126,17 @@ OTHER_EXECUTABLES = \
     firefox_already_running \
     getGIAnnotation \
     getGISummary \
-    mapping \
     merge-coverage \
     mVelvetPipe_paired \
     mVelvetPipe_singles \
     oasesPaired_pipe \
     omics \
+    omics-assemble \
+    omics-binning \
+    omics-mapping \
     omics-prep \
     omics-init \
-    qc \
+    omics-qc \
     refseq-rna \
     remove_space_from_filenames \
     setup_metapathways \

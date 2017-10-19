@@ -57,7 +57,7 @@ Exits with non-zero upon encountering an error.
     See Also
     ========
 
-    :manpage:`binning(1)`, :manpage:`mapping(1)`, :manpage:`omics(7)`,
-    :manpage:`illumina-reads-processing(7)`
+    :manpage:`omics-binning(1)`, :manpage:`omics-mapping(1)`,
+    :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`
 
 
