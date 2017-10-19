@@ -76,6 +76,7 @@ elif version_file.exists():
 else:
     res = subprocess.run(['git', 'describe'], stdout=subprocess.PIPE)
     version = res.stdout.decode()
+version = version.strip()
 
 if not re.match(r'\d+\.\d+\.\d+(-g-.*)?', version):
     print('[WARNING] [making sphinx docs] Possibly bad version string: {}'
