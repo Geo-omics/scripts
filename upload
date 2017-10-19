@@ -1,0 +1,250 @@
+#!/bin/bash
+#
+# Copyright (c) 2017 Regents of The University of Michigan.
+# All Rights Reserved.
+#
+# Author: Robert <heinro@med.umich.edu>
+#
+
+usage() {
+    if [ "$VERBOSITY" -ge 1 ]; then
+	echo "
+USAGE: $SCRIPT_NAME [-fhtv] OPTIONS... [dist_tar_archive]
+"
+    fi
+}
+
+user_help() {
+    echo "$SCRIPT_NAME - Upload and install geo-omics package"
+    usage
+    echo "Command line parameters:
+-f --force	    Skip safety checks
+-h --help           Print this help.
+   --host	    name of remote host
+-n --no-install     Don't run the installer, just copy and unpack
+   --no-color       Disable colorful output.
+   --no-google-drive Skip uploading docs to goodle drive
+   --stage-dir      Remote directory where to unpack distribution package
+-t --test	    Upload to test installation
+-v		    Verbosity: use multiple -v to increase output.
+   --verbosity <n>  Set level verbosity.
+dist_tar_archive    The tar.gz package file to use.
+"
+}
+
+debug() {
+    [ "$VERBOSITY" -lt 3 ] || echo "[$SCRIPT_NAME] [DEBUG] $1"
+}
+
+info() {
+    [ "$VERBOSITY" -lt 1 ] || echo "[$SCRIPT_NAME] $1"
+}
+
+warning() {
+    [ "$VERBOSITY" -lt 1 ] || echo -e "[$SCRIPT_NAME] [${ORANGE}WARNING${ENDCOLOR}] $1"
+}
+
+error() {
+    [ "$VERBOSITY" -lt -1 ] || >&2 echo -e "[$SCRIPT_NAME] [${RED}ERROR${ENDCOLOR}] $1"
+}
+
+abort() {
+    # write an error message and exit.  If the last positional parameter is 'usage' then also print the usage text.
+    >&2 echo -e "[$SCRIPT_NAME] [${RED}ABORT${ENDCOLOR}] $1"
+    if [ "$VERBOSITY" -ge 0 ]; then
+	if [ $# -ge 0 ]; then
+	    [ "${!#}" == "usage" ] && usage
+	fi
+    fi
+    exit 1
+}
+
+exception () {
+    echo "[ERROR] [upload] at line $1; error code $2"
+    exit 1
+}
+
+trap 'exception $LINENO $?' ERR
+
+# get name of this script
+SCRIPT_NAME=$(basename "$0")
+
+##########################
+# default variable values
+##########################
+
+# Upload some files to google drive
+# requires google drive being mounted properly on development machine
+GOOGLE_DRIVE_UPLOAD=true
+GOOGLE_DRIVE_FILES=(
+    docs/_build/latex/Geomicro-Illumina-Reads-Processing-Pipeline.pdf
+)
+# Force overriding safety checks
+FORCE=false
+#
+NO_INSTALL=false
+#
+PACKAGE_NAME=geo-omics-scripts
+# default verbosity level
+VERBOSITY=1
+# Enable colorful output by default
+USE_COLOR=true
+# where to unpack distibution package
+REMOTE_STAGE_DIR=/geomicro/data2/$(id --user --name)/packaging
+# name of remote host
+REMOTE_HOST=vondamm.geo.lsa.umich.edu
+# Install to test destination
+TEST=false
+
+###################################3
+# command line parameter handling
+###################################
+GETOPT_SHORT=fhntv
+GETOPT_LONG=force,help,host:,no-install,no-color,no-google-drive,stage-dir:,test,verbosity:
+if which getopt >/dev/null 2>&1; then
+    if [ "$(getopt -T > /dev/null 2>&1; echo $?)" == 4 ]; then
+        # GNU getopt available 
+        _getopt=$(getopt -o "$GETOPT_SHORT" --long "$GETOPT_LONG" --name "$SCRIPT_NAME" -- "$@")
+        if [ "$?" != 0 ]; then usage; exit 1; fi
+    else
+	# for non-GNU getopt (on MacOSX?)
+	# try best effort without handling long options
+	# TODO: this path needs testing
+        _getopt=$(getopt -o "$GETOPT_SHORT" --name "$SCRIPT_NAME" -- "$@")
+        if [ "$?" != 0 ]; then usage; exit 1; fi
+    fi
+    # reset $n parameters
+    eval set -- "$_getopt"
+fi
+
+# handle options arguments / should work with/without getopt
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+	(-f|--force) FORCE=true;;
+	(-h|--help) user_help; exit 0;;
+	(--host) REMOTE_HOST=$2; shift;;
+	(-n|--no-install) NO_INSTALL=true;;
+	(--no-color) USE_COLOR=false;;
+	(--no-google-drive) GOOGLE_DRIVE_UPLOAD=false;;
+	(--stage-dir) REMOTE_STAGE_DIR=$2; shift;;
+	(-t|--test) TEST=true;;
+	(-v) VERBOSITY=$((VERBOSITY+1));;
+	(--verbosity)
+	    VERBOSITY="$2"
+	    [[ "$VERBOSITY" =~ ^[[:digit:]]+$ ]] || abort "Verbosity level must be a positive integer." usage 
+	    shift
+	    ;;
+	(--) shift; break;;
+	(-|-*) abort "invalid command line option: $1" usage;;
+	(*) break;; # getopt failure? assume this and following are non-option args
+    esac
+    shift
+done
+
+##########################################################
+# color output
+#
+# for color codes see:
+# https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+#
+# 
+if [ "$USE_COLOR" == true ]; then
+    if which tput >/dev/null 2>&1 && [ "$(tput colors)" -ge 8 ]; then
+	RED=$(tput setaf 1)
+	ORANGE=$(tput bold)$(tput setaf 1)
+	ENDCOLOR=$(tput sgr0)
+    fi
+fi
+
+debug "command line options: $_getopt"
+debug "verbosity set to: $VERBOSITY"
+# set bash script debugging
+[ "$VERBOSITY" -ge 4 ] && set -x
+# forward verbosity to other commands
+[ "$VERBOSITY" -ge 2 ] && VERBOSE_FLAG=-v
+# handle non-option parameters
+if [ "$#" -gt 0 ]; then
+    package="$1"
+    shift
+fi
+
+if [ "$#" -gt 0 ]; then
+    abort "unrecognized parameter: $*" usage
+fi
+
+
+#################################
+# do stuff
+################################
+
+if [ -z "$package" ]; then
+    # find current release
+    git_tag=$(git describe)
+    if $TEST; then
+	# get latest dist tarball
+	# shellcheck disable=SC2012
+	package=$(ls -1rt "${PACKAGE_NAME}-${git_tag}"*.tar.gz | tail -n 1)
+    elif [[ "$git_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+	# be strict which versions to accept unless testing
+	version=$git_tag
+	info "Current version is $version"
+	package=${PACKAGE_NAME}-${version}.tar.gz
+    else
+	abort "You are trying to upload to the production server but no release has been made, current git tag is $git_tag, run 'make release' first"
+    fi
+fi
+# Do sanity checks
+if [ -e "$package" ]; then
+    info "Using tarball: $package"
+else
+    abort "Failed to find distribution package $package, run 'make <dist|release>' first!"
+fi
+
+if ! $FORCE; then
+    # shellcheck disable=SC2029
+    # shellcheck disable=SC2087
+    if ! ssh "$REMOTE_HOST" << EOF
+	(test -d "$REMOTE_STAGE_DIR" || (echo "[test failed] staging directory $REMOTE_STAGE_DIR does not exists"; exit 1)) &&
+	($TEST || ! test -e "$REMOTE_STAGE_DIR/$package" || (echo "[test failed] $package exists in staging directory"; exit 1))
+EOF
+    then
+	abort "Sanity check failed.  See error message above."
+    fi
+fi
+
+# copying package to remote host
+if $TEST; then
+    # shellcheck disable=SC2016
+    remote_env='FINSTER_RC=$HOME/.finster-test.rc'
+    module_cmds='module unload omics && module load omics/testing &&'
+else
+    remote_env=
+    module_cmds=
+fi
+
+echo -n "[$SCRIPT_NAME] Copying $PACKAGE_NAME to $REMOTE_HOST:$REMOTE_STAGE_DIR... "
+scp -p -q "$package" "$REMOTE_HOST:$REMOTE_STAGE_DIR"
+echo "done"
+
+# installing on remote host
+# shellcheck disable=SC2029
+# shellcheck disable=SC2087
+ssh -q "$REMOTE_HOST" << EOF
+    $module_cmds
+    $remote_env finster install $finster_verbose "$REMOTE_STAGE_DIR/$package" &&
+    echo "done"
+EOF
+
+if $GOOGLE_DRIVE_UPLOAD && ! $TEST; then
+    google_drive=/run/user/$(id --user)/gvfs/google-drive:host=umich.edu,user=$(id --user --name)
+    google_drive_dest="Geomicrobiology Lab/Bioinformatics Tutorials"
+    if [ -d "$google_drive" ]; then
+        info "Uploading to google drive..."
+	cp "${GOOGLE_DRIVE_FILES[@]}" "$google_drive/$google_drive_dest/"
+    else
+	warning "Google drive is not mounted at $google_drive"
+    fi
+fi
+
+$NO_INSTALL || info "Installation done"
+exit 0
