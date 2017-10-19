@@ -150,11 +150,11 @@ install-data:
 # html files remain in their directory structure
 # all others go flat into their directory $(dest) or man dir
 install-docs: dest := $(DESTDIR)$(docdir)/$(package_name)
-install-docs: html_dirs := $(shell cd docs/_build && find . -type d -path "./html*")
-install-docs: html_files := $(shell cd docs/_build && find . -type f -path "./html*")
-install-docs: man_1_pages := $(shell find docs/_build -type f -path "docs/_build/man/*.1")
-install-docs: man_7_pages := $(shell find docs/_build -type f -path "docs/_build/man/*.7")
-install-docs: pdfs := $(shell find docs/_build -type f -path "docs/_build/latex/*.pdf")
+install-docs: html_dirs = $(shell cd docs/_build && find . -type d -path "./html*")
+install-docs: html_files = $(shell cd docs/_build && find . -type f -path "./html*")
+install-docs: man_1_pages = $(shell find docs/_build -type f -path "docs/_build/man/*.1")
+install-docs: man_7_pages = $(shell find docs/_build -type f -path "docs/_build/man/*.7")
+install-docs: pdfs = $(shell find docs/_build -type f -path "docs/_build/latex/*.pdf")
 install-docs:
 	$(info Creating directories ...)
 	mkdir -p -- "$(dest)"
