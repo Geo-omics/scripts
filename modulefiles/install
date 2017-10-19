@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# --- CAUTION ---
+#
+# This script will install module files to production !
+#
+# --- CAUTION ---
+
+set -e
+
+# this will fail, no root rights after all
+# contact Mike Messina
+#scp -p omics/1 cayman:/usr/share/Modules/modulefiles/omics/1
+#scp -p omics/1 vondamm:/usr/share/Modules/modulefiles/omics/1
+
+# should work as heinro user
+scp -p flux.omics/1 guaymas.earth.lsa.umich.edu:/gmb/data9/flux/modulefiles/geomicro/omics/1
