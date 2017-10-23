@@ -171,7 +171,7 @@ install-docs:
 	$(INSTALL_DATA) ${man_7_pages} $(DESTDIR)$(man7dir)
 	$(info Installing other documentation ...)
 	$(INSTALL_DATA) $(doc_files) $(dest)
-	$(INSTALL_DATA) $(pdfs) $(dest)
+	$(if $(pdfs), $(INSTALL_DATA) $(pdfs) $(dest), $(warning PDFs missing from documentation))
 
 install: install-docs install-data
 	cd lib && $(MAKE) install
