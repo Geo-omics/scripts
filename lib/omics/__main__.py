@@ -53,6 +53,12 @@ def main():
         else:
             try:
                 p = subprocess.run(cmdline)
+            except FileNotFoundError as e:
+                if args.traceback:
+                    raise
+                else:
+                    argp.error('Not a valid omics command: {}\n({})'
+                               ''.format(cmd, e))
             except Exception as e:
                 if args.traceback:
                     raise
