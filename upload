@@ -219,7 +219,7 @@ fi
 if $TEST; then
     # shellcheck disable=SC2016
     remote_env='FINSTER_RC=$HOME/.finster-test.rc'
-    module_cmds='module unload omics && module load omics/testing &&'
+    module_cmds='module purge && module load omics/testing &&'
 else
     remote_env=
     module_cmds=
