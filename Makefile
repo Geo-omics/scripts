@@ -98,12 +98,15 @@ distmkdir:
 	mkdir -p -- "$(dist_dir)"
 
 distdocs:
+	# copy sources
 	for p in docs docs/_static/css; do \
 	    mkdir -p -- "$(dist_dir)/$$p"; \
 	    for i in $$(find $$p -type f -not -name '*~'); do \
 	        cp -p $$i "$(dist_dir)/$$p"; \
 	    done; \
 	done
+	# copy built docs to not require full sphinx/latex support on deployment sites
+	cp -rp docs/_build "$(dist_dir)/docs/_build"
 
 distdir: distmkdir distdocs
 	$(all_committed) || echo "Warning: git reports uncommitted changes; will be included in distribution!"
