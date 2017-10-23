@@ -26,9 +26,11 @@ def main():
     )
     argp.add_argument(
         '--script-dir',
+        metavar='PATH',
         default=Path(sys.argv[0]).parent,
-        help='Path to directory containing the scripts.  This can be used to '
-             'override the default.',
+        help='Path to directory containing the scripts that implement the '
+             'omics commands.  This can be used to override the default, '
+             'which is: {}'.format(Path(sys.argv[0]).parent),
     )
     argp.add_argument(
         'command',
