@@ -161,7 +161,10 @@ debug "verbosity set to: $VERBOSITY"
 # set bash script debugging
 [ "$VERBOSITY" -ge 4 ] && set -x
 # forward verbosity to other commands
-[ "$VERBOSITY" -ge 2 ] && VERBOSE_FLAG=-v
+if [[ $VERBOSITY -ge 2 ]]; then
+    # VERBOSE_FLAG=-v
+    finster_verbose=--verbosity=2
+fi
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     package="$1"
