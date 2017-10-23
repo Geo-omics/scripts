@@ -10,16 +10,15 @@ CONF_SECTION_PROJECT = 'project'
 SCRIPT_PREFIX = 'omics-'
 
 
-def process_command_line(cmdline):
+def process_command_line(command, options, script_dir=Path()):
     """
     Process command line given via the omics command
 
-    :param list cmdline: User-supplied command line
+    :param str command: User-supplied command name
+    :param list options: User-supplied options for command
+    :param Path script_dir: Directory with scripts
+
     :return list: Processed command line ready to hand off to subprocess.run
     """
-    dev_env_root = Path(__file__).parent.parent.parent
-    if dev_env_root.name == 'geo-omics-scripts':
-        # assume dev environment
-        script = dev_env_root.resolve() / 'scripts' / SCRIPT_PREFIX
-        cmdline = [str(script) + cmdline[0]] + cmdline[1:]
-    return cmdline
+    script = script_dir / (SCRIPT_PREFIX + command)
+    return [str(script)] + options

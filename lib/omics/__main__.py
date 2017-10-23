@@ -41,12 +41,18 @@ def main():
         argp.error('Not a directory: {}'.format(args.script_dir))
 
     if args.command:
-        cmd = process_command_line(args.command)
+        cmd = args.command[0]
+        cmd_opts = args.command[1:]
+        cmdline = process_command_line(
+            cmd,
+            cmd_opts,
+            script_dir=args.script_dir
+        )
         if args.dry_run:
-            print(*cmd)
+            print(*cmdline)
         else:
             try:
-                p = subprocess.run(cmd)
+                p = subprocess.run(cmdline)
             except Exception as e:
                 if args.traceback:
                     raise
