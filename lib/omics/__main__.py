@@ -51,11 +51,9 @@ def main():
                 if args.traceback:
                     raise
                 else:
-                    print('{}: {}'.format(e.__class__.__name__, e),
-                          file=sys.stderr)
-                    sys.exit(1)
+                    argp.error('{}: {}'.format(e.__class__.__name__, e))
             else:
-                sys.exit(p.returncode)
+                argp.exit(status=p.returncode)
     else:
         subcmds = get_available_commands()
         if subcmds:
