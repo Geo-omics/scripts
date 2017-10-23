@@ -25,11 +25,21 @@ def main():
              'debugging.',
     )
     argp.add_argument(
+        '--script-dir',
+        default=Path(sys.argv[0]).parent,
+        help='Path to directory containing the scripts.  This can be used to '
+             'override the default.',
+    )
+    argp.add_argument(
         'command',
         nargs=argparse.REMAINDER,
         help='The command to run.',
     )
     args = argp.parse_args()
+    args.script_dir = Path(args.script_dir)
+    if not args.script_dir.is_dir():
+        argp.error('Not a directory: {}'.format(args.script_dir))
+
     if args.command:
         cmd = process_command_line(args.command)
         if args.dry_run:
