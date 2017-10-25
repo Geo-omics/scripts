@@ -64,6 +64,7 @@ def get_argparser(*args, project_dir=True, **kwargs):
     common.add_argument(
         '--verbose', '-v',
         action='count',
+        default=1,
         help='Show diagnostic output.',
     )
     common.add_argument(
