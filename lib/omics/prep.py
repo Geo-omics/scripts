@@ -6,7 +6,7 @@ from itertools import groupby
 from pathlib import Path
 import re
 
-from . import get_argparser, get_project
+from . import get_argparser, get_project, DEFAULT_VERBOSITY
 
 raw_reads_file_pat = re.compile(
     r'(?P<sampleid>[^_]+)_((?P<index>[a-zA-Z]+)_)?S(?P<snum>\d+)_'
@@ -96,7 +96,7 @@ def get_direction(filename):
     return int(m.groupdict()['dir'])
 
 
-def prep(sample, files, dest=Path.cwd(), force=False):
+def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
     """
     Decompress and copy files into sample directory
 
@@ -132,6 +132,8 @@ def prep(sample, files, dest=Path.cwd(), force=False):
         outfile = destdir / outname
         with outfile.open('w') as f:
             for i in series:
+                if verbosity > DEFAULT_VERBOSITY:
+                    print('{}: src {}'.format(sample, i))
                 if i.suffix == '.gz':
                     infile = gzip.open(str(i), 'rt')
                 else:
@@ -141,6 +143,8 @@ def prep(sample, files, dest=Path.cwd(), force=False):
                     f.write(infile.read())
                 finally:
                     infile.close()
+            if verbosity > DEFAULT_VERBOSITY:
+                print('{}: dst {}'.format(sample, outfile))
 
 
 def main():
@@ -179,6 +183,13 @@ def main():
     )
     args = argp.parse_args()
 
+    project = get_project(args.project_dir)
+
+    if args.verbosity == DEFAULT_VERBOSITY:
+        verbosity = project['verbosity']
+    else:
+        verbosity = args.verbosity
+
     suffices = args.suffix.split(',')
     files = []
     for i in map(Path, args.rawreads):
@@ -192,28 +203,27 @@ def main():
             argp.error('File or directory not found: {}'.format(i))
 
     if files:
-        if args.verbosity == 1:
-            print('Found {} read files.')
-        if args.verbosity > 1:
+        if verbosity >= DEFAULT_VERBOSITY:
+            print('Found {} read files.'.format(len(files)))
+        if verbosity >= DEFAULT_VERBOSITY + 2:
             for i in files:
-                print('  ', i)
+                print('  ->', i)
     else:
         argp.error('No files found.')
 
     files = list(set(files))
-
-    project = get_project(args.project_dir)
-    if args.verbosity > 1:
-        project['verbosity'] = args.verbosity
+    samp_count = 0
 
     try:
 
         for sample, sample_group in group(files, keep_lanes=args.keep_lanes):
+            samp_count += 1
             prep(
                 sample,
                 sample_group,
                 dest=project['project_dir'],
-                force=args.force
+                force=args.force,
+                verbosity=verbosity,
             )
 
     except Exception as e:
@@ -221,6 +231,9 @@ def main():
             raise
         else:
             argp.error('{}: {}'.format(e.__class__.__name__, e))
+
+    if verbosity >= 1:
+        print('Processed {} samples'.format(samp_count))
 
 
 if __name__ == '__main__':

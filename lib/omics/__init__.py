@@ -12,6 +12,7 @@ OMICS_DIR = '.omics'
 CONFIG_FILE = 'config'
 CONF_SECTION_PROJECT = 'project'
 SCRIPT_PREFIX = 'omics-'
+DEFAULT_VERBOSITY = 1
 
 
 class OmicsArgParser(argparse.ArgumentParser):
@@ -118,7 +119,7 @@ class OmicsProject(dict):
     default = {
         'cwd': Path.cwd(),
         'name': None,
-        'verbosity': 1,
+        'verbosity': DEFAULT_VERBOSITY,
     }
     """ Default settings """
 
