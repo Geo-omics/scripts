@@ -1,13 +1,12 @@
 """
 Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 """
-import argparse
 import gzip
 from itertools import groupby
 from pathlib import Path
 import re
 
-from .. import omics
+from . import get_argparser, get_project
 
 raw_reads_file_pat = re.compile(
     r'(?P<sampleid>[^_]+)_((?P<index>[a-zA-Z]+)_)?S(?P<snum>\d+)_'
@@ -144,13 +143,11 @@ def prep(sample, files, dest=Path.cwd(), force=False):
                     infile.close()
 
 
-def main(files, force=False, keep_lanes=False, project=omics.get_project()):
-    for sample, sample_group in group(files, keep_lanes=keep_lanes):
-        prep(sample, sample_group, dest=project['project_dir'], force=force)
-
-
-if __name__ == '__main__':
-    argp = argparse.ArgumentParser(__package__, description=__doc__)
+def main():
+    argp = get_argparser(
+        prog=__loader__.name.replace('.', ' '),
+        description=__doc__
+    )
     argp.add_argument(
         'rawreads',
         nargs='*',
@@ -180,17 +177,6 @@ if __name__ == '__main__':
              'positional argument.  By default .fastq and .fastq.gz files '
              'are considered.',
     )
-    argp.add_argument(
-        '--traceback',
-        action='store_true',
-        help='Show python stack trace in case of some internal errors for '
-             'debugging.',
-    )
-    argp.add_argument(
-        '--verbose', '-v',
-        action='count',
-        help='Show diagnostic output.',
-    )
     args = argp.parse_args()
 
     suffices = args.suffix.split(',')
@@ -216,15 +202,26 @@ if __name__ == '__main__':
 
     files = list(set(files))
 
-    project = omics.get_project()
+    project = get_project(args.project_dir)
     if args.verbosity > 1:
         project['verbosity'] = args.verbosity
 
     try:
-        main(files, force=args.force, keep_lanes=args.keep_lanes,
-             project=project)
+
+        for sample, sample_group in group(files, keep_lanes=args.keep_lanes):
+            prep(
+                sample,
+                sample_group,
+                dest=project['project_dir'],
+                force=args.force
+            )
+
     except Exception as e:
         if args.traceback:
             raise
         else:
             argp.error('{}: {}'.format(e.__class__.__name__, e))
+
+
+if __name__ == '__main__':
+    main()
