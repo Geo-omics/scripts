@@ -115,6 +115,9 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
     destdir = dest / sample
     destdir.mkdir(exist_ok=True, parents=True)
     for stem, series in groupby(files, without_filenumber):
+        # a 'series' is a bunch of files from the same lane/sample that got
+        # split up, and that we need to put back together.  It's not clear if
+        # such data is still produced in the wild.
         try:
             direction = get_direction(stem)
         except Exception as e:
@@ -131,6 +134,9 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
                              ''.format(direction))
         series = list(series)
         outfile = destdir / outname
+        if outfile.is_file() and not force:
+            raise FileExistsError(outfile)
+
         with outfile.open('w') as f:
             for i in series:
                 if verbosity > DEFAULT_VERBOSITY:
