@@ -32,11 +32,11 @@ class OmicsArgParser(argparse.ArgumentParser):
         return usage
 
 
-def get_argparser(*args, project_dir=True, **kwargs):
+def get_argparser(*args, project_home=True, **kwargs):
     """
     Provide a canonical omics argparse argument parser
 
-    :param bool project_dir: Include a --project-dir option.
+    :param bool project_home: Include a --project-home option.
     :param: *args and **kwargs are handed over to argparse.ArgumentParser()
 
     :return: A new argparse.ArgumentParser object
@@ -55,9 +55,9 @@ def get_argparser(*args, project_dir=True, **kwargs):
         action='help', default=argparse.SUPPRESS,
         help='show this help and exit',
     )
-    if project_dir:
+    if project_home:
         common.add_argument(
-            '--project-dir',
+            '--project-home',
             metavar='PATH',
             help='Omics project directory, by default, this is the current '
                  'directory.',
@@ -117,7 +117,7 @@ class OmicsProject(dict):
     """
 
     default = {
-        'project_dir': Path.cwd(),  # internal variable, not found in conf file
+        'project_home': Path.cwd(),  # internal use, not found in conf file
         'name': None,
         'verbosity': DEFAULT_VERBOSITY,
     }
@@ -161,7 +161,7 @@ class OmicsProject(dict):
         else:
             print('Warning: No config file found, using default configuration.'
                   ' Empty config file created.', file=sys.stderr)
-            return cls.from_default(project_dir=path)
+            return cls.from_default(project_home=path)
 
     @classmethod
     def from_default(cls, **kwargs):
@@ -188,7 +188,7 @@ class OmicsProject(dict):
         try:
             return cls._from_str(
                 config_str,
-                project_dir=config_file.parent.parent
+                project_home=config_file.parent.parent
             )
         except configparser.MissingSectionHeaderError:
             # add project section

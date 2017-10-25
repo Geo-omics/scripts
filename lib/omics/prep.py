@@ -183,7 +183,7 @@ def main():
     )
     args = argp.parse_args()
 
-    project = get_project(args.project_dir)
+    project = get_project(args.project_home)
 
     if args.verbosity == DEFAULT_VERBOSITY:
         verbosity = project['verbosity']
@@ -221,7 +221,7 @@ def main():
             prep(
                 sample,
                 sample_group,
-                dest=project['project_dir'],
+                dest=project['project_home'],
                 force=args.force,
                 verbosity=verbosity,
             )
