@@ -1,11 +1,10 @@
 """
 Initialize a new omics project directory
 """
-import argparse
 from pathlib import Path
 from string import Template
 
-from omics import OMICS_DIR, CONFIG_FILE, CONF_SECTION_PROJECT
+from omics import OMICS_DIR, CONFIG_FILE, CONF_SECTION_PROJECT, get_argparser
 
 empty_conf_template = """\
 [$section_name]
@@ -57,9 +56,10 @@ def _init(path=Path.cwd(), name=None):
 
 
 def main():
-    argp = argparse.ArgumentParser(
+    argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
+        project_dir=False,
     )
     argp.add_argument(
         'path',

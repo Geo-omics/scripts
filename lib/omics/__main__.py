@@ -6,23 +6,20 @@ from pathlib import Path
 import subprocess
 import sys
 
-from . import SCRIPT_PREFIX, process_command_line
+from . import SCRIPT_PREFIX, process_command_line, get_argparser
 
 
 def main():
-    argp = argparse.ArgumentParser(__package__, description=__doc__)
+    argp = get_argparser(
+        prog=__package__,
+        description=__doc__,
+    )
 
     argp.add_argument(
         '-n', '--dry-run',
         action='store_true',
         help='Do not actually run command, just print the full command line '
              'that would have been run.',
-    )
-    argp.add_argument(
-        '--traceback',
-        action='store_true',
-        help='Show python stack trace in case of some internal errors for '
-             'debugging.',
     )
     argp.add_argument(
         '--script-dir',
