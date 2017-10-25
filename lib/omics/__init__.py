@@ -90,11 +90,16 @@ def process_command_line(command, options, script_dir=Path()):
     return [str(script)] + options
 
 
-def get_project(cwd=Path.cwd()):
+def get_project(path=None):
     """
     Retrieve the current project
     """
-    return OmicsProject.from_directory(Path(cwd))
+    if path is None:
+        path = Path.cwd()
+    else:
+        # allow str input
+        path = Path(path)
+    return OmicsProject.from_directory(path)
 
 
 class OmicsProjectNotFound(FileNotFoundError):
