@@ -94,7 +94,7 @@ def get_project(cwd=Path.cwd()):
     """
     Retrieve the current project
     """
-    return OmicsProject.from_directory(cwd)
+    return OmicsProject.from_directory(Path(cwd))
 
 
 class OmicsProjectNotFound(FileNotFoundError):
