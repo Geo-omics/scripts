@@ -118,7 +118,7 @@ class OmicsProject(dict):
     default = {
         'cwd': Path.cwd(),
         'name': None,
-        'verbosity': 0,
+        'verbosity': 1,
     }
     """ Default settings """
 
