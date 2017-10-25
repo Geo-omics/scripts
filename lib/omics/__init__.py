@@ -44,15 +44,6 @@ def get_argparser(*args, project_dir=True, **kwargs):
     the common group.  --project-dir is made optional as it does not go into
     the init script.
     """
-    if args or 'prog' in kwargs:
-        # use provided program name
-        pass
-    else:
-        # python-implemented commands will look like 'omics init'
-        # the omics.__main__ programm will be 'omics'
-        #kwargs.update(prog=__loader__.name.replace('.', ' '))
-        pass
-
     argp = OmicsArgParser(*args, add_help=False, **kwargs)
 
     common = argp.add_argument_group('common omics options')
