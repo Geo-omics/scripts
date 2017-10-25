@@ -117,31 +117,31 @@ class OmicsProject(dict):
     """
 
     default = {
-        'cwd': Path.cwd(),
+        'project_dir': Path.cwd(),  # internal variable, not found in conf file
         'name': None,
         'verbosity': DEFAULT_VERBOSITY,
     }
     """ Default settings """
 
     @classmethod
-    def from_directory(cls, cwd):
+    def from_directory(cls, path):
         """
         Get the local omics project
 
-        :param Path cwd: The directory for which the project should be
-                         retrieved.
+        :param Path path: The directory for which the project should be
+                          retrieved.
         :return: The omics project object.
         :raise NoOmicsContextFound: If no OMICS_DIR directory with a valid
                                     configuration is found in the given or a
                                     parent directory.
         """
         try:
-            cwd = Path.resolve(cwd)
+            path = Path.resolve(path)
         except Exception as e:
             raise OmicsProjectNotFound from e
 
         omics_dir = None
-        for i in [cwd] + list(cwd.parents):
+        for i in [path] + list(path.parents):
             if (i / OMICS_DIR).is_dir():
                 omics_dir = i / OMICS_DIR
                 break
@@ -149,7 +149,7 @@ class OmicsProject(dict):
         if omics_dir is None:
             raise OmicsProjectNotFound(
                 'No omics project found in {} or any parent directory'
-                ''.format(cwd)
+                ''.format(path)
             )
 
         config_file = omics_dir / CONFIG_FILE
@@ -161,30 +161,51 @@ class OmicsProject(dict):
         else:
             print('Warning: No config file found, using default configuration.'
                   ' Empty config file created.', file=sys.stderr)
-            return cls.from_default()
+            return cls.from_default(project_dir=path)
 
     @classmethod
-    def from_default(cls):
+    def from_default(cls, **kwargs):
         """
-        Return default project
+        Get a project with minimal default values
+
+        :param dict kwargs: Key-value pairs that override the default.
         """
-        return cls(**cls.default)
+        p = cls(**cls.default)
+        p.update(**kwargs)
+        return p
 
     @classmethod
     def from_file(cls, config_file):
+        """
+        Get project from config file
+
+        :param Path config_file: Configuration file
+        :return: OmicsProject object
+        """
         with config_file.open() as f:
             config_str = f.read()
 
         try:
-            return cls._from_str(config_str)
+            return cls._from_str(
+                config_str,
+                project_dir=config_file.parent.parent
+            )
         except configparser.MissingSectionHeaderError:
             # add project section
             config_str += '[{}]\n{}'.format(CONF_SECTION_PROJECT, config_str)
             return cls._from_str(config_str)
 
     @classmethod
-    def _from_str(cls, config_str):
-        proj = cls.from_default()
+    def _from_str(cls, config_str, **kwargs):
+        """
+        Helper method to parse the contents of a configuration file
+
+        :param str config_str: Configuration file contents
+        :param dict kwargs: Overriding key-value pairs
+
+        :return: OmicsConfig object
+        """
+        proj = cls.from_default(**kwargs)
 
         parser = configparser.ConfigParser(
             inline_comment_prefixes=('#',),
