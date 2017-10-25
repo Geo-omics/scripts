@@ -65,7 +65,8 @@ def get_argparser(*args, project_dir=True, **kwargs):
         '--verbose', '-v',
         action='count',
         default=1,
-        help='Show diagnostic output.',
+        dest='verbosity',
+        help='Show increased diagnostic output.',
     )
     common.add_argument(
         '--traceback',
