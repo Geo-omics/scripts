@@ -192,9 +192,9 @@ def main():
             argp.error('File or directory not found: {}'.format(i))
 
     if files:
-        if args.verbose == 1:
+        if args.verbosity == 1:
             print('Found {} read files.')
-        if args.verbose > 1:
+        if args.verbosity > 1:
             for i in files:
                 print('  ', i)
     else:
