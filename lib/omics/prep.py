@@ -5,6 +5,7 @@ import gzip
 from itertools import groupby
 from pathlib import Path
 import re
+import sys
 
 from . import get_argparser, get_project, DEFAULT_VERBOSITY
 
@@ -230,7 +231,8 @@ def main():
         if args.traceback:
             raise
         else:
-            argp.error('{}: {}'.format(e.__class__.__name__, e))
+            print('{}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
+            sys.exit(1)
 
     if verbosity >= 1:
         print('Processed {} samples'.format(samp_count))
