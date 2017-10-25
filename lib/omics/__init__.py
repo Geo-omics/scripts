@@ -1,8 +1,10 @@
 """
 Package to support geo-omics-scripts
 """
+import argparse
 import configparser
 from pathlib import Path
+import re
 import sys
 
 
@@ -10,6 +12,76 @@ OMICS_DIR = '.omics'
 CONFIG_FILE = 'config'
 CONF_SECTION_PROJECT = 'project'
 SCRIPT_PREFIX = 'omics-'
+
+
+class OmicsArgParser(argparse.ArgumentParser):
+    """
+    Implements minor modifications to parent
+
+    Assumes the parser is populated by get_argparser(), relevant changes there
+    may need to be reflected here.
+    """
+    def format_help(self):
+        """
+        Like parent method but abbreviate common options in usage text
+        """
+        usage = super().format_help()
+        # assume -h was defined first and --traceback is last common option
+        usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
+        return usage
+
+
+def get_argparser(*args, project_dir=True, **kwargs):
+    """
+    Provide a canonical omics argparse argument parser
+
+    :param bool project_dir: Include a --project-dir option.
+    :param: *args and **kwargs are handed over to argparse.ArgumentParser()
+
+    :return: A new argparse.ArgumentParser object
+
+    Does not use the normal help option since out help option shall go into
+    the common group.  --project-dir is made optional as it does not go into
+    the init script.
+    """
+    if args or 'prog' in kwargs:
+        # use provided program name
+        pass
+    else:
+        # python-implemented commands will look like 'omics init'
+        # the omics.__main__ programm will be 'omics'
+        #kwargs.update(prog=__loader__.name.replace('.', ' '))
+        pass
+
+    argp = OmicsArgParser(*args, add_help=False, **kwargs)
+
+    common = argp.add_argument_group('common omics options')
+
+    # help option is inspired by argparse.py
+    common.add_argument(
+        '-h', '--help',
+        action='help', default=argparse.SUPPRESS,
+        help='show this help and exit',
+    )
+    if project_dir:
+        common.add_argument(
+            '--project-dir',
+            metavar='PATH',
+            help='Omics project directory, by default, this is the current '
+                 'directory.',
+        )
+    common.add_argument(
+        '--verbose', '-v',
+        action='count',
+        help='Show diagnostic output.',
+    )
+    common.add_argument(
+        '--traceback',
+        action='store_true',
+        help='Show python stack trace in case of some internal errors for '
+             'debugging.',
+    )
+    return argp
 
 
 def process_command_line(command, options, script_dir=Path()):
