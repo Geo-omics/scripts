@@ -39,7 +39,7 @@ def create_config_file(path, **options):
     cfg_file.write_text(make_minimal_config_file(**options))
 
 
-def _init(path=Path.cwd(), name=None):
+def init(path=Path.cwd(), name=None):
     if isinstance(path, str):
         path = Path(path)
 
@@ -74,7 +74,7 @@ def main():
              'derived from the project directory',
     )
     args = argp.parse_args()
-    _init(path=args.path, name=args.name)
+    init(path=args.path, name=args.name)
 
 
 if __name__ == '__main__':
