@@ -281,8 +281,16 @@ def main():
                 )
 
             for fut in as_completed(futures.keys()):
+                if verbosity >= DEFAULT_VERBOSITY + 2:
+                    sample, direction = futures[fut]
+                    print('Done: {} {}'.format(
+                        sample,
+                        'fwd' if direction == 1 else 'rev'
+                    ))
                 if fut.exception() is not None:
-                    print(fut.result())
+                    print('Failed to write: {}: {}: {}'
+                          ''.format(*futures[fut], fut.result()),
+                          file=sys.stderr)
 
     except Exception as e:
         if args.traceback:
