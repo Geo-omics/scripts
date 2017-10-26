@@ -47,7 +47,7 @@ def init(path=Path.cwd(), name=None):
     omics_dir = path / OMICS_DIR
 
     if name is None:
-        name = path.parent.name
+        name = path.name
 
     if not name:
         # maybe path is root
