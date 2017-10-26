@@ -11,6 +11,9 @@ import sys
 
 from . import get_argparser, get_project, DEFAULT_VERBOSITY
 
+FORWARD_READS_FILE = 'fwd.fastq'
+REVERSE_READS_FILE = 'rev.fastq'
+
 raw_reads_file_pat = re.compile(
     r'(?P<sampleid>[^_]+)_((?P<index>[a-zA-Z]+)_)?S(?P<snum>\d+)_'
     r'L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
@@ -125,6 +128,12 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
     destdir = dest / sample
     destdir.mkdir(exist_ok=True, parents=True)
 
+    fwd_outfile = destdir / FORWARD_READS_FILE
+    rev_outfile = destdir / REVERSE_READS_FILE
+    for i in [fwd_outfile, rev_outfile]:
+        if i.is_file() and not force:
+            raise FileExistsError(i)
+
     for stem, series in groupby(files, without_filenumber):
         # a 'series' is a bunch of files from the same lane/sample that got
         # split up, and that we need to put back together.  It's not clear if
@@ -137,16 +146,13 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
                 ''.format(stem, files)
             )
         if direction == 1:
-            outname = 'fwd.fastq'
+            outfile = fwd_outfile
         elif direction == 2:
-            outname = 'rev.fastq'
+            outfile = rev_outfile
         else:
             raise ValueError('Illegal value for direction: {}'
                              ''.format(direction))
         series = list(series)
-        outfile = destdir / outname
-        if outfile.is_file() and not force:
-            raise FileExistsError(outfile)
 
         if executor is None:
             _do_extract_and_copy(outfile, series)
