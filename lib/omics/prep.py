@@ -99,7 +99,8 @@ def get_direction(filename):
     return int(m.groupdict()['dir'])
 
 
-def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
+def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
+         executor=None):
     """
     Decompress and copy files into sample directory
 
@@ -110,12 +111,20 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
     :param Path dest: Project directory, destination / output directory
     :param bool force: If true, skip any safety check and overwrite existing
                        files.
+    :param executor: A concurrent.futures.Executor object.  If executor is None
+                     then all will be done single-threaded.
+
+    :return: Dictionary of futures
 
     :raise: May raise OSError and relatives, in particular when destination
             files exist already or can not be written.
+
     """
+    futures = {}
+
     destdir = dest / sample
     destdir.mkdir(exist_ok=True, parents=True)
+
     for stem, series in groupby(files, without_filenumber):
         # a 'series' is a bunch of files from the same lane/sample that got
         # split up, and that we need to put back together.  It's not clear if
@@ -139,22 +148,46 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
         if outfile.is_file() and not force:
             raise FileExistsError(outfile)
 
-        with outfile.open('wb') as outf:
-            for i in series:
-                if i.suffix == '.gz':
-                    infile = gzip.open(str(i), 'r')
-                    action = 'extr'
-                else:
-                    infile = i.open('rb')
-                    action = 'copy'
+        if executor is None:
+            _do_extract_and_copy(outfile, series)
+        else:
+            futures[
+                executor.submit(
+                    _do_extract_and_copy,
+                    sample,
+                    outfile,
+                    series,
+                    verbosity
+                )
+            ] = (sample, direction)
 
-                if verbosity > DEFAULT_VERBOSITY:
-                    print('{}: {} {} >> {}'.format(sample, action, i, outfile))
+    return futures
 
-                try:
-                    shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
-                finally:
-                    infile.close()
+
+def _do_extract_and_copy(sample, outfile, series, verbosity):
+    """
+    Helper function doing all the parallelizable IO work
+
+    :param Path outfile: Output file
+    :param series: List of input files
+    """
+    with outfile.open('wb') as outf:
+        for i in series:
+            if i.suffix == '.gz':
+                infile = gzip.open(str(i), 'r')
+                action = 'extr'
+            else:
+                infile = i.open('rb')
+                action = 'copy'
+
+            if verbosity > DEFAULT_VERBOSITY:
+                print('{}: {} {} >> {}'.format(sample, action, i,
+                      outfile.relative_to(Path.cwd())))
+
+            try:
+                shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
+            finally:
+                infile.close()
 
 
 def main():
@@ -231,29 +264,25 @@ def main():
     files = list(set(files))
     samp_count = 0
 
-    tasks = []
-    for sample, sample_group in group(files, keep_lanes=args.keep_lanes):
-        samp_count += 1
-        tasks.append((
-            [
-                sample,
-                list(sample_group),
-            ],
-            {
-                'dest': project['project_home'],
-                'force': args.force,
-                'verbosity': verbosity,
-            },
-        ))
-
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as e:
-            fs = []
-            for args, kwargs in tasks:
-                fs.append(e.submit(prep, *args, **kwargs))
-            for i in as_completed(fs):
-                if i.exception() is not None:
-                    print(i.result())
+            futures = {}
+            for sample, sample_grp in group(files, keep_lanes=args.keep_lanes):
+                samp_count += 1
+                futures.update(
+                    prep(
+                        sample,
+                        list(sample_grp),
+                        dest=project['project_home'],
+                        force=args.force,
+                        verbosity=verbosity,
+                        executor=e,
+                    )
+                )
+
+            for fut in as_completed(futures.keys()):
+                if fut.exception() is not None:
+                    print(fut.result())
 
     except Exception as e:
         if args.traceback:
