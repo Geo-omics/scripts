@@ -1,6 +1,7 @@
 """
 Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 """
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 from itertools import groupby
 from pathlib import Path
@@ -188,6 +189,13 @@ def main():
              'positional argument.  By default .fastq and .fastq.gz files '
              'are considered.',
     )
+    argp.add_argument(
+        '--cpus', '--threads', '-t',
+        type=int,
+        dest='threads',
+        default=1,
+        help='Number of threads / CPUs to employ',
+    )
     args = argp.parse_args()
 
     project = get_project(args.project_home)
@@ -221,17 +229,29 @@ def main():
     files = list(set(files))
     samp_count = 0
 
-    try:
-
-        for sample, sample_group in group(files, keep_lanes=args.keep_lanes):
-            samp_count += 1
-            prep(
+    tasks = []
+    for sample, sample_group in group(files, keep_lanes=args.keep_lanes):
+        samp_count += 1
+        tasks.append((
+            [
                 sample,
-                sample_group,
-                dest=project['project_home'],
-                force=args.force,
-                verbosity=verbosity,
-            )
+                list(sample_group),
+            ],
+            {
+                'dest': project['project_home'],
+                'force': args.force,
+                'verbosity': verbosity,
+            },
+        ))
+
+    try:
+        with ThreadPoolExecutor(max_workers=args.threads) as e:
+            fs = []
+            for args, kwargs in tasks:
+                fs.append(e.submit(prep, *args, **kwargs))
+            for i in as_completed(fs):
+                if i.exception() is not None:
+                    print(i.result())
 
     except Exception as e:
         if args.traceback:
