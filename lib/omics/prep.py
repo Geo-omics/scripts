@@ -177,7 +177,7 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
     :param Path outfile: Output file
     :param series: List of input files
     """
-    with outfile.open('wb') as outf:
+    with outfile.open('ab') as outf:
         for i in series:
             if i.suffix == '.gz':
                 infile = gzip.open(str(i), 'r')
