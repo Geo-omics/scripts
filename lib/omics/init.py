@@ -46,6 +46,13 @@ def init(path=Path.cwd(), name=None):
     path = path.resolve()
     omics_dir = path / OMICS_DIR
 
+    if name is None:
+        name = path.parent.name
+
+    if not name:
+        # maybe path is root
+        name = None
+
     if omics_dir.is_dir():
         print('Reinitialized existing omics project in {}'.format(omics_dir))
         # TODO: check config file
