@@ -6,6 +6,7 @@ import gzip
 from itertools import groupby
 from pathlib import Path
 import re
+import shutil
 import sys
 
 from . import get_argparser, get_project, DEFAULT_VERBOSITY
@@ -138,20 +139,20 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
         if outfile.is_file() and not force:
             raise FileExistsError(outfile)
 
-        with outfile.open('w') as f:
+        with outfile.open('wb') as outf:
             for i in series:
                 if i.suffix == '.gz':
-                    infile = gzip.open(str(i), 'rt')
+                    infile = gzip.open(str(i), 'r')
                     action = 'extr'
                 else:
-                    infile = i.open()
+                    infile = i.open('rb')
                     action = 'copy'
 
                 if verbosity > DEFAULT_VERBOSITY:
                     print('{}: {} {} >> {}'.format(sample, action, i, outfile))
 
                 try:
-                    f.write(infile.read())
+                    shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
                 finally:
                     infile.close()
 
