@@ -140,19 +140,20 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1):
 
         with outfile.open('w') as f:
             for i in series:
-                if verbosity > DEFAULT_VERBOSITY:
-                    print('{}: src {}'.format(sample, i))
                 if i.suffix == '.gz':
                     infile = gzip.open(str(i), 'rt')
+                    action = 'extr'
                 else:
                     infile = i.open()
+                    action = 'copy'
+
+                if verbosity > DEFAULT_VERBOSITY:
+                    print('{}: {} {} >> {}'.format(sample, action, i, outfile))
 
                 try:
                     f.write(infile.read())
                 finally:
                     infile.close()
-            if verbosity > DEFAULT_VERBOSITY:
-                print('{}: dst {}'.format(sample, outfile))
 
 
 def main():
