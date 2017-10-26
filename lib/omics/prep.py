@@ -227,6 +227,7 @@ def main():
     argp.add_argument(
         '--cpus', '--threads', '-t',
         type=int,
+        metavar='N',
         dest='threads',
         default=1,
         help='Number of threads / CPUs to employ',

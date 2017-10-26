@@ -7,7 +7,7 @@ prep - prepare compressed fastq files for further processing
 Synopsis
 ========
 
-:program:`omics prep` [OPTIONS]... [RAWDATA]...
+:program:`omics prep` [OPTIONS]... [READS]...
 
 
 Description
@@ -22,35 +22,33 @@ conventions and formats and directory layout.  To get started the script
 Options
 =======
 
-.. option:: --force
+.. option:: -f, --force
 
     Allow overwriting existing files.
 
-.. option:: --lane
+.. option:: --keep-lanes-separate
 
-    Add lane number to sample id, even if sample ids are unique without lane
-    number.
+    Keep data from different lanes separate. The default is to collect reads
+    originating from the same physical sample if sequencing was done using
+    several lanes.
 
-.. option::  --working-dir=DIR
+.. option:: --suffix LIST
 
-    Directory under which output is stored. By default this is the current
-    directory.
+    Comma-separated list of valid file suffices used for raw reads. This is
+    used to find files when a directory is given as positional argument. By
+    default .fastq and .fastq.gz files are considered.
+
+.. option:: -t N, --threads N, --cpus N
+
+    Number of threads / CPUs to employ
 
 .. option:: -h, --help
 
     Print help.
 
-.. option:: --no-color
+.. option:: -v, --verbose
 
-    Disable colorful output.
-
-.. option:: -v, --verbosity=N
-
-    Use one or multiple ``-v`` to increase verbosity of output or set a
-    level of verbosity with ``--verbosity=N``.  By default the verbosity
-    level is 1.  Setting verbosity to 0 silences the program.  A level of
-    3 prints debugging info.
-
+    Use one or multiple ``-v`` to increase verbosity of output.
 
 Exit Status
 ===========
