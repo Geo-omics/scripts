@@ -66,7 +66,7 @@ def main():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
-        project_dir=False,
+        project_home=False,
     )
     argp.add_argument(
         'path',
