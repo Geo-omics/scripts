@@ -234,13 +234,7 @@ def main():
 
     project = get_project(args.project_home)
 
-    if args.verbosity == DEFAULT_VERBOSITY:
-        verbosity = project['verbosity']
-    else:
-        verbosity = args.verbosity
-
-    if args.threads is None:
-        args.threads = project['threads']
+    verbosity = args.verbosity
 
     suffices = args.suffix.split(',')
     files = []

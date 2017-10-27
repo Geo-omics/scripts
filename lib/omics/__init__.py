@@ -33,6 +33,24 @@ class OmicsArgParser(argparse.ArgumentParser):
         usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
         return usage
 
+    def parse_args(self, *args, **kwargs):
+        """
+        Parse options and substitue missing options with configured values
+
+        Missing values for --verbose and --threads are substituted.
+        """
+        args = super().parse_args(*args, **kwargs)
+
+        project = get_project(args.project_home)
+
+        if args.verbosity == DEFAULT_VERBOSITY:
+            args.verbosity = project['verbosity']
+
+        if args.threads is None:
+            args.threads = project['threads']
+
+        return args
+
 
 def get_num_cpus():
     """
