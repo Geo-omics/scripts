@@ -108,7 +108,7 @@ def get_argparser(*args, project_home=True, threads=True, **kwargs):
             help='Number of threads / CPUs to employ',
         )
     common.add_argument(
-        '--verbose', '-v',
+        '-v', '--verbose',
         action='count',
         default=1,
         dest='verbosity',
