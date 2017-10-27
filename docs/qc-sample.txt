@@ -1,25 +1,25 @@
-.. program:: omics qc
+.. program:: omics qc-sample
 
-===================================================
-qc - quality control for metagenomic Illumina reads
-===================================================
+==========================================================
+qc-sample - quality control for metagenomic Illumina reads
+==========================================================
 
 Synopsis
 ========
 
-:program:`omics qc` [OPTIONS]...
+:program:`omics qc-sample` [OPTIONS]...
 
 
 Description
 ===========
 
-The :program:`omics qc` script takes a pair of fastq-formatted files (forward and
-reverse reads) and runs them past quality assessment (FastQC), dereplication,
-adapter removal (Scythe), and quality-trimming (Sickle) steps and then
-prepares a FASTA-formatted interleaved reads file that can be used as input
-for the IDBA assembler.  A second run of FastQC allows a before-after
-comparison to see if these steps led to an improvement in the quality of the
-data.
+The :program:`omics qc-sample` script takes a pair of fastq-formatted files
+(forward and reverse reads, data from a single sample) and runs them past
+quality assessment (FastQC), dereplication, adapter removal (Scythe), and
+quality-trimming (Sickle) steps and then prepares a FASTA-formatted interleaved
+reads file that can be used as input for the IDBA assembler.  A second run of
+FastQC allows a before-after comparison to see if these steps led to an
+improvement in the quality of the data.
 
 
 Options
@@ -99,5 +99,6 @@ Exits with non-zero upon encountering an error.
     See Also
     ========
 
-    :manpage:`omics-prep(1)`, :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`
+    :manpage:`omics-prep(1)`, :manpage:`omics-qc`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
 

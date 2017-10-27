@@ -338,10 +338,10 @@ man_pages = [
      [author], 7),
     ('prep', 'omics-prep', 'prepare compressed fastq data for processing',
      [author], 1),
-    ('qc', 'omics-qc', 'run quality control steps on metagenomic Illumina reads',
-     [author], 1),
-    ('assemble', 'omics-assemble', 'assemble metagenomic Illumina reads, check '
-     'quality and classify contigs', [author], 1),
+    ('qc-sample', 'omics-qc-sample', 'run quality control steps on metagenomic'
+     'Illumina reads for a single sample', [author], 1),
+    ('assemble', 'omics-assemble', 'assemble metagenomic Illumina reads, check'
+     ' quality and classify contigs', [author], 1),
     ('mapping', 'omics-mapping', 'map reads to assembly',
      [author], 1),
     ('binning', 'omics-binning', 'bin meta-genomic assemblies',
