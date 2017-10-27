@@ -150,6 +150,9 @@ class OmicsProjectNotFound(FileNotFoundError):
 class OmicsProject(dict):
     """
     Dict-like container to hold an omics project's configuration data
+
+    This is intended to be used like an environment / execution context for
+    omics sub-commands.
     """
 
     default = {
@@ -183,16 +186,19 @@ class OmicsProject(dict):
                 omics_dir = i / OMICS_DIR
                 break
 
-        config_file = omics_dir / CONFIG_FILE
-        if config_file.is_file():
-            try:
-                return cls.from_file(config_file)
-            except Exception as e:
-                raise OmicsProjectNotFound from e
-        else:
-            print('Warning: No config file found, using default configuration.'
-                  ' Empty config file created.', file=sys.stderr)
-            return cls.from_default(project_home=path)
+        if omics_dir:
+            config_file = omics_dir / CONFIG_FILE
+            if config_file.is_file():
+                try:
+                    return cls.from_file(config_file)
+                except Exception as e:
+                    raise OmicsProjectNotFound from e
+            else:
+                print('Warning: No config file found, using default '
+                      'configuration.', file=sys.stderr)
+
+        # use default settings as fallback
+        return cls.from_default(project_home=path)
 
     @classmethod
     def from_default(cls, **kwargs):
