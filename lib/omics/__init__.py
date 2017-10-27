@@ -211,4 +211,30 @@ class OmicsProject(dict):
             for k, v
             in parser[CONF_SECTION_PROJECT].items()
         })
+
+        proj.fix_types(parser)
         return proj
+
+    def fix_types(self, parser):
+        """
+        Cast values from str to other types where appropriate
+
+        :param parser: ConfigParser object used to parse the configuration
+        """
+        get_funs = {
+            int: parser.getint,
+            float: parser.getfloat,
+            bool: parser.getboolean,
+        }
+
+        for key in self:
+            if self[key] is None:
+                # None means variable is unset, no type conversion
+                continue
+
+            type_ = type(self.default[key])
+            args = CONF_SECTION_PROJECT, key
+            try:
+                self[key] = get_funs[type_](*args)
+            except KeyError as e:
+                pass
