@@ -230,14 +230,6 @@ def main():
              'positional argument.  By default .fastq and .fastq.gz files '
              'are considered.',
     )
-    argp.add_argument(
-        '--cpus', '--threads', '-t',
-        type=int,
-        metavar='N',
-        dest='threads',
-        default=None,
-        help='Number of threads / CPUs to employ',
-    )
     args = argp.parse_args()
 
     project = get_project(args.project_home)

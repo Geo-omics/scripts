@@ -67,6 +67,7 @@ def main():
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
         project_home=False,
+        threads=False,
     )
     argp.add_argument(
         'path',

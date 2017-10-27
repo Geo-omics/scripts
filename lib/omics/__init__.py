@@ -68,7 +68,7 @@ def get_num_cpus():
     return num_cpus
 
 
-def get_argparser(*args, project_home=True, **kwargs):
+def get_argparser(*args, project_home=True, threads=True, **kwargs):
     """
     Provide a canonical omics argparse argument parser
 
@@ -97,6 +97,15 @@ def get_argparser(*args, project_home=True, **kwargs):
             metavar='PATH',
             help='Omics project directory, by default, this is the current '
                  'directory.',
+        )
+    if threads:
+        common.add_argument(
+            '--cpus', '--threads', '-t',
+            type=int,
+            metavar='N',
+            dest='threads',
+            default=None,
+            help='Number of threads / CPUs to employ',
         )
     common.add_argument(
         '--verbose', '-v',
