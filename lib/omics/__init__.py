@@ -146,12 +146,6 @@ class OmicsProject(dict):
                 omics_dir = i / OMICS_DIR
                 break
 
-        if omics_dir is None:
-            raise OmicsProjectNotFound(
-                'No omics project found in {} or any parent directory'
-                ''.format(path)
-            )
-
         config_file = omics_dir / CONFIG_FILE
         if config_file.is_file():
             try:
