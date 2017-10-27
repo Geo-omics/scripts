@@ -304,7 +304,9 @@ class OmicsProject(dict):
 
             type_ = type(self.default[key])
             args = CONF_SECTION_PROJECT, key
-            try:
-                self[key] = get_funs[type_](*args)
-            except KeyError as e:
-                pass
+
+            if not isinstance(self[key], type_):
+                try:
+                    self[key] = get_funs[type_](*args)
+                except KeyError as e:
+                    pass
