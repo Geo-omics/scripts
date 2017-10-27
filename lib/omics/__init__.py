@@ -3,8 +3,10 @@ Package to support geo-omics-scripts
 """
 import argparse
 import configparser
+from os import environ
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 
@@ -30,6 +32,40 @@ class OmicsArgParser(argparse.ArgumentParser):
         # assume -h was defined first and --traceback is last common option
         usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
         return usage
+
+
+def get_num_cpus():
+    """
+    Get the number of available CPUs
+
+    :return type: int
+
+    If run in the context of a PBS job, the number of requested CPUs is used.
+    On a non-PBS system, i.e. some shared machine, 1/2 the available CPUs are
+    taken.
+    """
+    if 'PBS_ENVIRONMENT' in environ:
+        try:
+            num_cpus = int(environ.get('PBS_NP'))
+        except Exception as e:
+            print('omics [WARNING]: Failed to read PBS_NP variable: {}: {}'
+                  ''.format(e.__class__.__name__, e), file=sys.stderr)
+            num_cpus = 1
+    else:
+        # `lscpu -p=cpu` prints list of cpu ids, starting with 0, so take last
+        # line, divide by 2 (sharing the system) add 1 is the number of CPUs
+        # used
+        p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
+        try:
+            p.check_returncode()
+            num_cpus = p.stdout.decode().splitlines()[-1].strip()
+            num_cpus = int(int(num_cpus) / 2) + 1
+        except Exception as e:
+            print('omics [WARNING]: Failed to obtain number of CPUs: {}: {}'
+                  ''.format(e.__class__.__name__, e), file=sys.stdout)
+            num_cpus = 1
+
+    return num_cpus
 
 
 def get_argparser(*args, project_home=True, **kwargs):
@@ -119,6 +155,7 @@ class OmicsProject(dict):
     default = {
         'project_home': Path.cwd(),  # internal use, not found in conf file
         'name': None,
+        'threads': get_num_cpus(),
         'verbosity': DEFAULT_VERBOSITY,
     }
     """ Default settings """
