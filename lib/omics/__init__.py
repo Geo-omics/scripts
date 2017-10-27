@@ -43,6 +43,8 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         project = get_project(args.project_home)
 
+        args.project = project
+
         if args.verbosity == DEFAULT_VERBOSITY:
             args.verbosity = project['verbosity']
 
