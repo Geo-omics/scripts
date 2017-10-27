@@ -235,7 +235,7 @@ def main():
         type=int,
         metavar='N',
         dest='threads',
-        default=1,
+        default=None,
         help='Number of threads / CPUs to employ',
     )
     args = argp.parse_args()
@@ -246,6 +246,9 @@ def main():
         verbosity = project['verbosity']
     else:
         verbosity = args.verbosity
+
+    if args.threads is None:
+        args.threads = project['threads']
 
     suffices = args.suffix.split(',')
     files = []
@@ -267,6 +270,9 @@ def main():
                 print('  ->', i)
     else:
         argp.error('No files found.')
+
+    if verbosity >= DEFAULT_VERBOSITY + 2:
+        print('Using {} threads.'.format(args.threads))
 
     files = list(set(files))
     samp_count = 0
