@@ -136,6 +136,7 @@ OTHER_EXECUTABLES = \
     omics-mapping \
     omics-prep \
     omics-init \
+    omics-qc \
     omics-qc-sample \
     refseq-rna \
     remove_space_from_filenames \
