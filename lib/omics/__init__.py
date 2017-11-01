@@ -44,16 +44,26 @@ class OmicsArgParser(argparse.ArgumentParser):
         """
         args = super().parse_args(*args, **kwargs)
 
-        project = get_project(args.project_home)
+        try:
+            project = get_project(args.project_home)
+        except AttributeError:
+            # if project_home is missing, i.e. omics init
+            project = None
+        else:
+            del args.project_home
 
-        del args.project_home
         args.project = project
 
         if args.verbosity == DEFAULT_VERBOSITY:
-            args.verbosity = project['verbosity']
+            try:
+                args.verbosity = project['verbosity']
+            except TypeError:
+                pass
 
-        if args.threads is None:
+        try:
             args.threads = project['threads']
+        except (TypeError, AttributeError, KeyError):
+            args.threads = 1
 
         return args
 
