@@ -38,11 +38,15 @@ class OmicsArgParser(argparse.ArgumentParser):
         Parse options and substitue missing options with configured values
 
         Missing values for --verbose and --threads are substituted.
+        Remove project_home and add project as object.
+
+        Note: There is some redundancy between the arguments and the project.
         """
         args = super().parse_args(*args, **kwargs)
 
         project = get_project(args.project_home)
 
+        del args.project_home
         args.project = project
 
         if args.verbosity == DEFAULT_VERBOSITY:
