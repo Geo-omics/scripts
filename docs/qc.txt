@@ -57,7 +57,7 @@ Options
     Skip building the interleaved fasta file, interleaved fastq files will
     still be build.
 
-.. optionn:: --cpus N, --threads N, -t N
+.. option:: --cpus N, --threads N, -t N
     Number of threads / CPUs to employ
 
 .. option:: -h, --help
