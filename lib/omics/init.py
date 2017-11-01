@@ -70,7 +70,7 @@ def main():
         threads=False,
     )
     argp.add_argument(
-        'path',
+        'directory',
         default='.',
         nargs='?',
         help='Path to project directory, by default the current directory.',
@@ -82,7 +82,7 @@ def main():
              'derived from the project directory',
     )
     args = argp.parse_args()
-    init(path=args.path, name=args.name)
+    init(path=args.directory, name=args.name)
 
 
 if __name__ == '__main__':
