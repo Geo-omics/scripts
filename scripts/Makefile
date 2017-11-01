@@ -184,7 +184,7 @@ man_pages = $(foreach i,$(perl_scripts_good),$(i).1)
 
 $(man_pages): name = $(subst .1,,$@)
 $(man_pages):
-	@pod2man --center $(name) $(name) $@
+	@pod2man --utf8 --release=$(version) --center $(name) $(name) $@
 	$(info manpage for $(name))
 
 man: $(man_pages)
