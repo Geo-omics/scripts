@@ -100,6 +100,7 @@ PERL_SCRIPTS = \
     silvaTaxonAppend\
     summarize_antiSmash\
     tally\
+    tally-weave\
     tallyWrap\
     taxonDist\
     test_fragRec\
@@ -111,7 +112,6 @@ PERL_SCRIPTS = \
     U2T\
     uClustHomology\
     usageStats\
-    weave
 
 OTHER_EXECUTABLES = \
     antiSmash_summary \
@@ -174,8 +174,8 @@ BAD_PODS = \
     removeBlastSubj\
     removeCommentLines\
     tally\
+    tally-weave\
     U2T\
-    weave
 
 # compute names for manpages
 bad_re = $(foreach i,$(BAD_PODS),"-F $(i)")
