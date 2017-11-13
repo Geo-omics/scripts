@@ -19,6 +19,7 @@
 
 use strict;
 use Getopt::Long;
+use File::Spec::Functions;
 use File::Which;
 
 my $masterList;
@@ -36,20 +37,27 @@ GetOptions(
 	'f|fasta:s'=>\$fasta,
 );
 
-#Check for all scripts
-which "getMasterList" or die "Could not find dependency: getMasterList";
-which "tally" or die "Could not find dependency: tally";
-which "tally-weave" or die "Could not find dependency: tally-weave";
+#Check for dependencies
+my @deps = ('getMasterList', 'tally', 'tally-weave');
+foreach $dep (@deps) {
+    my $p = catfile('.', $dep);
+    if (-x $p) {
+        $dep = $p;
+    } else {
+        $dep = which $dep or die "Could not find dependency: $dep";
+    }
+}
+my ($master_list_script, $tally_script, $tally_weave_script) = @deps;
 
 my @files=glob("*.$ext");
 print "Creating MasterList\n";
-system("getMasterList -o ".$masterList." -s ".$bs.($ext ? " -e $ext" : ""));
+system("$master_list_script -o ".$masterList." -s ".$bs.($ext ? " -e $ext" : ""));
 foreach my $f(@files){
 	print "\tTally: $f\n";
 	my($name, $ext)=split(/\./, $f);
 	my $tallyFile=$name.".tally";
-	system("tally -m ".$masterList." -i ".$f ." -o ".$tallyFile." -s ".$bs.($printValue ? " -values $printValue" : "").($fasta ? " -fasta $fasta":""));
+	system("$tally_script -m ".$masterList." -i ".$f ." -o ".$tallyFile." -s ".$bs.($printValue ? " -values $printValue" : "").($fasta ? " -fasta $fasta":""));
 }
 print "Weaving all tally files...\n";
-system("tally-weave -o ".$combinedTally);
+system("$tally_weave_script -o ".$combinedTally);
 exit;
