@@ -1,0 +1,6 @@
+geo-omics-scripts (1.0.54-1) UNRELEASED; urgency=low
+
+  * Initial release. Closes: #nnnn
+    <nnnn is the bug number of your ITP>
+
+ -- Robert <heinro@localhost>  Thu, 02 Nov 2017 15:49:53 -0400

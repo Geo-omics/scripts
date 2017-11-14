@@ -1,0 +1,247 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: geo-omics-scripts
+Source: <url://example.com>
+#
+# Please double check copyright with the licensecheck(1) command.
+
+Files:     .gitignore
+           README.md
+           contents.list
+           docs/Makefile
+           docs/_static/css/custom.css
+           docs/assemble.txt
+           docs/binning.txt
+           docs/chop-contigs.txt
+           docs/illumina-reads-processing.txt
+           docs/index.txt
+           docs/mapping.txt
+           docs/merge-coverage.txt
+           docs/omics.txt
+           docs/prep.txt
+           docs/qc-sample.txt
+           docs/qc.txt
+           lib/Makefile
+           lib/omics/__init__.py
+           lib/omics/__main__.py
+           lib/omics/init.py
+           lib/omics/prep.py
+           lib/omics/qc.py
+           modulefiles/flux.omics/.version
+           modulefiles/flux.omics/1
+           modulefiles/install
+           modulefiles/omics/.version
+           modulefiles/omics/1
+           phylosiftrc
+           scripts/CRISPR_spacer_extractor
+           scripts/Ebot.Output.Extract.Gi.Title.Rev3
+           scripts/GI_info_XMLParser
+           scripts/Makefile
+           scripts/U2T
+           scripts/addFileName2header
+           scripts/addInfo2lrn
+           scripts/ani
+           scripts/antiSmash_summary
+           scripts/assemble.pl
+           scripts/assemblyModules
+           scripts/bamTools
+           scripts/basicHF
+           scripts/batchBlast
+           scripts/binTablesForIMG
+           scripts/bins2fasta
+           scripts/blastDensityPlot
+           scripts/calcN50
+           scripts/changeClasses
+           scripts/changePGDBattribs
+           scripts/chop-contigs
+           scripts/chopper
+           scripts/clusterDensity
+           scripts/consolidateJGIdata
+           scripts/contigMetadata
+           scripts/countInstances
+           scripts/coveragePerBin
+           scripts/coveragePerScaffold
+           scripts/createFastq
+           scripts/createNodes
+           scripts/createPhgDB
+           scripts/curateDB
+           scripts/derep+alias
+           scripts/derep_ClusterMap
+           scripts/derep_getReadAbundance
+           scripts/dereplicate
+           scripts/do2folder
+           scripts/do2list
+           scripts/embl2picture
+           scripts/esomCodonMod
+           scripts/esomTrain
+           scripts/esomWrapper
+           scripts/expandGFF
+           scripts/extractEuks
+           scripts/extractGenbankMetadata
+           scripts/extractGenomes
+           scripts/extractSeqs
+           scripts/extractSubSeq
+           scripts/extractTranslationsFromGbk
+           scripts/extract_Blast_Hits_Of_Interest
+           scripts/fileChopper
+           scripts/findStretchesOfNs
+           scripts/firefox_already_running
+           scripts/folderLevelSize
+           scripts/fragRec
+           scripts/gbk2fna
+           scripts/gcSkew
+           scripts/genomeCheck
+           scripts/genomicFluidity
+           scripts/getBwaMappedReadList
+           scripts/getClassFasta
+           scripts/getCol
+           scripts/getFamilyP
+           scripts/getFastaFromAccNos
+           scripts/getGFF
+           scripts/getGI
+           scripts/getGIAnnotation
+           scripts/getGISummary
+           scripts/getGeneClusters
+           scripts/getGiInfo
+           scripts/getLineage
+           scripts/getMasterList
+           scripts/getMyContigs
+           scripts/getQueryList
+           scripts/getRandomData
+           scripts/getSciNames
+           scripts/gff2fasta
+           scripts/gff2neo
+           scripts/gff2tbl
+           scripts/iClust
+           scripts/img_Bin_Classifier
+           scripts/inflate
+           scripts/interleave
+           scripts/itemize
+           scripts/kmerFreq
+           scripts/legacy_consolidateJGIdata
+           scripts/length+GC
+           scripts/limit2Length
+           scripts/mVelvetPipe_paired
+           scripts/mVelvetPipe_singles
+           scripts/makeAnnotationFile
+           scripts/map_project_names
+           scripts/mapper
+           scripts/mapper_getQueryList
+           scripts/matchQueryNames
+           scripts/measureCompleteness
+           scripts/merge-coverage
+           scripts/nameClassFiles
+           scripts/nsmpReport
+           scripts/oasesPaired_pipe
+           scripts/omics
+           scripts/omics-binning
+           scripts/omics-init
+           scripts/omics-prep
+           scripts/omics-qc
+           scripts/parallel_antiSmash
+           scripts/parallel_getGenomesFromTaxa
+           scripts/parseBlastXML
+           scripts/parseFastq
+           scripts/patchBlastLineage
+           scripts/plotCoverage
+           scripts/postBlast
+           scripts/ppt_getGI
+           scripts/ppt_getXML
+           scripts/refseq-rna
+           scripts/removeBlastSubj
+           scripts/removeCommentLines
+           scripts/remove_space_from_filenames
+           scripts/renameHeaders
+           scripts/reverse_complement
+           scripts/sangerSeqParser
+           scripts/separateInterleaved
+           scripts/setup_metapathways
+           scripts/silva-db
+           scripts/silvaTaxonAppend
+           scripts/summarize_antiSmash
+           scripts/tally
+           scripts/tallyWrap
+           scripts/taxonDist
+           scripts/test_fragRec
+           scripts/toMultiGBK
+           scripts/toPhylipAndBack
+           scripts/top5
+           scripts/triage
+           scripts/uClustHomology
+           scripts/usageStats
+           scripts/weave
+Copyright: __NO_COPYRIGHT_NOR_LICENSE__
+License:   __NO_COPYRIGHT_NOR_LICENSE__
+
+Files:     COPYRIGHT
+           scripts/omics-assemble
+           scripts/omics-mapping
+           scripts/omics-qc-sample
+           upload
+Copyright: 2013-2017 Regents of the University of Michigan
+           2017 Regents of The University of Michigan.
+License:   __NO_LICENSE__
+
+Files:     scripts/extractContigReads
+Copyright: 2009 Daniel Zerbino <zerbino@ebi.ac.uk>
+License:   GPL-2.0+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ MA 02110-1301, USA.
+ .
+ A script to split out a single contig's reads from an LastGraph file
+ produced by the Velvet assembler.  The output is in fasta format.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ Version 2 can be found in `/usr/share/common-licenses/GPL-2'.
+
+Files:     scripts/tetramer_freqs_esom
+Copyright: 2007 Anders Andersson (anders.andersson@scilifelab.se)
+License:   __UNKNOWN__
+ This is free software; see the COPYRIGHT file accompanying this script
+ for details. There is NO warranty; not even for MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.
+
+Files:     lib/liba.sh
+Copyright: 2017 Regents of The University of Michigan.
+License:   __UNKNOWN__
+ ### a library for bash scripts ###
+ .
+ How to use:
+
+Files:     Makefile
+Copyright: __NO_COPYRIGHT__ in: Makefile
+License:   __UNKNOWN__
+ modulefiles \
+ README.md \
+
+Files:     docs/conf.py
+Copyright: __NO_COPYRIGHT__ in: docs/conf.py
+License:   __UNKNOWN__
+ # The version info for the project you're documenting, acts as replacement for
+ # |version| and |release|, also used in various other places throughout the
+ # built documents.
+ #
+ # The short X.Y version.
+
+#----------------------------------------------------------------------------
+# xml and html files (skipped):
+#         scripts/parseTinySeqXML.xslt
+#         scripts/slideshow.xml
+#         scripts/tinySeq2fasta.xslt
+#         scripts/tinySeq2table.xslt
+#         scripts/twitterscript.xml
+
+#----------------------------------------------------------------------------
+# Files marked as NO_LICENSE_TEXT_FOUND may be covered by the following
+# license/copyright files.
