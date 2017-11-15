@@ -1,6 +1,22 @@
-geo-omics-scripts (1.0.54-1) UNRELEASED; urgency=low
+geo-omics-scripts (1.0.56-1) unstable; urgency=medium
 
-  * Initial release. Closes: #nnnn
-    <nnnn is the bug number of your ITP>
+  [ Robert ]
+  * Set installation prefix as upstream Makefile sets empty prefix
+
+  [ Robert ]
+  * Fix regression, parse_args() now supplies the project
+  * Allow easy setup to locally run scripts from git repo
+  * Makefile: get version if run inside dist tarballs
+  * Makefile: create tarballs in parent directory
+  * Makefile: ensure sphinx docs are (for now) distributed in tarball
+  * Fix: only copy files per directory
+  * Make use of gbp buildpackage realistic
+
+ -- Robert <heinro@med.umich.edu>  Wed, 15 Nov 2017 16:42:33 -0500
+
+geo-omics-scripts (1.0.54-1) unstable; urgency=low
+
+  * Initial release.
+  * Packaged created with debmake
 
  -- Robert <heinro@localhost>  Thu, 02 Nov 2017 15:49:53 -0400
