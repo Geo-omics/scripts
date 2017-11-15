@@ -58,7 +58,7 @@ data_files = \
 
 doc_files = COPYRIGHT README.md
 
-dist_dir = $(package_name)-$(version)
+dist_dir = ../$(package_name)-$(version)
 html_dirs = \
 	html \
 	html/_sources \
