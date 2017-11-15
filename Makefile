@@ -9,16 +9,28 @@ git_version := $(shell git describe 2>/dev/null)
 date := $(shell date +%Y%m%d-%H%M)
 date_version_appendix := $(shell $(all_committed) || echo -n -$(date))
 
-# get version from  VERSION file is available
-# else use `git describe`
-# but override with $VERSION in environment
-version := $(strip $(if \
-	$(VERSION), \
-	$(VERSION), \
-	$(shell cat VERSION 2>/dev/null \
-		|| echo $(git_version)$(date_version_appendix) \
-		|| echo 1>&2 "Failed to get version information, no VERSION file and no git tags!" \
-	) \
+# Get version, try in order of priority (highest to lowest)
+# 0. VERSION environment variablke
+# 1. content of VERSION file
+# 2. output of `git describe` (plus possibly dat)
+# 3. version in parent directory
+version0 := $(VERSION)
+version1 := $(shell cat VERSION 2>/dev/null)
+version2 := $(git_version)$(date_version_appendix)
+version3 := $(shell basename $$(pwd) | grep -o -P "(?<=$(package_name)-).*")
+
+version := $(strip $(if $(version0),\
+        $(version0),\
+        $(if $(version1),\
+                $(version1),\
+                $(if $(version2),\
+                        $(version2),\
+                        $(if $(version3),\
+                                $(version3),\
+                                $(error "Failed to get version information")\
+                        )\
+                )\
+        )\
 ))
 
 export
