@@ -113,7 +113,7 @@ distdocs: sphinx-docs
 	# copy sources
 	for p in docs docs/_static/css; do \
 	    mkdir -p -- "$(dist_dir)/$$p"; \
-	    for i in $$(find $$p -type f -not -name '*~'); do \
+	    for i in $$(find $$p -maxdepth 1 -type f -not -name '*~'); do \
 	        cp -p $$i "$(dist_dir)/$$p"; \
 	    done; \
 	done
