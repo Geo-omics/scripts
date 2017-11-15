@@ -109,7 +109,7 @@ inc_version := $(major_version).$(minor_version).$(inc_patch_version)
 distmkdir:
 	mkdir -p -- "$(dist_dir)"
 
-distdocs:
+distdocs: sphinx-docs
 	# copy sources
 	for p in docs docs/_static/css; do \
 	    mkdir -p -- "$(dist_dir)/$$p"; \
@@ -117,7 +117,7 @@ distdocs:
 	        cp -p $$i "$(dist_dir)/$$p"; \
 	    done; \
 	done
-	# copy built docs to not require full sphinx/latex support on deployment sites
+	# copy sphinx-generated docs to not require full sphinx/latex support on deployment sites
 	cp -rp docs/_build "$(dist_dir)/docs/_build"
 
 distdir: distmkdir distdocs
