@@ -1,0 +1,11 @@
+# To use this repo as a local installation run
+#
+#   $ source localenv
+#
+# from a bash prompt
+
+base=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+export PATH=$PATH:$base/scripts
+export PYTHONPATH=$PYTHONPATH:$base/lib
+mkdir -p $base/share/geo-omics-scripts
+ln -f -s -t $base/share/geo-omics-scripts/ ../../lib/liba.sh

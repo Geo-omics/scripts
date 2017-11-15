@@ -9,7 +9,7 @@ import re
 import shutil
 import sys
 
-from . import get_argparser, get_project, DEFAULT_VERBOSITY
+from . import get_argparser, DEFAULT_VERBOSITY
 
 FORWARD_READS_FILE = 'fwd.fastq'
 REVERSE_READS_FILE = 'rev.fastq'
@@ -232,8 +232,6 @@ def main():
     )
     args = argp.parse_args()
 
-    project = get_project(args.project_home)
-
     verbosity = args.verbosity
 
     suffices = args.suffix.split(',')
@@ -272,7 +270,7 @@ def main():
                     prep(
                         sample,
                         list(sample_grp),
-                        dest=project['project_home'],
+                        dest=args.project['project_home'],
                         force=args.force,
                         verbosity=verbosity,
                         executor=e,
