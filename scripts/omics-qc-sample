@@ -80,9 +80,17 @@ handle_options () {
 ##########################
 
 # Set adapter file depending on server
+ADAPTERS_DEBIAN=/usr/share/trimmomatic/TruSeq3-PE-2.fa
 ADAPTERS_FLUX=/sw/lsa/centos7/trimmomatic/0.36/adapters/TruSeq3-PE-2.fa
 ADAPTERS_VONDAMM=/opt/packages/Trimmomatic/0.32/adapters/TruSeq3-PE-2.fa
-if [ -r $ADAPTERS_FLUX ]; then ADAPTERS=$ADAPTERS_FLUX; else ADAPTERS=$ADAPTERS_VONDAMM; fi
+
+set_default_adapters () {
+    while [ $# -gt 0 ] && [ ! -r "$1" ]; do
+        shift
+    done
+    ADAPTERS=$1
+}
+set_default_adapters $ADAPTERS_DEBIAN $ADAPTERS_FLUX $ADAPTERS_VONDAMM
 
 # default input files as produced by prep script
 FWD_FASTQ=fwd.fastq
@@ -111,6 +119,7 @@ fi
 # some input sanitation
 #########################
 [ -r "$ADAPTERS" ] || abort "Adapters file not found: $ADAPTERS"
+[ "$VERBOSITY" -lt 2 ] || info "Using adapters file: $ADAPTERS"
 [ -r "$FWD_FASTQ" ] || abort "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort "Reverse reads file not found: $REV_FASTQ"
 
