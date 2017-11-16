@@ -39,32 +39,53 @@ def group(files, keep_lanes=False):
     but graceful degradation is attempted in case the files do not correspond
     to this scheme.
     """
-    files = sorted(files, key=lambda x: x.name)
+    def id_lane_dir(x):
+        """
+        key function for initial sorting
 
-    def keyfunc(x):
-        """ key function for grouping """
-        # get sample id, all up to first underscore
-        key = x.name.partition('_')[0]
-        if keep_lanes:
-            # try to obtain the lane
-            m = re.search('_L\d+', x.name)
-            try:
-                lane = m.group()
-            except AttributeError:
-                raise RuntimeError(
-                    'Failed extract lane info from filename: {}'.format(x)
-                )
+        Primary key is sample name
+        If keep_lanes then lanes are second, other wise third after direction
+
+        Degrade to identity if filename can't be parsed
+        """
+        m = re.match(raw_reads_file_pat, x.name)
+        if m is None:
+            return x.name
+        else:
+            m = m.groupdict()
+            if keep_lanes:
+                return (m['sampleid'], int(m['lane']), m['dir'])
             else:
-                key += lane
-        return key
+                return (m['sampleid'], m['dir'], int(m['lane']))
 
-    for key, group in groupby(files, keyfunc):
+    files = sorted(files, key=id_lane_dir)
+
+    def id_lane(x):
+        """
+        key function for grouping
+
+        Key is sample name and if we keep lanes also the lane
+        """
+        m = re.match(raw_reads_file_pat, x.name)
+        try:
+            m = m.groupdict()
+        except AttributeError:
+            raise RuntimeError(
+                'Failed to parse filename: {}'.format(x)
+            )
+
+        if keep_lanes:
+            return (m['sampleid'], m['lane'])
+        else:
+            return m['sampleid']
+
+    for key, group in groupby(files, key=id_lane):
         yield (key, group)
 
 
 def without_filenumber(path):
     """
-    Helper function to removethe file number from a path
+    Helper function to remove the file number from a path
 
     Does this:
         id_Snnn_Lnnn_Rn_nnn.suf --> id_Snnn_Lnnn_Rn
@@ -89,13 +110,15 @@ def without_filenumber(path):
     return path
 
 
-def get_direction(filename):
+def sample_direction(filename):
     """
     Extract the read direction from filename
 
     :param filename: Path or (partial) filename, can be str or Path
     :return: Integer 1 or 2
     :raise: AttributeError if parsing fails
+
+    This is somewhat more permissive than the other filename parsing in prep
     """
     filename = Path(filename).name
     m = re.search(r'_R(?P<dir>[12])_', filename)
@@ -134,17 +157,9 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
         if i.is_file() and not force:
             raise FileExistsError(i)
 
-    for stem, series in groupby(files, without_filenumber):
-        # a 'series' is a bunch of files from the same lane/sample that got
-        # split up, and that we need to put back together.  It's not clear if
-        # such data is still produced in the wild.
-        try:
-            direction = get_direction(stem)
-        except Exception as e:
-            raise RuntimeError(
-                'Failed to parse read direction from filename: {} in {}'
-                ''.format(stem, files)
-            )
+    for direction, series in groupby(files, key=sample_direction):
+        # a 'series' is a bunch of files that got split up, and that we need
+        # to put back together in a consistent order
         if direction == 1:
             outfile = fwd_outfile
         elif direction == 2:
