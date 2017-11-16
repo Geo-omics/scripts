@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.57-1) unstable; urgency=medium
+
+  * Teach qc-sample where to find the adapters file on debian systems
+  * Fix: copy/extract sequentially into same output file
+
+ -- Robert <heinro@med.umich.edu>  Thu, 16 Nov 2017 15:11:35 -0500
+
 geo-omics-scripts (1.0.56-1) unstable; urgency=medium
 
   [ Robert ]
