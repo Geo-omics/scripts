@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.58-1) unstable; urgency=medium
+
+  * Fix error handling, only raise when status is actually non-zero
+
+ -- Robert <heinro@med.umich.edu>  Fri, 17 Nov 2017 10:03:42 -0500
+
 geo-omics-scripts (1.0.57-1) unstable; urgency=medium
 
   * Teach qc-sample where to find the adapters file on debian systems
