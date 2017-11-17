@@ -35,7 +35,7 @@ def qc_sample(sample, *, clean_only=False, adapters=None, keep_all=False,
         [script] + args,
         cwd=str(project['project_home'] / sample)
     )
-    if p.check_returncode:
+    if p.check_returncode():
         raise RuntimeError('Failed to run qc-sample: sample: {}: exit status: '
                            '{}'.format(sample, p.returncode))
 
