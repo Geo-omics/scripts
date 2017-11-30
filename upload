@@ -188,12 +188,12 @@ if [ -z "$package" ]; then
     if $TEST; then
 	# get latest dist tarball
 	# shellcheck disable=SC2012
-	package=$(ls -1rt "${PACKAGE_NAME}-${git_tag}"*.tar.gz | tail -n 1)
+	package=../$(ls -1rt "${PACKAGE_NAME}-${git_tag}"*.tar.gz | tail -n 1)
     elif [[ "$git_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
 	# be strict which versions to accept unless testing
 	version=$git_tag
 	info "Current version is $version"
-	package=${PACKAGE_NAME}-${version}.tar.gz
+	package=../${PACKAGE_NAME}-${version}.tar.gz
     else
 	abort "You are trying to upload to the production server but no release has been made, current git tag is $git_tag, run 'make release' first"
     fi
@@ -210,7 +210,7 @@ if ! $FORCE; then
     # shellcheck disable=SC2087
     if ! ssh "$REMOTE_HOST" << EOF
 	(test -d "$REMOTE_STAGE_DIR" || (echo "[test failed] staging directory $REMOTE_STAGE_DIR does not exists"; exit 1)) &&
-	($TEST || ! test -e "$REMOTE_STAGE_DIR/$package" || (echo "[test failed] $package exists in staging directory"; exit 1))
+        ($TEST || ! test -e "$REMOTE_STAGE_DIR/$(basename "$package")" || (echo "[test failed] $(basename "$package") exists in staging directory"; exit 1))
 EOF
     then
 	abort "Sanity check failed.  See error message above."
@@ -236,7 +236,7 @@ echo "done"
 # shellcheck disable=SC2087
 ssh -q "$REMOTE_HOST" << EOF
     $module_cmds
-    $remote_env finster install $finster_verbose "$REMOTE_STAGE_DIR/$package" &&
+    $remote_env finster install $finster_verbose "$REMOTE_STAGE_DIR/$(basename "$package")" &&
     echo "done"
 EOF
 
