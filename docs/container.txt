@@ -1,0 +1,43 @@
+.. program:: omics container
+
+================================================
+container -- start a singularity container
+================================================
+
+Synopsis
+========
+
+:program:`omics container` [OPTIONS]...
+
+
+Description
+===========
+
+Start a shell in a singularity container environment (typically on Flux HPC) with all
+omics scripts and software dependencies available.
+
+
+Options
+=======
+
+.. option:: -i, --container-image PATH
+
+    Path to singularity container image.  A sensible default is chosen if this
+    option is not provided.
+
+.. option:: -k, --keep-modules-loaded
+
+    Do not purge environment modules, by default all modules get purged.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`

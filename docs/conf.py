@@ -352,6 +352,9 @@ man_pages = [
      [author], 1),
     ('chop-contigs', 'chop-contigs', 'chop up long contigs of an assembly',
      [author], 1),
+    ('container', 'omics-container', 'switch to shell in singularity '
+     'container',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.
