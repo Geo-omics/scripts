@@ -21,7 +21,6 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 import os
-from pathlib import Path
 import re
 import subprocess
 
@@ -64,15 +63,15 @@ author = 'R.'
 # built documents.
 #
 # The short X.Y version.
-version_file = Path('../VERSION')
+version_file = '../VERSION'
 if 'version' in os.environ:
     # got version through assignment in Makefile
     version = os.environ['version']
 elif 'VERSION' in os.environ:
     # got version through assignment in shell?
     version = os.environ['VERSION']
-elif version_file.exists():
-    version = version_file.read_text()
+elif os.path.exists(version_file):
+    version = open(version_file).read()
 else:
     res = subprocess.run(['git', 'describe'], stdout=subprocess.PIPE)
     version = res.stdout.decode()
