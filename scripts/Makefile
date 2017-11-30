@@ -133,6 +133,7 @@ OTHER_EXECUTABLES = \
     omics \
     omics-assemble \
     omics-binning \
+    omics-container \
     omics-mapping \
     omics-prep \
     omics-init \

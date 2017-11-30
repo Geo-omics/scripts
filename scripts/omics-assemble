@@ -173,6 +173,9 @@ fi
 spec=k${MINK}_${MAXK}_s${STEP}
 out="$OUTDIR/$spec"
 
+$MEGAHIT || [ "$ASSEMBLY_LEVEL" == contig ] || [ "$ASSEMBLY_LEVEL" == scaffold ] \
+    || abort "Bad value given for --level: $ASSEMBLY_LEVEL"
+
 run_assembly=true
 if [ -n "$ASSEMBLY" ]; then
     if [ -f "$ASSEMBLY" ]; then
