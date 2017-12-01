@@ -3,31 +3,9 @@ Date: Fri, 1 Dec 2017 16:41:58 -0500
 Subject: Install python module to Debian-correct path
 
 ---
- debian/changelog | 13 +++++++++++++
- lib/Makefile     |  2 +-
- 2 files changed, 14 insertions(+), 1 deletion(-)
+ lib/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/debian/changelog b/debian/changelog
-index d59a52e..627be6c 100644
---- a/debian/changelog
-+++ b/debian/changelog
-@@ -1,3 +1,16 @@
-+geo-omics-scripts (1.0.60-1~1.gbpf0aaf2) UNRELEASED; urgency=medium
-+
-+  ** SNAPSHOT build @f0aaf239d5714c323af3cf74d9542850830fd4f0 **
-+
-+  [ Robert ]
-+  * Add script to enter shell in container
-+  * Allow docs building if sphinx-build uses python2
-+  * Check for valid user input, avoid cryptic crash later on
-+  * Fix coding style, thanks shellcheck
-+  * Fix regression, pick up tarball from parent directory
-+
-+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Fri, 01 Dec 2017 15:20:00 -0500
-+
- geo-omics-scripts (1.0.58-1) unstable; urgency=medium
- 
-   * Fix error handling, only raise when status is actually non-zero
 diff --git a/lib/Makefile b/lib/Makefile
 index f15bf60..eb65cee 100644
 --- a/lib/Makefile
