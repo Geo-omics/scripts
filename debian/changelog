@@ -1,3 +1,21 @@
+geo-omics-scripts (1.0.60-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Add script to enter shell in container
+  * Allow docs building if sphinx-build uses python2
+  * Check for valid user input, avoid cryptic crash later on
+  * Fix coding style, thanks shellcheck
+  * Fix regression, pick up tarball from parent directory
+  * Remove boilerplate from README
+  * Use real email for maintainer address
+  * Replace boilerplate and default in debian/control
+  * Install python module to Debian-correct path
+  * Bump standards version
+  * Replace placeholder url
+  * Fix patch which erroneously had the changelog modified
+
+ -- Robert <heinro@umich.edu>  Fri, 01 Dec 2017 17:00:59 -0500
+
 geo-omics-scripts (1.0.58-1) unstable; urgency=medium
 
   * Fix error handling, only raise when status is actually non-zero
