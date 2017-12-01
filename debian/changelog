@@ -32,4 +32,4 @@ geo-omics-scripts (1.0.54-1) unstable; urgency=low
   * Initial release.
   * Packaged created with debmake
 
- -- Robert <heinro@localhost>  Thu, 02 Nov 2017 15:49:53 -0400
+ -- Robert <heinro@umich.edu>  Thu, 02 Nov 2017 15:49:53 -0400
