@@ -114,12 +114,13 @@ for sec in ['SYNOPSIS', 'EXAMPLE']:
             'B<\\1>',
             pod[sec]
         )
-        # make options bold
-        pod[sec] = re.sub(
-            '({})'.format('|'.join(options)),
-            'B<\\1>',
-            pod[sec]
-        )
+        if options:
+            # make options bold
+            pod[sec] = re.sub(
+                '({})'.format('|'.join(options)),
+                'B<\\1>',
+                pod[sec]
+            )
 
 if args.write_to_file:
     args.inputfile.close()
