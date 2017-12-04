@@ -135,9 +135,11 @@ def write_section(name, text, file):
 # write output
 outfile.write(begin)
 
+# write sections in correct order
 for i in ['NAME', 'SYNOPSIS', 'DESCRIPTION', 'OPTIONS']:
-    write_section(i, pod[i], outfile)
-    del pod[i]
+    if i in pod:
+        write_section(i, pod[i], outfile)
+        del pod[i]
 
 # write rest
 for i in list(pod):
