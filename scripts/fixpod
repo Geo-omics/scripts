@@ -77,12 +77,18 @@ if 'DESCRIPTION' in pod:
 options = []
 if 'OPTIONS' in pod:
     optpat = re.compile(r'^(?P<opt>.*)(?P<val>\<\w+\>)(?P<descr>.*)$')
+    simplpat = re.compile(r'^(?P<opt>-\w+)(?P<descr>.*)$')
     new = '\n=over 8\n\n'
     for i in pod['OPTIONS'].splitlines():
         m = re.match(optpat, i)
         if m is None:
-            new += i
-            continue
+            m = re.match(simplpat, i)
+            if m is None:
+                new += '=item ' + i + '\n\n'
+                continue
+            else:
+                opt, descr = m.groups()
+                val = ''
         else:
             opt, val, descr = m.groups()
 
@@ -91,11 +97,12 @@ if 'OPTIONS' in pod:
         options += opts
         opts = ', '.join(['B<{}>'.format(i) for i in opts])
 
-        val = 'I' + val
+        if val:
+            val = ' I' + val  # val has <> already
 
         descr = descr.strip()
 
-        new += '=item {} {}\n\n{}\n\n'.format(opts, val, descr)
+        new += '=item {}{}\n\n{}\n\n'.format(opts, val, descr)
 
     new += '=back\n\n'
 
