@@ -47,7 +47,7 @@ for line in args.inputfile:
         name, section = pod.popitem()
         line = line.strip()
         if line:
-            section += line
+            section += line + '\n'
         pod[name] = section
     else:
         # new section
@@ -67,13 +67,6 @@ if 'NAME' not in pod:
     else:
         pod['NAME'] = args.inputfile.name + ' - '
 
-if 'SYNOPSIS' in pod:
-    pod['SYNOPSIS'] = re.sub(
-        r'perl ' + args.inputfile.name + '\.pl',
-        args.inputfile.name,
-        pod['SYNOPSIS']
-    )
-
 if 'DESCRIPTION' in pod:
     pod['DESCRIPTION'] = re.sub(
         r'^' + args.inputfile.name + '(\.pl)?\s*-*\s*',
@@ -81,14 +74,63 @@ if 'DESCRIPTION' in pod:
         pod['DESCRIPTION']
     )
 
+options = []
+if 'OPTIONS' in pod:
+    optpat = re.compile(r'^(?P<opt>.*)(?P<val>\<\w+\>)(?P<descr>.*)$')
+    new = '\n=over 8\n\n'
+    for i in pod['OPTIONS'].splitlines():
+        m = re.match(optpat, i)
+        if m is None:
+            new += i
+            continue
+        else:
+            opt, val, descr = m.groups()
+
+        opt = opt.strip()
+        opts = opt.split()
+        options += opts
+        opts = ', '.join(['B<{}>'.format(i) for i in opts])
+
+        val = 'I' + val
+
+        descr = descr.strip()
+
+        new += '=item {} {}\n\n{}\n\n'.format(opts, val, descr)
+
+    new += '=back\n\n'
+
+    pod['OPTIONS'] = new
+
+for sec in ['SYNOPSIS', 'EXAMPLE']:
+    if sec in pod:
+        pod[sec] = re.sub(
+            r'perl ' + args.inputfile.name + '\.pl',
+            args.inputfile.name,
+            pod[sec]
+        )
+        # make program bold
+        pod[sec] = re.sub(
+            '(?<!\w)({})(?!\w)'.format(args.inputfile.name),
+            'B<\\1>',
+            pod[sec]
+        )
+        # make options bold
+        pod[sec] = re.sub(
+            '({})'.format('|'.join(options)),
+            'B<\\1>',
+            pod[sec]
+        )
+
 if args.write_to_file:
     args.inputfile.close()
     outfile = open(args.inputfile.name, 'w')
 else:
     outfile = sys.stdout
 
+
 def write_section(name, text, file):
     file.write('=head1 {}\n\n{}\n\n'.format(name, text))
+
 
 # write output
 outfile.write(begin)
