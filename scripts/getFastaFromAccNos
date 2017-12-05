@@ -66,7 +66,11 @@
 #extract_links
 #get_ftp_file
 
-=head1
+=head1 NAME
+
+getFastaFromAccNos - routines used in the NCBI PowerScripting course
+
+=head1 SYNOPSIS
 
 	getFastaFromAccNos -list Accession_number.list -db protein -out output.fasta
 

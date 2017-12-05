@@ -29,9 +29,14 @@
 ##		 <directory> is the Velvet directory 
 ##
 ######################################################################
+
+=head1 NAME
+
+extractContigReads - split out a single contig's reads from an LastGraph file
+
 =head1 Usage:
 
-	extractContigReads -l list_of_Original_contig_Names.txt -dir assembly_directory -o output -r list of reads
+	extractCo`ntigReads -l list_of_Original_contig_Names.txt -dir assembly_directory -o output -r list of reads
 
 	-summary	when you only wish to see the # of reads in each contig and NOT the names.
 	-metav	if you've used metavelvet on your data.

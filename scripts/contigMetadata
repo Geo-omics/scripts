@@ -2,21 +2,27 @@
 
 =head1 NAME
 
-contigMetadata - 
+contigMetadata - tell which contigs combined to form the minimus output.
 
 =head1 SYNOPSIS
 
-Get me the .contig file from minimus and I'll tell you which contigs combined to form the minimus output.
 
 perl minimusMetadata.pl -c < .contig file from minimus> -o <output_File_Name>
 
+=head1 DESCRIPTION
 
-=head1 OPTIONAL
+Get me the .contig file from minimus and I'll tell you which contigs combined to form the minimus output.
+
+
+=head1 OPTIONS
 
 -len	minimum length
+
 -list	List of minimus scaffolds you wish to extract the contig names for
+
 -summary Don't get the read names, just the numbers. Also try the following command for the same effect
-#	system("grep "^##" filename.contig | cut -f 1,2 -d " " | sort -g -r -k 2 > summary_afg.map");
+
+   #	system("grep "^##" filename.contig | cut -f 1,2 -d " " | sort -g -r -k 2 > summary_afg.map");
 
 
 =head1 AUTHOR
