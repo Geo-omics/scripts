@@ -14,7 +14,7 @@ argp.add_argument('-w', '--write-to-file', action='store_true')
 
 args = argp.parse_args()
 
-header = re.compile(r'^\s*=head\d?\s+(?P<section_name>\w+)\s*$')
+header = re.compile(r'^\s*=head\d?\s+(?P<section_name>[\w/_. \'-]+)\s*$')
 last_pod_line = re.compile(r'^\s*=cut\s*$')
 
 begin = ''
