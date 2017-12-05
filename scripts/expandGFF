@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-expandGFF -- Take the GFF file attribute column and split it into multiple columns.
+expandGFF - Take the GFF file attribute column and split it into multiple columns.
 
 
 =head1 SYNOPSIS

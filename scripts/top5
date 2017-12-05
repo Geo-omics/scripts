@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-top5.pl -- This program gets the top 5 hits for each query in a blast tabular output file.
+top5 - This program gets the top 5 hits for each query in a blast tabular output file.
 
 
 =head1 SYNOPSIS

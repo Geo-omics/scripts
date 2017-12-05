@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-gbk2fna -- Read Genbank to Nucleotide Fasta file.
+gbk2fna - Read Genbank to Nucleotide Fasta file.
 
 
 =head1 SYNOPSIS

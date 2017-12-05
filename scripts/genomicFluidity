@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-genomicFluidity -- Do this.
+genomicFluidity - Do this.
 # aai -- http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1236649/
 # Genomic Fluidity -- http://www.biomedcentral.com/1471-2164/12/32 [(conserved1+conserved2)/(Total1+Total2)] * 100
 

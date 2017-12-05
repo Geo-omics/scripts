@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-img_Bin_Classifier.pl -- Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
+img_Bin_Classifier - Use the IMG taxonomic classification of contigs/scaffolds to get the taxonomic makeup of each bin.
 
 
 =head1 SYNOPSIS

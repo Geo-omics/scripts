@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-interleave.pl -- Take the fwd and rev sequence files and arrange the sequence pairs in a single file such that forward sequence is followed by it's reverse pair.
+interleave - Take the fwd and rev sequence files and arrange the sequence pairs in a single file such that forward sequence is followed by it's reverse pair.
 
 
 =head1 SYNOPSIS

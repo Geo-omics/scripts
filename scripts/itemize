@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-itemize.pl -- You you used mapper.pl for multiple datasets and you wish to get a comparison for each dataset. Use this script.
+itemize - You you used mapper.pl for multiple datasets and you wish to get a comparison for each dataset. Use this script.
 
 
 =head1 SYNOPSIS

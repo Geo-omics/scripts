@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-coveragePerScaffold -- Using the GenomeCoverageBed default output calculate the coverage per scaffold and the whole genome.
+coveragePerScaffold - Using the GenomeCoverageBed default output calculate the coverage per scaffold and the whole genome.
 
 
 =head1 SYNOPSIS

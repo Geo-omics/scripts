@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-toMultiGBK.pl -- split a multi GBK file to multiple single GBK file.
+toMultiGBK - split a multi GBK file to multiple single GBK file.
 
 
 =head1 SYNOPSIS

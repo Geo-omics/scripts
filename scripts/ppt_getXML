@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-perl ppt_getXML.pl -- Given a list of GI numbers from a user specified NCBI database, fetch TinySeq XML records for each GI number
+ppt_getXML - Given a list of GI numbers from a user specified NCBI database, fetch TinySeq XML records for each GI number
 
 
 =head1 SYNOPSIS

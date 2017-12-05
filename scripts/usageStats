@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-usageStats -- notes the CPU and Memory usage of a process at each defined time interval. Presents it in a usable format.
+usageStats - notes the CPU and Memory usage of a process at each defined time interval. Presents it in a usable format.
 
 
 =head1 SYNOPSIS

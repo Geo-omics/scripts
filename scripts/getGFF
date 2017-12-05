@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-getGFF -- Given a list of contig names extract GFF data.
+getGFF - Given a list of contig names extract GFF data.
 
 
 =head1 SYNOPSIS

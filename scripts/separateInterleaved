@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-separateInterleaved.pl -- Separate interleaved files. Tested for illumina datasets only.
+separateInterleaved - Separate interleaved files. Tested for illumina datasets only.
 
 
 =head1 SYNOPSIS

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-binTablesForIMG -- Given a list of Contigs reformat it to upload to IMG Scaffold workspace.
+binTablesForIMG - Given a list of Contigs reformat it to upload to IMG Scaffold workspace.
 
 
 =head1 SYNOPSIS

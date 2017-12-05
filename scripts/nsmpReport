@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-nsmpReport.pl -- Given AntiSmash and MetaPathways outputs get best hits and flanking regions of the genes of interest
+nsmpReport - Given AntiSmash and MetaPathways outputs get best hits and flanking regions of the genes of interest
 
 
 =head1 SYNOPSIS

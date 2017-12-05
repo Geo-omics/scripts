@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-map_project_names.pl -- Map IMG project names to your own. Creates Symbolic links with your project names to extracted IMG tar balls.
+map_project_names - Map IMG project names to your own. Creates Symbolic links with your project names to extracted IMG tar balls.
 
 
 =head1 SYNOPSIS

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-getGI -- returns GI numbers from a user specified NCBI database and search term
+getGI - returns GI numbers from a user specified NCBI database and search term
 
 
 =head1 SYNOPSIS

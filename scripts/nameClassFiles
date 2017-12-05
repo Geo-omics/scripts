@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-nameClassFiles.pl -- Rename class files according to a tab-separated list of old/original names to new/more sensible names.
+nameClassFiles - Rename class files according to a tab-separated list of old/original names to new/more sensible names.
 
 
 =head1 SYNOPSIS

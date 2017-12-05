@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-blastDensityPlot -- Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
+blastDensityPlot - Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
 
 
 =head1 SYNOPSIS

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-extractGenbankMetaData -- Extract Meta data and protein translations from a Genbank file. This script was created to be used as a part of the VirDB pipeline.
+extractGenbankMetadata - Extract Meta data and protein translations from a Genbank file. This script was created to be used as a part of the VirDB pipeline.
 
 
 =head1 SYNOPSIS

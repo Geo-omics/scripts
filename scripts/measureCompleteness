@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-measureCompleteness.pl -- Given a fasta file and IMG consolidated data look for the 36 essential housekeeping genes (Cicareli et al 2006)
+measureCompleteness - Given a fasta file and IMG consolidated data look for the 36 essential housekeeping genes (Cicareli et al 2006)
 NOTE1: Just matches COG numbers.
 NOTE2: Users can provide their own list as well. See "myCOGS" option for details.
 

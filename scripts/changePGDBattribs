@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-changePGDBattribs -- Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
+changePGDBattribs - Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
 
 
 =head1 SYNOPSIS
