@@ -1,37 +1,72 @@
 #!/usr/bin/perl
 
-=head1 DESCRIPTION
+=head1 NAME
 
 coveragePerBin -- Do this.
 
-=head1 USAGE
 
-coveragePerBin
+=head1 SYNOPSIS
 
-=head2 Options
+B<coveragePerBin>
 
-    -conf   <FILE>      Concatenated confidence file. # make sure you've used the loyalty scores in getClassFasta.
-                        # This script won't handle scaffold mapping to multiple bins.
-    -cov    <FILE>      Sample Scaffold file.
-    -prefix <TEXT>      Prefix that should be used for scaffold names in the `-cov` file.
-    -out    <TEXT>      Output file name.
-    -min    <INT>       Only count scaffolds with cov >= min; default=0
-    
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
 
-=head1 Author
+=head1 DESCRIPTION
+
+Do this.
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-conf> I<FILE>
+
+Concatenated confidence file. # make sure you've used the loyalty scores in getClassFasta.
+
+=item # This script won't handle scaffold mapping to multiple bins.
+
+=item B<-cov> I<FILE>
+
+Sample Scaffold file.
+
+=item B<-prefix> I<TEXT>
+
+Prefix that should be used for scaffold names in the `-cov` file.
+
+=item B<-out> I<TEXT>
+
+Output file name.
+
+=item B<-min> I<INT>
+
+Only count scaffolds with cov >= min; default=0
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Fri Jul 17 13:19:32 EDT 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

@@ -2,44 +2,70 @@
 
 =head1 NAME
 
-	tetramer_freqs_esom.pl 
-		calculates Tetramer frequencies for the given fasta file and produces 4 output files
+tetramer_freqs_esom.pl
+calculates Tetramer frequencies for the given fasta file and produces 4 output files
 
-=head1 USAGE
-	
-	perl tetramer_freqs_esom.pl -f fastaFile -a annotationFile [OPTIONS]
+
+=head1 SYNOPSIS
+
+B<tetramer_freqs_esom> B<-f> fastaFile B<-a> annotationFile [OPTIONS]
+
 
 =head1 OPTIONS
-	
-	-f		Required	Fasta File, may include X:s and N:s
-	-a		Required	Annotation File (3 columns; 1. full contig name, 2.annotation, 3.Class Number (Your metagenome has class#0, everything else 1+))
-	-k		Optional	default=4;	any reasonable k-mer size; ideally don't change this but if you do keep it between 3-6.
-	-min	Optional	default=2500; Minimal length (in nt) of input contig to be included in output
-	-max	Optional	default=5000
-	Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
-			eg: in default settings, a sequence of 14 kb will be split into a 5 kb and a 9 kb fragment if window_size = 5 kb.
+
+=over 8
+
+=item B<-f>
+
+Required	Fasta File, may include X:s and N:s
+
+=item B<-a>
+
+Required	Annotation File (3 columns; 1. full contig name, 2.annotation, 3.Class Number (Your metagenome has class#0, everything else 1+))
+
+=item B<-k>
+
+Optional	default=4;	any reasonable k-mer size; ideally don't change this but if you do keep it between 3-6.
+
+=item B<-min>
+
+Optional	default=2500; Minimal length (in nt) of input contig to be included in output
+
+=item B<-max>
+
+Optional	default=5000
+
+=item Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
+
+=item eg: in default settings, a sequence of 14 kb will be split into a 5 kb and a 9 kb fragment if window_size = 5 kb.
+
+=back
+
 
 =head1 AUTHORS
 
-	# Anders Andersson, 2007 (anders.andersson@scilifelab.se)
-	
-=head2 Modified by
+# Anders Andersson, 2007 (anders.andersson@scilifelab.se)
 
-	# Itai Sharon, Nov/2010
-	# Sunit Jain, 2010 (sunitj [AT] umich [DOT] edu)
-		
+
+=head1 Modified by
+
+# Itai Sharon, Nov/2010
+# Sunit Jain, 2010 (sunitj [AT] umich [DOT] edu)
+
+
 =head1 CITATION
 
-	If you use this script please cite:
-	Dick, G.J., A. Andersson, B.J. Baker, S.S. Simmons, B.C. Thomas, A.P. Yelton, and J.F. Banfield (2009).
-	Community-wide analysis of microbial genome sequence signatures. Genome Biology, 10: R85.
-	
+If you use this script please cite:
+Dick, G.J., A. Andersson, B.J. Baker, S.S. Simmons, B.C. Thomas, A.P. Yelton, and J.F. Banfield (2009).
+Community-wide analysis of microbial genome sequence signatures. Genome Biology, 10: R85.
+
 =head1 LICENSE & COPYRIGHT
 
-	Copyright (C) 2007 Anders Andersson (anders.andersson@scilifelab.se)
-	This is free software; see the COPYRIGHT file accompanying this script
-	for details. There is NO warranty; not even for MERCHANTABILITY or 
-	FITNESS FOR A PARTICULAR PURPOSE.
+Copyright (C) 2007 Anders Andersson (anders.andersson@scilifelab.se)
+This is free software; see the COPYRIGHT file accompanying this script
+for details. There is NO warranty; not even for MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

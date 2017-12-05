@@ -1,34 +1,62 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+getGFF -- Given a list of contig names extract GFF data.
+
+
+=head1 SYNOPSIS
+
+B<getGFF> B<-list> contig_names.list B<-gff> annotated_metagenome.gff
+
+
 =head1 DESCRIPTION
 
-	getGFF -- Given a list of contig names extract GFF data.
+Given a list of contig names extract GFF data.
 
-=head1 USAGE
 
-	getGFF -list contig_names.list -gff annotated_metagenome.gff
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-list 	<CHAR>	list of contigs
-	-gff	<CHAR>	metagenome GFF file.
-	-col	<INT>	Column number that contains the contig names; start count from 1. [ default = 1]
+=item B<-list> I<CHAR>
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+list of contigs
 
-=head1 Author
+=item B<-gff> I<CHAR>
 
-	Sunit Jain, (Thu Jan  2 12:41:53 EST 2014)
-	sunitj [AT] umich [DOT] edu
+metagenome GFF file.
 
-=head1 License
+=item B<-col> I<INT>
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+Column number that contains the contig names; start count from 1. [ default = 1]
 
-=head1 Disclaimer
+=item B<-version>, B<-v> I<BOOLEAN>
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Jan  2 12:41:53 EST 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

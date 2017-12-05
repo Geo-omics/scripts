@@ -1,36 +1,70 @@
 #! /usr/bin/perl
-=head1 Description
+=head1 NAME
 
-	bamTools: Yup, until I think of a better name that's what i'm calling it!
+bamTools: Yup, until I think of a better name that's what i'm calling it!
 
-	give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
+give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
 
-=head2 Dependencies
 
-	Samtools 1.1.17 or above
+=head1 SYNOPSIS
 
-=head2 Preparation
+B<bamTools> B<-f> reference.fasta B<-b> sorted.bam B<-l> contigNames.list [B<-o>ut processID.bamstats]
 
-	[1] Make sure you have an indexed sorted bam file in the same folder; and
-	[2] The samtools module is loaded.
-	[3] The contigs list file may contain 2 additional columns in the form of start and stop position on the contig.
 
-=head2 Usage
+=head1 DESCRIPTION
 
-	bamTools -f reference.fasta -b sorted.bam -l contigNames.list [-out processID.bamstats]
+: Yup, until I think of a better name that's what i'm calling it!
 
-=head2 Options
+give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
 
-	-b or bam:	sorted bam file;
-	-l or list:	list of contig used for the mapping.
-	-no_cov :	Don't calculate 'Mean Coverage' for each contig/region.
-	-all	:	Prints results for everything, even the reference regions that didn't recruit any reads.
-	-o or out : Number of reads for each contig/region.
-	-f or fasta : Reference fasta file.
 
-=head2 Questions/Comments/Feedback/Beer
+=head1 OPTIONS
 
-	October 2012, Sunit Jain (sunitj [AT] umich [DOT] edu)
+=over 8
+
+=item B<-b>
+
+or bam:	sorted bam file;
+
+=item B<-l>
+
+or list:	list of contig used for the mapping.
+
+=item B<-no_cov>
+
+:	Don't calculate 'Mean Coverage' for each contig/region.
+
+=item B<-all>
+
+:	Prints results for everything, even the reference regions that didn't recruit any reads.
+
+=item B<-o>
+
+or out : Number of reads for each contig/region.
+
+=item B<-f>
+
+or fasta : Reference fasta file.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+Samtools 1.1.17 or above
+
+
+=head1 PREPARATION
+
+[1] Make sure you have an indexed sorted bam file in the same folder; and
+[2] The samtools module is loaded.
+[3] The contigs list file may contain 2 additional columns in the form of start and stop position on the contig.
+
+
+=head1 Questions/Comments/Feedback/Beer
+
+October 2012, Sunit Jain (sunitj [AT] umich [DOT] edu)
+
 
 =cut
 

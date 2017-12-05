@@ -1,24 +1,48 @@
 #! /usr/bin/perl
 
+=head1 NAME
+
+usageStats -- notes the CPU and Memory usage of a process at each defined time interval. Presents it in a usable format.
+
+
+=head1 SYNOPSIS
+
+B<usageStats>
+
+
 =head1 DESCRIPTION
 
-	usageStats -- notes the CPU and Memory usage of a process at each defined time interval. Presents it in a usable format.
+notes the CPU and Memory usage of a process at each defined time interval. Presents it in a usable format.
 
-=head2 USAGE
 
-	perl usageStats.pl
+=head1 OPTIONS
 
-=head3 Options
+=over 8
 
-	-t	0 or more search terms;		default: velveth velvetg mVelvetPipe_paired.sh meta-velvetg
-	-i time interval in seconds;	default: 10
-	-o output file; 		default: processID.log
-	-e [flag] email the results file once the jobs have finished.
+=item B<-t>
+
+0 or more search terms;		default: velveth velvetg mVelvetPipe_paired.sh meta-velvetg
+
+=item B<-i>
+
+time interval in seconds;	default: 10
+
+=item B<-o>
+
+output file; 		default: processID.log
+
+=item B<-e>
+
+[flag] email the results file once the jobs have finished.
+
+=back
+
 
 =head1 Suggestions/Comments/Feedback/Beer
 
-	Sunit Jain (sunitj [AT] umich [DOT] edu)
-	May 2012	
+Sunit Jain (sunitj [AT] umich [DOT] edu)
+May 2012
+
 
 =cut
 

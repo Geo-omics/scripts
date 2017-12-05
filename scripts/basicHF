@@ -1,32 +1,64 @@
 #!/usr/bin/perl
 
 =head1 NAME
-	
-	basicHF - Basic no-frills Homolog Finder.
-	
-=head2 Dependencies
 
-	Blast 2.2.22 and above
+basicHF - Basic no-frills Homolog Finder.
 
-=head3 Options
 
-	-i or list	[character]	list of all files you wish to compare, the seed/reference should be the first one on the list
-	-t or -file_type	[characters]	file type (prot or nucl) [Default = prot]
-	-p or -percent	[float]	Blast percent identity [Default = 50]
-	-len or -aln_len	[float]	alignment length coverage (0-1) [Default = 0.75] [aln_len/(min(subj_len,query_len))]
-	-e or -evalue	[real number] E-Value; [Default = -4]
-	-a or -num_threads	[integer] Number of processors for blast jobs; [Default = 7]
-	-h or -help	[boolean] help (this page)
-	-v or -version	[boolean]	prints the current version of the script.
-	
-=head2 Example
+=head1 OPTIONS
 
-	basicHF -list file_names.list -file_type prot -percent 60 -len 0.50 -evalue -5 -num_threads 2 
+=over 8
 
-=head2 AUTHOR
-	
-	Sunit Jain, December 2010
-	sunitj_at_umich_dot_edu
+=item B<-i>
+
+or list	[character]	list of all files you wish to compare, the seed/reference should be the first one on the list
+
+=item B<-t>
+
+or -file_type	[characters]	file type (prot or nucl) [Default = prot]
+
+=item B<-p>
+
+or -percent	[float]	Blast percent identity [Default = 50]
+
+=item B<-len>
+
+or -aln_len	[float]	alignment length coverage (0-1) [Default = 0.75] [aln_len/(min(subj_len,query_len))]
+
+=item B<-e>
+
+or -evalue	[real number] E-Value; [Default = -4]
+
+=item B<-a>
+
+or -num_threads	[integer] Number of processors for blast jobs; [Default = 7]
+
+=item B<-h>
+
+or -help	[boolean] help (this page)
+
+=item B<-v>
+
+or -version	[boolean]	prints the current version of the script.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+Blast 2.2.22 and above
+
+
+=head1 EXAMPLE
+
+B<basicHF> -list file_names.list -file_type prot B<-p>ercent 60 B<-len> 0.50 B<-e>value -5 -num_threads 2
+
+
+=head1 AUTHOR
+
+Sunit Jain, December 2010
+sunitj_at_umich_dot_edu
+
 
 =cut
 

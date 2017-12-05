@@ -1,40 +1,46 @@
 #!/usr/bin/perl
-=head1 Name
+=head1 NAME
 
-	getRandomData - version 0.1.0
+getRandomData - version 0.1.0
 
-=head2 Description
 
-	Gets a 'random' subset of the data provided.
+=head1 SYNOPSIS
 
-=head2 Usage
+perl getRandomLines.pl -i <File Name>
 
-	perl getRandomLines.pl -i <File Name>
 
-=head3 Optional
+=head1 DESCRIPTION
 
-	-o: output file name; default: random<processID>.out
-	-p: What % of the data set do you want as your subset?; default: 10
-	-d: dataset type; default: "tab"
+Gets a 'random' subset of the data provided.
 
-=head3 File Types
 
-	This script maybe used for the following file types:
+=head1 OPTIONAL
 
-	"tab" tab-delimited data.
-	"space" space-delimited data.
-	"fastq"	fastq file w/ seq and quality scores.
-	"qual"	fastq file with just the quality scores and each new header begins with a '+'
-	"fasta" fasta files.
-	"newline" each entry in your dataset is in a 'newline'.
-	"comma" comma-seperated file
-	
-	Use the above mentioned key-words in the "-d" flag to describe the filetype to the script.
+-o: output file name; default: random<processID>.out
+-p: What % of the data set do you want as your subset?; default: 10
+-d: dataset type; default: "tab"
 
-=head2 Author
 
-	Sunit Jain, July 2011
-	sunitj [AT] umich [DOT] edu
+=head1 File Types
+
+This script maybe used for the following file types:
+
+"tab" tab-delimited data.
+"space" space-delimited data.
+"fastq"	fastq file w/ seq and quality scores.
+"qual"	fastq file with just the quality scores and each new header begins with a '+'
+"fasta" fasta files.
+"newline" each entry in your dataset is in a 'newline'.
+"comma" comma-seperated file
+
+Use the above mentioned key-words in the "-d" flag to describe the filetype to the script.
+
+
+=head1 AUTHOR
+
+Sunit Jain, July 2011
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

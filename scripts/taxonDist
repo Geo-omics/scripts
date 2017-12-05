@@ -1,36 +1,68 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+Given a ribopicker tabular output; get distribution by taxa.
+
+
+=head1 SYNOPSIS
+
+perl ribopicker_taxonDist.pl B<-tsv> ribopicker_output.tsv B<-out> output_filename.txt
+
+
 =head1 DESCRIPTION
 
-	Given a ribopicker tabular output; get distribution by taxa.
+Given a ribopicker tabular output; get distribution by taxa.
 
-=head1 USAGE
 
-	perl ribopicker_taxonDist.pl -tsv ribopicker_output.tsv -out output_filename.txt
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-tsv	[characters]	.tsv file created by ribopicker along with the fasta files.
-	-taxon	[characters]	path to the taxon file, the default shoud work for all cases; default = 
-			possible choices:
-			'rrnadb'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/rrnadb.taxon"
-			'ssr'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/ssr108.taxon"
-			'slr'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/slr108.taxon"
-			OR provide the path to a custom taxon file.
-	-out	[characters]	output file name.
-	
-	-v	[boolean]	script version
-	-h	[boolean]	this screen
+=item B<-tsv>
 
-=head3 Taxon File format
+[characters]	.tsv file created by ribopicker along with the fasta files.
 
-	ribopicker_reference_id <TAB> reference_sequence_length <TAB> Domain <TAB> Phylum <TAB> original_db_accession_numbers (optional)
-	EXAMPLE: ssr108_1        1437    Bacteria        Thermotogae     A61579,U37021,X91822
-	
-=head1 Author
+=item B<-taxon>
 
-	Sunit Jain, (Tue Jul 23 10:40:45 EDT 2013)
-	sunitj [AT] umich [DOT] edu
+[characters]	path to the taxon file, the default shoud work for all cases; default =
+
+=item possible choices:
+
+=item 'rrnadb'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/rrnadb.taxon"
+
+=item 'ssr'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/ssr108.taxon"
+
+=item 'slr'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/slr108.taxon"
+
+=item OR provide the path to a custom taxon file.
+
+=item B<-out>
+
+[characters]	output file name.
+
+=item B<-v>
+
+[boolean]	script version
+
+=item B<-h>
+
+[boolean]	this screen
+
+=back
+
+
+=head1 Taxon File format
+
+ribopicker_reference_id <TAB> reference_sequence_length <TAB> Domain <TAB> Phylum <TAB> original_db_accession_numbers (optional)
+EXAMPLE: ssr108_1        1437    Bacteria        Thermotogae     A61579,U37021,X91822
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Tue Jul 23 10:40:45 EDT 2013)
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

@@ -4,14 +4,15 @@
 
 getLineageNT - classify BLAST hits by taxonomy (Nucleotides only).
 
-=head2 USAGE
+
+=head1 SYNOPSIS
 
 perl getLineage.pl [-i tab_file] [-i second_BLAST_file] [-e evalue_cutoff]
-                      [-t dir_where_TAXONOMY_files_are] [-g gi2taxid] 
-                      [-z PATH_TO_zcat] [-v]
+[-t dir_where_TAXONOMY_files_are] [-g gi2taxid]
+[-z PATH_TO_zcat] [-v]
 
 
-=head2 DESCRIPTION
+=head1 DESCRIPTION
 
 Will print out the taxonomic distribution (at the kingdom level) for a
 set of hits against the NR database.  This script assumes you've done
@@ -22,19 +23,19 @@ This expects BLAST files in tabbed -m9 or -m8 format.  Output with -m
 8 or use blast2table.pl to convert (or fastam9_to_table.PLS if using
 FASTA).
 
-  Input values:
-   -t/--taxonomy  directory where the taxonomy .dmp files are (from NCBI)
-   -g/--gi        Location of gi_taxid_prot.dmp (or gi_taxid_nucl.dmp if 
-                  the search was against a NT db)
-   -i/--in        The name of the tab delimited -m8/-m9 output files to 
-                  process.
+Input values:
+-t/--taxonomy  directory where the taxonomy .dmp files are (from NCBI)
+-g/--gi        Location of gi_taxid_prot.dmp (or gi_taxid_nucl.dmp if
+the search was against a NT db)
+-i/--in        The name of the tab delimited -m8/-m9 output files to
+process.
 
-    -e/--evalue   Provide an E-value cutoff for hits to be considered
-    -z/--zcat     Path to the 'zcat' executable, can also be 'gunzip -c'
-                  if no zcat on your system.
-   Flags
-    -v/--verbose  To turn on verbose messages
-    -h/--help     Display this helpful information
+-e/--evalue   Provide an E-value cutoff for hits to be considered
+-z/--zcat     Path to the 'zcat' executable, can also be 'gunzip -c'
+if no zcat on your system.
+Flags
+-v/--verbose  To turn on verbose messages
+-h/--help     Display this helpful information
 
 This is intended to be useful starting script, but users may want to
 customize the output and parameters.  Note that I am summarizing the
@@ -45,13 +46,16 @@ changes can be made if you wanted to display hits by phylum for
 example.  Note that you must wipe out the cache file 'gi2class' that
 is created in your directory after making these changes.
 
-=head2 AUTHOR
+
+=head1 AUTHOR
 
 Jason Stajich jason_at_bioperl_dot_org
 
-=head2 EDITED BY
+
+=head1 EDITED BY
 
 Sunit Jain sunitj_at_umich_dot_edu
+
 
 =cut
 

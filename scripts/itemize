@@ -1,36 +1,66 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+itemize.pl -- You you used mapper.pl for multiple datasets and you wish to get a comparison for each dataset. Use this script.
+
+
+=head1 SYNOPSIS
+
+B<itemize> B<-info> contigs.info B<-m>log mapper_output.log B<-out> output.tsv
+
+
 =head1 DESCRIPTION
 
-	itemize.pl -- You you used mapper.pl for multiple datasets and you wish to get a comparison for each dataset. Use this script.
+You you used mapper.pl for multiple datasets and you wish to get a comparison for each dataset. Use this script.
 
-=head1 USAGE
 
-	perl itemize.pl -info contigs.info -mlog mapper_output.log -out output.tsv
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-info	-i	<CHAR>	A file containing the dataset info for each contig. One entry per line; FORMAT: Contig_Name <TAB> Dataset_Name.
-	-log	-l	<CHAR>	".log" output produced by the mapper.pl script.
-	-out	-o	<CHAR>	output produced by this script
+=item B<-info>, B<-i> I<CHAR>
 
-	-map	-m	<CHAR>	mapped output produced by the mapper.pl script. If you want the output from this script added to the mapper output.
+A file containing the dataset info for each contig. One entry per line; FORMAT: Contig_Name <TAB> Dataset_Name.
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-log>, B<-l> I<CHAR>
 
-=head1 Author
+".log" output produced by the mapper.pl script.
 
-	Sunit Jain, (Thu Mar 13 11:51:59 EDT 2014)
-	sunitj [AT] umich [DOT] edu
+=item B<-out>, B<-o> I<CHAR>
 
-=head1 License
+output produced by this script
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+=item B<-map>, B<-m> I<CHAR>
 
-=head1 Disclaimer
+mapped output produced by the mapper.pl script. If you want the output from this script added to the mapper output.
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Mar 13 11:51:59 EDT 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

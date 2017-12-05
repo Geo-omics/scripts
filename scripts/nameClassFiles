@@ -1,33 +1,62 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+nameClassFiles.pl -- Rename class files according to a tab-separated list of old/original names to new/more sensible names.
+
+
+=head1 SYNOPSIS
+
+B<nameClassFiles> B<-tsv> old_and_new_filenames.tsv B<-ext> fasta
+
+
 =head1 DESCRIPTION
 
-	nameClassFiles.pl -- Rename class files according to a tab-separated list of old/original names to new/more sensible names.
+Rename class files according to a tab-separated list of old/original names to new/more sensible names.
 
-=head1 USAGE
 
-	perl nameClassFiles.pl -tsv old_and_new_filenames.tsv -ext fasta
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-tsv	<CHAR>	col1=old name; <TAB> col2=new name
-	-out	<CHAR>	Output Folder [default: "Renamed"]
-	-ext	<CHAR>	extensions for the old and new names if the tsv doesn't already have them.
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-tsv> I<CHAR>
 
-=head1 Author
+col1=old name; <TAB> col2=new name
 
-	Sunit Jain, (Mon Feb 10 14:26:12 EST 2014)
-	sunitj [AT] umich [DOT] edu
+=item B<-out> I<CHAR>
 
-=head1 License
+Output Folder [default: "Renamed"]
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+=item B<-ext> I<CHAR>
 
-=head1 Disclaimer
+extensions for the old and new names if the tsv doesn't already have them.
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Mon Feb 10 14:26:12 EST 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

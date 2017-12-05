@@ -1,24 +1,33 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+fileChopperpl - chops a file into a defined number of portions.
+
+
+=head1 SYNOPSIS
+
+B<fileChopper> [-f Filename]
+
+
 =head1 DESCRIPTION
 
-	fileChopperpl - chops a file into a defined number of portions.
+pl - chops a file into a defined number of portions.
 
-=head1 USAGE
 
-	fileChopper [-f Filename]
+=head1 OPTIONAL
 
-=head2 Optional
+-p OR -parts:	Split the given file  into these many parts.
+-l OR Lines:	Maximum number of lines allowed in a file.
+-avgsize:	defines the average size of a  file. Only used when you don't specify '-p' OR '-l'.
 
-	-p OR -parts:	Split the given file  into these many parts.
-	-l OR Lines:	Maximum number of lines allowed in a file.
-	-avgsize:	defines the average size of a  file. Only used when you don't specify '-p' OR '-l'.
 
 =head1 AUTHOR
 
-	Sunit Jain, Aug, 2011.
-	sunitj [AT] umich [DOT] edu.
-	 
+Sunit Jain, Aug, 2011.
+sunitj [AT] umich [DOT] edu.
+
+
 =cut
 
 use strict;

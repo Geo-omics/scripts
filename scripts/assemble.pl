@@ -1,87 +1,120 @@
 #! /usr/bin/perl
 
-=head1 Description
+=head1 NAME
 
-	assemble.pl was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
+assemble.pl was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
 
-=head2 Dependencies
 
-=head3 Software
+=head1 SYNOPSIS
 
-	Velvet 1.1.07 or above
-	Oases 0.2.01 or above
-	MetaVelvet or 1.0.01 or above
+Case 1: Assemble files as singletons
+perl B<assemble.pl> -singles file1.fastq file2.fastq file3.fastq -k # (kmer value)
 
-=head3 Scripts
+Case 2: Assemble files as paired; this will interleave the fwd and rev files and then assemble.
+perl B<assemble.pl> -fwd fwd.fq -rev rev.fq -k # (kmer value) -i # (insert size)
 
-	interleave - to interleave the forward and reverse fastq/fasta files
-	calcN50 - to generate the N50 and L50 statistics of the final assembly
-	findStretchesOfNs - to find the stretches of Ns longer than k-mer
-	
-=head2 Usage
+Case 3: Assemble files as paired; when you already have an interleaved file
+perl B<assemble.pl> -paired interleaved.fq -k # (kmer value) -i # (insert size)
 
-	Case 1: Assemble files as singletons
-	perl assemble.pl -singles file1.fastq file2.fastq file3.fastq -k # (kmer value)
+Case 4: Mixed
+perl B<assemble.pl> -paired interleaved.fq -singles file1.fastq file2.fastq file3.fastq -k # (kmer value) -i # (insert size)
+OR
+perl B<assemble.pl> -fwd fwd.fq -rev rev.fq -singles file1.fastq file2.fastq file3.fastq -k # (kmer value) -i # (insert size)
 
-	Case 2: Assemble files as paired; this will interleave the fwd and rev files and then assemble.
-	perl assemble.pl -fwd fwd.fq -rev rev.fq -k # (kmer value) -i # (insert size)
 
-	Case 3: Assemble files as paired; when you already have an interleaved file
-	perl assemble.pl -paired interleaved.fq -k # (kmer value) -i # (insert size)
+=head1 DESCRIPTION
 
-	Case 4: Mixed
-	perl assemble.pl -paired interleaved.fq -singles file1.fastq file2.fastq file3.fastq -k # (kmer value) -i # (insert size)
-	OR
-	perl assemble.pl -fwd fwd.fq -rev rev.fq -singles file1.fastq file2.fastq file3.fastq -k # (kmer value) -i # (insert size)
+was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
 
-=head2 Options
 
-=head3 Required:
-	
-	fwd		:	Forward Sequence file
-	rev		:	Reverse Sequence file
-	paired	:	When you have an interleaved file, only accepts one file at a time, can be used with singles.
-	singles	:	When you have multiple files and you wish to force velvet into treating them individually.
-				You may give it as many files as long as the names are seperated by a space.
-	k or kmer	:	K-mer aka Hash size upto 99; We usually use k-mers of 61, 75, 91 but feel free to play around.
-	i or insert	:	Insert length; Required if using paired ended or interleaved data. 
-			Look at your bioanalyzer results, let's say you see a peak at 391, that's your insert size.
-	-sd		:	insert length standard deviation; default=13
+=head1 OPTIONS
 
-=head3 Optional:
+=over 8
 
-	outdir	:	The directory that contains the output
-	p or prefix	:	The prefix for your interleaved output
-	interval	:	The script also tracks the CPU and Memory consumption for the assemblies; default=10 (seconds)
-	log		:	change the name of the log file for the script
-	contig_size	:	Minimum Contig Length in your output; default=200
+=item =head3 Required:
 
-=head3 Boolean Flags
+=item fwd		:	Forward Sequence file
 
-	v		:	Version
-	fasta	:	If your sequence files are in the fasta format.
-	debug	:	When I need to debug the script. It doesnt actually run the assemblies, just prints out the commands it would have passed;
+=item rev		:	Reverse Sequence file
 
-=head2 Modifying Assembly Type
+=item paired	:	When you have an interleaved file, only accepts one file at a time, can be used with singles.
 
-	The following options require that the corresponding modules be loaded before executing the script.
+=item singles	:	When you have multiple files and you wish to force velvet into treating them individually.
+
+=item You may give it as many files as long as the names are seperated by a space.
+
+=item k or kmer	:	K-mer aka Hash size upto 99; We usually use k-mers of 61, 75, 91 but feel free to play around.
+
+=item i or insert	:	Insert length; Required if using paired ended or interleaved data.
+
+=item Look at your bioanalyzer results, let's say you see a peak at 391, that's your insert size.
+
+=item B<-sd>
+
+:	insert length standard deviation; default=13
+
+=item =head3 Optional:
+
+=item outdir	:	The directory that contains the output
+
+=item p or prefix	:	The prefix for your interleaved output
+
+=item interval	:	The script also tracks the CPU and Memory consumption for the assemblies; default=10 (seconds)
+
+=item log		:	change the name of the log file for the script
+
+=item contig_size	:	Minimum Contig Length in your output; default=200
+
+=back
+
+
+=head1 DEPENDENCIES
+
+
+
+
+=head1 SOFTWARE
+
+Velvet 1.1.07 or above
+Oases 0.2.01 or above
+MetaVelvet or 1.0.01 or above
+
+
+=head1 SCRIPTS
+
+interleave - to interleave the forward and reverse fastq/fasta files
+calcN50 - to generate the N50 and L50 statistics of the final assembly
+findStretchesOfNs - to find the stretches of Ns longer than k-mer
+
+
+=head1 Boolean Flags
+
+v		:	Version
+fasta	:	If your sequence files are in the fasta format.
+debug	:	When I need to debug the script. It doesnt actually run the assemblies, just prints out the commands it would have passed;
+
+
+=head1 Modifying Assembly Type
+
+The following options require that the corresponding modules be loaded before executing the script.
 
 =head3 Available:
 
-	-trans	:	for meta/transcriptomic reads.(requires Oases)
-	-metav	:	for metavelvet (metagenomic reads only).
+-trans	:	for meta/transcriptomic reads.(requires Oases)
+-metav	:	for metavelvet (metagenomic reads only).
 
 =head3 ToDo:
 
-	Assembler Support
-	-idba	:	uses IDBA-UD for assembly.
+Assembler Support
+-idba	:	uses IDBA-UD for assembly.
 
 =head1 Comments/Accolades/Brickbats/Beers:
-	
-	Sunit Jain, 2012
-	sunitj AT umich DOT edu
-	
-	last updated: June 2013
+
+Sunit Jain, 2012
+sunitj AT umich DOT edu
+
+last updated: June 2013
+
 
 =cut
 

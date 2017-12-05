@@ -1,26 +1,56 @@
 #! /usr/bin/perl
 
+=head1 NAME
+
+Use this script to create an annotation file and a concatenated fasta for ESOM binning.
+
+
+=head1 SYNOPSIS
+
+perl B<makeAnnotationFile> B<-p>ath Folder_Path B<-e>xt extension_of_files
+
+
 =head1 DESCRIPTION
 
-	Use this script to create an annotation file and a concatenated fasta for ESOM binning.
+Use this script to create an annotation file and a concatenated fasta for ESOM binning.
 
-=head1 USAGE
 
-	perl makeAnnotationFile -path Folder_Path -ext extension_of_files
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-p or path	path to folder; use "." (dot, without the quotes) for current folder.
-	-e or ext	file extension to look for in folder; default= fasta
-	-a or ann	name of the output annotation file; default= esom.ann
-	-c or cat	name of the output concatenated fasta file; default= esom.fasta
-	-O or dir	name of the output directory; default= ESOM
-	-h	this page.
+=item B<-p>
+
+or path	path to folder; use "." (dot, without the quotes) for current folder.
+
+=item B<-e>
+
+or ext	file extension to look for in folder; default= fasta
+
+=item B<-a>
+
+or ann	name of the output annotation file; default= esom.ann
+
+=item B<-c>
+
+or cat	name of the output concatenated fasta file; default= esom.fasta
+
+=item B<-O>
+
+or dir	name of the output directory; default= ESOM
+
+=item B<-h>
+
+this page.
+
+=back
+
 
 =head1 Suggestions/Corrections/Feedback/Beer
 
-	Sunit Jain, sunitj@umich.edu
-	January 2013
+Sunit Jain, sunitj@umich.edu
+January 2013
+
 
 =cut
 

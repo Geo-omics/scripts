@@ -1,26 +1,55 @@
 #!/usr/bin/perl
 
-=head1 USAGE
+=head1 NAME
 
-	findStretchesOfNs -f infile.fasta -coord outfile.tsv [OPTIONS]
+findStretchesOfNs - 
 
-=head2 OPTIONS
+=head1 SYNOPSIS
 
-	-nuc	[character]	any character other than 'N'	(default: N)
-	-coord	[character]	outputs coordinates file, start and stop position of the stretch of N's
-	-min	[integer]	minimum stretch of N's	(default: 10)
-	-max	[integer]	maximum number of N's	(default: 500)
-	-split	[character]	output file; split the fasta sequence at N's and write to this file.
-	-minLen	[integer]	When splitting on Ns, what's the smallest sequence you wish to obtain. (Default: 100 (bases))
-	
-=head3 Example
+B<findStretchesOfNs> -f infile.fasta B<-coord> outfile.tsv [OPTIONS]
 
-	findStretchesOfNs -f test.fasta -o test.coord -min 1 -split test_split_l20.fasta -len 20
 
-=head1 Author
+=head1 OPTIONS
 
-	Sunit Jain, January 2013
-	sunitj [AT] umich [DOT] edu
+=over 8
+
+=item B<-nuc>
+
+[character]	any character other than 'N'	(default: N)
+
+=item B<-coord>
+
+[character]	outputs coordinates file, start and stop position of the stretch of N's
+
+=item B<-min>
+
+[integer]	minimum stretch of N's	(default: 10)
+
+=item B<-max>
+
+[integer]	maximum number of N's	(default: 500)
+
+=item B<-split>
+
+[character]	output file; split the fasta sequence at N's and write to this file.
+
+=item B<-minLen>
+
+[integer]	When splitting on Ns, what's the smallest sequence you wish to obtain. (Default: 100 (bases))
+
+=back
+
+
+=head1 EXAMPLE
+
+B<findStretchesOfNs> -f test.fasta -o test.coord B<-min> 1 B<-split> test_split_l20.fasta -len 20
+
+
+=head1 AUTHOR
+
+Sunit Jain, January 2013
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

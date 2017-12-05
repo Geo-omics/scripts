@@ -1,37 +1,68 @@
 #! /usr/bin/perl
 
+=head1 NAME
+
+interleave.pl -- Take the fwd and rev sequence files and arrange the sequence pairs in a single file such that forward sequence is followed by it's reverse pair.
+
+
+=head1 SYNOPSIS
+
+B<interleave>.pl -fwd forward_file.fasta -rev reverse_file.fasta [OPTIONS]
+
+
 =head1 DESCRIPTION
 
-	interleave.pl -- Take the fwd and rev sequence files and arrange the sequence pairs in a single file such that forward sequence is followed by it's reverse pair.
+Take the fwd and rev sequence files and arrange the sequence pairs in a single file such that forward sequence is followed by it's reverse pair.
 
-=head2 USAGE
 
-	interleave.pl -fwd forward_file.fasta -rev reverse_file.fasta [OPTIONS]
-	
-=head3 Examples
+=head1 OPTIONS
 
-	# Have 2 fasta files; interleave and print to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
-	interleave.pl -fwd forward_file.fasta -rev reverse_file.fasta -o blah
-	OR
-	# Have 2 fastq files; interleave and print to blah_int.fastq, blah_sfwd.fastq, blah_srev.fastq	
-	interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah
-	OR
-	# Have 2 fastq files; interleave and print as fasta to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta	
-	interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah -outfmt fasta
+=over 8
 
-=head3 Options
+=item B<-fastq>
 
-	-fastq	:	Use this flag if your forward and reverse sequence files are fastq
-	-outfmt	:	Use this flag if you want the output of your fastq to be in fasta
-	-old	:	Use this flag if your sequence descriptors follow the old illumina naming convention; i.e. if the descriptor ends with a "/1" or "/2".
-	-p or -o:	Pefix for your output files; default: process_id
-	-h	:	This documentation.
-	-v	:	Script version.
+:	Use this flag if your forward and reverse sequence files are fastq
+
+=item B<-outfmt>
+
+:	Use this flag if you want the output of your fastq to be in fasta
+
+=item B<-old>
+
+:	Use this flag if your sequence descriptors follow the old illumina naming convention; i.e. if the descriptor ends with a "/1" or "/2".
+
+=item B<-p>
+
+or -o:	Pefix for your output files; default: process_id
+
+=item B<-h>
+
+:	This documentation.
+
+=item B<-v>
+
+:	Script version.
+
+=back
+
+
+=head1 EXAMPLES
+
+# Have 2 fasta files; interleave and print to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
+interleave.pl -fwd forward_file.fasta -rev reverse_file.fasta -o blah
+OR
+# Have 2 fastq files; interleave and print to blah_int.fastq, blah_sfwd.fastq, blah_srev.fastq
+interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah
+OR
+# Have 2 fastq files; interleave and print as fasta to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
+interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah -outfmt fasta
+
 
 =head1 Suggestions/Feedback/Beer
 
-	Sunit Jain, May 2012
-	sunitj [AT] umich [DOT] edu	
+Sunit Jain, May 2012
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

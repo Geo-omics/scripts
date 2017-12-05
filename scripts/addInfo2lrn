@@ -1,38 +1,74 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+addInfo2lrn -- Adds additional columns of data to the LRN files. You may want to add data like bin coverage, GC etc.
+
+
+=head1 SYNOPSIS
+
+B<addInfo2lrn> B<-info> scaffolds.info B<-lrn> esom.lrn B<-names> esom.names B<-out> file_with_additional_data.lrn
+
+
 =head1 DESCRIPTION
 
-	addInfo2lrn -- Adds additional columns of data to the LRN files. You may want to add data like bin coverage, GC etc.
+Adds additional columns of data to the LRN files. You may want to add data like bin coverage, GC etc.
 
-=head1 USAGE
 
-	addInfo2lrn -info scaffolds.info -lrn esom.lrn -names esom.names -out file_with_additional_data.lrn
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-info	<CHAR>	file with additional data; FORMAT: Scaffold_Name<TAB>Feature1<TAB>Feature2<TAB>...<TAB>FeatureN
-	-lrn	<CHAR>	LRN file created from the ESOM wrapper script.
-	-names	<CHAR>	NAMES file created from the ESOM wrapper script.
-	-out	<CHAR>	output file in the *.lrn format with the additional columns.
+=item B<-info> I<CHAR>
 
-	-map	<CHAR>	If your contig/scaffold names were changed at some point such that the coverage names don;t match your scaffold names anymore, create a file in the format:
-			scaffold_name_asIn_Coverage <TAB> scaffold_name_asIn_ESOM_input_fasta
+file with additional data; FORMAT: Scaffold_Name<TAB>Feature1<TAB>Feature2<TAB>...<TAB>FeatureN
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-lrn> I<CHAR>
 
-=head1 Author
+LRN file created from the ESOM wrapper script.
 
-	Sunit Jain, (Mon Nov 18 11:34:44 EST 2013)
-	sunitj [AT] umich [DOT] edu
+=item B<-names> I<CHAR>
 
-=head1 License
+NAMES file created from the ESOM wrapper script.
+
+=item B<-out> I<CHAR>
+
+output file in the *.lrn format with the additional columns.
+
+=item B<-map> I<CHAR>
+
+If your contig/scaffold names were changed at some point such that the coverage names don;t match your scaffold names anymore, create a file in the format:
+
+=item B<scaffold_name_asIn_Coverage> I<TAB>
+
+scaffold_name_asIn_ESOM_input_fasta
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Mon Nov 18 11:34:44 EST 2013)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

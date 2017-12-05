@@ -1,31 +1,53 @@
 #!/usr/bin/perl
 
 =head1 NAME
-	
-	uClustHomology - Does a combined UClust on the list of files that you provide.
-	Dependencies: USearch 5.0
-	
-=head2 USAGE
-	
-	perl uClustHomology.pl [-i: list of all files you wish to compare, the seed should be the first one on the list]
-		[-p: uClust percent identity]
-		[-t: type of files provided, 'p' for proteins and 'n' for nucleotides]
-		[-o: name of the output file]
-		[-h: help; brings this screen]
-						   
-=head2 OPTIONS
 
-	-i	REQUIRED
-	-p	OPTIONAL		Default: 95
-	-t	OPTIONAL (p/n)	Default: p (protein)
-	-o	OPTIONAL		Default: queryFileName.tsv
-	-h	This screen.
-	
-=head2 AUTHOR
+uClustHomology - Does a combined UClust on the list of files that you provide.
+Dependencies: USearch 5.0
 
-	Sunit Jain, Dec 2010
-	sunitj_at_umich_dot_edu
-	
+
+=head1 SYNOPSIS
+
+B<uClustHomology> [B<-i>: list of all files you wish to compare, the seed should be the first one on the list]
+[B<-p>: uClust percent identity]
+[B<-t>: type of files provided, 'p' for proteins and 'n' for nucleotides]
+[B<-o>: name of the output file]
+[B<-h>: help; brings this screen]
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-i>
+
+REQUIRED
+
+=item B<-p>
+
+OPTIONAL		Default: 95
+
+=item B<-t>
+
+OPTIONAL (p/n)	Default: p (protein)
+
+=item B<-o>
+
+OPTIONAL		Default: queryFileName.tsv
+
+=item B<-h>
+
+This screen.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, Dec 2010
+sunitj_at_umich_dot_edu
+
+
 =cut
 
 use strict;

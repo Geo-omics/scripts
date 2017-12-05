@@ -1,40 +1,73 @@
 #!/usr/bin/perl
 
-=head1 DESCRIPTION
+=head1 NAME
 
 ani  -- This program calculates Average Nucleotide Identity (ANI) for a pair of bacterial genomes.
 NOTE: Requires an older version of blast. Tested on version 2.2.20
-=head1 USAGE
 
-ani -blast path to blast binaries -query genome -subj the other strain genome -outdir output directory
-	
-=head2 Example
 
-	perl ANI.pl -blast ./blast-2.2.20/bin/ -query strain1.fa -subj strain2.fa -outdir result
+=head1 SYNOPSIS
 
-=head2 Options
+B<ani> -blast path to blast binaries -B<query> genome -B<subj> the other strain genome -B<outdir> output directory
 
-    query	<CHAR>	Query strain genome sequence in FASTA format. [REQUIRED]
-    subj	<CHAR>	Subject strain genome sequence in FASTA format. [REQUIRED]
-    
-    outdir	<CHAR>	output directory
-    threads	<INT>	number of processors to use for blast
 
-    -version -v	<BOOLEAN>	version of the current script
-    -help	-h	<BOOLEAN>	This message.
+=head1 DESCRIPTION
 
-=head1 Author
+This program calculates Average Nucleotide Identity (ANI) for a pair of bacterial genomes.
+NOTE: Requires an older version of blast. Tested on version 2.2.20
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<query> I<CHAR>
+
+Query strain genome sequence in FASTA format. [REQUIRED]
+
+=item B<subj> I<CHAR>
+
+Subject strain genome sequence in FASTA format. [REQUIRED]
+
+=item B<outdir> I<CHAR>
+
+output directory
+
+=item B<threads> I<INT>
+
+number of processors to use for blast
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 EXAMPLE
+
+perl ANI.pl -blast ./blast-2.2.20/bin/ -B<query> strain1.fa -B<subj> strain2.fa -B<outdir> result
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Tue May 13 16:07:06 EDT 2014)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

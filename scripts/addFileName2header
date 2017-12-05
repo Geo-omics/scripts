@@ -1,27 +1,63 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+Use this script to append the name of the file to all the sequences in your fasta/fastq format files. Output will be a new file of the same name, created in a directory called "renamed" in the current working directory. Remember this was written to function as a batch job, so it doesn't require a file name just the folder and file extension.
+
+
+=head1 SYNOPSIS
+
+B<addFileName2header> B<-p>ath Folder_Path B<-e>xt extension_of_files
+
+
 =head1 DESCRIPTION
 
-	Use this script to append the name of the file to all the sequences in your fasta/fastq format files. Output will be a new file of the same name, created in a directory called "renamed" in the current working directory. Remember this was written to function as a batch job, so it doesn't require a file name just the folder and file extension.
+Use this script to append the name of the file to all the sequences in your fasta/fastq format files. Output will be a new file of the same name, created in a directory called "renamed" in the current working directory. Remember this was written to function as a batch job, so it doesn't require a file name just the folder and file extension.
 
-=head1 USAGE
 
-	addFileName2header -path Folder_Path -ext extension_of_files
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-prefix	prefix to the filename; this will appear at the end of the current header BEFORE the filename.
-	-suffix	suffix to the filename; this will appear at the end of the current header AFTER the filename.
-	-after	add the filename AFTER the existing header. (default: BEFORE the existing header.)
-	-sep	separator between existing header and filename. (default: "_")
-	-replace	replace something in the file name.
-	-p	path to folder; use "." (dot, without the quotes) for current folder.
-	-e	file extension to look for in folder; default= fasta
-	-h	this page.
+=item B<-prefix>
+
+prefix to the filename; this will appear at the end of the current header BEFORE the filename.
+
+=item B<-suffix>
+
+suffix to the filename; this will appear at the end of the current header AFTER the filename.
+
+=item B<-after>
+
+add the filename AFTER the existing header. (default: BEFORE the existing header.)
+
+=item B<-sep>
+
+separator between existing header and filename. (default: "_")
+
+=item B<-replace>
+
+replace something in the file name.
+
+=item B<-p>
+
+path to folder; use "." (dot, without the quotes) for current folder.
+
+=item B<-e>
+
+file extension to look for in folder; default= fasta
+
+=item B<-h>
+
+this page.
+
+=back
+
 
 =head1 Suggestions/Corrections/Feedback/Beer
 
-	Sunit Jain, sunitj@umich.edu
+Sunit Jain, sunitj@umich.edu
+
 
 =cut
 

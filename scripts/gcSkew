@@ -1,26 +1,55 @@
 #!/usr/bin/perl
+=head1 NAME
+
+gcSkew	-	takes a fasta formatted nucleotide file and calculates GC skew [(C-G)/(C+G)]*100 content for the whole sequence in sliding windows. You can specify the window length, and amount of overlap between successive windows.
+
+
+=head1 SYNOPSIS
+
+B<gcSkew> B<-f> file.fasta
+
+
 =head1 DESCRIPTION
 
-	gcSkew	-	takes a fasta formatted nucleotide file and calculates GC skew [(C-G)/(C+G)]*100 content for the whole sequence in sliding windows. You can specify the window length, and amount of overlap between successive windows.
+takes a fasta formatted nucleotide file and calculates GC skew [(C-G)/(C+G)]*100 content for the whole sequence in sliding windows. You can specify the window length, and amount of overlap between successive windows.
 
-=head1 USAGE
 
-	gcSkew -f file.fasta
+=head1 OPTIONS
 
-=head2 OPTIONS
+=over 8
 
-	-f or -fasta:	Fasta file	(REQUIRED)
-	-o or -out:	Output File	(DEFAULT: process_id.gcskew)
-	-w or -window:	Window Size (DEFAULT: 4)
-	-overlap:	Overlap between two windows (DEFAULT: 0)
+=item B<-f>
 
-	-h or -help:	This Documentation
-	-v or -version:	Script version
+or -fasta:	Fasta file	(REQUIRED)
+
+=item B<-o>
+
+or -out:	Output File	(DEFAULT: process_id.gcskew)
+
+=item B<-w>
+
+or -window:	Window Size (DEFAULT: 4)
+
+=item B<-overlap>
+
+:	Overlap between two windows (DEFAULT: 0)
+
+=item B<-h>
+
+or -help:	This Documentation
+
+=item B<-v>
+
+or -version:	Script version
+
+=back
+
 
 =head1 AUTHOR
 
-	Sunit Jain, May 2013
-	sunitj [AT] umich [DOT] edu
+Sunit Jain, May 2013
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

@@ -1,32 +1,58 @@
 #!/usr/bin/perl
 
-=head1 DESCRIPTION
+=head1 NAME
 
 reverse_complement.pl -- Do this.
 
-=head1 USAGE
 
-perl reverse_complement.pl -fasta input.fasta -out output.fasta
+=head1 SYNOPSIS
 
-=head2 Options
+B<reverse_complement> B<-fasta> input.fasta B<-out> output.fasta
 
-	-fasta -f	<CHAR>	Fasta file
-	-out  -o	<CHAR>	Output file name
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
 
-=head1 Author
+=head1 DESCRIPTION
+
+Do this.
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-fasta>, B<-f> I<CHAR>
+
+Fasta file
+
+=item B<-out>, B<-o> I<CHAR>
+
+Output file name
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Tue Jan 20 11:00:25 EST 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

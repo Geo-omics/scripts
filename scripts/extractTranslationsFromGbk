@@ -1,34 +1,66 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+extractTranslationsFromGbk -- Do this.
+
+
+=head1 SYNOPSIS
+
+B<extractTranslationsFromGbk> B<-list> prophage_tbl.txt.list B<-gbk> corresponding_genbank.gbk
+
+
 =head1 DESCRIPTION
 
-	extractTranslationsFromGbk -- Do this.
+Do this.
 
-=head1 USAGE
 
-	extractTranslationsFromGbk -list prophage_tbl.txt.list -gbk corresponding_genbank.gbk
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-    -list
-    -gbk
-    -meta
-    -fasta
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-list>
 
-=head1 Author
 
-	Sunit Jain, (Tue Nov 26 16:49:24 EST 2013)
-	sunitj [AT] umich [DOT] edu
 
-=head1 License
+=item B<-gbk>
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=item B<-meta>
+
+
+
+=item B<-fasta>
+
+
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Tue Nov 26 16:49:24 EST 2013)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

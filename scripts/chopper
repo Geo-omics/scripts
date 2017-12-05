@@ -1,29 +1,38 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+chopper - chops a Fasta/Fastq file into a defined number of portions.
+
+
+=head1 SYNOPSIS
+
+B<chopper> [-f fasta_Filename.fasta]
+OR
+B<chopper> [-fq fastq_Filename.fastq]
+
+
 =head1 DESCRIPTION
 
-	chopper - chops a Fasta/Fastq file into a defined number of portions.
+chops a Fasta/Fastq file into a defined number of portions.
 
-=head1 USAGE
 
-	chopper [-f fasta_Filename.fasta]
-	OR
-	chopper [-fq fastq_Filename.fastq]
+=head1 OPTIONAL
 
-=head2 Optional
+-p OR -parts:	integer	Split the given fasta file into these many parts.
+-s OR seqs:	integer	Maximum number of Sequences allowed in a file.
+-t OR totalseqs:	integer	If you already know the total number of sequences in the file, mention here, this will greatly speed up the script.
+-avgsize:	integer	defines the average size of a fasta file. Only used when you don't specify '-p' OR '-s'.
+-maxbase:	integer	chop the fasta file upto a certain sequence length
+-overlap:	integer	chop a fasta sequence such that all sequences are AT MOST "maxbase" long and if a sequence has been chopped there is an overlap of 'overlap' bases (default = 0) between the two sequences.
 
-	-p OR -parts:	integer	Split the given fasta file into these many parts.
-	-s OR seqs:	integer	Maximum number of Sequences allowed in a file.
-	-t OR totalseqs:	integer	If you already know the total number of sequences in the file, mention here, this will greatly speed up the script.
-	-avgsize:	integer	defines the average size of a fasta file. Only used when you don't specify '-p' OR '-s'.
-	-maxbase:	integer	chop the fasta file upto a certain sequence length
-	-overlap:	integer	chop a fasta sequence such that all sequences are AT MOST "maxbase" long and if a sequence has been chopped there is an overlap of 'overlap' bases (default = 0) between the two sequences.
 
 =head1 AUTHOR
 
-	Sunit Jain, Aug, 2011.
-	sunitj [AT] umich [DOT] edu.
-	 
+Sunit Jain, Aug, 2011.
+sunitj [AT] umich [DOT] edu.
+
+
 =cut
 
 use strict;

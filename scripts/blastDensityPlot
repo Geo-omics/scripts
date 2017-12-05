@@ -1,48 +1,97 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+blastDensityPlot -- Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
+
+
+=head1 SYNOPSIS
+
+B<blastDensityPlot> B<-b> path_to_all_blast_files B<-e> extension_of_all_blast_files B<-prefix> output_prefix
+
+
 =head1 DESCRIPTION
 
-	blastDensityPlot -- Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
-	
-=head2 NOTE
+Given multiple blasts to the same reference database, make density plot based on tabular blast outputs.
 
-	* Requires Rscript
-	* Requires R package 'ggplot2'
-	* Recommended that the blast outputs only be top hits. (Use "top5.pl")
 
-=head1 USAGE
+=head1 OPTIONS
 
-	blastDensityPlot -b path_to_all_blast_files -e extension_of_all_blast_files -prefix output_prefix
+=over 8
 
-=head2 Options
+=item B<-blast>, B<-b> I<CHAR>
 
-	-blast	-b	<CHAR>	path to blast folder
-	-ext	-e	<CHAR>	extension used
-	-prefix	-p	<CHAR>	prefix for the output files
-	
-	-perc		<BOOLEAN>	Use Percent Identity [DEFAULT]
-	-evalue		<BOOLEAN>	Use E-Values
-	-aln		<BOOLEAN>	Use Alignment Length
-	-bs			<BOOLEAN>	Use Bit Scores
-	-scaled		<BOOLEAN>	Scale the graphs [0,1], such that all the peaks have the same height.
-	-tmp		<BOOLEAN>	Keep intermediate files. Deletes the r-script and temporary output unless this flag is provided.
-	-verbose	<BOOLEAN>	Get R log file
-	
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+path to blast folder
 
-=head1 Author
+=item B<-ext>, B<-e> I<CHAR>
 
-	Sunit Jain, (Fri Mar 14 11:49:03 EDT 2014)
-	sunitj [AT] umich [DOT] edu
+extension used
 
-=head1 License
+=item B<-prefix>, B<-p> I<CHAR>
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+prefix for the output files
 
-=head1 Disclaimer
+=item B<-perc> I<BOOLEAN>
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Use Percent Identity [DEFAULT]
+
+=item B<-evalue> I<BOOLEAN>
+
+Use E-Values
+
+=item B<-aln> I<BOOLEAN>
+
+Use Alignment Length
+
+=item B<-bs> I<BOOLEAN>
+
+Use Bit Scores
+
+=item B<-scaled> I<BOOLEAN>
+
+Scale the graphs [0,1], such that all the peaks have the same height.
+
+=item B<-tmp> I<BOOLEAN>
+
+Keep intermediate files. Deletes the r-script and temporary output unless this flag is provided.
+
+=item B<-verbose> I<BOOLEAN>
+
+Get R log file
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 NOTE
+
+* Requires Rscript
+* Requires R package 'ggplot2'
+* Recommended that the blast outputs only be top hits. (Use "top5.pl")
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Fri Mar 14 11:49:03 EDT 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

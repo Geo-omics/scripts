@@ -1,39 +1,59 @@
 #!/usr/bin/perl
 
-=head1 USAGE
+=head1 NAME
 
-	perl getSciNames.pl -list <gi-list-file> -dbtype <nucl/prot>
-	OR
-	perl getSciNames.pl -blast <tabular-blast-output> -dbtype <nucl/prot>
-	OR
-	perl getSciNames.pl -map <tabular-mapper-output> -dbtype <nucl/prot>
+getSciNames - 
 
-=head2 Options
+=head1 SYNOPSIS
 
-=head3 Input_type_(choose_one_only)
+B<getSciNames> B<-l>ist <giB<-l>ist-file> -dbtype <nucl/prot>
+OR
+B<getSciNames> B<-b>last <tabularB<-b>last-output> -dbtype <nucl/prot>
+OR
+B<getSciNames> B<-m>ap <tabularB<-m>apper-output> -dbtype <nucl/prot>
 
-	-l	-list	:	if your input is a list of GI numbers
-	-b	-blast	:	if your input is a blast output
-	-m	-map	:	if your input file is a mapper output
 
-=head3 Other_Options
+=head1 OPTIONS
 
-	-dbtype		:	database type <"prot" or "nucl">; Required
-	-o	-out	:	output file name <default=process_id.names>
+=over 8
 
-	-taxa		:	prints Taxa ids to this file <optional>
-	-dump		:	location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/">
-	-h	-help	:	This message; press "q" to exit this screen.
-	
+=item =head3 Input_type_(choose_one_only)
+
+=item B<-l>
+
+-list	:	if your input is a list of GI numbers
+
+=item B<-b>
+
+-blast	:	if your input is a blast output
+
+=item B<-m>
+
+-map	:	if your input file is a mapper output
+
+=back
+
+
+=head1 Other_Options
+
+-dbtype		:	database type <"prot" or "nucl">; Required
+-o	-out	:	output file name <default=process_id.names>
+
+-taxa		:	prints Taxa ids to this file <optional>
+-dump		:	location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/">
+-h	-help	:	This message; press "q" to exit this screen.
+
 =head2 Limitation:
 
-	If the input is a blast output, the script will only look at the subject cloumn and expect it to be in the NCBI FASTA header format (gi|gi_number|...)
-	
-=head1 Author
+If the input is a blast output, the script will only look at the subject cloumn and expect it to be in the NCBI FASTA header format (gi|gi_number|...)
 
-	Sunit Jain, May 2010
-	sunitj-at-umich-dot-edu
-	sunitjain-dot-com
+
+=head1 AUTHOR
+
+Sunit Jain, May 2010
+sunitj-at-umich-dot-edu
+sunitjain-dot-com
+
 
 =cut
 

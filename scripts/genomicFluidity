@@ -1,39 +1,78 @@
 #!/usr/bin/perl -w
 
-=head1 DESCRIPTION
+=head1 NAME
 
 genomicFluidity -- Do this.
 # aai -- http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1236649/
 # Genomic Fluidity -- http://www.biomedcentral.com/1471-2164/12/32 [(conserved1+conserved2)/(Total1+Total2)] * 100
 
-=head1 USAGE
 
-genomicFluidity
+=head1 SYNOPSIS
 
-=head2 Options
+B<genomicFluidity>
 
-	-ref	<CHAR>	Reference Genome
-	-blast	<CHAR>	Path to the Post-Blast directory; USE: blastp -outfmt "6 std qcovs"
-	-genomes <CHAR>	Path to the protein fasta files
-	-ext	<CHAR>	extension for the blast outputs; (Default="blastp")
-	-out	<CHAR>	3 column tab delimited output file. GeneName <TAB> ClusterNum <TAB> <Genome>
-	-map	<CHAR>	
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=head1 DESCRIPTION
 
-=head1 Author
+Do this.
+# aai -- http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1236649/
+# Genomic Fluidity -- http://www.biomedcentral.com/1471-2164/12/32 [(conserved1+conserved2)/(Total1+Total2)] * 100
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-ref> I<CHAR>
+
+Reference Genome
+
+=item B<-blast> I<CHAR>
+
+Path to the Post-Blast directory; USE: blastp -outfmt "6 std qcovs"
+
+=item B<-genomes> I<CHAR>
+
+Path to the protein fasta files
+
+=item B<-ext> I<CHAR>
+
+extension for the blast outputs; (Default="blastp")
+
+=item B<-out> I<CHAR>
+
+3 column tab delimited output file. GeneName <TAB> ClusterNum <TAB> <Genome>
+
+=item B<-map> I<CHAR>
+
+
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Wed Aug 20 12:08:14 EDT 2014)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

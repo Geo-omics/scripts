@@ -1,32 +1,58 @@
 #!/usr/bin/perl
 
-=head1 DESCRIPTION
+=head1 NAME
 
 gff2neo.pl -- Read a GFF(version 3) file and create nodes and relationship files for upload to a GraphDB. Tested on Neo4j v2.2.3.
 
-=head1 USAGE
 
-perl gff2neo.pl -gff myGFFv3_file.gff
+=head1 SYNOPSIS
 
-=head2 Options
+B<gff2neo> B<-gff> myGFFv3_file.gff
 
-	-gff		<CHAR>		GFF version 3 file.
-	-prefix	-p	<CHAR>		prefix for outputs
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
 
-=head1 Author
+=head1 DESCRIPTION
+
+Read a GFF(version 3) file and create nodes and relationship files for upload to a GraphDB. Tested on Neo4j v2.2.3.
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-gff> I<CHAR>
+
+GFF version 3 file.
+
+=item B<-prefix>, B<-p> I<CHAR>
+
+prefix for outputs
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Tue Jun 30 08:16:35 EDT 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

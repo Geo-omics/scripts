@@ -1,51 +1,93 @@
 #! /usr/bin/perl
 
+=head1 NAME
+
+Give me:
+- Path to folders that has the fasta files.
+
+I will:
+- Create an annotation file and a concatenated fasta for ESOM binning;
+- Run the tetramer frequency script on the files;
+
+
+=head1 SYNOPSIS
+
+B<esomWrapper> B<-p>ath Folder_Path B<-e>xt extension_of_files
+
+
 =head1 DESCRIPTION
 
-	Give me:
-		- Path to folders that has the fasta files.
+Give me:
+- Path to folders that has the fasta files.
 
-	I will:
-		- Create an annotation file and a concatenated fasta for ESOM binning;
-		- Run the tetramer frequency script on the files;
+I will:
+- Create an annotation file and a concatenated fasta for ESOM binning;
+- Run the tetramer frequency script on the files;
 
-=head2 Dependencies
 
-	As such there are no external perl module dependancies but this script is a wrapper which formats inputs runs other scripts, they are:
-	tetramer_freqs_esom - To calculate the tetramer frequencies of your contigs [ REQUIRED ]
-	esomCodonMod - To remove the tetramers containing stop codons from the analysis [ OPTIONAL ]
+=head1 OPTIONS
 
-=head1 USAGE
+=over 8
 
-	esomWrapper -path Folder_Path -ext extension_of_files
+=item B<-p>
 
-=head2 Options
+or path	[characters]	path to folder containing fasta files; use "." (dot, without the quotes) for current folder.
 
-	-p or path	[characters]	path to folder containing fasta files; use "." (dot, without the quotes) for current folder.
-	-e or ext	[characters]	file extension to look for in folder; default= fasta
-	-prefix		[characters]	prefix filename for annotation and concatenated file; default=esom
-	-DIR or dir	[characters]	name of the output directory; default= ESOM
-			
-	-min	[integer]	Optional	default=2500; Minimal length (in nt) of input contig to be included in output
-	-max	[integer]	Optional	default=5000
-	Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
-			eg: in default settings, a sequence of 14 kb will be split into a 5 kb and a 9 kb fragment if window_size = 5 kb.
-			
-	-mod	[BOOLEAN]	[Experimental Feature] Use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
-	-h	this page.
+=item B<-e>
 
-=head3 Example 1: Required Options
+or ext	[characters]	file extension to look for in folder; default= fasta
 
-	esomWrapper -path .
+=item B<-prefix>
 
-=head3 Example 2: Other Options
+[characters]	prefix filename for annotation and concatenated file; default=esom
 
-	esomWrapper -path . -ext fa -dir MyESOM -prefix esomOutput -min 2000 -max 5000
+=item B<-DIR>
+
+or dir	[characters]	name of the output directory; default= ESOM
+
+=item B<-min>
+
+[integer]	Optional	default=2500; Minimal length (in nt) of input contig to be included in output
+
+=item B<-max>
+
+[integer]	Optional	default=5000
+
+=item Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
+
+=item eg: in default settings, a sequence of 14 kb will be split into a 5 kb and a 9 kb fragment if window_size = 5 kb.
+
+=item B<-mod>
+
+[BOOLEAN]	[Experimental Feature] Use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
+
+=item B<-h>
+
+this page.
+
+=item =head3 Example 1: Required Options
+
+=item esomWrapper -path .
+
+=item =head3 Example 2: Other Options
+
+=item esomWrapper -path . -ext fa -dir MyESOM -prefix esomOutput -min 2000 -max 5000
+
+=back
+
+
+=head1 DEPENDENCIES
+
+As such there are no external perl module dependancies but this script is a wrapper which formats inputs runs other scripts, they are:
+tetramer_freqs_esom - To calculate the tetramer frequencies of your contigs [ REQUIRED ]
+esomCodonMod - To remove the tetramers containing stop codons from the analysis [ OPTIONAL ]
+
 
 =head1 Suggestions/Corrections/Feedback/Beer
 
-	Sunit Jain, sunitj@umich.edu
-	January 2013
+Sunit Jain, sunitj@umich.edu
+January 2013
+
 
 =cut
 

@@ -1,17 +1,24 @@
 #!/usr/bin/perl
 
-=head1 Motivation
+=head1 NAME
 
-	Get a subset of query list from the mapper script
+mapper_getQueryList - 
 
-=head1 USAGE
-	
-	perl mapper_getQueryList.pl -log <log file> -list <list of Queries of interest> -out <output>
-	
-=head1 Author
+=head1 SYNOPSIS
 
-	Sunit Jain, July 2013
-	
+B<mapper_getQueryList> -log <log file> -list <list of Queries of interest> -out <output>
+
+
+=head1 MOTIVATION
+
+Get a subset of query list from the mapper script
+
+
+=head1 AUTHOR
+
+Sunit Jain, July 2013
+
+
 =cut
 
 use strict; 

@@ -1,42 +1,81 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+parallel_antiSmash.pl -- Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner.
+
+
+=head1 SYNOPSIS
+
+B<parallel_antiSmash> B<-fasta> MultiSequence.fasta
+
+
 =head1 DESCRIPTION
 
-	parallel_antiSmash.pl -- Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner.
+Takes a multifasta file and runs antismash, single fasta at a time in an embarrassingly parallel manner.
 
-=head2 Dependencies
 
-	antiSmash v 2.0.2 (http://www.secondarymetabolites.org/download.html)
-	*nix environment.
-	Tested on RHEL6.
+=head1 OPTIONS
 
-=head1 USAGE
+=over 8
 
-	perl parallel_antiSmash.pl -fasta MultiSequence.fasta
+=item B<-fasta> I<STRING>
 
-=head2 Options
+Multi Fasta file.
 
-	-fasta <STRING>	Multi Fasta file.
-	-proc	<INTEGER>	Number of processors. default=30
-	-ppr	<INTEGER>	Processors per run. default=2
-	-len	<INTEGER>	Only run antismash on sequences greater than this value; default=1000
-	-pfam	<BOOLEAN>	perform pfam analysis as well
-	-pfamdir	<CHAR>	folder to pfamA database provided by Antismash.
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-proc> I<INTEGER>
 
-=head1 Author
+Number of processors. default=30
 
-	Sunit Jain, (Thu Oct 31 10:21:15 EDT 2013)
-	sunitj [AT] umich [DOT] edu
-	
-=head1 License
+=item B<-ppr> I<INTEGER>
+
+Processors per run. default=2
+
+=item B<-len> I<INTEGER>
+
+Only run antismash on sequences greater than this value; default=1000
+
+=item B<-pfam> I<BOOLEAN>
+
+perform pfam analysis as well
+
+=item B<-pfamdir> I<CHAR>
+
+folder to pfamA database provided by Antismash.
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+antiSmash v 2.0.2 (http://www.secondarymetabolites.org/download.html)
+*nix environment.
+Tested on RHEL6.
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Oct 31 10:21:15 EDT 2013)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

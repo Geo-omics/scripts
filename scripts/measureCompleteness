@@ -1,44 +1,78 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+measureCompleteness.pl -- Given a fasta file and IMG consolidated data look for the 36 essential housekeeping genes (Cicareli et al 2006)
+NOTE1: Just matches COG numbers.
+NOTE2: Users can provide their own list as well. See "myCOGS" option for details.
+
+
+=head1 SYNOPSIS
+
+B<measureCompleteness> B<-list> bin.list B<-tsv> IMG_consolodated.data B<-p> bin -detail
+
+
 =head1 DESCRIPTION
 
-	measureCompleteness.pl -- Given a fasta file and IMG consolidated data look for the 36 essential housekeeping genes (Cicareli et al 2006)
-				NOTE1: Just matches COG numbers.
-				NOTE2: Users can provide their own list as well. See "myCOGS" option for details.
+Given a fasta file and IMG consolidated data look for the 36 essential housekeeping genes (Cicareli et al 2006)
+NOTE1: Just matches COG numbers.
+NOTE2: Users can provide their own list as well. See "myCOGS" option for details.
 
-=head1 USAGE
 
-	perl measureCompleteness.pl -list bin.list -tsv IMG_consolodated.data -p bin -detail
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-list	-l	<CHAR>	List of headers in your bin matching the contig or IMG_Name column of consolidated data
-	-tsv		<CHAR>	Consolidated IMG data generated from "consolidateJGIdata.pl"
-	-prefix	-p	<CHAR>	Output file; Contains --> presence/absence, copy numbers and contig names. (extension= .out)
-	
-	-img_names	<BOOLEAN>	use IMG assigned names to match headers.
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-list>, B<-l> I<CHAR>
 
-=head2 Additional Features
+List of headers in your bin matching the contig or IMG_Name column of consolidated data
 
-	-binned		<BOOLEAN>	If consolidated file belongs to the list of scaffolds that you're interested in ONLY, use this instead of "-list" flag.
-	-detail	-d	<BOOLEAN>	Optional Output File; print line from consolidated data containing the match. (extension= .tsv)
-	-myCOGS	-m	<CHAR>	user defined list of cog numbers. One entry per line; only first 2 columns will be read.
-			FORMAT: Column1=COG#### <TAB> COG_Description
+=item B<-tsv> I<CHAR>
 
-=head1 Author
+Consolidated IMG data generated from "consolidateJGIdata.pl"
 
-	Sunit Jain, (Thu Mar  6 13:41:57 EST 2014)
-	sunitj [AT] umich [DOT] edu
+=item B<-prefix>, B<-p> I<CHAR>
 
-=head1 License
+Output file; Contains --> presence/absence, copy numbers and contig names. (extension= .out)
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+=item B<-img_names> I<BOOLEAN>
 
-=head1 Disclaimer
+use IMG assigned names to match headers.
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 Additional Features
+
+-binned		<BOOLEAN>	If consolidated file belongs to the list of scaffolds that you're interested in ONLY, use this instead of "-list" flag.
+-detail	-d	<BOOLEAN>	Optional Output File; print line from consolidated data containing the match. (extension= .tsv)
+-myCOGS	-m	<CHAR>	user defined list of cog numbers. One entry per line; only first 2 columns will be read.
+FORMAT: Column1=COG#### <TAB> COG_Description
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Mar  6 13:41:57 EST 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

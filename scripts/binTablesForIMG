@@ -1,34 +1,66 @@
 #!/usr/bin/perl
 
-=head1 DESCRIPTION
+=head1 NAME
 
 binTablesForIMG -- Given a list of Contigs reformat it to upload to IMG Scaffold workspace.
 
-=head1 USAGE
 
-binTablesForIMG
+=head1 SYNOPSIS
 
-=head2 Options
+B<binTablesForIMG>
 
-        -map    -m   <CHAR>  names.map.txt
-        -bins   -b   <CHAR>  Scaffolds_By_Sample_by_Bin/LOYAL_60 directory
-        -outdir -o  <CHAR>  Bins_For_IMG/LOYAL_60
-        -map_bins   <BOOLEAN>   Add bin numbers to project data downloaded from IMG in the map file.
-        -version    -v  <BOOLEAN>   version of the current script
-        -help   -h  <BOOLEAN>   This message.
 
-=head1 Author
+=head1 DESCRIPTION
+
+Given a list of Contigs reformat it to upload to IMG Scaffold workspace.
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-map>, B<-m> I<CHAR>
+
+names.map.txt
+
+=item B<-bins>, B<-b> I<CHAR>
+
+Scaffolds_By_Sample_by_Bin/LOYAL_60 directory
+
+=item B<-outdir>, B<-o> I<CHAR>
+
+Bins_For_IMG/LOYAL_60
+
+=item B<-map_bins> I<BOOLEAN>
+
+Add bin numbers to project data downloaded from IMG in the map file.
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Wed Feb 18 15:26:27 EST 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

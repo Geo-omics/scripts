@@ -1,39 +1,71 @@
 #!/usr/bin/perl
 
-=head1 DESCRIPTION
+=head1 NAME
 
 top5.pl -- This program gets the top 5 hits for each query in a blast tabular output file.
 
-=head1 USAGE
 
-	perl top5.pl -b <blast output> -t <top X hits; default: 5> -o <output_File_Name>
-	
-=head2 Example
+=head1 SYNOPSIS
 
-perl top5.pl -b sample.blastn -o sample_topHits.blastn -t 1
+B<top5> B<-b> <blast output> B<-t> <top X hits; default: 5> B<-o> <output_File_Name>
 
-=head2 Options
 
--b	<CHAR>	Blast output in tabular (-outfmt 6/7 OR -m 8/9). [REQUIRED]
--t	<INT>	# of top hits. [default = 5 ]
--o	<CHAR>	output file; same format as blast file
--no_self	<BOOLEAN>	remove self hits. helpful in a self blast.
-	
--version -v	<BOOLEAN>	version of the current script
--help	-h	<BOOLEAN>	This message.
+=head1 DESCRIPTION
 
-=head1 Author
+This program gets the top 5 hits for each query in a blast tabular output file.
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-b> I<CHAR>
+
+Blast output in tabular (-outfmt 6/7 OR -m 8/9). [REQUIRED]
+
+=item B<-t> I<INT>
+
+# of top hits. [default = 5 ]
+
+=item B<-o> I<CHAR>
+
+output file; same format as blast file
+
+=item B<-no_self> I<BOOLEAN>
+
+remove self hits. helpful in a self blast.
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 EXAMPLE
+
+B<top5> B<-b> sample.blastn B<-o> sample_topHits.blastn B<-t> 1
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Tue May 13 16:07:06 EDT 2011)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

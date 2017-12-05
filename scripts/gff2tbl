@@ -1,36 +1,73 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+gff2tbl.pl	-	Convert JGI's 'GFF3' data to NCBI's ridiculous 'tbl' format.
+
+
+=head1 SYNOPSIS
+
+B<gff2tbl> B<-fasta> scaffolds.fasta B<-gff> jgi_annotated.gff B<-gene> jgi_annotated.gene_product.txt B<-tbl> output.tbl
+
+
 =head1 DESCRIPTION
 
-	gff2tbl.pl	-	Convert JGI's 'GFF3' data to NCBI's ridiculous 'tbl' format.
+Convert JGI's 'GFF3' data to NCBI's ridiculous 'tbl' format.
 
-=head1 USAGE
 
-	perl gff2tbl.pl -fasta scaffolds.fasta -gff jgi_annotated.gff -gene jgi_annotated.gene_product.txt -tbl output.tbl
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-fasta	[characters]	Original assembled Fasta file [Required]
-	-gff	[characters]	JGI's GFF file [Required]
-	-tbl	[characters]	Output tbl file [Required]
+=item B<-fasta>
 
-	-gene	[characters]	gene product file from JGI. Required if GFF doesn't have the tag 'product'
+[characters]	Original assembled Fasta file [Required]
 
-	-aka	[characters]	aliased file; from "toPhylipAndBack.pl" script
-	-min	[integers]	minimum sequence length
-	-prot_prefix	[characters]	Project specific prefix for CDS regions. example: "abc|unique_lab_name|"
+=item B<-gff>
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message. press q to exit this screen.
+[characters]	JGI's GFF file [Required]
+
+=item B<-tbl>
+
+[characters]	Output tbl file [Required]
+
+=item B<-gene>
+
+[characters]	gene product file from JGI. Required if GFF doesn't have the tag 'product'
+
+=item B<-aka>
+
+[characters]	aliased file; from "toPhylipAndBack.pl" script
+
+=item B<-min>
+
+[integers]	minimum sequence length
+
+=item B<-prot_prefix>
+
+[characters]	Project specific prefix for CDS regions. example: "abc|unique_lab_name|"
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message. press q to exit this screen.
+
+=back
+
 
 =head1 Feedback/Bug Reports
 
 Please use the Github issues page for any issues/bugs with these scripts. Make sure you add the name of the script in the issue header.
 
-=head1 Author
 
-	Sunit Jain, (Thu Oct 10 12:48:37 EDT 2013)
-	Last Updated: June 02, 2016
+=head1 AUTHOR
+
+Sunit Jain, (Thu Oct 10 12:48:37 EDT 2013)
+Last Updated: June 02, 2016
+
 
 =cut
 

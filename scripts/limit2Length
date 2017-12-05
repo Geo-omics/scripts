@@ -1,36 +1,63 @@
 #!/usr/bin/perl -w
+=head1 NAME
+
+Check length of each sequence and only print those that clear the minimum threshold of x (default=60) bases;
+
+
+=head1 SYNOPSIS
+
+B<limit2Length> -f fasta_File B<-len> # [-o output file]
+OR
+B<limit2Length> -fq fastq_File B<-len> # [-o output file]
+OR
+B<limit2Length> B<-b>elow B<-len> 2001 -f fasta_file B<-len> # [-o output file]
+
+
 =head1 DESCRIPTION
 
-	Check length of each sequence and only print those that clear the minimum threshold of x (default=60) bases;
+Check length of each sequence and only print those that clear the minimum threshold of x (default=60) bases;
 
-=head1 USAGE
-	
-	perl limit2Length.pl -f fasta_File -len # [-o output file]
-	OR
-	perl limit2Length.pl -fq fastq_File -len # [-o output file]
-	OR
-	perl limit2Length.pl -below -len 2001 -f fasta_file -len # [-o output file]
 
-=head2 OPTIONS
+=head1 OPTIONS
 
-    -len    [INTEGER] : Get sequences of (length+1).
-            Default =  Sequences greater than this parameter will be included. To change this behavior see '-below'.
-	-b  [INTEGER]:	bin size for length distribution; default=2000
-	-below [BOOLEAN]:	get sequences equal to or less than the 'len' threshold. 
-	        Default = Only greater than -len.
-	-scripts    [CHARACTER]: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
-	
-=head3 Boolean Flags
+=over 8
 
-	-quick:	don't get the distribution.
-	-n50: also calculate the N50 and L50 stats for a *fasta* file
+=item B<-len>
+
+[INTEGER] : Get sequences of (length+1).
+
+=item Default =  Sequences greater than this parameter will be included. To change this behavior see '-below'.
+
+=item B<-b>
+
+[INTEGER]:	bin size for length distribution; default=2000
+
+=item B<-below>
+
+[BOOLEAN]:	get sequences equal to or less than the 'len' threshold.
+
+=item Default = Only greater than -len.
+
+=item B<-scripts>
+
+[CHARACTER]: change the default directory for script dependencies: default: /geomicro/data1/COMMON/scripts/
+
+=back
+
+
+=head1 Boolean Flags
+
+-quick:	don't get the distribution.
+-n50: also calculate the N50 and L50 stats for a *fasta* file
+
 
 =head1 AUTHOR
 
-	Sunit Jain, Mar, 2012
-	sunitj-at-umich-dot-edu
+Sunit Jain, Mar, 2012
+sunitj-at-umich-dot-edu
 
-	last updated: June 2013
+last updated: June 2013
+
 
 =cut
 

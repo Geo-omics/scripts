@@ -1,35 +1,70 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+changeClasses -- Edit the *.cls file to change the class numbers for a given list of contig names.
+
+
+=head1 SYNOPSIS
+
+B<changeClasses> B<-cls> esom.cls B<-names> esom.names B<-list> contigs.list -o output.cls
+
+
 =head1 DESCRIPTION
 
-	changeClasses -- Edit the *.cls file to change the class numbers for a given list of contig names.
+Edit the *.cls file to change the class numbers for a given list of contig names.
 
-=head1 USAGE
 
-	changeClasses -cls esom.cls -names esom.names -list contigs.list -o output.cls
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-cls	<CHARACTERS>	*.cls file produced by the esomWrapper script
-	-names	<CHARACTERS>	*.names file produced by the esomWrapper script
-	-list	<CHARACTERS>	list of contig names(replace all special chracters with '_')
-	-tag	<CHARACTERS>	new class name/number to be assigned.[default=next available class number]
-	-out	<CHARACTERS>	new class file. default: esom_edited.cls
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-cls> I<CHARACTERS>
 
-=head1 Author
+*.cls file produced by the esomWrapper script
 
-	Sunit Jain, (Fri Dec  6 08:59:27 EST 2013)
-	sunitj [AT] umich [DOT] edu
+=item B<-names> I<CHARACTERS>
 
-=head1 License
+*.names file produced by the esomWrapper script
+
+=item B<-list> I<CHARACTERS>
+
+list of contig names(replace all special chracters with '_')
+
+=item B<-tag> I<CHARACTERS>
+
+new class name/number to be assigned.[default=next available class number]
+
+=item B<-out> I<CHARACTERS>
+
+new class file. default: esom_edited.cls
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Fri Dec  6 08:59:27 EST 2013)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 
