@@ -19,21 +19,21 @@ count the number of times a value is seen in a column
 
 =over 8
 
-=item B<-in>
+=item B<-in> I<character>
 
-[character]	input file name
+input file name
 
-=item B<-out>
+=item B<-out> I<character>
 
-[character]	output file name
+output file name
 
-=item B<-col>
+=item B<-col> I<integer>
 
-[integer] column to subtotal; start counting from 1.
+column to subtotal; start counting from 1.
 
-=item B<-sum>
+=item B<-sum> I<integer>
 
-[integer] sum the column # instead of incrementing by 1.
+sum the column # instead of incrementing by 1.
 
 =back
 

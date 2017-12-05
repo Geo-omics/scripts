@@ -19,13 +19,13 @@ Given a ribopicker tabular output; get distribution by taxa.
 
 =over 8
 
-=item B<-tsv>
+=item B<-tsv> I<character>
 
-[characters]	.tsv file created by ribopicker along with the fasta files.
+.tsv file created by ribopicker along with the fasta files.
 
-=item B<-taxon>
+=item B<-taxon> I<character>
 
-[characters]	path to the taxon file, the default shoud work for all cases; default =
+path to the taxon file, the default shoud work for all cases; default =
 
 =item possible choices:
 
@@ -43,11 +43,11 @@ Given a ribopicker tabular output; get distribution by taxa.
 
 =item B<-v>
 
-[boolean]	script version
+script version
 
 =item B<-h>
 
-[boolean]	this screen
+this screen
 
 =back
 

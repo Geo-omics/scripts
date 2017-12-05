@@ -19,33 +19,33 @@ Convert JGI's 'GFF3' data to NCBI's ridiculous 'tbl' format.
 
 =over 8
 
-=item B<-fasta>
+=item B<-fasta> I<character>
 
-[characters]	Original assembled Fasta file [Required]
+Original assembled Fasta file [Required]
 
-=item B<-gff>
+=item B<-gff> I<character>
 
-[characters]	JGI's GFF file [Required]
+JGI's GFF file [Required]
 
-=item B<-tbl>
+=item B<-tbl> I<character>
 
-[characters]	Output tbl file [Required]
+Output tbl file [Required]
 
-=item B<-gene>
+=item B<-gene> I<character>
 
-[characters]	gene product file from JGI. Required if GFF doesn't have the tag 'product'
+gene product file from JGI. Required if GFF doesn't have the tag 'product'
 
-=item B<-aka>
+=item B<-aka> I<character>
 
-[characters]	aliased file; from "toPhylipAndBack.pl" script
+aliased file; from "toPhylipAndBack.pl" script
 
-=item B<-min>
+=item B<-min> I<integer>
 
-[integers]	minimum sequence length
+minimum sequence length
 
-=item B<-prot_prefix>
+=item B<-prot_prefix> I<character>
 
-[characters]	Project specific prefix for CDS regions. example: "abc|unique_lab_name|"
+Project specific prefix for CDS regions. example: "abc|unique_lab_name|"
 
 =item B<-version>, B<-v> I<BOOLEAN>
 

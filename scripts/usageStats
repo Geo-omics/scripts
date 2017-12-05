@@ -33,7 +33,7 @@ output file; 		default: processID.log
 
 =item B<-e>
 
-[flag] email the results file once the jobs have finished.
+email the results file once the jobs have finished.
 
 =back
 

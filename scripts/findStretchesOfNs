@@ -13,29 +13,29 @@ B<findStretchesOfNs> -f infile.fasta B<-coord> outfile.tsv [OPTIONS]
 
 =over 8
 
-=item B<-nuc>
+=item B<-nuc> I<character>
 
-[character]	any character other than 'N'	(default: N)
+any character other than 'N'	(default: N)
 
-=item B<-coord>
+=item B<-coord> I<character>
 
-[character]	outputs coordinates file, start and stop position of the stretch of N's
+outputs coordinates file, start and stop position of the stretch of N's
 
-=item B<-min>
+=item B<-min> I<integer>
 
-[integer]	minimum stretch of N's	(default: 10)
+minimum stretch of N's	(default: 10)
 
-=item B<-max>
+=item B<-max> I<integer>
 
-[integer]	maximum number of N's	(default: 500)
+maximum number of N's	(default: 500)
 
-=item B<-split>
+=item B<-split> I<character>
 
-[character]	output file; split the fasta sequence at N's and write to this file.
+output file; split the fasta sequence at N's and write to this file.
 
-=item B<-minLen>
+=item B<-minLen> I<integer>
 
-[integer]	When splitting on Ns, what's the smallest sequence you wish to obtain. (Default: 100 (bases))
+When splitting on Ns, what's the smallest sequence you wish to obtain. (Default: 100 (bases))
 
 =back
 

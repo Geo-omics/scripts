@@ -23,9 +23,9 @@ B<silvaTaxonAppend> B<-mapper> <mapper output> B<-out> <output filename>
 
 =over 8
 
-=item B<-db>
+=item B<-db> I<character>
 
-[characters]	Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
+Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
 
 =item Default: "ssu119" with location set as: /omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta (SSU version 119)
 
@@ -33,21 +33,21 @@ B<silvaTaxonAppend> B<-mapper> <mapper output> B<-out> <output filename>
 
 [characters]	Blast output performed against the fasta file.
 
-=item B<-mapper>
+=item B<-mapper> I<character>
 
-[characters]	mapper.pl output performed on the blast output.
+mapper.pl output performed on the blast output.
 
-=item B<-out>
+=item B<-out> I<character>
 
-[characters]	output file
+output file
 
 =item B<-h>, B<-help>
 
-[boolean]	help; This page.
+help; This page.
 
 =item B<-v>, B<-version>
 
-[boolean]	script version.
+script version.
 
 =back
 

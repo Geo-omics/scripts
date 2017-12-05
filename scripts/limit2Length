@@ -22,9 +22,9 @@ Check length of each sequence and only print those that clear the minimum thresh
 
 =over 8
 
-=item B<-len>
+=item B<-len> I<integer>
 
-[INTEGER] : Get sequences of (length+1).
+Get sequences of (length+1).
 
 =item Default =  Sequences greater than this parameter will be included. To change this behavior see '-below'.
 
@@ -34,7 +34,7 @@ Check length of each sequence and only print those that clear the minimum thresh
 
 =item B<-below>
 
-[BOOLEAN]:	get sequences equal to or less than the 'len' threshold.
+get sequences equal to or less than the 'len' threshold.
 
 =item Default = Only greater than -len.
 

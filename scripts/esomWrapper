@@ -37,21 +37,21 @@ or path	[characters]	path to folder containing fasta files; use "." (dot, withou
 
 or ext	[characters]	file extension to look for in folder; default= fasta
 
-=item B<-prefix>
+=item B<-prefix> I<character>
 
-[characters]	prefix filename for annotation and concatenated file; default=esom
+prefix filename for annotation and concatenated file; default=esom
 
 =item B<-DIR>
 
 or dir	[characters]	name of the output directory; default= ESOM
 
-=item B<-min>
+=item B<-min> I<integer>
 
-[integer]	Optional	default=2500; Minimal length (in nt) of input contig to be included in output
+Optional	default=2500; Minimal length (in nt) of input contig to be included in output
 
-=item B<-max>
+=item B<-max> I<integer>
 
-[integer]	Optional	default=5000
+Optional	default=5000
 
 =item Note:	The script will split sequence after each 'max' nt; join last part, if remaining seq shorter than 'max', with second-last part
 
@@ -59,7 +59,7 @@ or dir	[characters]	name of the output directory; default= ESOM
 
 =item B<-mod>
 
-[BOOLEAN]	[Experimental Feature] Use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
+[Experimental Feature] Use the codon mod script which removes the kmers containing stop-codons.(output=*.mod.lrn)
 
 =item B<-h>
 
