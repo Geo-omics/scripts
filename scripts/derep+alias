@@ -38,7 +38,7 @@ File containing a list of GI numbers. Used to weed out any sequences that may no
 
 =item B<-d>, B<-data> I<FILE>
 
-File obtained from fetching the data from NCBI in tabular form. GI<tab>NCBI Taxon ID<tab>Prot Seq<eol>
+File obtained from fetching the data from NCBI in tabular form. GI ?? NCBI Taxon ID ?? Prot Seq
 
 =item B<-h>
 
