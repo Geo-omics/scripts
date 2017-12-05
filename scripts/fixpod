@@ -54,7 +54,10 @@ for line in args.inputfile:
         pod[name] = section
     else:
         # new section
-        name = m.groups()[0].upper()
+        name = m.groups()[0]
+        if name.isalpha():
+            # leave non-standard header in original case
+            name = name.upper()
         if name == 'USAGE':
             name = 'SYNOPSIS'
         pod[name] = ''  # do not include header line
