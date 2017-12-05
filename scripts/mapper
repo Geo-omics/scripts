@@ -2,8 +2,7 @@
 
 =head1 NAME
 
-The Script is a modification of Ryan's 'highestHitsPerQuery.pl' and 'coolScript.pl'.
-It scores subjects based on it's popularity with the queries in the blast output.
+mapper - scores subjects based on it's popularity with the queries in the blast output
 
 
 =head1 SYNOPSIS

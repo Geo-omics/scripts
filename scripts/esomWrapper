@@ -2,12 +2,7 @@
 
 =head1 NAME
 
-Give me:
-- Path to folders that has the fasta files.
-
-I will:
-- Create an annotation file and a concatenated fasta for ESOM binning;
-- Run the tetramer frequency script on the files;
+esomWrapper - wrapper for ESOM 
 
 
 =head1 SYNOPSIS

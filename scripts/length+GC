@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 =head1 NAME
 
-This program takes a fasta file, extracts length and %GC information (if '-gc' is specified)
+length+GC - extract length and GC content from a fasta file
 
 
 =head1 SYNOPSIS

@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-triage.pl - Give it forward and reverse fastq files and this will seperate the sequences based on whether a fwd-rev pair can be found or not.
+triage - seperate paired sequences
 
 
 =head1 SYNOPSIS
 
-B<triage>.pl -fwd forward.fastq -rev reverse.fastq [-n for the new illumina pipeline casava 1.8+ that has a space instead of a '/' in sequence headers]
+B<triage> -fwd forward.fastq -rev reverse.fastq [-n for the new illumina pipeline casava 1.8+ that has a space instead of a '/' in sequence headers]
 
 
 =head1 DESCRIPTION

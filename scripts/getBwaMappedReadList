@@ -2,18 +2,7 @@
 
 =head1 NAME
 
-getMappedReadList: give me a sorted bam(-b) file and a list of contigs(-l) and I'll tell you which reads mapped(-o) onto those list of contigs.
-
-=head2 NOTE: For Single Contig
-
-If you just have one contig, use the following command instead:
-samtools view -F0x4 sortedBamFile contigName | cut -f 1 >> outputFile.list
-Some other commands to try:
-# of unmapped reads:
-samtools view -f0x4 -c sortedBamFile contigName
-# of uniquely mapped reads:
-samtools view -F0x4 -c -q 1 sortedBamFile contigName
-where, -c = Instead of printing the alignments, only count them and print the total number
+getBwaMappedReadList - tell which reads are mapped onto those contigs
 
 
 =head1 DESCRIPTION
@@ -53,9 +42,9 @@ or out:	output list
 
 =head1 PREPARATION
 
-[1] Make sure your sequence headers don't have any funny characters like: (,);:
-[2] Make sure you have an indexed sorted bam file in the same folder; and
-[3] The samtools module is loaded.
+ [1] Make sure your sequence headers don't have any funny characters like: (,);:
+ [2] Make sure you have an indexed sorted bam file in the same folder; and
+ [3] The samtools module is loaded.
 
 
 =head1 Questions/Comments/Feedback/Beer

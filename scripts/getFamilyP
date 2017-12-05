@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-getLineageNT - classify BLAST hits by taxonomy (Nucleotides only).
+getFamilyP - classify BLAST hits by taxonomy (Nucleotides only)
 
 
 =head1 SYNOPSIS
 
-perl getLineage.pl [-i tab_file] [-i second_BLAST_file] [-e evalue_cutoff]
+getFamilyP [-i tab_file] [-i second_BLAST_file] [-e evalue_cutoff]
 [-t dir_where_TAXONOMY_files_are] [-g gi2taxid]
 [-z PATH_TO_zcat] [-v]
 

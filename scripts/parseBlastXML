@@ -5,7 +5,7 @@ use Getopt::Long;
 
 =head1 NAME
 
-parse BlastXML results and print out Query, Subj, %id, evalue, bitScore. To get more contact me.
+parseBlastXML - parse and print BlastXML results
 
 
 =head1 SYNOPSIS
@@ -27,15 +27,17 @@ parse BlastXML results and print out Query, Subj, %id, evalue, bitScore. To get 
 
 To use this script Bioperl MUST be installed.
 For our lab, here is how you can access Bioperl for this script:
-1) Make sure you're on Cayman.
-2) type "/opt/package/perl5/5.12.2/bin/perl" instead of just "perl" while running the script. example:
-/opt/package/perl5/5.12.2/bin/perl parseBlastXML.pl -b <blastXML file>
+
+ 1) Make sure you're on Cayman.
+ 2) type "/opt/package/perl5/5.12.2/bin/perl" instead of just "perl" while running the script. example:
+
+   /opt/package/perl5/5.12.2/bin/perl parseBlastXML.pl -b <blastXML file>
 
 
 =head1 AUTHOR
 
-Sunit Jain, July 2011
-sunitj [AT] umich [DOT] edu
+ Sunit Jain, July 2011
+ sunitj [AT] umich [DOT] edu
 
 
 =cut

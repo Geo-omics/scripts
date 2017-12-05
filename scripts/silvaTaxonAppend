@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-silvaTaxonAppend.pl: get the SSU database and make the taxon file.
+silvaTaxonAppend - get the SSU database and make the taxon file
 
 
 =head1 SYNOPSIS

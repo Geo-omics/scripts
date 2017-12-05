@@ -1,8 +1,7 @@
 #!/usr/bin/perl -w
 =head1 NAME
 
-Dereplicates a Fasta file at 100% identity over 100% coverage. Picks a first sequence as the representative for the cluster.
-Dereplicates a Fastq file at 100% identity over 100% coverage. Picks the sequence with the best 'avg quality score' as the representative for the cluster.
+dereplicate - dereplicate reads in fasta or fastq files
 
 
 =head1 SYNOPSIS

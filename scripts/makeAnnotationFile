@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-Use this script to create an annotation file and a concatenated fasta for ESOM binning.
+makeAnnotationFile - create annotation file and concatenated fasta for ESOM binning
 
 
 =head1 SYNOPSIS
 
-perl B<makeAnnotationFile> B<-p>ath Folder_Path B<-e>xt extension_of_files
+B<makeAnnotationFile> B<-p>ath Folder_Path B<-e>xt extension_of_files
 
 
 =head1 DESCRIPTION

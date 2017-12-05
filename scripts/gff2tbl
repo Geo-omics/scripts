@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-gff2tbl.pl	-	Convert JGI's 'GFF3' data to NCBI's ridiculous 'tbl' format.
+gff2tbl - Convert JGI's 'GFF3' data to NCBI's ridiculous 'tbl' format
 
 
 =head1 SYNOPSIS

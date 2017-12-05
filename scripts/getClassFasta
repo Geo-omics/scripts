@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-This program takes a class file, a names file, a fasta file and extracts the seqs for the contigs presents in the desired class.
+getClassFasta - extracts seqs for the contigs presents in the desired class.
 
 
 =head1 SYNOPSIS

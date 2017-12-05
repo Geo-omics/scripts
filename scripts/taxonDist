@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Given a ribopicker tabular output; get distribution by taxa.
+taxonDist - given a ribopicker tabular output; get distribution by taxa
 
 
 =head1 SYNOPSIS

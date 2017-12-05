@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Extract blast outputs based on any of the following: evalue, bitscore, percent ID, alignment length, % query coverage and & inferred global coverage (requires slightly modified blast output). Read `help` for more.
+postBlast - extract blast outputs
 
 
 =head1 SYNOPSIS

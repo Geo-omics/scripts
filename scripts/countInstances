@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-countInstances count the number of times a value is seen in a column
+countInstances - count the number of times a value is seen in a column
 
 
 =head1 SYNOPSIS

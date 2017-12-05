@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-renameHeaders.pl : Changes the names of the sequence headers by inserting a user defined prefix.
+renameHeaders - change the names of the sequence headers by inserting a user defined prefix.
 
 
 =head1 SYNOPSIS

@@ -2,11 +2,7 @@
 
 =head1 NAME
 
-fragRec : use multiple blast outputs in tabular format to generate a fragment recruitment plot.
--- x-axis = ref genome(2nd column of blast tabular output);
--- y-axis = percent-id. This script parses the blast output;
--- Generates an R script and executes it.
--- All the blasts must have the same reference database
+fragRec - generate fragment recruitment plot from blast outputs
 
 
 =head1 SYNOPSIS
@@ -16,11 +12,12 @@ B<fragRec> [-f reference genome fasta] [-b path to folder containing the blast o
 
 =head1 DESCRIPTION
 
-: use multiple blast outputs in tabular format to generate a fragment recruitment plot.
--- x-axis = ref genome(2nd column of blast tabular output);
--- y-axis = percent-id. This script parses the blast output;
--- Generates an R script and executes it.
--- All the blasts must have the same reference database
+Use multiple blast outputs in tabular format to generate a fragment recruitment plot.
+
+ -- x-axis = ref genome(2nd column of blast tabular output);
+ -- y-axis = percent-id. This script parses the blast output;
+ -- Generates an R script and executes it.
+ -- All the blasts must have the same reference database
 
 
 =head1 OPTIONS

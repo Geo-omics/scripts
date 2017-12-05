@@ -5,7 +5,7 @@ use Getopt::Long;
 
 =head1 NAME
 
-derep+alias - 
+derep+alias -
 
 =head1 SYNOPSIS
 

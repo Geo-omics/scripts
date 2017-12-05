@@ -2,8 +2,7 @@
 
 =head1 NAME
 
-tetramer_freqs_esom.pl
-calculates Tetramer frequencies for the given fasta file and produces 4 output files
+tetramer_freqs_esom - calculates Tetramer frequencies from fasta file
 
 
 =head1 SYNOPSIS

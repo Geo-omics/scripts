@@ -2,9 +2,7 @@
 
 =head1 NAME
 
-Given the names of sequences. extract from a fasta file. Make sure each name is in a seperate line.
-By default, the script prints the sequences with the names in the list.
-This behavior can be changed by adding the '-e' flag which will ask the script to exclude the sequences present in the list
+extractSeqs - retrieve sequences from fasta file
 
 
 =head1 DESCRIPTION

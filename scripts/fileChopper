@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-fileChopperpl - chops a file into a defined number of portions.
+fileChopper - chops a file into a defined number of portions
 
 
 =head1 SYNOPSIS
