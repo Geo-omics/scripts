@@ -1,33 +1,43 @@
 #!/usr/bin/perl
+=head1 NAME
+
+getCol - extract the desired column number from a tab delimited file.
+
+
+=head1 SYNOPSIS
+
+B<getCol> -i <tab delimited file>
+
+
 =head1 DESCRIPTION
 
-	getCol - extract the desired column number from a tab delimited file.
-	
-=head2 USAGE
+extract the desired column number from a tab delimited file.
 
-	getCol -i <tab delimited file>
-	
-=head3 Optional
 
-	-c cloumn number to extract; default col 1
-		NOTE: to count from the last column start counting from '-1' eg: -1, -2, -3 and so on.
-	-o output file name; default processID.list
-	-u print unique values only; default print everything.
-	-t print unique values with their tallies
+=head1 OPTIONAL
 
-=head3 Example
+-c cloumn number to extract; default col 1
+NOTE: to count from the last column start counting from '-1' eg: -1, -2, -3 and so on.
+-o output file name; default processID.list
+-u print unique values only; default print everything.
+-t print unique values with their tallies
 
-	For UNIQUE values in the column:
-		getCol -i fileWithManyColumns.txt -o fileWithOneColumnOfUniques.txt -c 2 -u
 
-	For ALL values in the column, in order of appearence.
-		getCol -i fileWithManyColumns.txt -o fileWithOneColumn.txt -c 2
+=head1 EXAMPLE
 
-=head2 AUTHOR
+For UNIQUE values in the column:
+B<getCol> -i fileWithManyColumns.txt -o fileWithOneColumnOfUniques.txt -c 2 -u
 
-	SUNIT JAIN
-	sunitj [AT] umich [DOT] edu	
-	
+For ALL values in the column, in order of appearence.
+B<getCol> -i fileWithManyColumns.txt -o fileWithOneColumn.txt -c 2
+
+
+=head1 AUTHOR
+
+SUNIT JAIN
+sunitj [AT] umich [DOT] edu
+
+
 =cut
 
 use strict;

@@ -3,13 +3,15 @@
 use strict;
 use Getopt::Long;
 
-=head2 NAME
-	
-	U2T : Converts  U -> T and removes gaps.
-	
-=head2 Description
+=head1 NAME
 
-	 U2T -in <input fasta file> -out <output fasta file>
+U2T - Converts U -> T and removes gaps
+
+
+=head1 SYNOPSIS
+
+B<U2F> B<-in> I<input fasta file> B<-out> I<output fasta file>
+
 
 =cut
 

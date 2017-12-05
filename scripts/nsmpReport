@@ -1,33 +1,62 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+nsmpReport - Given AntiSmash and MetaPathways outputs get best hits and flanking regions of the genes of interest
+
+
+=head1 SYNOPSIS
+
+B<nsmpReport> B<-as> path/to/AntiSmash/output/overview/directory B<-mp> path/to/metapathways1/output/directory -out output.tsv
+
+
 =head1 DESCRIPTION
 
-nsmpReport.pl -- Given AntiSmash and MetaPathways outputs get best hits and flanking regions of the genes of interest
+Given AntiSmash and MetaPathways outputs get best hits and flanking regions of the genes of interest
 
-=head1 USAGE
 
-perl nsmpReport.pl -as path/to/AntiSmash/output/overview/directory -mp path/to/metapathways1/output/directory -out output.tsv
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-    -antismash -as  <CHAR>  path to Antismash overview directory
-    -metapathways -mp   <CHAR>  path to MetaPathways output directory.
-    -prefix -p	<CHAR>	output file prefix   
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-antismash>, B<-as> I<CHAR>
 
-=head1 Author
+path to Antismash overview directory
+
+=item B<-metapathways>, B<-mp> I<CHAR>
+
+path to MetaPathways output directory.
+
+=item B<-prefix>, B<-p> I<CHAR>
+
+output file prefix
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Tue Jan 20 15:25:16 EST 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 
@@ -576,7 +605,8 @@ sub genes2cluster{
 		$adjStart=$gStart-$cStart;
 		$adjStop=$gStop-$cStart;
 		#die "Tag 'adjusted_start' already exist in this Feature!\n" if($featObj->has_tag("adjusted_start"));
-		#$featObj->add_tag_value("adjusted_start", $adjStart);		#$featObj->add_tag_value("adjusted_stop", $adjStop);
+		#$featObj->add_tag_value("adjusted_start", $adjStart);
+		#$featObj->add_tag_value("adjusted_stop", $adjStop);
 		last;
 	}
 	

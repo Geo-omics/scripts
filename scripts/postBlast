@@ -1,63 +1,80 @@
 #!/usr/bin/perl
 
-=head1 Description
+=head1 NAME
+
+postBlast - extract blast outputs
+
+
+=head1 SYNOPSIS
+
+B<postBlast> -b <blast output>
+
+
+=head1 DESCRIPTION
 
 Extract blast outputs based on any of the following: evalue, bitscore, percent ID, alignment length, % query coverage and & inferred global coverage (requires slightly modified blast output). Read `help` for more.
 
-=head2 Acceptable BLAST Output Format
+
+=head1 OPTIONS
+
+=over 8
+
+=back
+
+
+=head1 Acceptable BLAST Output Format
 
 In order to filter your blast outputs by query coverage or inferred global coverage, you'll need to run your command line blast with:
 
-	'-outfmt "6 std qcovs qlen slen"'
+'-outfmt "6 std qcovs qlen slen"'
 
 This will output your standard tabular blast output (6 std) and then will add the columns for query coverage (qcovs), query length (qlen) and subject length (slen).
 
 Once your blast is finished, you may use the flags:
 
-	"-cov 80 -covCol 13"
-	to accept hits with query coverage greater than or equal to 80%, where Column 13 is your Query Coverage column; OR
+"-cov 80 -covCol 13"
+to accept hits with query coverage greater than or equal to 80%, where Column 13 is your Query Coverage column; OR
 
-	"-globalCov 80 -qLenCol 14 -sLenCol 15"
-	to accept hits with inferred global query coverage greater than or equal to 80%, where Column 14 and 15 are your QueryLength and SubjectLength columns respectively.
+"-globalCov 80 -qLenCol 14 -sLenCol 15"
+to accept hits with inferred global query coverage greater than or equal to 80%, where Column 14 and 15 are your QueryLength and SubjectLength columns respectively.
 
-=head1 USAGE
 
-perl postBlast.pl -b <blast output>
+=head1 THRESHOLDS
 
-=head2 Options
+-e	maximum e-value; default=1
+-s	minimum bit score; default=0
+-p	minimum % id; default=0
+-l	minimum alignment length; default=0
+-c	-localCoverage	minimum Query Coverage in %;
+requires a number between 0-100;
+requires '-covCol'
+-covCol	Column number for query coverage in blast output; (start counting at '1')
+-globalCov	minimum Inferred Global Coverage, calculated as [((Alignment_Length - Gaps - Mismatches)/ min(Query_Length, Subject_Length))*100]
+requires a number between 0-100;
+requires '-qLenCol' and '-sLenCol'
+-qLenCol	Query Length column number (start counting at '1')
+-sLenCol	Subject Length column number (start counting at '1')
+-list	Just get me the queries/subj in the list File;
+if you wish to search in subj column for matches; mention with flag "-subj";
+default= will look in query;
 
-=head3 Thresholds
 
-	-e	maximum e-value; default=1
-	-s	minimum bit score; default=0
-	-p	minimum % id; default=0
-	-l	minimum alignment length; default=0
-	-c	-localCoverage	minimum Query Coverage in %;
-		requires a number between 0-100;
-		requires '-covCol'
-	-covCol	Column number for query coverage in blast output; (start counting at '1')
-	-globalCov	minimum Inferred Global Coverage, calculated as [((Alignment_Length - Gaps - Mismatches)/ min(Query_Length, Subject_Length))*100]
-				requires a number between 0-100;
-				requires '-qLenCol' and '-sLenCol'
-	-qLenCol	Query Length column number (start counting at '1')
-	-sLenCol	Subject Length column number (start counting at '1')
-	-list	Just get me the queries/subj in the list File;
-		if you wish to search in subj column for matches; mention with flag "-subj";
-		default= will look in query;
+=head1 DEPENDENCIES
 
-=head3 Dependencies
+-subj	look for items in list in the subj col; required if using '-list' AND wish to only check subjects for matches to the list.
 
-	-subj	look for items in list in the subj col; required if using '-list' AND wish to only check subjects for matches to the list.
 
-=head3 Output
+=head1 OUTPUT
 
-	-o	output file name; default= processID.pb.out
-	-r	inverse of output file; default= not printed at all.
+-o	output file name; default= processID.pb.out
+-r	inverse of output file; default= not printed at all.
 
-=head1 Author
 
-	Sunit Jain, January 2010 : sunitj [AT] umich [DOT] edu
-	- updated May 2016
+=head1 AUTHOR
+
+Sunit Jain, January 2010 : sunitj [AT] umich [DOT] edu
+- updated May 2016
+
 
 =cut
 

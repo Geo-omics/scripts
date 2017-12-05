@@ -1,29 +1,42 @@
 #! /usr/bin/perl
 
-=head1 USAGE
+=head1 NAME
 
-	perl toPhylipAndBack.pl -phylip -f InputFile.fasta -alias file_Prefix
-	OR
-	perl toPhylipAndBack.pl -original -f InputFile.fasta -alias file_Prefix
+toPhylipAndBack - phylip fasta file converter
 
-=head1 Description
 
-=head2	-phylip
+=head1 SYNOPSIS
 
-	Converts a regular fasta file to a 10-digit header fasta file and creates an 'aka' file that keeps track of the name changes.
+B<toPhylipAndBack> -phylip -f InputFile.fasta -alias file_Prefix
+OR
+B<toPhylipAndBack> -original -f InputFile.fasta -alias file_Prefix
 
-=head2	-original
 
-	Converts the fasta file generated from '-phylip' to it's original self using the 'aka' file.
+=head1 DESCRIPTION
 
-=head1 Outputs
 
-	*.aka file, is your alias file. Guard it with your life! I won't be able to convert your fasta file to their original names without this.
-	*.toPhylip.fasta OR *.toOriginal.fasta file, will have the same name as the '.aka' file. This is your converted fasta file.
+
+
+=head1 -phylip
+
+Converts a regular fasta file to a 10-digit header fasta file and creates an 'aka' file that keeps track of the name changes.
+
+
+=head1 -original
+
+Converts the fasta file generated from '-phylip' to it's original self using the 'aka' file.
+
+
+=head1 OUTPUTS
+
+*.aka file, is your alias file. Guard it with your life! I won't be able to convert your fasta file to their original names without this.
+*.toPhylip.fasta OR *.toOriginal.fasta file, will have the same name as the '.aka' file. This is your converted fasta file.
+
 
 =head1 Questions/Suggestions/Feedback/Beer
 
-	Sunit Jain, October 2012 (sunitj [AT] umich [DOT] edu)
+Sunit Jain, October 2012 (sunitj [AT] umich [DOT] edu)
+
 
 =cut
 

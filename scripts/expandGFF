@@ -1,32 +1,58 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+expandGFF - Take the GFF file attribute column and split it into multiple columns.
+
+
+=head1 SYNOPSIS
+
+B<expandGFF> B<-gff> B<-out>
+
+
 =head1 DESCRIPTION
 
-expandGFF -- Take the GFF file attribute column and split it into multiple columns.
+Take the GFF file attribute column and split it into multiple columns.
 
-=head1 USAGE
 
-expandGFF -gff -out
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-    -gff        <FILE>      GFF File Name
-    -out        <FILE>      Output File Name
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-gff> I<FILE>
 
-=head1 Author
+GFF File Name
+
+=item B<-out> I<FILE>
+
+Output File Name
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Thu Aug  6 08:01:10 EDT 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

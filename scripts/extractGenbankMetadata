@@ -1,39 +1,75 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+extractGenbankMetadata - Extract Meta data and protein translations from a Genbank file. This script was created to be used as a part of the VirDB pipeline.
+
+
+=head1 SYNOPSIS
+
+B<extractGenbankMetadata> B<-gbk> in.gbk B<-faa> out.faa B<-meta> out.meta B<-list> geneTags.list
+
+
 =head1 DESCRIPTION
 
 extractGenbankMetaData -- Extract Meta data and protein translations from a Genbank file. This script was created to be used as a part of the VirDB pipeline.
-    
-=head2 DEPENDENCIES
 
-    BioPerl module Bio::SeqIO is required to run this script.
 
-=head1 USAGE
+=head1 OPTIONS
 
-    extractGenbankMetadata -gbk in.gbk -faa out.faa -meta out.meta -list geneTags.list
+=over 8
 
-=head2 Options
+=item B<-gbk>, B<-g> I<CHAR>
 
-    -gbk    -g  <CHAR>  Genbank file (input)
-    -list -l <CHAR>  List of Gene locus tags that you're interested in. (optional input; default: get everything)
-    -meta   -m  <CHAR>  Metadata file (output 1)  
-    -faa    -f  <CHAR>  Translated CDS (output 2)
-    -null       <CHAR>  Set null value as (default: NA)
-    -version -v     <BOOLEAN>       version of the current script
-    -help   -h      <BOOLEAN>       This message.
+Genbank file (input)
 
-=head1 Author
+=item B<-list>, B<-l> I<CHAR>
+
+List of Gene locus tags that you're interested in. (optional input; default: get everything)
+
+=item B<-meta>, B<-m> I<CHAR>
+
+Metadata file (output 1)
+
+=item B<-faa>, B<-f> I<CHAR>
+
+Translated CDS (output 2)
+
+=item B<-null> I<CHAR>
+
+Set null value as (default: NA)
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+BioPerl module Bio::SeqIO is required to run this script.
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Fri Jan 3 12:27:13 EST 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

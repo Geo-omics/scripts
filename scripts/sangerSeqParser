@@ -1,18 +1,37 @@
 #!/usr/bin/perl
 
-=head1 USAGE
+=head1 NAME
 
-	perl sangerSeqParser.pl -p Folder_Path
+sangerSeqParser - 
 
-=head2 Options
+=head1 SYNOPSIS
 
-	-o	output file name; default= processID.fasta
-	-e	file extension to look for in folder; default= fasta
-	-h	this page.
+B<sangerSeqParser> -p Folder_Path
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-o>
+
+output file name; default= processID.fasta
+
+=item B<-e>
+
+file extension to look for in folder; default= fasta
+
+=item B<-h>
+
+this page.
+
+=back
+
 
 =head1 Suggestions/Corrections/Feedback/Beer
 
-	Sunit Jain, sunitj@umich.edu
+Sunit Jain, sunitj@umich.edu
+
 
 =cut
 

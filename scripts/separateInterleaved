@@ -1,33 +1,58 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+separateInterleaved - Separate interleaved files. Tested for illumina datasets only.
+
+
+=head1 SYNOPSIS
+
+B<separateInterleaved> B<-fq> interleaved.fastq B<-p>refix split
+
+
 =head1 DESCRIPTION
 
-	separateInterleaved.pl -- Separate interleaved files. Tested for illumina datasets only.
+Separate interleaved files. Tested for illumina datasets only.
 
-=head1 USAGE
 
-	perl separateInterleaved.pl -fq interleaved.fastq -prefix split
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-fq	OR -fastq <CHAR>	interleaved Fastq file. [REQUIRED]
-	-p OR -prefix	<CHAR>	prefix for the forward and reverse files. [Default=prefix of the input fastq]
+=item B<-fq>, B<OR>, B<-fastq> I<CHAR>
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+interleaved Fastq file. [REQUIRED]
 
-=head1 Author
+=item B<-p>, B<OR>, B<-prefix> I<CHAR>
 
-	Sunit Jain, (Wed Jan 22 16:16:19 EST 2014)
-	sunitj [AT] umich [DOT] edu
+prefix for the forward and reverse files. [Default=prefix of the input fastq]
 
-=head1 License
+=item B<-version>, B<-v> I<BOOLEAN>
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+version of the current script
 
-=head1 Disclaimer
+=item B<-help>, B<-h> I<BOOLEAN>
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Wed Jan 22 16:16:19 EST 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

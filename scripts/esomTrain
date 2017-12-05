@@ -1,57 +1,69 @@
 #!/usr/bin/perl
 
-=head1 Description
+=head1 NAME
 
-	esomTrain - Given tetramer frequency script output files, the script will normalize the files and train the ESOM.
+esomTrain - Given tetramer frequency script output files, the script will normalize the files and train the ESOM.
 
-=head2 Dependencies
 
-	ESOM 1.1 or above
+=head1 SYNOPSIS
 
-=head1 Usage
+B<esomTrain> -lrn esom.lrn -cls esom.cls -rows #1 -cols #2
+OR
+B<esomTrain> -lrn esom.lrn -cls esom.cls -rows #1 -cols #2 -info file.info -names esom.names
 
-	esomTrain -lrn esom.lrn -cls esom.cls -rows #1 -cols #2
-	OR
-	esomTrain -lrn esom.lrn -cls esom.cls -rows #1 -cols #2 -info file.info -names esom.names
 
-=head2 Required options
+=head1 DESCRIPTION
 
-	-lrn	[characters]	*.lrn file produced by the tetramer frequency script
-	-cls	[characters]	*.cls file produced by the tetramer frequency script
-	-rows	[integer]	number of rows in the ESOM grid; vertical size of the map
-	-cols	[integer]	number of columns in the ESOM grid; horizontal size of the map
+Given tetramer frequency script output files, the script will normalize the files and train the ESOM.
 
-	NOTE:	The product of rows and columns, i.e. the number of neurons should be at least 1K neurons.
-	The ratio of rows and columns should be significantly different from unity.
 
-=head2 More Options
+=head1 DEPENDENCIES
 
-	-info	[characters]	file with information associated with the sequences; -names flag also required
-				Column1=Column1 name of scaffold (as it appears in col3 of names file); Column2=%GC(example)...ColumnN=any_numerical_metric;
-	-names	[characters]	*.names file produced by the tetramer frequency script; required with the -info flag
-	-norm	[characters]	Normalization strategy; possible choices:
-				'RZT'	- to robust-zt the dataset (replaces the mean and std dev with median and median absolute deviation); [default]
-				'Scale' - to scale the dataset from 0-1;
-				'ZT'	- to Z-transform the dataset;
+ESOM 1.1 or above
 
-=head3 Advance Options
 
-	-k	[float]		k for k-Batch as percentage of data set.[default is 15% written as = 0.15]
-				Percentage of all data vectors that is processed between map updates.
-	-algorithm	[characters]	training algorithm; possible choices:
-					'kbatch' - k-batch training [default]
-					'online' - standard online training
-	-startRadius	[integer]	start value for radius, default: half the smaller length of the grid.
-	-epochs		[integer]	The number of iterations over the training data; default=20
-	-cmd	[boolean]	tells the script to print the ESOM training command to the screen but not to execute it.
-	-debug	[boolean]	same as '-cmd' but also print some basic stats per k-mer.
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
+=head1 Required options
 
-=head1 Author
+-lrn	[characters]	*.lrn file produced by the tetramer frequency script
+-cls	[characters]	*.cls file produced by the tetramer frequency script
+-rows	[integer]	number of rows in the ESOM grid; vertical size of the map
+-cols	[integer]	number of columns in the ESOM grid; horizontal size of the map
 
-	Sunit Jain, (Thu Aug 15 10:56:11 EDT 2013)
-	sunitj [AT] umich [DOT] edu
+NOTE:	The product of rows and columns, i.e. the number of neurons should be at least 1K neurons.
+The ratio of rows and columns should be significantly different from unity.
+
+
+=head1 More Options
+
+-info	[characters]	file with information associated with the sequences; -names flag also required
+Column1=Column1 name of scaffold (as it appears in col3 of names file); Column2=%GC(example)...ColumnN=any_numerical_metric;
+-names	[characters]	*.names file produced by the tetramer frequency script; required with the -info flag
+-norm	[characters]	Normalization strategy; possible choices:
+'RZT'	- to robust-zt the dataset (replaces the mean and std dev with median and median absolute deviation); [default]
+'Scale' - to scale the dataset from 0-1;
+'ZT'	- to Z-transform the dataset;
+
+
+=head1 Advance Options
+
+-k	[float]		k for k-Batch as percentage of data set.[default is 15% written as = 0.15]
+Percentage of all data vectors that is processed between map updates.
+-algorithm	[characters]	training algorithm; possible choices:
+'kbatch' - k-batch training [default]
+'online' - standard online training
+-startRadius	[integer]	start value for radius, default: half the smaller length of the grid.
+-epochs		[integer]	The number of iterations over the training data; default=20
+-cmd	[boolean]	tells the script to print the ESOM training command to the screen but not to execute it.
+-debug	[boolean]	same as '-cmd' but also print some basic stats per k-mer.
+-version -v	<BOOLEAN>	version of the current script
+-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Aug 15 10:56:11 EDT 2013)
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

@@ -1,7 +1,12 @@
 #!/usr/bin/perl
-=head1 USAGE
+=head1 NAME
 
-	esomCodonMod -lrn file.lrn -o outputFile.lrn
+esomCodonMod - 
+
+=head1 SYNOPSIS
+
+B<esomCodonMod> -lrn file.lrn -o outputFile.lrn
+
 
 =cut
 

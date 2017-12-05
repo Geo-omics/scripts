@@ -1,49 +1,78 @@
 #!/usr/bin/perl -w
+=head1 NAME
+
+dereplicate - dereplicate reads in fasta or fastq files
+
+
+=head1 SYNOPSIS
+
+B<dereplicate> B<-f> fasta_File B<-o>ut output.fasta
+OR
+B<dereplicate> B<-f>q fastq_File B<-o>ut output.fastq
+OR
+B<dereplicate> B<-f>q fastq_File B<-o>ut output.fasta B<-o>utfmt fasta
+
+
 =head1 DESCRIPTION
 
-	Dereplicates a Fasta file at 100% identity over 100% coverage. Picks a first sequence as the representative for the cluster.
-	Dereplicates a Fastq file at 100% identity over 100% coverage. Picks the sequence with the best 'avg quality score' as the representative for the cluster.
-	
+Dereplicates a Fasta file at 100% identity over 100% coverage. Picks a first sequence as the representative for the cluster.
+Dereplicates a Fastq file at 100% identity over 100% coverage. Picks the sequence with the best 'avg quality score' as the representative for the cluster.
 
-=head2 USAGE
-	
-	dereplicate -f fasta_File -out output.fasta
-	OR
-	dereplicate -fq fastq_File -out output.fastq 
-	OR
-	dereplicate -fq fastq_File -out output.fasta -outfmt fasta
-	
-=head2 Options
 
-	-f	or	-fasta	[characters]	fasta file input
-	-fq	or	-fastq	[characters]	fastq file input
-	-o	or	-out	[characters]	dereplicated fasta/fastq file. Note that an output file will only be created if this option is provided.
-	-outfmt			["fasta"]	Use this if you wish that the output for your fastq input be fasta. See example #3 above.
-	-n	or	-top	[integer]	Print top N sequence clusters. Default 10.
+=head1 OPTIONS
 
-=head3 NOTE
+=over 8
 
-	## NOTE1: The Script DOES NOT look for sub-string matches. 
-	## NOTE2: Default Phred offset is 33
-	## Note3: An output file will only be created if the '-o' option is provided.
+=item B<-f> I<character>, B<-fasta> I<character>
 
-=head2 OUTPUT
+fasta file input
 
-	The script will create the following as its output, the ".clust", the ".clust.list" and optionaly the fasta/fastq file. These files are explained below.
-	The ".clust" file:
-	This file contains the cluster number, cluster size and the names of all sequences in that particular cluster. The third column in the file is the representative for each cluster. The file is tab-delimited.
+=item B<-fq> I<character>, B<-fastq> I<character>
 
-	The ".clust.list" file:
-	This file contains a list of all representative sequences in the fastq file. The file is tab-delimited.
-	
-=head2 AUTHOR
+fastq file input
 
-	Sunit Jain, Oct, 2011
-	sunitj [at] umich [dot] edu
+=item B<-o> I<character>, B<-out> I<character>
 
-=head2 Contributors
+dereplicated fasta/fastq file. Note that an output file will only be created if this option is provided.
 
-	Chris Taylor, Nov, 2011
+=item B<-outfmt>
+
+["fasta"]	Use this if you wish that the output for your fastq input be fasta. See example #3 above.
+
+=item B<-n> I<integer>, B<-top> I<integer>
+
+Print top N sequence clusters. Default 10.
+
+=back
+
+
+=head1 NOTE
+
+## NOTE1: The Script DOES NOT look for sub-string matches.
+## NOTE2: Default Phred offset is 33
+## Note3: An output file will only be created if the '-o' option is provided.
+
+
+=head1 OUTPUT
+
+The script will create the following as its output, the ".clust", the ".clust.list" and optionaly the fasta/fastq file. These files are explained below.
+The ".clust" file:
+This file contains the cluster number, cluster size and the names of all sequences in that particular cluster. The third column in the file is the representative for each cluster. The file is tab-delimited.
+
+The ".clust.list" file:
+This file contains a list of all representative sequences in the fastq file. The file is tab-delimited.
+
+
+=head1 AUTHOR
+
+Sunit Jain, Oct, 2011
+sunitj [at] umich [dot] edu
+
+
+=head1 CONTRIBUTORS
+
+Chris Taylor, Nov, 2011
+
 
 =cut
 

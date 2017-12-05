@@ -1,24 +1,32 @@
 #!/usr/bin/perl
 
-=head1 Description
+=head1 NAME
 
-	parseFastq - parses illumina Fastq files and splits them into fasta and qual files.
+parseFastq - parses illumina Fastq files and splits them into fasta and qual files.
 
-=head2 Usage
 
-	perl parseFastq.pl [-i Illumina FastQ file]
+=head1 SYNOPSIS
 
-=head3 Optional
+B<parseFastq> [-i Illumina FastQ file]
 
-	-f	Fasta Output File.
-	-q	Qual Output File.
-	-p	Phred offset; default 33;
-	-summary	provides a sequence length distribution for the fastq file.
+
+=head1 DESCRIPTION
+
+parses illumina Fastq files and splits them into fasta and qual files.
+
+
+=head1 OPTIONAL
+
+-f	Fasta Output File.
+-q	Qual Output File.
+-p	Phred offset; default 33;
+-summary	provides a sequence length distribution for the fastq file.
 
 =head2 For Suggestions/Comments/Feedback/Beer Contact:
 
-	Sunit Jain, Aug 2011
-	sunitj [AT] umich [DOT] edu
+Sunit Jain, Aug 2011
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

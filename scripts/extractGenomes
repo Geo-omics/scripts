@@ -2,53 +2,83 @@
 
 =head1 NAME
 
-	extractGenomes - extract genomes from NCBI databases (nr/nt) by Taxa curate and concatenate them to form your owm customized database.
+extractGenomes - extract genomes from NCBI databases (nr/nt) by Taxa curate and concatenate them to form your owm customized database.
 
-=head2 PREPARATION.
 
-	In your terminal window, goto the directory where you've stored your exported file from IMG and type: 'less <your file name>'. 
-	This should show you a header line. Start at '1' and count to the column number for 'NCBI_Taxon_ID'. 
-	Note the column number. such that, columnA=1, ColumnB=2..and so on.
+=head1 SYNOPSIS
 
-		eg: less imgCyanoTaxa.tsv (press 'q' to exit)
-		
-		lets say, my 'NCBI_Taxon_ID' was in column E so my column number is '5'.
-	In the same terminal, now type:
-		'module load blast/2.2.24'
-	
-=head2 USAGE
+B<extractGenomes> [-i File from IMG] [-o Your Database Name] [B<-c> NCBI Taxon ID Column Number] [B<-outdir> database directory]
 
-	extractGenomes [-i File from IMG] [-o Your Database Name] [-c NCBI Taxon ID Column Number] [-outdir database directory]
-				
-=head2 OPTIONS
 
-	OPT        Meaning                Expected Values		Default Values.
-	-r        redundant Seq File		(y/n)				n
-	-d        database			(nr/nt)			nr(proteins)
-	-j        concatenate			(y/n)				y
-	-f        Individual Genome Files	(y/n)				n
-	-c        Column Number		NCBI Taxon Col Num			5
-	-outdir   Output Directory		DIR name		<yourUsername>DB
-	--help    Help (This page).
+=head1 OPTIONS
 
-=head2 EXAMPLE.
+=over 8
 
-	perl extractDB.pl -i imgCyanoTaxa.tsv -o imgCyanoDB -c 5 -d nt .
+=item OPT        Meaning                Expected Values		Default Values.
 
-=head2 OUTPUT.
+=item B<-r>
 
-	You can find all the individual files in a directory named '<your_user_name>DB'.
-	eg. If I were to run this script the folder name would be 'sunitjDB'.
+redundant Seq File		(y/n)				n
 
-	This folder/directory contains your fasta/faa files with taxon IDs as names and a Concatenated Database
-	file  (unless you turned the concatenation off) with name you provided for your database.
-	By default, this concatenated file will be formatted.
+=item B<-d>
 
-	Your database is now ready to use.
+database			(nr/nt)			nr(proteins)
 
-=head2 AUTHOR
+=item B<-j>
 
-	Sunit Jain: sunitj_at_umich_dot_edu
+concatenate			(y/n)				y
+
+=item B<-f>
+
+Individual Genome Files	(y/n)				n
+
+=item B<-c>
+
+Column Number		NCBI Taxon Col Num			5
+
+=item B<-outdir>, B<Output>, B<Directory>, B<DIR>, B<name> I<yourUsername>
+
+DB
+
+=item --help    Help (This page).
+
+=back
+
+
+=head1 PREPARATION.
+
+In your terminal window, goto the directory where you've stored your exported file from IMG and type: 'less <your file name>'.
+This should show you a header line. Start at '1' and count to the column number for 'NCBI_Taxon_ID'.
+Note the column number. such that, columnA=1, ColumnB=2..and so on.
+
+eg: less imgCyanoTaxa.tsv (press 'q' to exit)
+
+lets say, my 'NCBI_Taxon_ID' was in column E so my column number is '5'.
+In the same terminal, now type:
+'module load blast/2.2.24'
+
+
+=head1 EXAMPLE.
+
+perl extractDB.pl -i imgCyanoTaxa.tsv -o imgCyanoDB -c 5 -d nt .
+
+
+=head1 OUTPUT.
+
+You can find all the individual files in a directory named '<your_user_name>DB'.
+eg. If I were to run this script the folder name would be 'sunitjDB'.
+
+This folder/directory contains your fasta/faa files with taxon IDs as names and a Concatenated Database
+file  (unless you turned the concatenation off) with name you provided for your database.
+By default, this concatenated file will be formatted.
+
+Your database is now ready to use.
+
+
+=head1 AUTHOR
+
+Sunit Jain: sunitj_at_umich_dot_edu
+
 
 =cut
 

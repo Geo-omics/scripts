@@ -1,32 +1,62 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+silvaTaxonAppend - get the SSU database and make the taxon file
+
+
+=head1 SYNOPSIS
+
+# For Blast outpts
+B<silvaTaxonAppend> B<-blast> <blast output> B<-out> <output filename>
+OR
+# For Mapper files
+B<silvaTaxonAppend> B<-mapper> <mapper output> B<-out> <output filename>
+
+
 =head1 DESCRIPTION
 
-	silvaTaxonAppend.pl: get the SSU database and make the taxon file.
+: get the SSU database and make the taxon file.
 
-=head1 USAGE
 
-	# For Blast outpts
-	perl silvaTaxonAppend.pl -blast <blast output> -out <output filename>
-	OR
-	# For Mapper files
-	perl silvaTaxonAppend.pl -mapper <mapper output> -out <output filename>
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-db	[characters]	Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
-						Default: "ssu119" with location set as: /omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta (SSU version 119)
-	-blast	[characters]	Blast output performed against the fasta file.
-	-mapper	[characters]	mapper.pl output performed on the blast output.
-	-out	[characters]	output file
-	
-	-h or -help	[boolean]	help; This page.
-	-v or -version	[boolean]	script version.
+=item B<-db> I<character>
 
-=head1 Author
+Silva database fasta; really any fasta that has header in the format ">accession_number[SPACE]description"
 
-	Sunit Jain, (Thu Aug  1 15:40:59 EDT 2013)
-	sunitj [AT] umich [DOT] edu
+=item Default: "ssu119" with location set as: /omics/PublicDB/silva/release_119/SILVA_119_SSURef_tax_silva.fasta (SSU version 119)
+
+=item B<-blast>
+
+[characters]	Blast output performed against the fasta file.
+
+=item B<-mapper> I<character>
+
+mapper.pl output performed on the blast output.
+
+=item B<-out> I<character>
+
+output file
+
+=item B<-h>, B<-help>
+
+help; This page.
+
+=item B<-v>, B<-version>
+
+script version.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Aug  1 15:40:59 EDT 2013)
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

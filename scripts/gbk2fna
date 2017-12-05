@@ -1,31 +1,54 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+gbk2fna - Read Genbank to Nucleotide Fasta file.
+
+
+=head1 SYNOPSIS
+
+B<gbk2fna>
+
+
 =head1 DESCRIPTION
 
-gbk2fna -- Read Genbank to Nucleotide Fasta file.
+Read Genbank to Nucleotide Fasta file.
 
-=head1 USAGE
 
-gbk2fna
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-in	<CHAR>	FASTA File
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-in> I<CHAR>
 
-=head1 Author
+FASTA File
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Thu Oct  1 11:10:47 EDT 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

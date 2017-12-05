@@ -1,28 +1,56 @@
 #! /usr/bin/perl
 
-=head1 Description
+=head1 NAME
 
-	This program takes a class file, a names file, a fasta file and extracts the seqs for the contigs presents in the desired class.
+getClassFasta - extracts seqs for the contigs presents in the desired class.
 
-=head1 Usage
 
-	getClassFasta -cls <CLASS File> -names <NAMES File> -fasta <esom FASTA File> -num <CLASS NUMBER>
+=head1 SYNOPSIS
 
-=head2 Options
+B<getClassFasta> B<-cls> <CLASS File> B<-names> <NAMES File> B<-fasta> <esom FASTA File> B<-num> <CLASS NUMBER>
 
-	-cls	<STRING>	the .cls file
-	-names	<STRING>	the .names file
-	-fasta	<STRING>	The Concatenated fasta file that was used with the tetramer script.
-	-num	<INTEGER>	the class number you're interested in.
-	-id	<STRING>	An identifier that is unique to the set of contigs you're interested in.
 
-=head2 Experimental Feature
+=head1 DESCRIPTION
 
-	-loyal	<REAL: 1-100>	Bin loyalty value; Only get a contig if loyal% bins in this class; Default = 0
+This program takes a class file, a names file, a fasta file and extracts the seqs for the contigs presents in the desired class.
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-cls> I<STRING>
+
+the .cls file
+
+=item B<-names> I<STRING>
+
+the .names file
+
+=item B<-fasta> I<STRING>
+
+The Concatenated fasta file that was used with the tetramer script.
+
+=item B<-num> I<INTEGER>
+
+the class number you're interested in.
+
+=item B<-id> I<STRING>
+
+An identifier that is unique to the set of contigs you're interested in.
+
+=back
+
+
+=head1 Experimental Feature
+
+-loyal	<REAL: 1-100>	Bin loyalty value; Only get a contig if loyal% bins in this class; Default = 0
+
 
 =head1 Questions/Comments/Suggestions/Accolades/Beer
 
-	Sunit Jain, sunitj [AT] umich [DOT] edu
+Sunit Jain, sunitj [AT] umich [DOT] edu
+
 
 =cut
 

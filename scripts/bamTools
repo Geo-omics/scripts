@@ -1,36 +1,65 @@
 #! /usr/bin/perl
-=head1 Description
+=head1 NAME
 
-	bamTools: Yup, until I think of a better name that's what i'm calling it!
+bamTools - tell which reads mapped onto contigs
 
-	give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
+=head1 SYNOPSIS
 
-=head2 Dependencies
+B<bamTools> B<-f> reference.fasta B<-b> sorted.bam B<-l> contigNames.list [B<-o>ut processID.bamstats]
 
-	Samtools 1.1.17 or above
 
-=head2 Preparation
+=head1 DESCRIPTION
 
-	[1] Make sure you have an indexed sorted bam file in the same folder; and
-	[2] The samtools module is loaded.
-	[3] The contigs list file may contain 2 additional columns in the form of start and stop position on the contig.
+Give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
 
-=head2 Usage
 
-	bamTools -f reference.fasta -b sorted.bam -l contigNames.list [-out processID.bamstats]
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-b or bam:	sorted bam file;
-	-l or list:	list of contig used for the mapping.
-	-no_cov :	Don't calculate 'Mean Coverage' for each contig/region.
-	-all	:	Prints results for everything, even the reference regions that didn't recruit any reads.
-	-o or out : Number of reads for each contig/region.
-	-f or fasta : Reference fasta file.
+=item B<-b>, B<-bam>
 
-=head2 Questions/Comments/Feedback/Beer
+sorted bam file;
 
-	October 2012, Sunit Jain (sunitj [AT] umich [DOT] edu)
+=item B<-l>, B<-list>
+
+list of contig used for the mapping.
+
+=item B<-no_cov>
+
+Don't calculate 'Mean Coverage' for each contig/region.
+
+=item B<-all>
+
+Prints results for everything, even the reference regions that didn't recruit any reads.
+
+=item B<-o>, B<-out>
+
+Number of reads for each contig/region.
+
+=item B<-f>, B<-fasta>
+
+Reference fasta file.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+Samtools 1.1.17 or above
+
+
+=head1 PREPARATION
+
+ [1] Make sure you have an indexed sorted bam file in the same folder; and
+ [2] The samtools module is loaded.
+ [3] The contigs list file may contain 2 additional columns in the form of start and stop position on the contig.
+
+
+=head1 Questions/Comments/Feedback/Beer
+
+October 2012, Sunit Jain (sunitj [AT] umich [DOT] edu)
+
 
 =cut
 

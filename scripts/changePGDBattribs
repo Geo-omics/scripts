@@ -1,34 +1,66 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+changePGDBattribs - Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
+
+
+=head1 SYNOPSIS
+
+B<changePGDBattribs> B<-list> project_names.list
+
+
 =head1 DESCRIPTION
 
-	changePGDBattribs -- Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
+Change the attributes in "data/ptools-local/pgdbs/user/<NAME>/1.0/input/organism.dat" to avoid confusion while opening a PGDB.
 
-=head1 USAGE
 
-	changePGDBattribs -list project_names.list
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-list	<CHAR>	List of the fasta files you used to run MetaPathways.
-	-data	<CHAR>	Location of the pathway-tools data folder; default:/opt/packages/pathway-tools/data/
-	-prefix	<CHAR>	If you wish to add a prefix to the names, add it here (no spaces allowed)
-	-bkp	<BOOLEAN>	Keep the old version (just in case);
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-list> I<CHAR>
 
-=head1 Author
+List of the fasta files you used to run MetaPathways.
 
-	Sunit Jain, (Thu Feb 27 15:52:47 EST 2014)
-	sunitj [AT] umich [DOT] edu
+=item B<-data> I<CHAR>
 
-=head1 License
+Location of the pathway-tools data folder; default:/opt/packages/pathway-tools/data/
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+=item B<-prefix> I<CHAR>
 
-=head1 Disclaimer
+If you wish to add a prefix to the names, add it here (no spaces allowed)
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=item B<-bkp> I<BOOLEAN>
+
+Keep the old version (just in case);
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Feb 27 15:52:47 EST 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

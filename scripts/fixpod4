@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""
+Fix additional stuff in POD in perl scripts
+
+Note: Makes assumptions about input, little error checking
+"""
+import argparse
+import re
+import sys
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument('inputfile', type=argparse.FileType())
+argp.add_argument('-w', '--write-to-file', action='store_true')
+argp.add_argument('-c', '--check-name-only', action='store_true')
+
+args = argp.parse_args()
+
+out = ''
+
+for line in args.inputfile:
+    if line.startswith('=head1 NAME'):
+        out += line
+
+        empty_line = args.inputfile.readline()  # empty line following =head
+        if empty_line.strip():
+            raise RuntimeError('non-empty line following =head')
+
+        short_descr = args.inputfile.readline()
+        m = re.match(r'^{} - '.format(args.inputfile.name), short_descr)
+        if m is None:
+            if args.check_name_only:
+                print('bad NAME section:', args.inputfile.name,
+                      '=>', short_descr[:90].strip())
+                continue
+            # best effort sub '^something -- ' ===> 'realname - '
+            short_descr = re.sub(
+                r'^.*\s+--\s+',
+                '{} - '.format(args.inputfile.name),
+                short_descr
+            )
+        else:
+            # all good
+            pass
+
+        out += '\n' + short_descr
+    else:
+        out += line
+
+if args.check_name_only:
+    sys.exit()
+
+# write output
+if args.write_to_file:
+    args.inputfile.close()
+    outfile = open(args.inputfile.name, 'w')
+else:
+    outfile = sys.stdout
+
+outfile.write(out)

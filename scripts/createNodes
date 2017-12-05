@@ -1,33 +1,62 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+createNodes - Do this.
+
+
+=head1 SYNOPSIS
+
+B<createNodes>
+
+
 =head1 DESCRIPTION
 
-createNodes -- Do this.
+Do this.
 
-=head1 USAGE
 
-createNodes
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-config	-c	<CHAR>		Config file explicitly declaring which columns to make nodes out of and which the properties; Recommended but Optional; default = guess.
-	-nodes	-n	<CHAR>		Read this nodes file created by one of the parsers and create nodes in the database; Required.
-	-port	-p	<INT>		Port which the database is listening to; default: 7474.
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-config>, B<-c> I<CHAR>
 
-=head1 Author
+Config file explicitly declaring which columns to make nodes out of and which the properties; Recommended but Optional; default = guess.
+
+=item B<-nodes>, B<-n> I<CHAR>
+
+Read this nodes file created by one of the parsers and create nodes in the database; Required.
+
+=item B<-port>, B<-p> I<INT>
+
+Port which the database is listening to; default: 7474.
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
 
 Sunit Jain, (Tue Jun 30 08:14:43 EDT 2015)
 sunitj [AT] umich [DOT] edu
 
-=head1 License
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

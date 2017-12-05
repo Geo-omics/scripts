@@ -1,31 +1,50 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+parallel_getGenomesFromTaxa - Do this.
+
+
+=head1 SYNOPSIS
+
+B<parallel_getGenomesFromTaxa>
+
+
 =head1 DESCRIPTION
 
-	parallel_getGenomesFromTaxa.pl -- Do this.
-
-=head1 USAGE
-
-	perl parallel_getGenomesFromTaxa.pl
-
-=head2 Options
+Do this.
 
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=head1 OPTIONS
 
-=head1 Author
+=over 8
 
-	Sunit Jain, (Fri Jan 17 09:43:35 EST 2014)
-	sunitj [AT] umich [DOT] edu
+=item B<-version>, B<-v> I<BOOLEAN>
 
-=head1 License
+version of the current script
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+=item B<-help>, B<-h> I<BOOLEAN>
 
-=head1 Disclaimer
+This message.
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Fri Jan 17 09:43:35 EST 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

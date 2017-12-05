@@ -1,37 +1,47 @@
 #!/usr/bin/perl
 
-=head2 Description
+=head1 NAME
 
-	Given the names of sequences. extract from a fasta file. Make sure each name is in a seperate line.
-	By default, the script prints the sequences with the names in the list.
-	This behavior can be changed by adding the '-e' flag which will ask the script to exclude the sequences present in the list
+extractSeqs - retrieve sequences from fasta file
 
-=head2 Examples
-	
-	extractSeqs -l <list of sequences names> -f <fasta file> -o output.fasta
-	OR
-	extractSeqs -l <list of sequences names> -fq <fastq file> -o output.fastq
-	OR
-	extractSeqs -l <list of sequences names> -fq <fastq file> -o output.fasta -outfmt fasta
-	
-=head2 Optional
 
-	-fq	fastq file
-	-fuzzy If you list file contains a part of the name in the sequence file, use this.
-		Default: exact match.
-	-o	name of the output file; default: processID.fasta.
-	-outfmt	fasta; if the output file required is a fasta file when a fastq file is the input.
-	-e	exclude list.
-	-h	help; this text.
+=head1 DESCRIPTION
 
-=head2 Author
+Given the names of sequences. extract from a fasta file. Make sure each name is in a seperate line.
+By default, the script prints the sequences with the names in the list.
+This behavior can be changed by adding the '-e' flag which will ask the script to exclude the sequences present in the list
 
-	Sunit Jain, March 2011
-	sunitj [AT] umich [DOT] edu
 
-=head2 Contributors
+=head1 EXAMPLES
 
-	Chris Taylor, 2011
+extractSeqs -l <list of sequences names> -f <fasta file> -o output.fasta
+OR
+extractSeqs -l <list of sequences names> -fq <fastq file> -o output.fastq
+OR
+extractSeqs -l <list of sequences names> -fq <fastq file> -o output.fasta -outfmt fasta
+
+
+=head1 OPTIONAL
+
+-fq	fastq file
+-fuzzy If you list file contains a part of the name in the sequence file, use this.
+Default: exact match.
+-o	name of the output file; default: processID.fasta.
+-outfmt	fasta; if the output file required is a fasta file when a fastq file is the input.
+-e	exclude list.
+-h	help; this text.
+
+
+=head1 AUTHOR
+
+Sunit Jain, March 2011
+sunitj [AT] umich [DOT] edu
+
+
+=head1 CONTRIBUTORS
+
+Chris Taylor, 2011
+
 
 =cut
 

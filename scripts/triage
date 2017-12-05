@@ -1,24 +1,33 @@
 #! /usr/bin/perl
 
+=head1 NAME
+
+triage - seperate paired sequences
+
+
+=head1 SYNOPSIS
+
+B<triage> -fwd forward.fastq -rev reverse.fastq [-n for the new illumina pipeline casava 1.8+ that has a space instead of a '/' in sequence headers]
+
+
 =head1 DESCRIPTION
 
-	triage.pl - Give it forward and reverse fastq files and this will seperate the sequences based on whether a fwd-rev pair can be found or not.
+Give it forward and reverse fastq files and this will seperate the sequences based on whether a fwd-rev pair can be found or not.
 
-=head2 USAGE
 
-	triage.pl -fwd forward.fastq -rev reverse.fastq [-n for the new illumina pipeline casava 1.8+ that has a space instead of a '/' in sequence headers]
+=head1 OUTPUTS
 
-=head2 OUTPUTS
+Created 4 files, with the processID (pid) as the prefix.
+pid.fp.fastq : forward pair found in reverse
+pid.fs.fastq : forward singleton
+pid.rp.fastq : reverse pair found in forward
+pid.rs.fastq : reverse singleton
 
-	Created 4 files, with the processID (pid) as the prefix.
-	pid.fp.fastq : forward pair found in reverse
-	pid.fs.fastq : forward singleton
-	pid.rp.fastq : reverse pair found in forward
-	pid.rs.fastq : reverse singleton
 
-=head2 Questions/Suggestions/Feedback
+=head1 Questions/Suggestions/Feedback
 
-	Contact: Sunit Jain (sunitj [AT] umich [DOT] edu)
+Contact: Sunit Jain (sunitj [AT] umich [DOT] edu)
+
 
 =cut
 

@@ -2,42 +2,70 @@
 
 =head1 NAME
 
-	extract blast hits of interest
+extract_Blast_Hits_Of_Interest - extract blast hits of interest
 
-=head1 Description
 
-	-You give list of Query/Subject names you're interested in and the blast output.
-	-Script gives you a sub-set of the blast result that contain the Query or Subjects of Interest.
-	-You may adjust the amount of detail you want in you output.
-	-Works for tabular Blast output (format 6 and 7 for 2.2.22 and above and for 8 and 9 for the versions 2.2.20 and below)
+=head1 SYNOPSIS
 
-=head1 Usage
+B<extract_Blast_Hits_Of_Interest> -b <blast output file> -l <list of hits of interest>
 
-	extract_Blast_Hits_Of_Interest -b <blast output file> -l <list of hits of interest>
 
-=head1 Options
+=head1 DESCRIPTION
 
-	-o:		output file; 
-	-c:		where to look, for the names in the list:
-			'q': look in Query Column;
-			's': look in Subj Column ;
-			'b': look in Both Columns; 
-	-brief:		level of detail you want in the output file. This is a boolean flag, its presence in the command line would mean you just want the corresponding subj/query as your output
-			The default behavior (i.e -brief is not present) of the script prints the output in the blast tabular format.
-	-mp:		minimum % id
-	-mal:		minimum alignment length
+-You give list of Query/Subject names you're interested in and the blast output.
+-Script gives you a sub-set of the blast result that contain the Query or Subjects of Interest.
+-You may adjust the amount of detail you want in you output.
+-Works for tabular Blast output (format 6 and 7 for 2.2.22 and above and for 8 and 9 for the versions 2.2.20 and below)
 
-=head3 Defaults
 
-	-o:		<pid>_BlastHitsOfInterest.out
-	-c:		q
-	-mp:		0
-	-mal:		0
+=head1 OPTIONS
 
-=head1 Author
+=over 8
 
-	Sunit Jain, May 2011
-	sunitj-at-umich-dot-edu
+=item B<-o>
+
+output file;
+
+=item B<-c>
+
+where to look, for the names in the list:
+
+=item 'q': look in Query Column;
+
+=item 's': look in Subj Column ;
+
+=item 'b': look in Both Columns;
+
+=item B<-brief>
+
+:		level of detail you want in the output file. This is a boolean flag, its presence in the command line would mean you just want the corresponding subj/query as your output
+
+=item The default behavior (i.e -brief is not present) of the script prints the output in the blast tabular format.
+
+=item B<-mp>
+
+:		minimum % id
+
+=item B<-mal>
+
+minimum alignment length
+
+=back
+
+
+=head1 DEFAULTS
+
+-o:		<pid>_BlastHitsOfInterest.out
+-c:		q
+-mp:		0
+-mal:		0
+
+
+=head1 AUTHOR
+
+Sunit Jain, May 2011
+sunitj-at-umich-dot-edu
+
 
 =cut
 

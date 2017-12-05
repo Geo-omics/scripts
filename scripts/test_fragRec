@@ -1,40 +1,78 @@
 #!/usr/bin/perl
 
-=head1 Description
+=head1 NAME
 
-	fragRec.pl : use multiple blast outputs in tabular format to generate a fragment recruitment plot.
-	-- x-axis = ref genome(2nd column of blast tabular output);
-	-- y-axis = percent-id. This script parses the blast output;
-	-- Generates an R script and executes it. 
-	-- All the blasts must have the same reference database
+test_fragRec - generate a fragment recruitment plot from multiple blast outputs
 
-=head1 Usage
 
-	fragRec.pl [-f reference genome fasta] [-b path to folder containing the blast outputs] [-e extension for the blast outputs] [OPTIONS]
+=head1 SYNOPSIS
 
-=head2 Options
+fragRec [-f reference genome fasta] [-b path to folder containing the blast outputs] [-e extension for the blast outputs] [OPTIONS]
 
-	-prefix	:	output R-script and image file name; default= Process_id.r and iProcess_id.png
-	-start	:	define a specific region in the reference genome
-	-stop	:	define a specific region in the reference genome; not required if stop is the end of the genome.
-	-p	:	min percent id; default= 0%
-	-l	:	min alignment length; default= 100
-	-s	:	min bit score; default= 40
-	-details	:	To get a list of query names.
-	-h	:	help; this screen
 
-=head1 Author
+=head1 DESCRIPTION
 
-	Sunit Jain, (Fri July 25 11:49:03 EDT 2014)
-	sunitj [AT] umich [DOT] edu
+fragRec.pl : use multiple blast outputs in tabular format to generate a fragment recruitment plot.
+-- x-axis = ref genome(2nd column of blast tabular output);
+-- y-axis = percent-id. This script parses the blast output;
+-- Generates an R script and executes it.
+-- All the blasts must have the same reference database
 
-=head1 License
 
-	This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+=head1 OPTIONS
 
-=head1 Disclaimer
+=over 8
 
-	This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+=item B<-prefix>
+
+output R-script and image file name; default= Process_id.r and iProcess_id.png
+
+=item B<-start>
+
+define a specific region in the reference genome
+
+=item B<-stop>
+
+define a specific region in the reference genome; not required if stop is the end of the genome.
+
+=item B<-p>
+
+min percent id; default= 0%
+
+=item B<-l>
+
+min alignment length; default= 100
+
+=item B<-s>
+
+min bit score; default= 40
+
+=item B<-details>
+
+To get a list of query names.
+
+=item B<-h>
+
+help; this screen
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Fri July 25 11:49:03 EDT 2014)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
+
+This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+
+=head1 DISCLAIMER
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

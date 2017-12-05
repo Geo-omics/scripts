@@ -1,45 +1,95 @@
 #! /usr/bin/perl
+=head1 NAME
+
+batchBlast - start multiple instances of blast at once:
+
+
+=head1 SYNOPSIS
+
+Start multiple instances of blast at once:
+
+B<batchBlast> [B<-p> blast type] [B<-l> list of query files]
+
+Start a single instance of blast:
+
+B<batchBlast> [B<-p> blast type] [B<-q> single query fasta file]
+
+Check if any type of blast was performed on the query file:
+
+B<batchBlast> [B<-check>] [B<-q> query fasta file]
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-p>, B<-blast>
+
+Blast Task (blastn, blastp, blastx, tblastn, tblastx)
+
+=item B<-l>, B<-list>
+
+List of Query File Names for Blasts; Each name should be in a seperate line.
+
+=item B<-q>, B<-query>
+
+Single query fasta file.
+
+=item B<-m>, B<-outfmt>
+
+Output Format. Default: outputs w/ comments.
+
+=item B<-n>
+
+Makes the script use the latest version of blast. Make sure you have loaded the appropriate module.
+
+=item Default: uses old blast syntax.
+
+=item B<-a>
+
+OR -num_threads:	Multi-thread your blast; default: 1
+
+=item B<-e>, B<-evalue>
+
+Evalue; Default: 1e-3
+
+=item B<-d>, B<-db>
+
+database; Default: 'nr' OR 'nt', depending on '-p'
+
+=item B<-per>
+
+percentage identity; only available with the newer versions of blast (2.2.22 and above).
+
+=item B<-check>
+
+Check if blasts for this file have been performed earlier.
+
+=item B<-h>, B<-help>
+
+this page.
+
+=back
+
+
 =head1 MOTIVATION
 
-	The script began as a wrapper script to run multiple instances of blast jobs when given a list of query files.
-	It has since evolved into a wrapper for catalouging all blast jobs run to avoid duplicating results and wasting resources.
-	It handles all basic functionalities of blast jobs (both new and old), and more can be added upon request.
+The script began as a wrapper script to run multiple instances of blast jobs when given a list of query files.
+It has since evolved into a wrapper for catalouging all blast jobs run to avoid duplicating results and wasting resources.
+It handles all basic functionalities of blast jobs (both new and old), and more can be added upon request.
 
-=head2 Dependencies
 
-	Blast 2.2.20 (old); OR
-	Blast 2.2.22 or above (new)
+=head1 DEPENDENCIES
 
-=head1 USAGE
+ Blast 2.2.20 (old); OR
+ Blast 2.2.22 or above (new)
 
-	Start multiple instances of blast at once:
-		batchBlast [-p blast type] [-l list of query files]
-	OR
-	Start a single instance of blast:
-		batchBlast [-p blast type] [-q single query fasta file]
-	OR
-	Check if any type of blast was performed on the query file:
-		batchBlast [-check] [-q query fasta file]
-
-=head2 Options
-
-	-p OR -blast:	Blast Task (blastn, blastp, blastx, tblastn, tblastx)
-	-l OR -list:	List of Query File Names for Blasts; Each name should be in a seperate line.
-	-q OR -query:	Single query fasta file.
-	-m OR -outfmt:	Output Format. Default: outputs w/ comments.
-	-n:		Makes the script use the latest version of blast. Make sure you have loaded the appropriate module.
-			Default: uses old blast syntax.
-	-a OR -num_threads:	Multi-thread your blast; default: 1
-	-e OR -evalue:	Evalue; Default: 1e-3
-	-d OR -db:	database; Default: 'nr' OR 'nt', depending on '-p'
-	-per	percentage identity; only available with the newer versions of blast (2.2.22 and above).
-	-check		:	Check if blasts for this file have been performed earlier.
-	-h OR -help:	this page.
 
 =head1 AUTHOR
 
-	Sunit Jain, Aug 2011
-	sunitj [AT] umich [DOT] edu
+ Sunit Jain, Aug 2011
+ sunitj [AT] umich [DOT] edu
+
 
 =cut
 

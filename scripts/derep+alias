@@ -3,28 +3,56 @@
 use strict;
 use Getopt::Long;
 
-=head1 USAGE
+=head1 NAME
 
-	derep+alias -l gi.list -d gi.data -abs 75
-	OR
-	derep+alias -l gi.list -d gi.data -percent 75
-	OR
-	derep+alias -l gi.list -d gi.data -all
+derep+alias -
 
-=head2 Options
+=head1 SYNOPSIS
 
-	-p	-percent	<INT:1-100>	What percent of taxa you want randomly extracted?
-	-abs	-absolute	<INT>	How many taxa you want randomly extracted? (overrides -p)
-	-prefix			<CHAR>	Output prefix
-	-l	-list		<FILE>	File containing a list of GI numbers. Used to weed out any sequences that may not belong.
-	-d	-data		<FILE>	File obtained from fetching the data from NCBI in tabular form. GI<tab>NCBI Taxon ID<tab>Prot Seq<eol>
-	-h	-help		<>	This page.
+derep+alias B<-l> gi.list B<-d> gi.data B<-abs> 75
+OR
+derep+alias B<-l> gi.list B<-d> gi.data B<-p>ercent 75
+OR
+derep+alias B<-l> gi.list B<-d> gi.data -all
 
-=head1 Developer
 
-	Sunit Jain
-	June 2010.
-	
+=head1 OPTIONS
+
+=over 8
+
+=item B<-p>
+
+-percent	<INT:1-100>	What percent of taxa you want randomly extracted?
+
+=item B<-abs>, B<-absolute> I<INT>
+
+How many taxa you want randomly extracted? (overrides -p)
+
+=item B<-prefix> I<CHAR>
+
+Output prefix
+
+=item B<-l>, B<-list> I<FILE>
+
+File containing a list of GI numbers. Used to weed out any sequences that may not belong.
+
+=item B<-d>, B<-data> I<FILE>
+
+File obtained from fetching the data from NCBI in tabular form. GI ?? NCBI Taxon ID ?? Prot Seq
+
+=item B<-h>
+
+-help		<>	This page.
+
+=back
+
+
+=head1 DEVELOPER
+
+Sunit Jain
+June 2010.
+
+
 =cut
 
 #system("blastdbcmd -entry_batch phg_gi.list -db nr -outfmt "%g %T %s" -out phg_gi.data");

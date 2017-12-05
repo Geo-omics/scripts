@@ -1,42 +1,72 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+legacy_consolidateJGIdata - consolidate the data obtained from JGI into one tabular file
+
+
+=head1 SYNOPSIS
+
+perl consolidateJGIdata.pl B<-DIR> path_to_the_JGI_files B<-OUTDIR> output_directory
+
+
 =head1 DESCRIPTION
 
-	Consolidate the data obtained from JGI into one tabular file
+Consolidate the data obtained from JGI into one tabular file
 
-=head2 Dependencies
 
-	-scripts	<STRING>	location of the script dependencies;	default=/geomicro/data1/COMMON/scripts/SeqTools
-	
-	extractSubSeq.pl - To extract genes from the contigs
-	length+gc.pl - To claculate the length and %GC of the contigs
+=head1 OPTIONS
 
-=head1 USAGE
+=over 8
 
-	perl consolidateJGIdata.pl -DIR path_to_the_JGI_files -OUTDIR output_directory
+=item B<-DIR>, B<-d> I<STRING>
 
-=head2 Options
+path to the files downloaded from JGI;	default=present working directory
 
-	-DIR	-d	<STRING>	path to the files downloaded from JGI;	default=present working directory
-	-OUTDIR	-o	<STRING>	Directory with consolidated tab delimited files for each bin;		default=processID
-	-genes	-g	<STRING>	produces a fasta file of all the genes in the given file;	default=not produced
-	-scripts	<STRING>	location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/SeqTools
+=item B<-OUTDIR>, B<-o> I<STRING>
 
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message. press "q" to exit this screen.
+Directory with consolidated tab delimited files for each bin;		default=processID
 
-=head3 NOTE:
+=item B<-genes>, B<-g> I<STRING>
 
-	In order to get a seperate file for each bin, add a 3rd column in the '*map.txt' file to reflect the bin that the original scaffold belongs to.
-	
-=head3 Example:
+produces a fasta file of all the genes in the given file;	default=not produced
 
-	perl consolidateJGIdata.pl -d ~/JGI_data/ -o output_directory -g output_genes.fasta
-	
-=head1 Author
+=item B<-scripts> I<STRING>
 
-	Sunit Jain, (Fri Jun  7 17:53:04 EDT 2013)
-	sunitj [AT] umich [DOT] edu
+location of the extractSubSeq.pl script;	default=/geomicro/data1/COMMON/scripts/SeqTools
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message. press "q" to exit this screen.
+
+=item =head3 NOTE:
+
+=item In order to get a seperate file for each bin, add a 3rd column in the '*map.txt' file to reflect the bin that the original scaffold belongs to.
+
+=item =head3 Example:
+
+=item perl consolidateJGIdata.pl -d ~/JGI_data/ -o output_directory -g output_genes.fasta
+
+=back
+
+
+=head1 DEPENDENCIES
+
+-scripts	<STRING>	location of the script dependencies;	default=/geomicro/data1/COMMON/scripts/SeqTools
+
+extractSubSeq.pl - To extract genes from the contigs
+length+gc.pl - To claculate the length and %GC of the contigs
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Fri Jun  7 17:53:04 EDT 2013)
+sunitj [AT] umich [DOT] edu
+
 
 =cut
 

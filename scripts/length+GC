@@ -1,20 +1,38 @@
 #! /usr/bin/perl
-=head1 Description
+=head1 NAME
 
-	This program takes a fasta file, extracts length and %GC information (if '-gc' is specified)
+length+GC - extract length and GC content from a fasta file
 
-=head2 Usage
 
-	length+GC.pl -f input.fasta
+=head1 SYNOPSIS
 
-=head3 Options
+length+GC.pl -f input.fasta
 
-	-gc	Calculate GC(%) content.
-	-len calculate for sequences abovea certain length only.	
-    
-=head1 Author
 
-	Sunit Jain
+=head1 DESCRIPTION
+
+This program takes a fasta file, extracts length and %GC information (if '-gc' is specified)
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-gc>
+
+Calculate GC(%) content.
+
+=item B<-len>
+
+calculate for sequences abovea certain length only.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain
+
 
 =cut
 

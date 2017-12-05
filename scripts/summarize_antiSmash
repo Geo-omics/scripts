@@ -1,32 +1,58 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+summarize_antiSmash - Do this.
+
+
+=head1 SYNOPSIS
+
+B<summarize_antiSmash> B<-dir> project_folder
+
+
 =head1 DESCRIPTION
 
-	summarize_antiSmash.pl -- Do this.
+Do this.
 
-=head1 USAGE
 
-	perl summarize_antiSmash.pl -dir project_folder
+=head1 OPTIONS
 
-=head2 Options
+=over 8
 
-	-dir	<CHAR>	path to the project folder with all the Antismash outputs
-	-prefix	<CHAR>	output file prefix
-	-version -v	<BOOLEAN>	version of the current script
-	-help	-h	<BOOLEAN>	This message.
+=item B<-dir> I<CHAR>
 
-=head1 Author
+path to the project folder with all the Antismash outputs
 
-	Sunit Jain, (Thu Nov 21 16:17:53 EST 2013)
-	sunitj [AT] umich [DOT] edu
+=item B<-prefix> I<CHAR>
 
-=head1 License
+output file prefix
+
+=item B<-version>, B<-v> I<BOOLEAN>
+
+version of the current script
+
+=item B<-help>, B<-h> I<BOOLEAN>
+
+This message.
+
+=back
+
+
+=head1 AUTHOR
+
+Sunit Jain, (Thu Nov 21 16:17:53 EST 2013)
+sunitj [AT] umich [DOT] edu
+
+
+=head1 LICENSE
 
 This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
-=head1 Disclaimer
+
+=head1 DISCLAIMER
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 
 =cut
 

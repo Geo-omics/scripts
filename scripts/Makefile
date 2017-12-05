@@ -176,7 +176,6 @@ BAD_PODS = \
     removeCommentLines\
     tally\
     tally-weave\
-    U2T\
 
 # compute names for manpages
 bad_re = $(foreach i,$(BAD_PODS),"-F $(i)")
@@ -184,6 +183,7 @@ perl_scripts_good = $(filter-out $(BAD_PODS),$(PERL_SCRIPTS))
 man_pages = $(foreach i,$(perl_scripts_good),$(i).1)
 
 $(man_pages): name = $(subst .1,,$@)
+$(man_pages): version ?= unknown_version
 $(man_pages):
 	@pod2man --utf8 --release=$(version) --center $(name) $(name) $@
 	$(info manpage for $(name))
