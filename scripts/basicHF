@@ -56,8 +56,8 @@ B<basicHF> -list file_names.list -file_type prot B<-p>ercent 60 B<-len> 0.50 B<-
 
 =head1 AUTHOR
 
-Sunit Jain, December 2010
-sunitj_at_umich_dot_edu
+ Sunit Jain, December 2010
+ sunitj_at_umich_dot_edu
 
 
 =cut

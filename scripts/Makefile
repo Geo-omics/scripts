@@ -176,7 +176,6 @@ BAD_PODS = \
     removeCommentLines\
     tally\
     tally-weave\
-    U2T\
 
 # compute names for manpages
 bad_re = $(foreach i,$(BAD_PODS),"-F $(i)")

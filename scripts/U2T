@@ -5,12 +5,12 @@ use Getopt::Long;
 
 =head1 NAME
 
-U2T : Converts  U -> T and removes gaps.
+U2T - Converts U -> T and removes gaps
 
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
-in <input fasta file> -out <output fasta file>
+B<U2F> B<-in> I<input fasta file> B<-out> I<output fasta file>
 
 
 =cut

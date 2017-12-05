@@ -1,10 +1,7 @@
 #! /usr/bin/perl
 =head1 NAME
 
-bamTools: Yup, until I think of a better name that's what i'm calling it!
-
-give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
-
+bamTools - tell which reads mapped onto contigs
 
 =head1 SYNOPSIS
 
@@ -13,38 +10,36 @@ B<bamTools> B<-f> reference.fasta B<-b> sorted.bam B<-l> contigNames.list [B<-o>
 
 =head1 DESCRIPTION
 
-: Yup, until I think of a better name that's what i'm calling it!
-
-give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
+Give me a sorted bam(-b) file, a list of contigs(-l). I'll tell you which reads mapped(-reads) onto those list of contigs and the mean coverage for each contig.
 
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<-b>
+=item B<-b>, B<-bam>
 
-or bam:	sorted bam file;
+sorted bam file;
 
-=item B<-l>
+=item B<-l>, B<-list>
 
-or list:	list of contig used for the mapping.
+list of contig used for the mapping.
 
 =item B<-no_cov>
 
-:	Don't calculate 'Mean Coverage' for each contig/region.
+Don't calculate 'Mean Coverage' for each contig/region.
 
 =item B<-all>
 
-:	Prints results for everything, even the reference regions that didn't recruit any reads.
+Prints results for everything, even the reference regions that didn't recruit any reads.
 
-=item B<-o>
+=item B<-o>, B<-out>
 
-or out : Number of reads for each contig/region.
+Number of reads for each contig/region.
 
-=item B<-f>
+=item B<-f>, B<-fasta>
 
-or fasta : Reference fasta file.
+Reference fasta file.
 
 =back
 
@@ -56,9 +51,9 @@ Samtools 1.1.17 or above
 
 =head1 PREPARATION
 
-[1] Make sure you have an indexed sorted bam file in the same folder; and
-[2] The samtools module is loaded.
-[3] The contigs list file may contain 2 additional columns in the form of start and stop position on the contig.
+ [1] Make sure you have an indexed sorted bam file in the same folder; and
+ [2] The samtools module is loaded.
+ [3] The contigs list file may contain 2 additional columns in the form of start and stop position on the contig.
 
 
 =head1 Questions/Comments/Feedback/Beer

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-addInfo2lrn -- Adds additional columns of data to the LRN files. You may want to add data like bin coverage, GC etc.
+addInfo2lrn - adds additional columns of data to LRN files
 
 
 =head1 SYNOPSIS

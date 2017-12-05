@@ -1,17 +1,21 @@
 #! /usr/bin/perl
 =head1 NAME
 
-batchBlast - 
+batchBlast - start multiple instances of blast at once:
+
 
 =head1 SYNOPSIS
 
 Start multiple instances of blast at once:
+
 B<batchBlast> [B<-p> blast type] [B<-l> list of query files]
-OR
+
 Start a single instance of blast:
+
 B<batchBlast> [B<-p> blast type] [B<-q> single query fasta file]
-OR
+
 Check if any type of blast was performed on the query file:
+
 B<batchBlast> [B<-check>] [B<-q> query fasta file]
 
 
@@ -37,7 +41,7 @@ OR -outfmt:	Output Format. Default: outputs w/ comments.
 
 =item B<-n>
 
-:		Makes the script use the latest version of blast. Make sure you have loaded the appropriate module.
+Makes the script use the latest version of blast. Make sure you have loaded the appropriate module.
 
 =item Default: uses old blast syntax.
 
@@ -77,14 +81,14 @@ It handles all basic functionalities of blast jobs (both new and old), and more 
 
 =head1 DEPENDENCIES
 
-Blast 2.2.20 (old); OR
-Blast 2.2.22 or above (new)
+ Blast 2.2.20 (old); OR
+ Blast 2.2.22 or above (new)
 
 
 =head1 AUTHOR
 
-Sunit Jain, Aug 2011
-sunitj [AT] umich [DOT] edu
+ Sunit Jain, Aug 2011
+ sunitj [AT] umich [DOT] edu
 
 
 =cut

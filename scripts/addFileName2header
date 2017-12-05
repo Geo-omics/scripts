@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-Use this script to append the name of the file to all the sequences in your fasta/fastq format files. Output will be a new file of the same name, created in a directory called "renamed" in the current working directory. Remember this was written to function as a batch job, so it doesn't require a file name just the folder and file extension.
+addFileName2header - append the name of file to all sequences in fasta/fastq files
 
 
 =head1 SYNOPSIS
 
-B<addFileName2header> B<-p>ath Folder_Path B<-e>xt extension_of_files
+B<addFileName2header> B<-path> I<Folder_Path> B<-ext> I<extension_of_files>
 
 
 =head1 DESCRIPTION
@@ -39,11 +39,11 @@ separator between existing header and filename. (default: "_")
 
 replace something in the file name.
 
-=item B<-p>
+=item B<-p>, B<-path>
 
 path to folder; use "." (dot, without the quotes) for current folder.
 
-=item B<-e>
+=item B<-e>, B<-ext>
 
 file extension to look for in folder; default= fasta
 

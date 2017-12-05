@@ -1,18 +1,18 @@
 #!/usr/bin/perl
 =head1 NAME
 
-Given a fasta file with repeat sequences and a contig fasta file, get the positions of these repeats in the contigs and find the coordinates of spacers, defined by default as sequences between two repeats which are less than 200 bases apart. This definition can be changed using a '-len' parameter.
-NOTE: This script only searches for exact matches (100% over 100% length) and not "similar" sequences (not even 99.99%)
+CRISPR_spacer_extractor - get positions of repeats and spacers in contigs
 
 
 =head1 SYNOPSIS
 
-perl crispr_spacer_extractor.pl B<-c> contigs.fasta B<-r> repeats.fasta
+B<CRISPR_spacer_extractor> B<-c> contigs.fasta B<-r> repeats.fasta
 
 
 =head1 DESCRIPTION
 
-Given a fasta file with repeat sequences and a contig fasta file, get the positions of these repeats in the contigs and find the coordinates of spacers, defined by default as sequences between two repeats which are less than 200 bases apart. This definition can be changed using a '-len' parameter.
+Given a fasta file with repeat sequences and a contig fasta file, get the positions of these repeats in the contigs and find the coordinates of spacers, defined by default as sequences between two repeats which are less than 200 bases apart. This definition can be changed using a B<-len> parameter.
+
 NOTE: This script only searches for exact matches (100% over 100% length) and not "similar" sequences (not even 99.99%)
 
 
@@ -20,25 +20,25 @@ NOTE: This script only searches for exact matches (100% over 100% length) and no
 
 =over 8
 
-=item B<-r>
+=item B<-r>, B<-repeats>
 
-or -repeats	(required)	repeats fasta file
+(required)	repeats fasta file
 
-=item B<-c>
+=item B<-c>, B<-contigs>
 
-or -contigs	(required)	contigs fasta file
+(required)	contigs fasta file
 
-=item B<-p>
+=item B<-p>, B<-prefix>
 
-or -prefix	output file prefix	(optional; default= process_id)
+output file prefix	(optional; default= process_id)
 
-=item B<-l>
+=item B<-l>, B<-len>
 
-or -len	maximum length of a spacer	(optional; default=200)
+maximum length of a spacer	(optional; default=200)
 
-=item B<-rc>
+=item B<-rc>, B<-revcomp>
 
-or -revcomp	look for reverse complements of the repeat sequences as well
+look for reverse complements of the repeat sequences as well
 
 =back
 

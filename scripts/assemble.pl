@@ -2,119 +2,168 @@
 
 =head1 NAME
 
-assemble.pl was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
+assemble.pl - deprecated one stop shop for your illumina assembly needs
 
 
 =head1 SYNOPSIS
 
 Case 1: Assemble files as singletons
+
 perl B<assemble.pl> -singles file1.fastq file2.fastq file3.fastq -k # (kmer value)
 
 Case 2: Assemble files as paired; this will interleave the fwd and rev files and then assemble.
+
 perl B<assemble.pl> -fwd fwd.fq -rev rev.fq -k # (kmer value) -i # (insert size)
 
 Case 3: Assemble files as paired; when you already have an interleaved file
+
 perl B<assemble.pl> -paired interleaved.fq -k # (kmer value) -i # (insert size)
 
 Case 4: Mixed
+
 perl B<assemble.pl> -paired interleaved.fq -singles file1.fastq file2.fastq file3.fastq -k # (kmer value) -i # (insert size)
+
 OR
+
 perl B<assemble.pl> -fwd fwd.fq -rev rev.fq -singles file1.fastq file2.fastq file3.fastq -k # (kmer value) -i # (insert size)
 
 
 =head1 DESCRIPTION
 
-was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
+Was created to be THE one stop shop for your illumina assembly needs. Once you're satified with the quality of your reads, put 'em here and the script will create the assemblies for you. The pipeline also includes support for Oases (for meta/transcriptomics) and MetaVelvet (for meta-genomics). Support for MetaIDBA and AMOS (minimus) is in the works.
 
 
 =head1 OPTIONS
 
+=head2 Required:
+
 =over 8
 
-=item =head3 Required:
+=item B<-fwd>
 
-=item fwd		:	Forward Sequence file
+Forward Sequence file
 
-=item rev		:	Reverse Sequence file
+=item B<-rev>
 
-=item paired	:	When you have an interleaved file, only accepts one file at a time, can be used with singles.
+Reverse Sequence file
 
-=item singles	:	When you have multiple files and you wish to force velvet into treating them individually.
+=item B<-paired>
 
-=item You may give it as many files as long as the names are seperated by a space.
+When you have an interleaved file, only accepts one file at a time, can be used with singles.
 
-=item k or kmer	:	K-mer aka Hash size upto 99; We usually use k-mers of 61, 75, 91 but feel free to play around.
+=item B<-singles>
 
-=item i or insert	:	Insert length; Required if using paired ended or interleaved data.
+When you have multiple files and you wish to force velvet into treating them individually.  You may give it as many files as long as the names are seperated by a space.
 
-=item Look at your bioanalyzer results, let's say you see a peak at 391, that's your insert size.
+=item B<-k>, B<-kmer>
+
+K-mer aka Hash size upto 99; We usually use k-mers of 61, 75, 91 but feel free to play around.
+
+=item B<-i>, B<-insert>
+
+Insert length; Required if using paired ended or interleaved data.  Look at your bioanalyzer results, let's say you see a peak at 391, that's your insert size.
 
 =item B<-sd>
 
-:	insert length standard deviation; default=13
+insert length standard deviation; default=13
 
-=item =head3 Optional:
+=back
 
-=item outdir	:	The directory that contains the output
+=head2 Optional
 
-=item p or prefix	:	The prefix for your interleaved output
+=over 8
 
-=item interval	:	The script also tracks the CPU and Memory consumption for the assemblies; default=10 (seconds)
+=item B<-outdir>
 
-=item log		:	change the name of the log file for the script
+The directory that contains the output
 
-=item contig_size	:	Minimum Contig Length in your output; default=200
+=item B<-p>, B<-prefix>
+
+The prefix for your interleaved output
+
+=item B<-interval>
+
+The script also tracks the CPU and Memory consumption for the assemblies; default=10 (seconds)
+
+=item B<-log>
+
+change the name of the log file for the script
+
+=item B<-contig_size>
+
+Minimum Contig Length in your output; default=200
+
+=back
+
+=head2 Boolean Flags
+
+=over 8
+
+=item B<-v>
+
+Version
+
+=item B<-fasta>
+
+If your sequence files are in the fasta format.
+
+=item B<-debug>
+
+When I need to debug the script. It doesnt actually run the assemblies, just prints out the commands it would have passed;
+
+=back
+
+=head2 Modifying Assembly Type
+
+The following options require that the corresponding modules be loaded before executing the script.
+
+=head3 Available
+
+=over 8
+
+=item B<-trans>
+
+for meta/transcriptomic reads.(requires Oases)
+
+=item B<-metav>
+
+for metavelvet (metagenomic reads only).
+
+=back
+
+=head3 ToDo:
+
+=head4 Assembler Support
+
+=over 8
+
+=item B<-idba>
+
+uses IDBA-UD for assembly.
 
 =back
 
 
 =head1 DEPENDENCIES
 
+=head2 Software
 
+ Velvet 1.1.07 or above
+ Oases 0.2.01 or above
+ MetaVelvet or 1.0.01 or above
 
+=head2 Scripts
 
-=head1 SOFTWARE
+ interleave - to interleave the forward and reverse fastq/fasta files
+ calcN50 - to generate the N50 and L50 statistics of the final assembly
+ findStretchesOfNs - to find the stretches of Ns longer than k-mer
 
-Velvet 1.1.07 or above
-Oases 0.2.01 or above
-MetaVelvet or 1.0.01 or above
-
-
-=head1 SCRIPTS
-
-interleave - to interleave the forward and reverse fastq/fasta files
-calcN50 - to generate the N50 and L50 statistics of the final assembly
-findStretchesOfNs - to find the stretches of Ns longer than k-mer
-
-
-=head1 Boolean Flags
-
-v		:	Version
-fasta	:	If your sequence files are in the fasta format.
-debug	:	When I need to debug the script. It doesnt actually run the assemblies, just prints out the commands it would have passed;
-
-
-=head1 Modifying Assembly Type
-
-The following options require that the corresponding modules be loaded before executing the script.
-
-=head3 Available:
-
--trans	:	for meta/transcriptomic reads.(requires Oases)
--metav	:	for metavelvet (metagenomic reads only).
-
-=head3 ToDo:
-
-Assembler Support
--idba	:	uses IDBA-UD for assembly.
 
 =head1 Comments/Accolades/Brickbats/Beers:
 
-Sunit Jain, 2012
-sunitj AT umich DOT edu
-
-last updated: June 2013
-
+ Sunit Jain, 2012
+ sunitj AT umich DOT edu
+ last updated: June 2013
 
 =cut
 
