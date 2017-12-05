@@ -83,7 +83,7 @@ if 'DESCRIPTION' in pod:
 
 options = []
 if 'OPTIONS' in pod:
-    optpat = re.compile(r'^(?P<opt>.*)(?P<val>\<\w+\>)(?P<descr>.*)$')
+    optpat = re.compile(r'^(?P<opt>.*?)(?P<val>\<\w+\>)(?P<descr>.*)$')
     simplpat = re.compile(r'^(?P<opt>-\w+)(?P<descr>.*)$')
     new = '=over 8\n\n'
     for i in pod['OPTIONS'].splitlines():
