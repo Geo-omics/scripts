@@ -24,11 +24,11 @@ B<extract_Blast_Hits_Of_Interest> -b <blast output file> -l <list of hits of int
 
 =item B<-o>
 
-:		output file;
+output file;
 
 =item B<-c>
 
-:		where to look, for the names in the list:
+where to look, for the names in the list:
 
 =item 'q': look in Query Column;
 
@@ -48,7 +48,7 @@ B<extract_Blast_Hits_Of_Interest> -b <blast output file> -l <list of hits of int
 
 =item B<-mal>
 
-:		minimum alignment length
+minimum alignment length
 
 =back
 

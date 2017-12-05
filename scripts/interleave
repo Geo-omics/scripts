@@ -21,27 +21,27 @@ Take the fwd and rev sequence files and arrange the sequence pairs in a single f
 
 =item B<-fastq>
 
-:	Use this flag if your forward and reverse sequence files are fastq
+Use this flag if your forward and reverse sequence files are fastq
 
 =item B<-outfmt>
 
-:	Use this flag if you want the output of your fastq to be in fasta
+Use this flag if you want the output of your fastq to be in fasta
 
 =item B<-old>
 
-:	Use this flag if your sequence descriptors follow the old illumina naming convention; i.e. if the descriptor ends with a "/1" or "/2".
+Use this flag if your sequence descriptors follow the old illumina naming convention; i.e. if the descriptor ends with a "/1" or "/2".
 
-=item B<-p>
+=item B<-p>, B<-o>
 
-or -o:	Pefix for your output files; default: process_id
+Pefix for your output files; default: process_id
 
 =item B<-h>
 
-:	This documentation.
+This documentation.
 
 =item B<-v>
 
-:	Script version.
+Script version.
 
 =back
 

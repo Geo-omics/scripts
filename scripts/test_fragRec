@@ -29,35 +29,35 @@ fragRec.pl : use multiple blast outputs in tabular format to generate a fragment
 
 =item B<-prefix>
 
-:	output R-script and image file name; default= Process_id.r and iProcess_id.png
+output R-script and image file name; default= Process_id.r and iProcess_id.png
 
 =item B<-start>
 
-:	define a specific region in the reference genome
+define a specific region in the reference genome
 
 =item B<-stop>
 
-:	define a specific region in the reference genome; not required if stop is the end of the genome.
+define a specific region in the reference genome; not required if stop is the end of the genome.
 
 =item B<-p>
 
-:	min percent id; default= 0%
+min percent id; default= 0%
 
 =item B<-l>
 
-:	min alignment length; default= 100
+min alignment length; default= 100
 
 =item B<-s>
 
-:	min bit score; default= 40
+min bit score; default= 40
 
 =item B<-details>
 
-:	To get a list of query names.
+To get a list of query names.
 
 =item B<-h>
 
-:	help; this screen
+help; this screen
 
 =back
 

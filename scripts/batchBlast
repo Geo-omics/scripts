@@ -23,21 +23,21 @@ B<batchBlast> [B<-check>] [B<-q> query fasta file]
 
 =over 8
 
-=item B<-p>
+=item B<-p>, B<-blast>
 
-OR -blast:	Blast Task (blastn, blastp, blastx, tblastn, tblastx)
+Blast Task (blastn, blastp, blastx, tblastn, tblastx)
 
-=item B<-l>
+=item B<-l>, B<-list>
 
-OR -list:	List of Query File Names for Blasts; Each name should be in a seperate line.
+List of Query File Names for Blasts; Each name should be in a seperate line.
 
-=item B<-q>
+=item B<-q>, B<-query>
 
-OR -query:	Single query fasta file.
+Single query fasta file.
 
-=item B<-m>
+=item B<-m>, B<-outfmt>
 
-OR -outfmt:	Output Format. Default: outputs w/ comments.
+Output Format. Default: outputs w/ comments.
 
 =item B<-n>
 
@@ -49,13 +49,13 @@ Makes the script use the latest version of blast. Make sure you have loaded the 
 
 OR -num_threads:	Multi-thread your blast; default: 1
 
-=item B<-e>
+=item B<-e>, B<-evalue>
 
-OR -evalue:	Evalue; Default: 1e-3
+Evalue; Default: 1e-3
 
-=item B<-d>
+=item B<-d>, B<-db>
 
-OR -db:	database; Default: 'nr' OR 'nt', depending on '-p'
+database; Default: 'nr' OR 'nt', depending on '-p'
 
 =item B<-per>
 
@@ -63,11 +63,11 @@ percentage identity; only available with the newer versions of blast (2.2.22 and
 
 =item B<-check>
 
-:	Check if blasts for this file have been performed earlier.
+Check if blasts for this file have been performed earlier.
 
-=item B<-h>
+=item B<-h>, B<-help>
 
-OR -help:	this page.
+this page.
 
 =back
 

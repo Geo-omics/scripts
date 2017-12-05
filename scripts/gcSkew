@@ -18,29 +18,29 @@ takes a fasta formatted nucleotide file and calculates GC skew [(C-G)/(C+G)]*100
 
 =over 8
 
-=item B<-f>
+=item B<-f>, B<-fasta>
 
-or -fasta:	Fasta file	(REQUIRED)
+Fasta file	(REQUIRED)
 
-=item B<-o>
+=item B<-o>, B<-out>
 
-or -out:	Output File	(DEFAULT: process_id.gcskew)
+Output File	(DEFAULT: process_id.gcskew)
 
-=item B<-w>
+=item B<-w>, B<-window>
 
-or -window:	Window Size (DEFAULT: 4)
+Window Size (DEFAULT: 4)
 
 =item B<-overlap>
 
-:	Overlap between two windows (DEFAULT: 0)
+Overlap between two windows (DEFAULT: 0)
 
-=item B<-h>
+=item B<-h>, B<-help>
 
-or -help:	This Documentation
+This Documentation
 
-=item B<-v>
+=item B<-v>, B<-version>
 
-or -version:	Script version
+Script version
 
 =back
 

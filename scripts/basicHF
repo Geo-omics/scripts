@@ -13,33 +13,33 @@ basicHF - Basic no-frills Homolog Finder.
 
 or list	[character]	list of all files you wish to compare, the seed/reference should be the first one on the list
 
-=item B<-t>
+=item B<-t>, B<-file_type>
 
-or -file_type	[characters]	file type (prot or nucl) [Default = prot]
+[characters]	file type (prot or nucl) [Default = prot]
 
-=item B<-p>
+=item B<-p>, B<-percent>
 
-or -percent	[float]	Blast percent identity [Default = 50]
+[float]	Blast percent identity [Default = 50]
 
-=item B<-len>
+=item B<-len>, B<-aln_len>
 
-or -aln_len	[float]	alignment length coverage (0-1) [Default = 0.75] [aln_len/(min(subj_len,query_len))]
+[float]	alignment length coverage (0-1) [Default = 0.75] [aln_len/(min(subj_len,query_len))]
 
-=item B<-e>
+=item B<-e>, B<-evalue>
 
-or -evalue	[real number] E-Value; [Default = -4]
+[real number] E-Value; [Default = -4]
 
-=item B<-a>
+=item B<-a>, B<-num_threads>
 
-or -num_threads	[integer] Number of processors for blast jobs; [Default = 7]
+[integer] Number of processors for blast jobs; [Default = 7]
 
-=item B<-h>
+=item B<-h>, B<-help>
 
-or -help	[boolean] help (this page)
+[boolean] help (this page)
 
-=item B<-v>
+=item B<-v>, B<-version>
 
-or -version	[boolean]	prints the current version of the script.
+[boolean]	prints the current version of the script.
 
 =back
 

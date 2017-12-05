@@ -24,25 +24,25 @@ Dereplicates a Fastq file at 100% identity over 100% coverage. Picks the sequenc
 
 =over 8
 
-=item B<-f>
+=item B<-f>, B<-fasta>
 
-or	-fasta	[characters]	fasta file input
+[characters]	fasta file input
 
-=item B<-fq>
+=item B<-fq>, B<-fastq>
 
-or	-fastq	[characters]	fastq file input
+[characters]	fastq file input
 
-=item B<-o>
+=item B<-o>, B<-out>
 
-or	-out	[characters]	dereplicated fasta/fastq file. Note that an output file will only be created if this option is provided.
+[characters]	dereplicated fasta/fastq file. Note that an output file will only be created if this option is provided.
 
 =item B<-outfmt>
 
 ["fasta"]	Use this if you wish that the output for your fastq input be fasta. See example #3 above.
 
-=item B<-n>
+=item B<-n>, B<-top>
 
-or	-top	[integer]	Print top N sequence clusters. Default 10.
+[integer]	Print top N sequence clusters. Default 10.
 
 =back
 

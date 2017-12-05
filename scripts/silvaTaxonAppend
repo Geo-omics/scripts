@@ -41,13 +41,13 @@ B<silvaTaxonAppend> B<-mapper> <mapper output> B<-out> <output filename>
 
 [characters]	output file
 
-=item B<-h>
+=item B<-h>, B<-help>
 
-or -help	[boolean]	help; This page.
+[boolean]	help; This page.
 
-=item B<-v>
+=item B<-v>, B<-version>
 
-or -version	[boolean]	script version.
+[boolean]	script version.
 
 =back
 
