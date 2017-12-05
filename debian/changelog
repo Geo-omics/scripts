@@ -1,3 +1,27 @@
+geo-omics-scripts (1.0.61-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Add script to fix pod in perl scripts
+  * Allow man page target to work without version set, for dev/testing
+  * Format options nicely, some typesetting for progam name, options and values
+  * Fix crash if some section are missing
+  * Fix output in case no options are recognized
+  * Extend options parser to cover more styles
+  * Fix parsing of head lines
+  * Keep empty lines within a section
+  * Improve option 'type' parsing,
+  * Only upper-case standard headers
+  * Apply fixpod script to improve PODs of perl scripts
+  * Batch of manual corrections of PODs
+  * Fix option formating
+  * Fix option type formating
+  * Make many NAME sections stardard conform
+  * Manual fixes for various NAME section
+  * Allow pod2man to do its work by removing strange formatting strings
+  * Make pods more standard confirm, fix some formatting
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 05 Dec 2017 16:50:10 -0500
+
 geo-omics-scripts (1.0.60-1) unstable; urgency=medium
 
   [ Robert ]
