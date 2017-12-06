@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.62-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Add SEE ALSO section to many perl scripts' man pages
+  * Leave PDFs uncompressed
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 06 Dec 2017 14:55:03 -0500
+
 geo-omics-scripts (1.0.61-1) unstable; urgency=medium
 
   [ Robert ]
