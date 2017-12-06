@@ -52,6 +52,42 @@ Sunit Jain, sunitj@umich.edu
 January 2013
 
 
+=head1 SEE ALSO
+
+L<omics(1)>, L<illumina-reads-processing(7)>
+
+=head3 Other local resources
+
+=over
+
+=item 1
+
+L<HTML documentation|file:///usr/share/doc/geo-omics-scripts/html/index.html>
+
+=item 2
+
+L<Omics workflow documentation [PDF]|file:///usr/share/doc/geo-omics-scripts/Geomicro-Illumina-Reads-Processing-Pipeline.pdf>
+
+=back
+
+=head3 Web
+
+=over
+
+=item 1
+
+L<Workflow documentation [PDF]|https://drive.google.com/open?id=0BxFSivK8RfJed05wamtrbEVUeE0>
+
+=item 2
+
+L<Website|http://www.earth.lsa.umich.edu/geomicrobiology/>
+
+=item 3
+
+L<Github repository|https://github.com/Geo-omics/scripts>
+
+=back
+
 =cut
 
 use strict;
