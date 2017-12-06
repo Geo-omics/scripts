@@ -136,6 +136,7 @@ OTHER_EXECUTABLES = \
     omics-container \
     omics-mapping \
     omics-prep \
+    omics-run \
     omics-init \
     omics-qc \
     omics-qc-sample \

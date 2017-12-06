@@ -1,0 +1,23 @@
+#!/bin/bash
+# Run a command inside omics container
+
+set -e
+IMAGE_NAME=omics.img
+
+CONTAINER_PATH=(
+/dept/geology/geomicro/data9/flux
+/data9/flux
+)
+
+unset image
+
+for i in "${CONTAINER_PATH[@]}"; do
+    [ -d "$i" ] && image=$i/$IMAGE_NAME && break
+done
+
+if [ -f "$image" ]; then
+    exec "$image" "$@"
+else
+    echo >&2 "Error: Failed to find omics container image"
+    exit 1
+fi
