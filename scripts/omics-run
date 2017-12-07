@@ -1,22 +1,119 @@
 #!/bin/bash
-# Run a command inside omics container
+#
+# Copyright (c) 2017 Regents of The University of Michigan.
+# All Rights Reserved.
+#
+# Author: Robert <heinro@med.umich.edu>
+#
 
 set -e
-IMAGE_NAME=omics.img
+# shellcheck disable=SC2034
+{
+USAGE="[OPTIONS... --] COMMAND..."
+HELP="Run a command inside omics singularity container"
+ARG_HELP="
+Any options given to this script must be separated from the COMMAND
+by a double dash, otherwise the COMMAND will be interpreted as
+options with unintended consequences likely.
 
+    -i <PATH>, --container-image <PATH>
+                Full path to singularity container image.  By default
+                image is $IMAGE_NAME, search path is
+                ${CONTAINER_PATH[*]}
+
+    -s <option>, --singularity <option>
+                Options passed on to singularity.  For instance,
+                to additionally mount a path /some/path, add
+                --singularity \"-B /some/path\" and the option
+                -B /some-path will be appended to the call
+                to 'singularity run'.  The empty space between the
+                option and its parameter must be protected by quotes
+                to prevent premature word splitting by the shell.
+
+"
+SHORT_OPTIONS=i:s:
+LONG_OPTIONS=container-image:singularity:
+}
+
+handle_options () {
+    if [ "$#" -gt 0 ]; then
+	case "$1" in
+	    (-i|--container-image)
+		IMAGE=$2
+		return 2;;
+	    (-s|--singularity)
+                SINGULARITY_ARGS+=($2)
+		return 2;;
+        esac
+    else
+        return 0
+    fi
+}
+
+##########################
+# default variable values
+##########################
+
+
+IMAGE=
+# Default name of image file
+IMAGE_NAME=omics.img
+# Image file search paths
 CONTAINER_PATH=(
 /dept/geology/geomicro/data9/flux
 /data9/flux
+~/src/omics-singularity-container
 )
+# useful mounts for flux
+BIND_PATHS=(
+/scratch
+/nfs
+/dept
+/dept/geology/geomicro/data9/flux/reference-data:/omics-reference-data:ro
+)
+SINGULARITY_ARGS=()
 
-unset image
+# shellcheck source=../lib/liba.sh
+# shellcheck disable=SC1091
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
-for i in "${CONTAINER_PATH[@]}"; do
-    [ -d "$i" ] && image=$i/$IMAGE_NAME && break
+###############
+# sanity check
+###############
+
+if [[ -n "$SINGULARITY_CONTAINER" ]]; then
+    warning "Singularity container already running"
+    exit 0
+fi
+
+#################################
+# do stuff
+################################
+
+if [ -z "$IMAGE" ]; then
+    image=
+    for i in "${CONTAINER_PATH[@]}"; do
+        if [[ -d "$i" ]]; then
+            image=$i/$IMAGE_NAME
+            [[ $VERBOSITY -lt 2 ]] || echo "Found image: $image"
+            break
+        fi
+    done
+else
+    image=$IMAGE
+fi
+
+bind_args=()
+for i in "${BIND_PATHS[@]}"; do
+    if [ -d "${i%:ro}" ]; then
+        bind_args+=(-B "$i")
+        [[ $VERBOSITY -lt 2 ]] || echo "Mounting: $i"
+        echo "${bind_args[@]}"
+    fi
 done
 
 if [ -f "$image" ]; then
-    exec "$image" "$@"
+   exec singularity run "${bind_args[@]}" "${SINGULARITY_ARGS[@]}" "$image" "$@"
 else
     echo >&2 "Error: Failed to find omics container image"
     exit 1
