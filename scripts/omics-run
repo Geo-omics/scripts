@@ -108,7 +108,6 @@ for i in "${BIND_PATHS[@]}"; do
     if [ -d "${i%:ro}" ]; then
         bind_args+=(-B "$i")
         [[ $VERBOSITY -lt 2 ]] || echo "Mounting: $i"
-        echo "${bind_args[@]}"
     fi
 done
 
