@@ -83,7 +83,8 @@ SINGULARITY_ARGS=()
 
 if [[ -n "$SINGULARITY_CONTAINER" ]]; then
     warning "Singularity container already running"
-    exit 0
+    eval "$@"
+    exit $?
 fi
 
 #################################
