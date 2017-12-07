@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.65-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Add wrapper to run cmd lines in omics container
+  * Make the omics-run wrapper work for real
+  * Fix spelling in path
+  * Remove debugging statement
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 07 Dec 2017 16:52:15 -0500
+
 geo-omics-scripts (1.0.62-1) unstable; urgency=medium
 
   [ Robert ]
