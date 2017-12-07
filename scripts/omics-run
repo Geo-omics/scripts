@@ -69,7 +69,7 @@ BIND_PATHS=(
 /scratch
 /nfs
 /dept
-/dept/geology/geomicro/data9/flux/reference-data:/omics-reference-data:ro
+/dept/geology/geomicro/data9/flux/reference-data/omics-reference-data:ro
 )
 SINGULARITY_ARGS=()
 
