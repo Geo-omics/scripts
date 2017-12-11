@@ -26,6 +26,13 @@ ARG_HELP="
       --no-interleave   Skip building the interleaved reads file
       --no-fasta-interleave   Skip building the interleaved fasta file,
                               interleaved fastq will still be build
+      --no-re-separation
+                        Skip making the final set of forward and reversed reads
+                        file, containing the same reads as the interleaved file
+                        in the same order.  These can be used, alternatively,
+                        for assembly and mapping, as some downstream tools can
+                        only use on kind of input.  By default the separated
+                        read files are generated
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -36,7 +43,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-fasta-interleave,no-interleave
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-fasta-interleave,no-interleave,no-re-separation
 }
 
 handle_options () {
@@ -68,6 +75,9 @@ handle_options () {
 	        return 1;;
 	    (--no-fasta-interleave)
 	        INTERLEAVE_FASTA=false
+	        return 1;;
+	    (--no-re-separation)
+	        SEPARATE_AGAIN=false
 	        return 1;;
         esac
     else
@@ -105,6 +115,7 @@ LESSMEM=false
 DEREPLICATION=true
 INTERLEAVE=true
 INTERLEAVE_FASTA=true
+SEPARATE_AGAIN=true
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -204,6 +215,10 @@ if $INTERLEAVE; then
     fi
     interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o good
     ! $INTERLEAVE_FASTA || wait %interleave
+fi
+if $SEPARATE_AGAIN; then
+    info "Generate final set of separate read files..."
+    separateInterleaved -fq good_int.fastq
 fi
 wait %fastqc
 $KEEPALL || clean_intermediates
