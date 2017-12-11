@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.66-1) unstable; urgency=medium
+
+  * Gracefully allow omics-run from within a container
+  * Be compatible with quast >=4.5, changed option name
+  * Refactor getopt code, simplify control flow, improve maintainability
+  * Emit status code 2 for command line usage errors
+  * Correctly interpret options of the command as such
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Mon, 11 Dec 2017 12:55:58 -0500
+
 geo-omics-scripts (1.0.65-1) unstable; urgency=medium
 
   [ Robert ]
