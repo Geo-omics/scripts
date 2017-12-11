@@ -23,7 +23,7 @@ Separate interleaved files. Tested for illumina datasets only.
 
 interleaved Fastq file. [REQUIRED]
 
-=item B<-p> I<name>, B<-prefix> I<name>
+=item B<-o> I<name>, B<-p> I<name>, B<-prefix> I<name>
 
 prefix for the forward and reverse files.  Default is basename of input file
 
