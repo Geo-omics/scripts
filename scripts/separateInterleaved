@@ -105,7 +105,6 @@ GetOptions(
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
-print "\# $version\n";
 
 my @ext=qw(fastq fq);
 if(! $prefix){
