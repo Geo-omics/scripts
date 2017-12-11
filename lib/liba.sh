@@ -97,7 +97,13 @@ $MORE_HELP"
 }
 
 exception () {
-    echo "[${RED}ERROR${ENDCOLOR}] $SCRIPT_NAME at line $1; error code $2"
+    case "$2" in
+        101) exit 1;;
+        102) exit 2;;
+        *)
+            echo "[${RED}ERROR${ENDCOLOR}] $SCRIPT_NAME at line $1; error code $2"
+            exit "$2";;
+    esac
 }
 
 debug() {
@@ -161,7 +167,14 @@ if which getopt >/dev/null 2>&1; then
         # reset $n parameters
         eval set -- "$parsed_opts"
     else
-        exit $?
+        if [ "$?" == 1 ]; then
+            usage
+            # indicate to exception not to catch this error but exit with 2
+            # indicating usage error
+            exit 102
+        else
+            exit $?
+        fi
     fi
 fi
 
