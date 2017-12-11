@@ -97,7 +97,13 @@ $MORE_HELP"
 }
 
 exception () {
-    echo "[${RED}ERROR${ENDCOLOR}] $SCRIPT_NAME at line $1; error code $2"
+    case "$2" in
+        101) exit 1;;
+        102) exit 2;;
+        *)
+            echo "[${RED}ERROR${ENDCOLOR}] $SCRIPT_NAME at line $1; error code $2"
+            exit "$2";;
+    esac
 }
 
 debug() {
@@ -146,20 +152,30 @@ USE_COLOR=true
 GETOPT_SHORT=hv${SHORT_OPTIONS}
 GETOPT_LONG=${LONG_OPTIONS},help,no-color,working-dir:,verbosity:
 if which getopt >/dev/null 2>&1; then
-    getopt -T || getopt_test="$?"
-    if [ "$getopt_test" == 4 ]; then
+    getopt_opts=(-o $GETOPT_SHORT --name $SCRIPT_NAME)
+
+    if getopt -T || [ "$?" == 4 ]; then
         # GNU getopt available 
-        _getopt=$(getopt -o "$GETOPT_SHORT" --long "$GETOPT_LONG" --name "$SCRIPT_NAME" -- "$@") \
-	    || (usage; exit 1)
-    else
 	# for non-GNU getopt (on MacOSX?)
 	# try best effort without handling long options
-	# TODO: this path needs testing
-        _getopt=$(getopt -o "$GETOPT_SHORT" --name "$SCRIPT_NAME" -- "$@")
-        if [ "$?" != 0 ]; then usage; exit 1; fi
+	# TODO: the else path needs testing
+        getopt_opts+=(--long $GETOPT_LONG)
     fi
-    # reset $n parameters
-    eval set -- "$_getopt"
+
+    getopt_opts+=(-- $@)
+    if parsed_opts=$(getopt "${getopt_opts[@]}"); then
+        # reset $n parameters
+        eval set -- "$parsed_opts"
+    else
+        if [ "$?" == 1 ]; then
+            usage
+            # indicate to exception not to catch this error but exit with 2
+            # indicating usage error
+            exit 102
+        else
+            exit $?
+        fi
+    fi
 fi
 
 # handle options arguments / should work with/without getopt
@@ -204,7 +220,7 @@ if [ "$USE_COLOR" == true ]; then
     fi
 fi
 
-debug "command line options: $_getopt"
+debug "command line options: $parsed_opts"
 debug "verbosity set to: $VERBOSITY"
 # set bash script debugging
 [ "$VERBOSITY" -ge 4 ] && set -x

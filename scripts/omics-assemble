@@ -257,7 +257,7 @@ if $RUN_QUAST; then
 	QUAST_T_OPT=-T
     fi
     quast_out="$out/QUAST_RESULTS"
-    $QUAST -f --meta $QUAST_T_OPT "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
+    $QUAST -f --mgm $QUAST_T_OPT "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
     info "done: Quast results at $quast_out"
 fi
 

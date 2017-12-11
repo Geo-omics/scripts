@@ -75,7 +75,7 @@ SINGULARITY_ARGS=()
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
-. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 ###############
 # sanity check
@@ -83,7 +83,8 @@ SINGULARITY_ARGS=()
 
 if [[ -n "$SINGULARITY_CONTAINER" ]]; then
     warning "Singularity container already running"
-    exit 0
+    eval "$@"
+    exit $?
 fi
 
 #################################
