@@ -106,7 +106,7 @@ GetOptions(
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
 
-my @ext=qw(fastq fq);
+my @ext=qw(.fastq .fq);
 if(! $prefix){
 	$prefix=fileparse($fastq, @ext);
 }
