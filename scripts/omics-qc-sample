@@ -137,7 +137,7 @@ clean_all () {
     # clean final results
     $RM -rf -- FASTQC
     $RM -f -- {"$fwd","$rev"}{_derep,}_scythe_sickle.fastq
-    $RM -f -- dt_int.fast{a,q}
+    $RM -f -- good_int.fast{a,q}
 }
 
 clean_intermediates () {
@@ -146,7 +146,7 @@ clean_intermediates () {
     $RM -f -- {"$fwd","$rev"}{_derep,}_scythe.fastq
     $RM -f -- {"$fwd","$rev"}{_derep,}_matches.fastq
     $RM -f -- {"$fwd","$rev"}.clust{.list,}
-    $RM -f -- dt_s{fwd,rev}.fast{a,q}
+    $RM -f -- good_s{fwd,rev}.fast{a,q}
     
 }
 
@@ -200,9 +200,9 @@ fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log 
 if $INTERLEAVE; then
     info "interleaving..."
     if $INTERLEAVE_FASTA; then
-        interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
+        interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o good &
     fi
-    interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt
+    interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o good
     ! $INTERLEAVE_FASTA || wait %interleave
 fi
 wait %fastqc
@@ -212,5 +212,5 @@ info "Done!"
 
 # gmb: input: fwd.fastq
 # gmb: input: rev.fastq
-# gmb: output: dt_int.fasta
+# gmb: output: good_int.fasta
 # gmb: cpus: 2

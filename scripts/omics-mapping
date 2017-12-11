@@ -50,7 +50,7 @@ REV_READS=
 # whether to run indexing
 INDEX=true
 #
-INT_READS=dt_int.fastq
+INT_READS=good_int.fastq
 #
 ASSEMBLY=assembly.fa
 #
