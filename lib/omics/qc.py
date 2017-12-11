@@ -21,7 +21,7 @@ def qc_sample(sample, *, clean_only=False, adapters=None, keep_all=False,
 
     args = []
     not clean_only or args.append('--clean-only')
-    not keep_all or args.append('--kepp-all')
+    not keep_all or args.append('--keep-all')
     if adapters:
         args += ['--adapters', adapters]
     not less_mem or args.append('--less-mem')
