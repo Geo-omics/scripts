@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-separateInterleaved - Separate interleaved files. Tested for illumina datasets only.
+separateInterleaved - separate interleaved reads
 
 
 =head1 SYNOPSIS
 
-B<separateInterleaved> B<-fq> interleaved.fastq B<-p>refix split
+B<separateInterleaved> B<-fq> I<infile> [B<-prefix> I<name>]
 
 
 =head1 DESCRIPTION
@@ -19,19 +19,19 @@ Separate interleaved files. Tested for illumina datasets only.
 
 =over 8
 
-=item B<-fq>, B<OR>, B<-fastq> I<CHAR>
+=item B<-fq> I<infile>>, B<-fastq> I<infile>
 
 interleaved Fastq file. [REQUIRED]
 
-=item B<-p>, B<OR>, B<-prefix> I<CHAR>
+=item B<-p> I<name>, B<-prefix> I<name>
 
-prefix for the forward and reverse files. [Default=prefix of the input fastq]
+prefix for the forward and reverse files.  Default is basename of input file
 
-=item B<-version>, B<-v> I<BOOLEAN>
+=item B<-version>, B<-v>
 
 version of the current script
 
-=item B<-help>, B<-h> I<BOOLEAN>
+=item B<-help>, B<-h>
 
 This message.
 
@@ -40,8 +40,8 @@ This message.
 
 =head1 AUTHOR
 
-Sunit Jain, (Wed Jan 22 16:16:19 EST 2014)
-sunitj [AT] umich [DOT] edu
+ Sunit Jain, (Wed Jan 22 16:16:19 EST 2014)
+ sunitj [AT] umich [DOT] edu
 
 
 =head1 LICENSE

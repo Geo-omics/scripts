@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-interleave - Take the fwd and rev sequence files and arrange the sequence pairs in a single file such that forward sequence is followed by it's reverse pair.
+interleave - pair reads from separate forward and reverse files
 
 
 =head1 SYNOPSIS
 
-B<interleave>.pl -fwd forward_file.fasta -rev reverse_file.fasta [OPTIONS]
+B<interleave> [OPTION...] B<-fwd> I<forward_file.fasta> B<-rev> I<reverse_file.fasta>
 
 
 =head1 DESCRIPTION
@@ -23,15 +23,17 @@ Take the fwd and rev sequence files and arrange the sequence pairs in a single f
 
 Use this flag if your forward and reverse sequence files are fastq
 
-=item B<-outfmt>
+=item B<-outfmt> < fasta | fastq >
 
-Use this flag if you want the output of your fastq to be in fasta
+Specify a different output file format. By default output format is the input format.
 
 =item B<-old>
 
 Use this flag if your sequence descriptors follow the old illumina naming convention; i.e. if the descriptor ends with a "/1" or "/2".
 
-=item B<-p>, B<-o>
+=item B<-o> I<pref>, B<-output> I<pref>,
+
+=item B<-p> I<pref>, B<-prefix> I<pref>
 
 Pefix for your output files; default: process_id
 
@@ -48,53 +50,65 @@ Script version.
 
 =head1 EXAMPLES
 
-# Have 2 fasta files; interleave and print to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
-interleave.pl -fwd forward_file.fasta -rev reverse_file.fasta -o blah
-OR
-# Have 2 fastq files; interleave and print to blah_int.fastq, blah_sfwd.fastq, blah_srev.fastq
-interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah
-OR
-# Have 2 fastq files; interleave and print as fasta to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
-interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah -outfmt fasta
+=over
 
+=item 1.
+
+Have 2 fasta files, interleave and print to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
+
+ interleave.pl -fwd forward_file.fasta -rev reverse_file.fasta -o blah
+
+=item 2.
+
+Have 2 fastq files, interleave and print to blah_int.fastq, blah_sfwd.fastq, blah_srev.fastq
+
+ interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah
+
+=item 3.
+
+Have 2 fastq files, interleave and print as fasta to blah_int.fasta, blah_sfwd.fasta, blah_srev.fasta
+
+ interleave.pl -fastq -fwd forward_file.fastq -rev reverse_file.fastq -o blah -outfmt fasta
+
+=back
 
 =head1 Suggestions/Feedback/Beer
 
-Sunit Jain, May 2012
-sunitj [AT] umich [DOT] edu
+ Sunit Jain, May 2012
+ sunitj [AT] umich [DOT] edu
 
 
 =head1 SEE ALSO
 
 L<omics(1)>, L<illumina-reads-processing(7)>
 
-=head3 Other local resources
+=head4 Other local resources
 
 =over
 
-=item 1
+=item [1]
 
 L<HTML documentation|file:///usr/share/doc/geo-omics-scripts/html/index.html>
 
-=item 2
+=item [2]
 
 L<Omics workflow documentation [PDF]|file:///usr/share/doc/geo-omics-scripts/Geomicro-Illumina-Reads-Processing-Pipeline.pdf>
 
 =back
 
-=head3 Web
+=head4 Web
 
 =over
 
-=item 1
+=item [3]
 
 L<Workflow documentation [PDF]|https://drive.google.com/open?id=0BxFSivK8RfJed05wamtrbEVUeE0>
 
-=item 2
+=item [4]
 
 L<Website|http://www.earth.lsa.umich.edu/geomicrobiology/>
 
-=item 3
+=item [5]
 
 L<Github repository|https://github.com/Geo-omics/scripts>
 
