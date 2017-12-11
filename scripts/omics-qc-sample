@@ -222,7 +222,7 @@ if $INTERLEAVE; then
 fi
 if $SEPARATE_AGAIN; then
     info "Generate final set of separate read files..."
-    separateInterleaved -fq good_int.fastq
+    separateInterleaved -fq good_int.fastq -prefix good
 fi
 wait %fastqc
 $KEEPALL || clean_intermediates
