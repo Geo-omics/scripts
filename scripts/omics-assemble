@@ -26,7 +26,7 @@ ARG_HELP="
       --megahit           Use MEGAHIT assembler, default is to use IDBA_UD
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
-      --reads FILE        Interleaved reads file, by default this is 'dt_int.fasta'
+      --reads FILE        Interleaved reads file, by default this is 'good_int.fasta'
       --skip-blast        Skip classification steps, by default run blast
       --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
       --skip-quast        Skip QUAST analysis, by default QUAST is run
@@ -112,7 +112,7 @@ MEGAHIT=false
 # PhyloSift run control file
 PHYLOSIFTRC="$(dirname "$0")/../share/geo-omics-scripts/phylosiftrc"
 # interleaved reads as made by qc script
-READS=dt_int.fasta
+READS=good_int.fasta
 #
 RUN_BLAST=true
 RUN_PHYLOSIFT=true
@@ -300,7 +300,7 @@ if $RUN_PHYLOSIFT; then
 fi
 
 debug "[assemble script done]"
-# gmb: input: dt_int.fasta
+# gmb: input: good_int.fasta
 # gmb: output: scaffold.fa
 # gmb: args: --cpus {{ cpus }} --no-color
 # gmb: cpus_min: 1

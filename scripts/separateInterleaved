@@ -2,12 +2,12 @@
 
 =head1 NAME
 
-separateInterleaved - Separate interleaved files. Tested for illumina datasets only.
+separateInterleaved - separate interleaved reads
 
 
 =head1 SYNOPSIS
 
-B<separateInterleaved> B<-fq> interleaved.fastq B<-p>refix split
+B<separateInterleaved> B<-fq> I<infile> [B<-prefix> I<name>]
 
 
 =head1 DESCRIPTION
@@ -19,19 +19,19 @@ Separate interleaved files. Tested for illumina datasets only.
 
 =over 8
 
-=item B<-fq>, B<OR>, B<-fastq> I<CHAR>
+=item B<-fq> I<infile>>, B<-fastq> I<infile>
 
 interleaved Fastq file. [REQUIRED]
 
-=item B<-p>, B<OR>, B<-prefix> I<CHAR>
+=item B<-o> I<name>, B<-p> I<name>, B<-prefix> I<name>
 
-prefix for the forward and reverse files. [Default=prefix of the input fastq]
+prefix for the forward and reverse files.  Default is basename of input file
 
-=item B<-version>, B<-v> I<BOOLEAN>
+=item B<-version>, B<-v>
 
 version of the current script
 
-=item B<-help>, B<-h> I<BOOLEAN>
+=item B<-help>, B<-h>
 
 This message.
 
@@ -40,8 +40,8 @@ This message.
 
 =head1 AUTHOR
 
-Sunit Jain, (Wed Jan 22 16:16:19 EST 2014)
-sunitj [AT] umich [DOT] edu
+ Sunit Jain, (Wed Jan 22 16:16:19 EST 2014)
+ sunitj [AT] umich [DOT] edu
 
 
 =head1 LICENSE
@@ -58,33 +58,33 @@ This script is distributed in the hope that it will be useful, but WITHOUT ANY W
 
 L<omics(1)>, L<illumina-reads-processing(7)>
 
-=head3 Other local resources
+=head2 Other local resources
 
 =over
 
-=item 1
+=item [1]
 
 L<HTML documentation|file:///usr/share/doc/geo-omics-scripts/html/index.html>
 
-=item 2
+=item [2]
 
 L<Omics workflow documentation [PDF]|file:///usr/share/doc/geo-omics-scripts/Geomicro-Illumina-Reads-Processing-Pipeline.pdf>
 
 =back
 
-=head3 Web
+=head2 Web
 
 =over
 
-=item 1
+=item [3]
 
 L<Workflow documentation [PDF]|https://drive.google.com/open?id=0BxFSivK8RfJed05wamtrbEVUeE0>
 
-=item 2
+=item [4]
 
 L<Website|http://www.earth.lsa.umich.edu/geomicrobiology/>
 
-=item 3
+=item [5]
 
 L<Github repository|https://github.com/Geo-omics/scripts>
 
@@ -105,9 +105,8 @@ GetOptions(
 	'v|version'=>sub{print $version."\n"; exit;},
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
 );
-print "\# $version\n";
 
-my @ext=qw(fastq fq);
+my @ext=qw(.fastq .fq);
 if(! $prefix){
 	$prefix=fileparse($fastq, @ext);
 }

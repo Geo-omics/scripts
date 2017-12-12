@@ -22,10 +22,21 @@ ARG_HELP="
 			intermediate results will be deleted to save disk space
       --less-mem        Use less memory during de-replication at the expense of
                         computing time
+
       --no-dereplicate  Skip the de-replication step
       --no-interleave   Skip building the interleaved reads file
-      --no-fasta-interleave   Skip building the interleaved fasta file,
-                              interleaved fastq will still be build
+
+      --no-fasta-interleave
+                        Skip building the interleaved fasta file,
+                        interleaved fastq will still be build
+
+      --no-re-separation
+                        Skip making the final set of forward and reversed reads
+                        file, containing the same reads as the interleaved file
+                        in the same order.  These can be used, alternatively,
+                        for assembly and mapping, as some downstream tools can
+                        only use on kind of input.  By default the separated
+                        read files are generated
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -36,7 +47,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave dereplicate"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-fasta-interleave,no-interleave
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,less-mem,no-dereplicate,no-fasta-interleave,no-interleave,no-re-separation
 }
 
 handle_options () {
@@ -68,6 +79,9 @@ handle_options () {
 	        return 1;;
 	    (--no-fasta-interleave)
 	        INTERLEAVE_FASTA=false
+	        return 1;;
+	    (--no-re-separation)
+	        SEPARATE_AGAIN=false
 	        return 1;;
         esac
     else
@@ -105,6 +119,7 @@ LESSMEM=false
 DEREPLICATION=true
 INTERLEAVE=true
 INTERLEAVE_FASTA=true
+SEPARATE_AGAIN=true
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -137,7 +152,7 @@ clean_all () {
     # clean final results
     $RM -rf -- FASTQC
     $RM -f -- {"$fwd","$rev"}{_derep,}_scythe_sickle.fastq
-    $RM -f -- dt_int.fast{a,q}
+    $RM -f -- good{,_int}.fast{a,q}
 }
 
 clean_intermediates () {
@@ -146,7 +161,7 @@ clean_intermediates () {
     $RM -f -- {"$fwd","$rev"}{_derep,}_scythe.fastq
     $RM -f -- {"$fwd","$rev"}{_derep,}_matches.fastq
     $RM -f -- {"$fwd","$rev"}.clust{.list,}
-    $RM -f -- dt_s{fwd,rev}.fast{a,q}
+    $RM -f -- good_s{fwd,rev}.fast{a,q}
     
 }
 
@@ -200,10 +215,14 @@ fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log 
 if $INTERLEAVE; then
     info "interleaving..."
     if $INTERLEAVE_FASTA; then
-        interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt &
+        interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o good &
     fi
-    interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o dt
+    interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o good
     ! $INTERLEAVE_FASTA || wait %interleave
+fi
+if $SEPARATE_AGAIN; then
+    info "Generate final set of separate read files..."
+    separateInterleaved -fq good_int.fastq -prefix good
 fi
 wait %fastqc
 $KEEPALL || clean_intermediates
@@ -212,5 +231,5 @@ info "Done!"
 
 # gmb: input: fwd.fastq
 # gmb: input: rev.fastq
-# gmb: output: dt_int.fasta
+# gmb: output: good_int.fasta
 # gmb: cpus: 2

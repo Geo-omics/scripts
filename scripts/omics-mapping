@@ -45,12 +45,12 @@ MEM_PER_THREAD=16G
 #
 FORCE=false
 # no defaults needed
-FWD_READS=
-REV_READS=
+FWD_READS=good.fwd.fastq
+REV_READS=good.rev.fastq
 # whether to run indexing
 INDEX=true
 #
-INT_READS=dt_int.fastq
+INT_READS=good_int.fastq
 #
 ASSEMBLY=assembly.fa
 #
@@ -175,11 +175,10 @@ if $CHOP_ASSEMBLY; then
 fi
 
 alnSam=${name}_aligned.sam
-alnSamLog=${name}.aln.log
+log=${name}.bowtie2.log
 sam2bam=${name}_fixmate.bam
 sortBam=${name}_sorted.bam
 nameSortBam=${name}_name_sorted.bam
-readGroup="@RG\\tID:group_${1}\\tSM:Sample_${1}\\tPL:illumina\\tLB:lib_${1}\\tPU:unit_${1}"
 bedOut=${name}.genomeCovBed.tsv
 scafCov=${name}.cov
 
@@ -187,20 +186,19 @@ scafCov=${name}.cov
 #########      PIPELINE       #########
 #######################################
 if $INDEX; then
-    info "Indexing Database..."
-    bwa index "$assembly"
+    info "Generating Index..."
+    # bwa index "$assembly"
+    bowtie2-build "$assembly" "$name" &> "$log"
 fi
 
-info "Aligning reads using 'bwa mem'..."
-info "[NOTE] Using Read Group ${readGroup}"
-info "[NOTE] bwa mem run is logged to $alnSamLog"
+info "Aligning reads..."
+printf "\n[Running bowtie2]\n" >> "$log"
 if $use_int_reads; then
 	info "[NOTE] Using $int_reads for reads"
-	bwa mem -M -R "$readGroup" -t "$CPUS" -p "$assembly" "$int_reads" 1> "$alnSam" 2> "$alnSamLog";
+        bowtie2 -x "$name" --interleaved "$int_reads" -S "$alnSam" &>> "$log"
 else
 	info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
-	echo bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$fwd_reads" "$rev_reads" REDIR "$alnSam" REDIR "$alnSamLog";
-	bwa mem -M -R "$readGroup" -t "$CPUS" "$ASSEMBLY" "$fwd_reads" "$rev_reads" 1> "$alnSam" 2> "$alnSamLog";
+        bowtie2 -x "$name" -1 "$fwd_reads" -2 "$rev_reads" -S "$alnSam" &>> "$log"
 fi
 
 info "Fixing alignment artifacts and converting SAM to BAM..."
