@@ -45,8 +45,8 @@ MEM_PER_THREAD=16G
 #
 FORCE=false
 # no defaults needed
-FWD_READS=
-REV_READS=
+FWD_READS=good.fwd.fastq
+REV_READS=good.rev.fastq
 # whether to run indexing
 INDEX=true
 #
