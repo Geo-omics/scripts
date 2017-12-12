@@ -152,7 +152,7 @@ clean_all () {
     # clean final results
     $RM -rf -- FASTQC
     $RM -f -- {"$fwd","$rev"}{_derep,}_scythe_sickle.fastq
-    $RM -f -- good{,_int}.fast{a,q}
+    $RM -f -- good_int.fast{a,q} good.{fwd,rev}.fastq
 }
 
 clean_intermediates () {
