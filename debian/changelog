@@ -1,3 +1,22 @@
+geo-omics-scripts (1.0.67-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Use bowtie2 for mapping, abandon bwa
+  * Improve docs for a couple important scripts
+  * Improve formatting of SEE ALSO section
+  * Fix misspelled option, crashed when called with --keep-all
+  * Remove redundant print statement, use -v instead
+  * Give final post-qc reads file a more meaningful, less cryptic name
+  * Also generate final good reads separately
+  * Fix layout in help text
+  * Avoid output file with additional . in name
+  * Specify output filenames, the generated ones contain 'int' undesirably
+  * Document option variant
+  * Add missing files to cleanup job
+  * Add defaults for separate input reads, as made by omics-qc now
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 12 Dec 2017 10:12:37 -0500
+
 geo-omics-scripts (1.0.66-1) unstable; urgency=medium
 
   * Gracefully allow omics-run from within a container
