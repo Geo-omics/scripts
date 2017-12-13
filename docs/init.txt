@@ -1,0 +1,54 @@
+.. program:: omics init
+
+=========================================
+init - initialize omics project directory
+=========================================
+
+
+Synopsis
+========
+
+:program:`omics init` [OPTIONS...] [``--name`` NAME] [directory]
+
+
+Description
+===========
+
+Creates a new omics project in the given directory by setting up a
+configuration file in a hidden sub-directory ``.omics`` to primarily store
+options common to various command in the omics tool chain.  This is purely a
+convenience feature and not necessary to run any of the omics tools.
+
+
+Options
+=======
+
+.. option:: directory
+
+    Path to project directory, by default the current directory.
+
+.. option:: --name NAME
+
+    Optional project name, by default, a project name will be derived from the
+    project directory
+
+.. option:: -h, --help
+
+    Print help.
+
+.. option:: -v, --verbose
+
+    Use one or multiple :option:`-v` to increase verbosity of output.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics-prep(1)`, :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`
