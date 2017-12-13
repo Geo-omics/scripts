@@ -21,7 +21,8 @@ ARG_HELP="
   -r, --rev-reads FILE  Fastq file with reverse reads, in same order
   -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
                         can also be single-paired reads,
-			The default is dt_int.fastq
+			The default is good_int.fastq
+                        Incompatible with bowtie2 <= 2.3.0
   -o, --out-dir DIR     Name of output directory, default: MAPPING
       --no-indexing     Do not index the assembly but existing index
 "
@@ -197,6 +198,7 @@ if $use_int_reads; then
 	info "[NOTE] Using $int_reads for reads"
         bowtie2 -x "$name" --interleaved "$int_reads" -S "$alnSam" &>> "$log"
 else
+        # this is also the compatibility option for bowtie2 <= 2.3.0
 	info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
         bowtie2 -x "$name" -1 "$fwd_reads" -2 "$rev_reads" -S "$alnSam" &>> "$log"
 fi
