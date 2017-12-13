@@ -7,6 +7,16 @@
 #
 
 set -e
+
+# Default name of image file
+IMAGE_NAME=omics.img
+# Image file search paths
+CONTAINER_PATH=(
+/dept/geology/geomicro/data9/flux
+/data9/flux
+~/src/omics-singularity-container
+)
+
 # shellcheck disable=SC2034
 {
 USAGE="[OPTIONS... --] COMMAND..."
@@ -56,14 +66,6 @@ handle_options () {
 
 
 IMAGE=
-# Default name of image file
-IMAGE_NAME=omics.img
-# Image file search paths
-CONTAINER_PATH=(
-/dept/geology/geomicro/data9/flux
-/data9/flux
-~/src/omics-singularity-container
-)
 # useful mounts for flux
 BIND_PATHS=(
 /scratch

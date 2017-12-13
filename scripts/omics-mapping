@@ -5,7 +5,7 @@
 #
 # Author: Robert <heinro@med.umich.edu>
 #
-set -eE
+set -eEu
 
 # shellcheck disable=SC2034
 {
@@ -21,7 +21,8 @@ ARG_HELP="
   -r, --rev-reads FILE  Fastq file with reverse reads, in same order
   -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
                         can also be single-paired reads,
-			The default is dt_int.fastq
+			The default is good_int.fastq
+                        Incompatible with bowtie2 <= 2.3.0
   -o, --out-dir DIR     Name of output directory, default: MAPPING
       --no-indexing     Do not index the assembly but existing index
 "
@@ -113,13 +114,11 @@ if $opts_int; then
     ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
     use_int_reads=true
 else
+    use_int_reads=false  # this is also the default if no cmd line options given
     if $opts_fwd; then
 	$opts_rev || abort "Use --rev-reads to also specify reverse reads" usage
-	use_int_reads=false
     elif $opts_rev; then
 	abort usage "Use --fwd-reads to also specify reverse reads"
-    else
-	use_int_reads=true
     fi
 fi
 
@@ -133,6 +132,8 @@ fi
 if $use_int_reads; then
     [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
 else
+    # this is also the default if no cmd line options were given
+    use_int_reads=false
     [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
     [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
 fi
@@ -197,6 +198,7 @@ if $use_int_reads; then
 	info "[NOTE] Using $int_reads for reads"
         bowtie2 -x "$name" --interleaved "$int_reads" -S "$alnSam" &>> "$log"
 else
+        # this is also the compatibility option for bowtie2 <= 2.3.0
 	info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
         bowtie2 -x "$name" -1 "$fwd_reads" -2 "$rev_reads" -S "$alnSam" &>> "$log"
 fi

@@ -354,6 +354,10 @@ man_pages = [
     ('container', 'omics-container', 'switch to shell in singularity '
      'container',
      [author], 1),
+    ('init', 'omics-init', 'initialize omics project directory',
+     [author], 1),
+    ('run', 'omics-run', 'run commands or script inside omics container',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.

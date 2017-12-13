@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-mapper_getQueryList - 
+mapper_getQueryList - get subset of query list from mapper script
 
 =head1 SYNOPSIS
 
-B<mapper_getQueryList> -log <log file> -list <list of Queries of interest> -out <output>
+B<mapper_getQueryList> B<-log> I<log file> B<-list> I<list of Queries of interest> B<-out> I<output>
 
 
 =head1 MOTIVATION

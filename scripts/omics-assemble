@@ -205,6 +205,7 @@ else
         done
     else
         # descend into single sample directory or working directory, output goes here, too
+        cd "${SAMPLE_DIRS[0]}"
         reads=$READS
     fi
 

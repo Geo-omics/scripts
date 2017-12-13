@@ -2,34 +2,42 @@
 
 =head1 NAME
 
-derep_ClusterMap - 
+derep_ClusterMap - Map representative reads back to original replicated read set
 
 =head1 SYNOPSIS
 
-derepClustMap.pl -clust <name of the .clust file> -l <log file> -m <original mapped file>
+B<derepClustMap> B<-clust> I<.clust file> B<-l> I<log file> B<-m> I<original mapped file>
 
 
 =head1 MOTIVATION
 
-In a dereplicated file genererated by my 'dereplicate' script, each sequences may be a representative of a cluster of sequences.
-If you've used the dereplicated file for your Blasts, you may wish to find out the actual number of sequences that 'would have' gotten
-the same result had the file not been dereplicated. By using this script you can get to that number	by simply multiplying this
-result to your blast output.
+In a dereplicated file genererated by my 'dereplicate' script, each sequences
+may be a representative of a cluster of sequences.  If you've used the
+dereplicated file for your Blasts, you may wish to find out the actual number
+of sequences that 'would have' gotten the same result had the file not been
+dereplicated. By using this script you can get to that number by simply
+multiplying this result to your blast output.
 
-Why use a dereplicated file at all, you say?
-One of the many reasons is that it cuts down on the blast times by a HUGE margin!
-for more on dereplication and its affects, goto:
+Why use a dereplicated file at all, you say?  One of the many reasons is that
+it cuts down on the blast times by a HUGE margin!  For more on dereplication
+and its affects, goto: ???
 
 
-=head1 OPTIONAL
+=head1 OPTIONS
 
--o Output File Name
+=over
+
+=item B<-o> I<file>
+
+Output File Name
+
+=back
 
 
 =head1 AUTHOR
 
-Sunit Jain, November, 2011
-sunitj [AT] umich [DOT] edu
+ Sunit Jain, November, 2011
+ sunitj [AT] umich [DOT] edu
 
 
 =head1 SEE ALSO

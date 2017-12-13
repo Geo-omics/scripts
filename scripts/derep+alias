@@ -5,14 +5,14 @@ use Getopt::Long;
 
 =head1 NAME
 
-derep+alias -
+derep+alias - read the source
 
 =head1 SYNOPSIS
 
 derep+alias B<-l> gi.list B<-d> gi.data B<-abs> 75
-OR
+
 derep+alias B<-l> gi.list B<-d> gi.data B<-p>ercent 75
-OR
+
 derep+alias B<-l> gi.list B<-d> gi.data -all
 
 
@@ -20,9 +20,9 @@ derep+alias B<-l> gi.list B<-d> gi.data -all
 
 =over 8
 
-=item B<-p>
+=item B<-p> I<nnn>, -B<percent> I<nnn>
 
--percent	<INT:1-100>	What percent of taxa you want randomly extracted?
+What percent of taxa you want randomly extracted?
 
 =item B<-abs>, B<-absolute> I<INT>
 
@@ -40,17 +40,17 @@ File containing a list of GI numbers. Used to weed out any sequences that may no
 
 File obtained from fetching the data from NCBI in tabular form. GI ?? NCBI Taxon ID ?? Prot Seq
 
-=item B<-h>
+=item B<-h> B<-help>
 
--help		<>	This page.
+This page.
 
 =back
 
 
 =head1 DEVELOPER
 
-Sunit Jain
-June 2010.
+ Sunit Jain
+ June 2010.
 
 
 =head1 SEE ALSO

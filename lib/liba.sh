@@ -225,6 +225,7 @@ debug "verbosity set to: $VERBOSITY"
 # set bash script debugging
 [ "$VERBOSITY" -ge 4 ] && set -x
 # forward verbosity to other commands
+VERBOSE_FLAG=
 [ "$VERBOSITY" -ge 2 ] && VERBOSE_FLAG=-v
 # shellcheck disable=SC2034
 V=$VERBOSE_FLAG
