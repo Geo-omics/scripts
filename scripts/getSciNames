@@ -2,57 +2,74 @@
 
 =head1 NAME
 
-getSciNames - 
+getSciNames - get sci names
 
 =head1 SYNOPSIS
 
-B<getSciNames> B<-l>ist <giB<-l>ist-file> -dbtype <nucl/prot>
-OR
-B<getSciNames> B<-b>last <tabularB<-b>last-output> -dbtype <nucl/prot>
-OR
-B<getSciNames> B<-m>ap <tabularB<-m>apper-output> -dbtype <nucl/prot>
+B<getSciNames> B<-list> I<gi-list-file> B<-dbtype> I<nucl/prot>
+
+B<getSciNames> B<-blast> I<tabular-blast-output> B<-dbtype> I<nucl/prot>
+
+B<getSciNames> B<-map> I<tabular-mapper-output> B<-dbtype> I<nucl/prot>
 
 
 =head1 OPTIONS
 
+=head2 Input type (choose_one_only)
+
 =over 8
 
-=item =head3 Input_type_(choose_one_only)
+=item B<-l> I<gi-list>, B<-list> I<gi-list>
 
-=item B<-l>
+if your input is a list of GI numbers
 
--list	:	if your input is a list of GI numbers
+=item B<-b> I<blast output>, B<-blast> I<blast output>
 
-=item B<-b>
+if your input is a blast output
 
--blast	:	if your input is a blast output
+=item B<-m> I<mapper output>, B<-map> I<mapper output>
 
-=item B<-m>
-
--map	:	if your input file is a mapper output
+if your input file is a mapper output
 
 =back
 
 
-=head1 Other_Options
+=head2 Other_Options
 
--dbtype		:	database type <"prot" or "nucl">; Required
--o	-out	:	output file name <default=process_id.names>
+=over 8
 
--taxa		:	prints Taxa ids to this file <optional>
--dump		:	location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/">
--h	-help	:	This message; press "q" to exit this screen.
+=item B<-dbtype> prot|nucl
 
-=head2 Limitation:
+database type <"prot" or "nucl">; Required
 
-If the input is a blast output, the script will only look at the subject cloumn and expect it to be in the NCBI FASTA header format (gi|gi_number|...)
+=item B<-o> I<file>, B<-out> I<file>
+
+output file name <default=process_id.names>
+
+=item B<-taxa> I<file>
+
+prints Taxa ids to this file <optional>
+
+=item B<-dump> I<path>
+
+location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/">
+
+=item B<-h>, B<-help>
+
+This message; press "q" to exit this screen.
+
+=back
+
+=head1 Limitation
+
+If the input is a blast output, the script will only look at the subject column and expect it to be in the NCBI FASTA header format (gi|gi_number|...)
 
 
 =head1 AUTHOR
 
-Sunit Jain, May 2010
-sunitj-at-umich-dot-edu
-sunitjain-dot-com
+ Sunit Jain, May 2010
+ sunitj-at-umich-dot-edu
+ sunitjain-dot-com
 
 
 =head1 SEE ALSO

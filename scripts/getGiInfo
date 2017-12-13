@@ -65,10 +65,14 @@
 #get_link_report
 #extract_links
 #get_ftp_file
+=head1 NAME
 
-=head1
+getGiInfo - get gi info
 
-	getGiInfo -d [nucleotide/protein] -o [outputFileName] -l [list of GI numbers]
+
+=head1 SYNOPSIS
+
+B<getGiInfo> B<-d> I<nucleotide/protein> B<-o> I<outputFileName> B<-l> I<list of GI numbers>
 
 
 =head1 SEE ALSO
