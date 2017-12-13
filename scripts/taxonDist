@@ -17,29 +17,39 @@ Given a ribopicker tabular output; get distribution by taxa.
 
 =head1 OPTIONS
 
-=over 8
+=over
 
 =item B<-tsv> I<character>
 
 .tsv file created by ribopicker along with the fasta files.
 
-=item B<-taxon> I<character>
+=item B<-taxon> I<choice>|I<path>
 
-path to the taxon file, the default shoud work for all cases; default =
+path to the taxon file, the default shoud work for all cases; default = ssr
 
-=item possible choices:
+possible choices:
 
-=item 'rrnadb'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/rrnadb.taxon"
+=over 12
 
-=item 'ssr'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/ssr108.taxon"
+=item 'rrnadb'
 
-=item 'slr'	=>	"/geomicro/data1/COMMON/ribopickerDB/taxons/slr108.taxon"
+/geomicro/data1/COMMON/ribopickerDB/taxons/rrnadb.taxon
 
-=item OR provide the path to a custom taxon file.
+=item 'ssr'
 
-=item B<-out>
+/geomicro/data1/COMMON/ribopickerDB/taxons/ssr108.taxon
 
-[characters]	output file name.
+=item 'slr'
+
+/geomicro/data1/COMMON/ribopickerDB/taxons/slr108.taxon
+
+=back
+
+OR provide the path to a custom taxon file.
+
+=item B<-out> I<file>
+
+output file name.
 
 =item B<-v>
 
