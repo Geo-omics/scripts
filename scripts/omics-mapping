@@ -5,7 +5,7 @@
 #
 # Author: Robert <heinro@med.umich.edu>
 #
-set -eE
+set -eEu
 
 # shellcheck disable=SC2034
 {
