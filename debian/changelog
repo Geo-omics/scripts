@@ -1,3 +1,23 @@
+geo-omics-scripts (1.0.69-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Fix filenames of to be cleaned files
+  * Fix assembly script when assembling date from a single sample
+  * Ensure variable is initialized
+  * Add compatibility note
+  * Use separate read files as mapping reference by default
+  * Ensure all variables are initialized in mapping script
+  * Fix some PODs so that at least the NAME section is conform for whatis
+  * Remove redundant script, is the same as mapper_getQueryList
+  * Fix some POD formatting
+  * Fix POD, NAME section to work with whatis
+  * Fix POD layout/formatting
+  * Fix default option values not showing up in help text
+  * Add man pages for init and run commands
+  * Actually add those man page source files
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 13 Dec 2017 16:01:37 -0500
+
 geo-omics-scripts (1.0.67-1) unstable; urgency=medium
 
   [ Robert ]
