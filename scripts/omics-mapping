@@ -114,13 +114,11 @@ if $opts_int; then
     ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
     use_int_reads=true
 else
+    use_int_reads=false  # this is also the default if no cmd line options given
     if $opts_fwd; then
 	$opts_rev || abort "Use --rev-reads to also specify reverse reads" usage
-	use_int_reads=false
     elif $opts_rev; then
 	abort usage "Use --fwd-reads to also specify reverse reads"
-    else
-	use_int_reads=true
     fi
 fi
 
@@ -134,6 +132,8 @@ fi
 if $use_int_reads; then
     [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
 else
+    # this is also the default if no cmd line options were given
+    use_int_reads=false
     [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
     [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
 fi
