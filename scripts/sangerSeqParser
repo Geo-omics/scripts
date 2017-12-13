@@ -2,22 +2,22 @@
 
 =head1 NAME
 
-sangerSeqParser - 
+sangerSeqParser - sanger seq parser
 
 =head1 SYNOPSIS
 
-B<sangerSeqParser> -p Folder_Path
+B<sangerSeqParser> B<-p> I<Folder_Path>
 
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<-o>
+=item B<-o> I<file>
 
 output file name; default= processID.fasta
 
-=item B<-e>
+=item B<-e> I<suffix>
 
 file extension to look for in folder; default= fasta
 

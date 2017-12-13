@@ -2,22 +2,23 @@
 
 =head1 NAME
 
-tallyWrap - 
+tallyWrap - count hits above given bit score
 
 =head1 SYNOPSIS
+In multiple blast outputs, count the number of times a query gets a hit above a certain bit score:
 
-# In multiple blast outputs, count the number of times a query gets a hit above a certain bit score.
-B<tallyWrap> -ext blastp -m masterList_output -t combinedTally_output -s 40
+ B<tallyWrap> -ext blastp -m masterList_output -t combinedTally_output -s 40
 
-# In multiple tab delimited files, for each value in the first column, combine the values of the last column from each file into a combined tabular file.
-B<tallyWrap> -ext blastp -m masterList_output -t combinedTally_output -values
+In multiple tab delimited files, for each value in the first column, combine the values of the last column from each file into a combined tabular file:
+
+ B<tallyWrap> -ext blastp -m masterList_output -t combinedTally_output -values
 
 
 =head1 DEPENDENCIES
 
-getMasterList
-tally
-tally-weave
+ getMasterList
+ tally
+ tally-weave
 
 
 =head1 SEE ALSO
