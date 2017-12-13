@@ -58,7 +58,6 @@ PERL_SCRIPTS = \
     getLineage\
     getMasterList\
     getMyContigs\
-    getQueryList\
     getRandomData\
     getSciNames\
     gff2fasta\
