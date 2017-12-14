@@ -14,6 +14,7 @@ OMICS_DIR = '.omics'
 CONFIG_FILE = 'config'
 CONF_SECTION_PROJECT = 'project'
 SCRIPT_PREFIX = 'omics-'
+DEFAULT_THREADS = 1
 DEFAULT_VERBOSITY = 1
 
 
@@ -63,7 +64,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         try:
             args.threads = project['threads']
         except (TypeError, AttributeError, KeyError):
-            args.threads = 1
+            args.threads = DEFAULT_THREADS
 
         return args
 
@@ -144,7 +145,7 @@ def get_argparser(*args, project_home=True, threads=True, **kwargs):
     common.add_argument(
         '-v', '--verbose',
         action='count',
-        default=1,
+        default=DEFAULT_VERBOSITY,
         dest='verbosity',
         help='Show increased diagnostic output.',
     )
