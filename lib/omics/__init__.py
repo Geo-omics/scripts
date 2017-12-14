@@ -38,8 +38,8 @@ class OmicsArgParser(argparse.ArgumentParser):
         """
         Parse options and substitue missing options with configured values
 
-        Missing values for --verbose and --threads are substituted.
-        Remove project_home and add project as object.
+         * Missing values for --verbose and --threads are substituted.
+         * Remove project_home and add project as object.
 
         Note: There is some redundancy between the arguments and the project.
         """
@@ -139,7 +139,7 @@ def get_argparser(*args, project_home=True, threads=True, **kwargs):
             type=int,
             metavar='N',
             dest='threads',
-            default=None,
+            default=None,  # None signifies option not given on cmd line
             help='Number of threads / CPUs to employ',
         )
     common.add_argument(
