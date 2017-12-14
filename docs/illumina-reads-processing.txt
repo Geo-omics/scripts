@@ -9,7 +9,7 @@ Geomicro Illumina Reads processing Pipeline
 Prerequisites
 =============
 
-    #. Have a user account on flux (with allocation), vondamm, or cayman
+    #. Have a user account on flux (with high-mem allocation), vondamm, or cayman
     #. Have access to long-term data storage
     #. Log into a terminal session on one of the servers
     #. Have the :doc:`omics <omics>` module loaded
@@ -21,12 +21,12 @@ Illumina Data
 Importing the raw sequence data:
 """"""""""""""""""""""""""""""""
 Data will generally be available from the UMich Sequencing core via FTP. In
-order to download the data, first make sure you have sufficient disk space. As
-of October 2015, one lane of Illumina HiSeq 2500 data takes about 45GB. Next,
-use the FTP protocol to download this data. Here is the command that has
-worked for me::
+order to download the data, first make sure you have sufficient disk space. One
+lane of compressed Illumina HiSeq data may require 80GB. Next, use the FTP
+protocol to download this data. Here is the command that has worked for me::
 
-    wget -m --ask-password --user=PI-LOGIN ftp://ruddle.brcf.med.umich.edu/Run_####
+    cd /path/to/storage
+    wget -m --ask-password --user=<useraccount> ftp://ruddle.brcf.med.umich.edu/Run_####
 
 The raw data should be stored in a permanent place and be read-only.  You may
 want to write-protect it with a command like::
@@ -34,12 +34,12 @@ want to write-protect it with a command like::
     chmod -w *.fastq.gz
 
 to protect against accidental deletion.  Consider making a separate backup
-copy on a different storage medium, possibly off-line.
+copy on a separate storage medium, possibly off-line.
 
 What does it look like?
 """"""""""""""""""""""""""
-The raw data is a collection of :command:`gzip`-compressed FASTQ files.  Sometimes,
-rather than providing us one FASTQ giant file for each read direction, the
+The raw data is a collection of :command:`gzip`-compressed FASTQ files.
+Sometimes, rather than providing us one FASTQ file for each read direction, the
 reads are chopped into FASTQ files containing 4 million reads each. The file
 names looked like this:
 

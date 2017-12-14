@@ -14,6 +14,7 @@ OMICS_DIR = '.omics'
 CONFIG_FILE = 'config'
 CONF_SECTION_PROJECT = 'project'
 SCRIPT_PREFIX = 'omics-'
+DEFAULT_THREADS = 1
 DEFAULT_VERBOSITY = 1
 
 
@@ -37,8 +38,8 @@ class OmicsArgParser(argparse.ArgumentParser):
         """
         Parse options and substitue missing options with configured values
 
-        Missing values for --verbose and --threads are substituted.
-        Remove project_home and add project as object.
+         * Missing values for --verbose and --threads are substituted.
+         * Remove project_home and add project as object.
 
         Note: There is some redundancy between the arguments and the project.
         """
@@ -63,7 +64,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         try:
             args.threads = project['threads']
         except (TypeError, AttributeError, KeyError):
-            args.threads = 1
+            args.threads = DEFAULT_THREADS
 
         return args
 
@@ -138,13 +139,13 @@ def get_argparser(*args, project_home=True, threads=True, **kwargs):
             type=int,
             metavar='N',
             dest='threads',
-            default=None,
+            default=None,  # None signifies option not given on cmd line
             help='Number of threads / CPUs to employ',
         )
     common.add_argument(
         '-v', '--verbose',
         action='count',
-        default=1,
+        default=DEFAULT_VERBOSITY,
         dest='verbosity',
         help='Show increased diagnostic output.',
     )
