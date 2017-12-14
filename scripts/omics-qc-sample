@@ -167,7 +167,7 @@ clean_intermediates () {
 
 
 clean_all
-! $CLEAN_ONLY || exit
+! $CLEAN_ONLY || exit 0
 
 $MKDIR -p FASTQC
 info "pre-QC fastqc running..."
