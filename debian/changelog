@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.70-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Use constants for default values
+  * Explain purpose of option default in comment
+  * Fix bug, make omics-qc pass number of threads option correctly
+  * Some smallish work on improving pipeline docs
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 14 Dec 2017 14:49:57 -0500
+
 geo-omics-scripts (1.0.69-1) unstable; urgency=medium
 
   [ Robert ]
