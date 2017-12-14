@@ -157,6 +157,7 @@ def main():
             no_interleave=args.no_interleave,
             no_fasta_interleave=args.no_fasta_interleave,
             verbosity=args.verbosity,
+            threads=args.threads,
             project=args.project,
         )
     except Exception as e:
