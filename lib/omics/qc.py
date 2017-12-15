@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from omics import get_argparser, DEFAULT_VERBOSITY
+from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
 
 
 def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
@@ -44,7 +44,7 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
 def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
        less_mem=False, no_dereplicate=False, no_interleave=False,
        no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
-       threads=1, project=None):
+       threads=DEFAULT_THREADS, project=None):
     """
     Do quality control on multiple samples
 
