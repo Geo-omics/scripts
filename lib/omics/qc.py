@@ -2,13 +2,14 @@
 Run QC on metagenomic reads from multiple samples
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 import subprocess
 import sys
 
-from omics import get_argparser, DEFAULT_VERBOSITY
+from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
 
 
-def qc_sample(sample, *, clean_only=False, adapters=None, keep_all=False,
+def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
               less_mem=False, no_dereplicate=False, no_interleave=False,
               no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
               project=None):
@@ -33,20 +34,21 @@ def qc_sample(sample, *, clean_only=False, adapters=None, keep_all=False,
 
     p = subprocess.run(
         [script] + args,
-        cwd=str(project['project_home'] / sample)
+        cwd=str(path),
     )
     if p.check_returncode():
         raise RuntimeError('Failed to run qc-sample: sample: {}: exit status: '
-                           '{}'.format(sample, p.returncode))
+                           '{}'.format(path, p.returncode))
 
 
 def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
        less_mem=False, no_dereplicate=False, no_interleave=False,
        no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
-       threads=1, project=None):
+       threads=DEFAULT_THREADS, project=None):
     """
     Do quality control on multiple samples
 
+    :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
     if less_mem:
@@ -61,10 +63,10 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
 
     with ThreadPoolExecutor(max_workers=threads) as e:
         futures = {}
-        for i in samples:
+        for path in samples:
             futures[e.submit(
                 qc_sample,
-                i,
+                path,
                 clean_only=clean_only,
                 adapters=adapters,
                 keep_all=keep_all,
@@ -74,18 +76,18 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
                 no_fasta_interleave=no_fasta_interleave,
                 verbosity=verbosity,
                 project=project,
-            )] = i
+            )] = path
 
         for fut in as_completed(futures.keys()):
-            sample = futures[fut]
+            sample_path = futures[fut]
             e = fut.exception()
             if e is None:
                 if verbosity >= DEFAULT_VERBOSITY + 2:
-                    print('Done: {}'.format(sample))
+                    print('Done: {}'.format(sample_path.name))
             else:
                 errors.append(
                     '[qc] (error): {}: {}: {}'
-                    ''.format(sample, e.__class__.__name__, e)
+                    ''.format(sample_path, e.__class__.__name__, e)
                 )
 
     if errors:
@@ -100,9 +102,13 @@ def main():
     argp.add_argument(
         'samples',
         nargs='*',
-        default=[],
+        default=['.'],
         help='List of directories, one per sample that contain the sample\'s '
-             'reads.'
+             'reads. The default is to take the current directory and '
+             'process a single sample.  The names of the reads files must be '
+             'fwd.fastq and rev.fastq, currently this can not be set manually.'
+             ' Use the omics-qc-sample script directly to specify filenames, '
+             'omics-qc is just a wrapper after all.'
     )
     argp.add_argument(
         '--clean-only',
@@ -146,6 +152,11 @@ def main():
              'files will still be build.',
     )
     args = argp.parse_args()
+    args.samples = [Path(i) for i in args.samples]
+    for i in args.samples:
+        if not i.is_dir():
+            argp.error('Directory not found: {}'.format(i))
+
     try:
         qc(
             args.samples,

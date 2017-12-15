@@ -125,18 +125,21 @@ SEPARATE_AGAIN=true
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
+info1 () { info "[$(basename "$PWD")] $1" ; }
+abort1 () { abort "[$(basename "$PWD")] $1" ; }
+
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    abort "Unknown parameters: ${*}"
+    abort1 "Unknown parameters: ${*}"
 fi
 
 #########################
 # some input sanitation
 #########################
-[ -r "$ADAPTERS" ] || abort "Adapters file not found: $ADAPTERS"
-[ "$VERBOSITY" -lt 2 ] || info "Using adapters file: $ADAPTERS"
-[ -r "$FWD_FASTQ" ] || abort "Forward reads file not found: $FWD_FASTQ"
-[ -r "$REV_FASTQ" ] || abort "Reverse reads file not found: $REV_FASTQ"
+[ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
+[ "$VERBOSITY" -lt 2 ] || info1 "Using adapters file: $ADAPTERS"
+[ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
+[ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
 
 #################################
 # do stuff
@@ -145,7 +148,7 @@ fi
 # get root of input file names
 fwd=$(basename "$FWD_FASTQ" .fastq)
 rev=$(basename "$REV_FASTQ" .fastq)
-[ "$fwd" != "$rev" ] || abort "Forward and reverse reads filenames are equal?"
+[ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames are equal?"
 
 clean_all () {
     clean_intermediates
@@ -167,17 +170,17 @@ clean_intermediates () {
 
 
 clean_all
-! $CLEAN_ONLY || exit
+! $CLEAN_ONLY || exit 0
 
 $MKDIR -p FASTQC
-info "pre-QC fastqc running..."
+info1 "pre-QC fastqc running..."
 fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 
 # basename for files
 base=""
 
 if $DEREPLICATION; then
-    info "dereplicating..."
+    info1 "dereplicating..."
     base="_derep"
     # With LESSMEM the calls to dereplicate are sequential.  To do that bash
     # monitor mode is enabled, so that fg works and puts the first job to the
@@ -197,23 +200,23 @@ else
     cur_rev=$REV_FASTQ
 fi
 
-info "adapter trimming..."
+info1 "adapter trimming..."
 oldbase=$base
 base="${base}_scythe"
 scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}_matches.fastq" -o "$fwd$base.fastq" "$cur_fwd" &
 scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}_matches.fastq" -o "$rev$base.fastq" "$cur_rev"
 wait %scythe
-info "quality score trimming..."
+info1 "quality score trimming..."
 oldbase=$base
 base="${base}_sickle"
 sickle se -t sanger -f "$fwd$oldbase.fastq" -o "$fwd$base.fastq" &
 sickle se -t sanger -f "$rev$oldbase.fastq" -o "$rev$base.fastq"
 wait %sickle
-info "post-QC fastqc run..."
+info1 "post-QC fastqc run..."
 wait %fastqc
 fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log &
 if $INTERLEAVE; then
-    info "interleaving..."
+    info1 "interleaving..."
     if $INTERLEAVE_FASTA; then
         interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -o good &
     fi
@@ -221,12 +224,12 @@ if $INTERLEAVE; then
     ! $INTERLEAVE_FASTA || wait %interleave
 fi
 if $SEPARATE_AGAIN; then
-    info "Generate final set of separate read files..."
+    info1 "Generate final set of separate read files..."
     separateInterleaved -fq good_int.fastq -prefix good
 fi
 wait %fastqc
 $KEEPALL || clean_intermediates
-info "Done!"
+info1 "Done!"
 
 
 # gmb: input: fwd.fastq
