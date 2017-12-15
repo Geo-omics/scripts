@@ -15,7 +15,7 @@ ARG_HELP="
     -i, --container-image <PATH> Path to singularity container image.  By default this is $CONTAINER_IMAGE
     -k, --keep-modules-loaded    Do not purge environment modules, by default all modules get purged.
 "
-SHORT_OPTIONS=ik
+SHORT_OPTIONS=i:k
 LONG_OPTIONS=container-image:,keep-modules-loaded
 }
 
