@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.71-1) unstable; urgency=medium
+
+  [ Robert ]
+  * Fix wrong exit status when run with --clean-only option
+  * qc-sample: add sample id to output messages
+  * [qc] Make current directory the default, check for existing paths
+  * [qc] Use constant instead of hard-coded value
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Fri, 15 Dec 2017 11:42:42 -0500
+
 geo-omics-scripts (1.0.70-1) unstable; urgency=medium
 
   [ Robert ]
