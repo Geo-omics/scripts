@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import subprocess
 import sys
+import zipfile
 
 from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
 
@@ -94,6 +95,24 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
         raise(RuntimeError('\n'.join(errors)))
 
 
+def check_result(*path):
+    """
+    Check results of FASTQC
+    """
+    for i in path:
+        for d in ['fwd', 'rev']:
+            result_file = \
+                i / 'FASTQC' / '{}_derep_scythe_sickle_fastqc.zip'.format(d)
+            with zipfile.ZipFile(result_file) as zf:
+                summary_name = \
+                    '{}_derep_scythe_sickle_fastqc/summary.txt'.format(d)
+                with zf.open(summary_name) as summary:
+                    for line in summary:
+                        mark, test_name, _ = line.decode().split('\t')
+                        if mark == 'WARN':
+                            print(i, d, mark, ':', test_name)
+
+
 def main():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
@@ -151,11 +170,20 @@ def main():
         help='Skip building the interleaved fasta file, interleaved fastq '
              'files will still be build.',
     )
+    argp.add_argument(
+        '--check',
+        action='store_true',
+        help='Check fastqc results',
+    )
     args = argp.parse_args()
     args.samples = [Path(i) for i in args.samples]
     for i in args.samples:
         if not i.is_dir():
             argp.error('Directory not found: {}'.format(i))
+
+    if args.check:
+        check_result(*args.samples)
+        return
 
     try:
         qc(
