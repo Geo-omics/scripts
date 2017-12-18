@@ -115,7 +115,7 @@ for i in "${BIND_PATHS[@]}"; do
 done
 
 if [ -f "$image" ]; then
-   exec singularity run "${bind_args[@]}" "${SINGULARITY_ARGS[@]}" "$image" "$@"
+   exec singularity run --cleanenv "${bind_args[@]}" "${SINGULARITY_ARGS[@]}" "$image" "$@"
 else
     echo >&2 "Error: Failed to find omics container image"
     exit 1

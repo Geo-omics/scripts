@@ -14,6 +14,13 @@ Synopsis
 Description
 ===========
 
+This is a wrapper around :command:`singularity run`.  It runs the given command
+inside the omics container environment.  if :program:`omics run` is called from
+a shell then command may need to be protected from the shell with single or
+double quotes as needed.  The container will provide a clean environment, so if
+environment variables are needed inside, e.g. ``SOMEVAR=foobar``, then set instead
+``SINGULARITYENV_SOMEVAR=foobar``, and the variable will be set with the
+``SINGULARITYENV_`` prefix stripped.
 
 Options
 =======
@@ -29,15 +36,16 @@ options with unintended consequences likely.
 
 .. option:: -s option, --singularity option
 
-    Options passed on to singularity.  For instance, to additionally mount a
+    Options passed on to :command:`singularity`.  For instance, to additionally mount a
     path ``/some/path``, add ``--singularity "-B /some/path"`` and the option
     ``-B /some/path`` will be appended to the call to :command:`singularity run`.  The
     empty space between the option and its parameter must be protected by
-    quotes to prevent premature word splitting by the shell.
+    quotes to prevent premature word splitting by the shell.  Run
+    :command:`singularity run --help` to see what options are supported.
 
 .. option:: --working-dir PATH
 
-    Set the working dorectory for the command
+    Set the working directory for the command
 
 .. option:: -h, --help
 
@@ -62,4 +70,4 @@ Exits with non-zero upon encountering an error.
     See Also
     ========
 
-    :manpage:`omics-prep(1)`, :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`
+    :manpage:`omics-prep(1)`, :manpage:`omics(7)`, :manpage:`illumina-reads-processing(7)`, :manpage:`singularity(1)`
