@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""
+Separate interleaved reads fastq file into forwards and reverse files.
+
+Input file must be in FASTQ format, Sequence and quality score must be on a
+single line each, separated by a '+', read headers must start with '@'.  It is
+not checked if two reads are actually paired-end reads.
+"""
+import argparse
+from pathlib import Path
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'inputfile',
+    type=argparse.FileType('rb'),
+    help='Interleaved reads FASTQ file.',
+)
+argp.add_argument(
+    '-p', '--prefix',
+    help='Prefix for output files.  A value is derived from the input '
+         'filename by default.',
+)
+argp.add_argument(
+    '-v', '--verbose',
+    action='count',
+    default=1,
+    dest='verbosity',
+    help='Show increased diagnostic output.',
+)
+
+args = argp.parse_args()
+if args.prefix:
+    prefix = args.prefix
+else:
+    prefix = Path(args.inputfile.name).stem
+
+fwd = open('{}.fwd.fastq'.format(prefix), 'wb')
+rev = open('{}.rev.fastq'.format(prefix), 'wb')
+
+# state space
+F = 0  # forward
+R = 1  # reverse
+
+H = 0  # head
+S = 1  # sequence
+P = 2  # plus separator
+Q = 3  # quality
+
+
+file = {F: fwd, R: rev}
+
+
+state = F, H
+linenum = 0
+for line in args.inputfile:
+    linenum += 1
+
+    if state[0] not in [0, 1] or state[1] not in range(4):
+        raise RuntimeError('Illegal internal state: {}, line: {}'
+                           ''.format(state, linenum))
+
+    if state[1] == H and line[0] != ord('@'):
+        raise RuntimeError('Line {} is not a fastq header:'
+                           ''.format(linenum, line.decode()))
+
+    if state[1] == P and line != b'+\n':
+        raise RuntimeError('Line {} is not the + seperator:'
+                           ''.format(linenum, line.decode()))
+
+    file[state[0]].write(line)
+
+    if state[1] == Q:
+        # go back to header and switch file
+        state = state[0] ^ 1, H
+    else:
+        state = state[0], (state[1] + 1) % 4
+
+args.inputfile.close()
+
+if linenum % 8 != 0:
+    raise RuntimeError(
+        'Data missing or file corrupt: Found {} lines in {}; not a '
+        'multiple of 8'.format(linenum, args.inputfile)
+    )
+
+for f in [fwd, rev]:
+    size = f.tell()
+    f.close()
+    if args.verbosity >= 2:
+        print('{} reads / {} bytes written to {}'
+              ''.format(int(linenum / 8), size, f.name))

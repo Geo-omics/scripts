@@ -358,6 +358,9 @@ man_pages = [
      [author], 1),
     ('run', 'omics-run', 'run commands or script inside omics container',
      [author], 1),
+    ('separate-interleaved', 'separate-interleaved',
+     'separate interleaved reads',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.
