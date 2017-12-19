@@ -1,0 +1,55 @@
+.. program:: separate-interleaved
+
+====================
+separate-interleaved
+====================
+
+Synopsis
+========
+
+:program:`separate-interleaved` [:option:`-v`] [:option:`--prefix` PREFIX]  <fastq-file>
+
+
+Description
+===========
+
+Separate interleaved reads fastq file into forwards and reverse files.
+
+Input file must be in FASTQ format, Sequence and quality score must be on a
+single line each, separated by a ``+``, read headers must start with ``@``.
+It is not checked if two reads are actually paired-end reads.
+
+This is a speedier reimplementation of Sunit Jain's
+:command:`separateInterleved` script.
+
+
+Options
+=======
+.. option:: -h, --help
+
+    show this help message and exit
+
+.. option:: -p PREFIX, --prefix PREFIX
+
+    Prefix for output files.  A value is derived from the input filename by
+    default.
+
+.. option:: -v, --verbose
+
+    Print more informative output
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+
+

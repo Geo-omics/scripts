@@ -95,7 +95,6 @@ PERL_SCRIPTS = \
     renameHeaders\
     reverse_complement\
     sangerSeqParser\
-    separateInterleaved\
     silvaTaxonAppend\
     summarize_antiSmash\
     tally\
@@ -141,6 +140,7 @@ OTHER_EXECUTABLES = \
     omics-qc-sample \
     refseq-rna \
     remove_space_from_filenames \
+    separate-interleaved\
     setup_metapathways \
     silva-db \
 
