@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.73-1) unstable; urgency=medium
+
+  * [prep] Fix crash when using --keep-lanes-separated
+  * [prep] Remove leading zeros from lane part of sample name
+  * [qc] Fix crash when using --check option
+  * [qc] make --check report FAIL not just warning
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 19 Dec 2017 15:22:27 -0500
+
 geo-omics-scripts (1.0.72-1) unstable; urgency=medium
 
   * [omics-container] Fix option parsing
