@@ -109,7 +109,7 @@ def check_result(*path):
                 with zf.open(summary_name) as summary:
                     for line in summary:
                         mark, test_name, _ = line.decode().split('\t')
-                        if mark == 'WARN':
+                        if mark in ['WARN', 'FAIL']:
                             print(i, d, mark, ':', test_name)
 
 
