@@ -26,9 +26,13 @@ def group(files, keep_lanes=False):
 
     :param list files: Files, list of pathlib.Path objects
     :param bool keep_lanes: If true, then data from one sample that was spread
-                            across several lanes are concatenated.
+                            across several lanes are not concatenated and kept
+                            separate.
 
-    :return: Iterator over groups (which are also iterators)
+    :return: Iterator over tuples containing the sort key and the group.  The
+             key comes as a tuple of sub-keys, i.e. the sample id and if
+             ``keep_lanes == True`` also the lane.
+             The group is an iterator over the files with the given keys.
 
     Filenames are assumed to adhere to the usual scheme:
 
@@ -77,7 +81,7 @@ def group(files, keep_lanes=False):
         if keep_lanes:
             return (m['sampleid'], m['lane'])
         else:
-            return m['sampleid']
+            return (m['sampleid'], )
 
     for key, group in groupby(files, key=id_lane):
         yield (key, group)
@@ -279,12 +283,21 @@ def main():
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as e:
             futures = {}
-            for sample, sample_grp in group(files, keep_lanes=args.keep_lanes):
+            for samp_key, samp_grp in group(files, keep_lanes=args.keep_lanes):
                 samp_count += 1
+
+                samp_key = list(samp_key)
+                if len(samp_key) > 1:
+                    try:
+                        # remove leading zeros
+                        samp_key[1] = str(int(samp_key[1]))
+                    except Exception:
+                        pass
+
                 futures.update(
                     prep(
-                        sample,
-                        list(sample_grp),
+                        '_'.join(samp_key),
+                        list(samp_grp),
                         dest=args.project['project_home'],
                         force=args.force,
                         verbosity=verbosity,

@@ -103,13 +103,13 @@ def check_result(*path):
         for d in ['fwd', 'rev']:
             result_file = \
                 i / 'FASTQC' / '{}_derep_scythe_sickle_fastqc.zip'.format(d)
-            with zipfile.ZipFile(result_file) as zf:
+            with zipfile.ZipFile(str(result_file)) as zf:
                 summary_name = \
                     '{}_derep_scythe_sickle_fastqc/summary.txt'.format(d)
                 with zf.open(summary_name) as summary:
                     for line in summary:
                         mark, test_name, _ = line.decode().split('\t')
-                        if mark == 'WARN':
+                        if mark in ['WARN', 'FAIL']:
                             print(i, d, mark, ':', test_name)
 
 
