@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.72-1) unstable; urgency=medium
+
+  * [omics-container] Fix option parsing
+  * [omics-run] reduce interference with existing environment
+  * Reimplement separateInterleaved script
+  * [qc] Add option to check FASTQC results
+  * Increment compat level to 10
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 19 Dec 2017 12:00:22 -0500
+
 geo-omics-scripts (1.0.71-1) unstable; urgency=medium
 
   [ Robert ]
