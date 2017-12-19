@@ -287,6 +287,12 @@ def main():
                 samp_count += 1
 
                 samp_key = list(samp_key)
+                if len(samp_key) > 1:
+                    try:
+                        # remove leading zeros
+                        samp_key[1] = str(int(samp_key[1]))
+                    except Exception:
+                        pass
 
                 futures.update(
                     prep(
