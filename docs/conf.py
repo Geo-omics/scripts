@@ -23,7 +23,10 @@
 import os
 import re
 import subprocess
+import sys
 
+
+sys.path.insert(0, os.path.abspath('../lib'))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -35,6 +38,7 @@ import subprocess
 # ones.
 extensions = [
     'sphinx.ext.mathjax',
+    'sphinxarg.ext',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
