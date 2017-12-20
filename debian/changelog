@@ -1,3 +1,19 @@
+geo-omics-scripts (1.0.74-1) unstable; urgency=medium
+
+  * Enable use of sphinx' argparse extension
+  * Add qc-check command to replace qc --check
+  * [qc] Remove --check option, is superseded by qc-check command
+  * Fix line breaking in man page
+  * Python 2-to-3 conversion
+  * Fix code style / formatting
+  * [bins2fasta] Move script under omics package
+  * [bins2fasta] Make script a proper module, add entry point under old name
+  * [bins2fasta] Generate documentation
+  * [bin2fasta] Refactor to make module more reusable, executable
+  * [omics init] Generate docs from argparser
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 20 Dec 2017 15:40:24 -0500
+
 geo-omics-scripts (1.0.73-1) unstable; urgency=medium
 
   * [prep] Fix crash when using --keep-lanes-separated
