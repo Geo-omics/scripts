@@ -1,0 +1,27 @@
+.. program:: omics qc-check
+
+==================
+qc-check - bork me
+==================
+
+.. argparse::
+    :module: omics.qc_check
+    :func: get_argp
+    :prog: omics qc-check
+    :nodefault:
+    :manpage:
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics-qc`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+

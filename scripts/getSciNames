@@ -52,7 +52,8 @@ prints Taxa ids to this file <optional>
 
 =item B<-dump> I<path>
 
-location of your *.dmp file downloaded from NCBI's Taxonomy FTP site; <default="/geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/">
+location of your *.dmp file downloaded from NCBI's Taxonomy FTP site;
+the default is I</geomicro/data1/COMMON/scripts/Ungit/NCBI/taxa_dump/>
 
 =item B<-h>, B<-help>
 

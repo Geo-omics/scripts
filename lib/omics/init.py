@@ -1,5 +1,8 @@
 """
-Initialize a new omics project directory
+Creates a new omics project in the given directory by setting up a
+configuration file in a hidden sub-directory ``.omics`` to primarily store
+options common to various command in the omics tool chain.  This is purely a
+convenience feature and not necessary to run any of the omics tools.
 """
 from pathlib import Path
 from string import Template
@@ -62,7 +65,7 @@ def init(path=Path.cwd(), name=None):
         print('Initialized omics project in {}'.format(omics_dir))
 
 
-def main():
+def get_argp():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
@@ -81,7 +84,11 @@ def main():
         help='Optional project name, by default, a project name will be '
              'derived from the project directory',
     )
-    args = argp.parse_args()
+    return argp
+
+
+def main():
+    args = get_argp().parse_args()
     init(path=args.directory, name=args.name)
 
 
