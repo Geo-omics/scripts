@@ -8,8 +8,8 @@ from pathlib import Path
 import sys
 
 
-def main():
-    argp = argparse.ArgumentParser(__doc__)
+def get_argp():
+    argp = argparse.ArgumentParser(description=__doc__)
     argp.add_argument(
         'clustering',
         type=argparse.FileType(),
@@ -35,8 +35,11 @@ def main():
         action='store_true',
         help='Print more info in case of errors'
     )
+    return argp
 
-    args = argp.parse_args()
+
+def main():
+    args = get_argp().parse_args()
 
     outdir = Path(args.output_dir)
     outdir.mkdir(parents=True, exist_ok=True)

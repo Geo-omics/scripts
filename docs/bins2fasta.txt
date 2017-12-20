@@ -1,0 +1,27 @@
+.. program:: bins2fasta
+
+===========================================
+bins2fasta - generate fasta files from bins
+===========================================
+
+.. argparse::
+    :module: omics.bins2fasta
+    :func: get_argp
+    :prog: bins2fasta
+    :nodefault:
+    :manpage:
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics-binning`, :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+

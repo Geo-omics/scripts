@@ -367,6 +367,8 @@ man_pages = [
      [author], 1),
     ('qc-check', 'omics-qc-check', 'check results of FASTQC run',
      [author], 1),
+    ('bins2fasta', 'bins2fasta', 'generate per-bin fasta files',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.
