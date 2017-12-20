@@ -11,6 +11,7 @@ Package: geo-omics-scripts
 Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${python3:Depends}
+Recommends: libjs-jquery, libjs-underscore, libjs-modernizr
 Description: Tools to process and analyse metagenomic sequencing data
  A collection of various tools and scripts used by the Geomicrobiology group at
  the Dept. of Earth & Environmental Sciences at the University of Michigan.
