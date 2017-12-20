@@ -42,21 +42,32 @@ def main():
     args = get_argp().parse_args()
 
     outdir = Path(args.output_dir)
+    to_fasta(
+        outdir=outdir,
+        clustering=args.clustering,
+        input_contigs=args.contigs,
+        suffix=args.suffix,
+        verbose=args.verbose,
+    )
+
+
+def to_fasta(outdir, clustering, input_contigs, suffix='fna', verbose=False):
     outdir.mkdir(parents=True, exist_ok=True)
 
     # load bin assignments
     contigs = {}
     bins = set()
     print('Reading bin assignment data... ', end='', flush=True)
-    for line in args.clustering:
+    for line in clustering:
         line = line.strip()
 
         try:
             contig_id, xbin = line.split(',')
             xbin = int(xbin)
         except Exception as e:
-            print('Failed to parse clustering file {}, offending line: {}: Error: '
-                  '{}: {}'.format(args.clustering, line, e.__class__.__name__, e))
+            print('Failed to parse clustering file {}, offending line: {}: '
+                  'Error: {}: {}'
+                  ''.format(clustering, line, e.__class__.__name__, e))
             sys.exit(1)
 
         contigs[contig_id] = xbin
@@ -70,14 +81,14 @@ def main():
     # get output file handles
     files = {}
     for i in bins:
-        suffix = args.suffix.lstrip('.')
+        suffix = suffix.lstrip('.')
         fname = 'bin_{}.{}'.format(i, suffix)
         files[i] = (outdir / fname).open('w')
 
     # write contigs
     contig_id = None
     num_not_binned = 0
-    for line in args.contigs:
+    for line in input_contigs:
         is_header = line.startswith('>')
         if is_header:
             # account previous contig
@@ -110,11 +121,15 @@ def main():
     print('done')
 
     if contigs:
-        print('WARNING: {} contigs were clustered but not written out (not found '
-              'in contigs file?)'.format(len(contigs)))
-        if args.verbose:
+        print('WARNING: {} contigs were clustered but not written out (not '
+              'found in contigs file?)'.format(len(contigs)))
+        if verbose:
             for i, b in contigs.items():
                 print(i, b)
 
     if num_not_binned > 0:
         print('Found {} contigs without bin assignment'.format(num_not_binned))
+
+
+if __name__ == '__main__':
+    main()
