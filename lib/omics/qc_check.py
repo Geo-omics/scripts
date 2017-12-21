@@ -154,6 +154,12 @@ def get_argp():
         help=('The infix part of the post-qc reads files, default is {}'
               ''.format(DEFAULT_POST_QC_INFIX))
     )
+    argp.add_argument(
+        '-t', '--test',
+        action='append',
+        help='Restrict output to given tests, this option can be given '
+             'multiple times'
+    )
 
     return argp
 
@@ -179,6 +185,14 @@ def main():
             warnings=args.warnings or args.diff,
             passes=args.diff,
         )
+
+        if args.test:
+            # show all tests unless restircted by command line
+            results = [
+                i for i in results
+                if any([i.test.startswith(j) for j in args.test])
+            ]
+
         if args.diff:
             def diffsort(x):
                 return (x.path, x.pref, x.test)
