@@ -78,7 +78,7 @@ def get_basename(prefix, infix):
 
 def get_details(path, fastqc_dir, prefix, infix, test):
     """
-    Retrieve detailed test result
+    Retrieve a single detailed test result
     """
     basename = get_basename(prefix, infix)
     zipf = path / fastqc_dir / '{}.zip'.format(basename)
@@ -169,6 +169,7 @@ def main():
     infixes = [args.post_qc_infix]
     if args.all or args.diff:
         # pre-qc files have empty infix
+        # order such that before-qc comes before after-qc
         infixes = [''] + infixes
 
     try:
@@ -201,14 +202,24 @@ def main():
                         )
         else:
             for i in results:
+                if args.all:
+                    if i.inf == infixes[0]:
+                        order = ' before'
+                    elif i.inf == infixes[1]:
+                        order = '  after'
+                    else:
+                        raise ValueError('bad infix value: {}'.format(i.inf))
+                else:
+                    order = ''
+
                 if args.verbosity > DEFAULT_VERBOSITY:
-                    print('[{} {}] {} {} -- Detailed report:'
-                          ''.format(i.path, i.pref, i.mark, i.test))
+                    print('[{} {}{}] {} {} -- Detailed report:'
+                          ''.format(i.path, i.pref, order, i.mark, i.test))
                     print(get_details(i.path, DEFAULT_FASTQC_DIR, i.pref,
                                       i.inf, i.test))
                 else:
                     print(
-                        '[{} {}]'.format(i.path, i.pref),
+                        '[{} {}{}]'.format(i.path, i.pref, order),
                         '{} ({})'.format(i.mark, i.test),
                     )
 
