@@ -209,11 +209,13 @@ def main():
                     )
                 else:
                     if before.mark != after.mark:
-                        print(
-                            '[{} {}]'.format(path, pref),
-                            '{} --> {} ({})'
-                            ''.format(before.mark, after.mark, test),
-                        )
+                        if args.warnings \
+                                or 'FAIL' in [before.mark, after.mark]:
+                            print(
+                                '[{} {}]'.format(path, pref),
+                                '{} --> {} ({})'
+                                ''.format(before.mark, after.mark, test),
+                            )
         else:
             for i in results:
                 if args.all:
