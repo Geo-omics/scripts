@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.75-1) unstable; urgency=medium
+
+  * [docs] Remove mathjax extension since no math is actually used anywhere
+  * Link to debian's copy of general purpose non-sphinx-specific js libs
+  * [debian/control] Fix debhelper dependency
+  * [debian/control] Add more dependencies, as recommends for now
+  * [mapping] Fix dependency check
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 21 Dec 2017 10:31:39 -0500
+
 geo-omics-scripts (1.0.74-1) unstable; urgency=medium
 
   * Enable use of sphinx' argparse extension
