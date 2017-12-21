@@ -78,7 +78,7 @@ def get_basename(prefix, infix):
 
 def get_details(path, fastqc_dir, prefix, infix, test):
     """
-    Retrieve detailed test result
+    Retrieve a single detailed test result
     """
     basename = get_basename(prefix, infix)
     zipf = path / fastqc_dir / '{}.zip'.format(basename)
@@ -123,14 +123,16 @@ def get_argp():
     argp.add_argument(
         '-w', '--warnings',
         action='store_true',
-        help='Also report warnings',
+        help='Also report warnings. By default only results involving a FAIL'
+             'get reported',
     )
-    argp.add_argument(
+    excl_grp = argp.add_mutually_exclusive_group()
+    excl_grp.add_argument(
         '-d', '--diff',
         action='store_true',
         help='Show pre- vs. post-qc difference.  ',
     )
-    argp.add_argument(
+    excl_grp.add_argument(
         '-a', '--all',
         action='store_true',
         help='Report both, pre- and post qc results.  By default only report '
@@ -154,6 +156,13 @@ def get_argp():
         help=('The infix part of the post-qc reads files, default is {}'
               ''.format(DEFAULT_POST_QC_INFIX))
     )
+    argp.add_argument(
+        '-t', '--test',
+        action='append',
+        help='Restrict output to given tests, this option can be given '
+             'multiple times.  It is okay to only give the beginning of'
+             'the test\'s name.'
+    )
 
     return argp
 
@@ -169,6 +178,7 @@ def main():
     infixes = [args.post_qc_infix]
     if args.all or args.diff:
         # pre-qc files have empty infix
+        # order such that before-qc comes before after-qc
         infixes = [''] + infixes
 
     try:
@@ -178,6 +188,14 @@ def main():
             warnings=args.warnings or args.diff,
             passes=args.diff,
         )
+
+        if args.test:
+            # show all tests unless restircted by command line
+            results = [
+                i for i in results
+                if any([i.test.startswith(j) for j in args.test])
+            ]
+
         if args.diff:
             def diffsort(x):
                 return (x.path, x.pref, x.test)
@@ -194,21 +212,33 @@ def main():
                     )
                 else:
                     if before.mark != after.mark:
-                        print(
-                            '[{} {}]'.format(path, pref),
-                            '{} --> {} ({})'
-                            ''.format(before.mark, after.mark, test),
-                        )
+                        if args.warnings \
+                                or 'FAIL' in [before.mark, after.mark]:
+                            print(
+                                '[{} {}]'.format(path, pref),
+                                '{} --> {} ({})'
+                                ''.format(before.mark, after.mark, test),
+                            )
         else:
             for i in results:
+                if args.all:
+                    if i.inf == infixes[0]:
+                        order = ' before'
+                    elif i.inf == infixes[1]:
+                        order = '  after'
+                    else:
+                        raise ValueError('bad infix value: {}'.format(i.inf))
+                else:
+                    order = ''
+
                 if args.verbosity > DEFAULT_VERBOSITY:
-                    print('[{} {}] {} {} -- Detailed report:'
-                          ''.format(i.path, i.pref, i.mark, i.test))
+                    print('[{} {}{}] {} {} -- Detailed report:'
+                          ''.format(i.path, i.pref, order, i.mark, i.test))
                     print(get_details(i.path, DEFAULT_FASTQC_DIR, i.pref,
                                       i.inf, i.test))
                 else:
                     print(
-                        '[{} {}]'.format(i.path, i.pref),
+                        '[{} {}{}]'.format(i.path, i.pref, order),
                         '{} ({})'.format(i.mark, i.test),
                     )
 
