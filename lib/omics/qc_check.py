@@ -7,15 +7,16 @@ from pathlib import Path
 import sys
 import zipfile
 
-from omics import get_argparser
+from omics import get_argparser, DEFAULT_VERBOSITY
 
+DEFAULT_FASTQC_DIR = 'FASTQC'
 DEFAULT_FWD_PREFIX = 'fwd'
 DEFAULT_REV_PREFIX = 'rev'
 DEFAULT_POST_QC_INFIX = 'derep_scythe_sickle'
 
 
-def get_test_marks(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
-                   warnings=False, passes=False):
+def get_test_marks(*paths, fastqc_dir=DEFAULT_FASTQC_DIR, prefixes=None,
+                   infixes=None, warnings=False, passes=False):
     """
     Check results of FASTQC
 
@@ -52,13 +53,7 @@ def get_test_marks(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
     for p in paths:
         for inf in infixes:
             for pref in prefixes:
-                if pref and inf:
-                    basename = pref + '_' + inf
-                else:
-                    # one is empty (at least) so no _ separator
-                    basename = pref + inf
-                basename += '_fastqc'
-
+                basename = get_basename(pref, inf)
                 zipf = p / fastqc_dir / '{}.zip'.format(basename)
                 with zipfile.ZipFile(str(zipf)) as zf:
                     summary_name = '{}/summary.txt'.format(basename)
@@ -69,10 +64,50 @@ def get_test_marks(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
                                 yield result(p, pref, inf, test_name, mark)
 
 
+def get_basename(prefix, infix):
+    """
+    Build base of relevant filenames
+    """
+    if prefix and infix:
+        basename = prefix + '_' + infix
+    else:
+        # one is empty (at least) so no _ separator
+        basename = prefix + infix
+    return basename + '_fastqc'
+
+
+def get_details(path, fastqc_dir, prefix, infix, test):
+    """
+    Retrieve detailed test result
+    """
+    basename = get_basename(prefix, infix)
+    zipf = path / fastqc_dir / '{}.zip'.format(basename)
+    with zipfile.ZipFile(str(zipf)) as zf:
+        data_file_name = '{}/fastqc_data.txt'.format(basename)
+        with zf.open(data_file_name) as data:
+            ret = ''
+            in_section = False
+            for line in data:
+                line = line.decode()
+                if line.startswith('>>{}\t'.format(test)):
+                    in_section = True
+                    continue
+
+                if in_section and line == '>>END_MODULE\n':
+                    break
+
+                if in_section:
+                    ret += line
+
+            return ret
+
+
 def get_argp():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
+        project_home=False,
+        threads=False,
     )
     argp.add_argument(
         'samples',
@@ -166,10 +201,16 @@ def main():
                         )
         else:
             for i in results:
-                print(
-                    '[{} {}]'.format(i.path, i.pref),
-                    '{} ({})'.format(i.mark, i.test),
-                )
+                if args.verbosity > DEFAULT_VERBOSITY:
+                    print('[{} {}] {} {} -- Detailed report:'
+                          ''.format(i.path, i.pref, i.mark, i.test))
+                    print(get_details(i.path, DEFAULT_FASTQC_DIR, i.pref,
+                                      i.inf, i.test))
+                else:
+                    print(
+                        '[{} {}]'.format(i.path, i.pref),
+                        '{} ({})'.format(i.mark, i.test),
+                    )
 
     except Exception as e:
         if args.traceback:
