@@ -37,7 +37,6 @@ sys.path.insert(0, os.path.abspath('../lib'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.mathjax',
     'sphinxarg.ext',
 ]
 
