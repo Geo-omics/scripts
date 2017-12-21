@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.76-1) unstable; urgency=medium
+
+  * [debian/links] Fix target
+  * [qc-check] Add --diff option showing before/after differences
+  * [qc-check] Print details when being verbose
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 21 Dec 2017 14:54:28 -0500
+
 geo-omics-scripts (1.0.75-1) unstable; urgency=medium
 
   * [docs] Remove mathjax extension since no math is actually used anywhere
