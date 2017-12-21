@@ -1,19 +1,22 @@
 """
 Run QC on metagenomic reads from multiple samples
 """
+from collections import namedtuple
+from itertools import groupby
 from pathlib import Path
 import sys
 import zipfile
 
-from omics import get_argparser
+from omics import get_argparser, DEFAULT_VERBOSITY
 
+DEFAULT_FASTQC_DIR = 'FASTQC'
 DEFAULT_FWD_PREFIX = 'fwd'
 DEFAULT_REV_PREFIX = 'rev'
 DEFAULT_POST_QC_INFIX = 'derep_scythe_sickle'
 
 
-def get_fail(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
-             warnings=False):
+def get_test_marks(*paths, fastqc_dir=DEFAULT_FASTQC_DIR, prefixes=None,
+                   infixes=None, warnings=False, passes=False):
     """
     Check results of FASTQC
 
@@ -21,7 +24,9 @@ def get_fail(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
     :param str fastqc_dir: Name of sub-directory with FASTQC results
     :param list prefixes: List of prefixes to build analysed files' name
     :param list infixes: List of infixes to build analysed files' name
-    :param bool warning: Report warnings, too.  By default only fails are
+    :param bool warnings: Report warnings, too.  By default only fails are
+                         reported
+    :param bool passes: Report passes, too.  By default only fails are
                          reported
     """
     if prefixes is None:
@@ -36,21 +41,19 @@ def get_fail(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
     if warnings:
         query.append('WARN')
 
+    if passes:
+        query.append('PASS')
+
     if not prefixes:
         # if empty list was passed
         prefixes = ['']
 
+    result = namedtuple('result', ['path', 'pref', 'inf', 'test', 'mark'])
     # compile names of result files
     for p in paths:
-        for pref in prefixes:
-            for inf in infixes:
-                if pref and inf:
-                    basename = pref + '_' + inf
-                else:
-                    # one is empty (at least) so no _ separator
-                    basename = pref + inf
-                basename += '_fastqc'
-
+        for inf in infixes:
+            for pref in prefixes:
+                basename = get_basename(pref, inf)
                 zipf = p / fastqc_dir / '{}.zip'.format(basename)
                 with zipfile.ZipFile(str(zipf)) as zf:
                     summary_name = '{}/summary.txt'.format(basename)
@@ -58,13 +61,53 @@ def get_fail(*paths, fastqc_dir='FASTQC', prefixes=None, infixes=None,
                         for line in summary:
                             mark, test_name, _ = line.decode().split('\t')
                             if mark in query:
-                                yield p, pref, inf, mark, test_name
+                                yield result(p, pref, inf, test_name, mark)
+
+
+def get_basename(prefix, infix):
+    """
+    Build base of relevant filenames
+    """
+    if prefix and infix:
+        basename = prefix + '_' + infix
+    else:
+        # one is empty (at least) so no _ separator
+        basename = prefix + infix
+    return basename + '_fastqc'
+
+
+def get_details(path, fastqc_dir, prefix, infix, test):
+    """
+    Retrieve detailed test result
+    """
+    basename = get_basename(prefix, infix)
+    zipf = path / fastqc_dir / '{}.zip'.format(basename)
+    with zipfile.ZipFile(str(zipf)) as zf:
+        data_file_name = '{}/fastqc_data.txt'.format(basename)
+        with zf.open(data_file_name) as data:
+            ret = ''
+            in_section = False
+            for line in data:
+                line = line.decode()
+                if line.startswith('>>{}\t'.format(test)):
+                    in_section = True
+                    continue
+
+                if in_section and line == '>>END_MODULE\n':
+                    break
+
+                if in_section:
+                    ret += line
+
+            return ret
 
 
 def get_argp():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
+        project_home=False,
+        threads=False,
     )
     argp.add_argument(
         'samples',
@@ -81,6 +124,11 @@ def get_argp():
         '-w', '--warnings',
         action='store_true',
         help='Also report warnings',
+    )
+    argp.add_argument(
+        '-d', '--diff',
+        action='store_true',
+        help='Show pre- vs. post-qc difference.  ',
     )
     argp.add_argument(
         '-a', '--all',
@@ -119,17 +167,51 @@ def main():
             argp.error('Directory not found: {}'.format(i))
 
     infixes = [args.post_qc_infix]
-    if args.all:
+    if args.all or args.diff:
+        # pre-qc files have empty infix
         infixes = [''] + infixes
 
     try:
-        fails = get_fail(
+        results = get_test_marks(
             *args.samples,
             infixes=infixes,
-            warnings=args.warnings,
+            warnings=args.warnings or args.diff,
+            passes=args.diff,
         )
-        for i in fails:
-            print(*i)
+        if args.diff:
+            def diffsort(x):
+                return (x.path, x.pref, x.test)
+
+            results = list(sorted(results, key=diffsort))
+
+            for (path, pref, test), results in groupby(results, diffsort):
+                try:
+                    before, after = list(results)
+                except ValueError:
+                    raise RuntimeError(
+                        'Unexpected number of results for {}/{}/{}: {}'
+                        ''.format(path, pref, test, results)
+                    )
+                else:
+                    if before.mark != after.mark:
+                        print(
+                            '[{} {}]'.format(path, pref),
+                            '{} --> {} ({})'
+                            ''.format(before.mark, after.mark, test),
+                        )
+        else:
+            for i in results:
+                if args.verbosity > DEFAULT_VERBOSITY:
+                    print('[{} {}] {} {} -- Detailed report:'
+                          ''.format(i.path, i.pref, i.mark, i.test))
+                    print(get_details(i.path, DEFAULT_FASTQC_DIR, i.pref,
+                                      i.inf, i.test))
+                else:
+                    print(
+                        '[{} {}]'.format(i.path, i.pref),
+                        '{} ({})'.format(i.mark, i.test),
+                    )
+
     except Exception as e:
         if args.traceback:
             raise
