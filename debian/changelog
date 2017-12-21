@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.77-1) unstable; urgency=medium
+
+  * [qc-check] Indicate if report is from before or after
+  * [qc-check] Add --test to restrict output to those from certain tests
+  * [qc-check] Default to show diffs with a FAIL unless --warnings is given
+  * [qc-check] Make --diff and --all exclusive and extend help text a bit
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 21 Dec 2017 15:54:21 -0500
+
 geo-omics-scripts (1.0.76-1) unstable; urgency=medium
 
   * [debian/links] Fix target
