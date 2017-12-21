@@ -28,7 +28,7 @@ ARG_HELP="
 "
 SHORT_OPTIONS=a:cf:i:o:r:
 LONG_OPTIONS=chop,cpus:,fwd-reads:,force,rev-reads:,assembly:,no-indexing,out-dir:,int-reads:
-CHECK_PROGS="bwa genomeCoverageBed samtools coveragePerScaffold"
+CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 }
 
 ##########################
