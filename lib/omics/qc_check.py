@@ -123,14 +123,16 @@ def get_argp():
     argp.add_argument(
         '-w', '--warnings',
         action='store_true',
-        help='Also report warnings',
+        help='Also report warnings. By default only results involving a FAIL'
+             'get reported',
     )
-    argp.add_argument(
+    excl_grp = argp.add_mutually_exclusive_group()
+    excl_grp.add_argument(
         '-d', '--diff',
         action='store_true',
         help='Show pre- vs. post-qc difference.  ',
     )
-    argp.add_argument(
+    excl_grp.add_argument(
         '-a', '--all',
         action='store_true',
         help='Report both, pre- and post qc results.  By default only report '
@@ -158,7 +160,8 @@ def get_argp():
         '-t', '--test',
         action='append',
         help='Restrict output to given tests, this option can be given '
-             'multiple times'
+             'multiple times.  It is okay to only give the beginning of'
+             'the test\'s name.'
     )
 
     return argp
