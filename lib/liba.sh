@@ -77,23 +77,23 @@ trap 'exception $LINENO $?' ERR
 usage() {
     if [ "$VERBOSITY" -ge 1 ]; then
 	echo "
-USAGE: $SCRIPT_NAME $USAGE
+USAGE: $SCRIPT_NAME ${USAGE:-}
 "
     fi
 }
 
 user_help() {
-    echo "$SCRIPT_NAME - $HELP"
+    echo "$SCRIPT_NAME - ${HELP:-}"
     usage
     echo "Command line parameters:"
-    echo "$ARG_HELP
+    echo "${ARG_HELP:-}
      --working-dir=DIR  Directory where to retrieve and store files
  -h, --help             Print this help.
      --no-color         Disable colorful output.
  -v                     Verbosity: use multiple -v to increase output.
      --verbosity=N      Set level verbosity.
 
-$MORE_HELP"
+${MORE_HELP:-}"
 }
 
 exception () {
