@@ -15,6 +15,10 @@ ARG_HELP="
   -a, --assembly FILE   Fasta file assembly i.e. contigs or scaffolds
   -c, --chop		Chop up assembly contigs into even size before
                         mapping
+      --index-only      Index the assembly and stop.  Useful when processing
+                        a joint assembly from several samples.  In this work-
+                        flow run --index-only once and then re-use the index
+                        for mapping reads from each sample.
       --cpus N          Number of CPUs to use for parallel processing
       --force           Overwrite any previous results
   -f, --fwd-reads FILE  Fastq file with forward reads
@@ -23,11 +27,12 @@ ARG_HELP="
                         can also be single-paired reads,
 			The default is good_int.fastq
                         Incompatible with bowtie2 <= 2.3.0
+      --index-base PATH/NAME
+                        Path and base name of bowtie2 index db files
   -o, --out-dir DIR     Name of output directory, default: MAPPING
-      --no-indexing     Do not index the assembly but existing index
 "
 SHORT_OPTIONS=a:cf:i:o:r:
-LONG_OPTIONS=chop,cpus:,fwd-reads:,force,rev-reads:,assembly:,no-indexing,out-dir:,int-reads:
+LONG_OPTIONS=chop,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-base:,index-only,out-dir:,int-reads:
 CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 }
 
@@ -49,7 +54,10 @@ FORCE=false
 FWD_READS=good.fwd.fastq
 REV_READS=good.rev.fastq
 # whether to run indexing
-INDEX=true
+INDEX_ONLY=false
+# path and base name for bowtie2 index files
+# default depends on path and name of assembly file, set further below if needed
+INDEX_BASE=
 #
 INT_READS=good_int.fastq
 #
@@ -92,9 +100,12 @@ handle_options () {
 	    (-o|--out-dir)
 		OUT_DIR="$2"
 		return 2;;
-	    (--no-indexing)
-		INDEX=false
+	    (--index-only)
+		INDEX_ONLY=true
 		return 1;;
+	    (--index-base)
+		INDEX_BASE="$2"
+		return 2;;
         esac
     fi
 }
@@ -128,25 +139,22 @@ fi
 [ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
 [ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
 
-# find read files
-if $use_int_reads; then
-    [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
-else
-    # this is also the default if no cmd line options were given
-    use_int_reads=false
-    [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
-    [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
+if ! $INDEX_ONLY; then
+    # find read files
+    if $use_int_reads; then
+        [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
+    else
+        # this is also the default if no cmd line options were given
+        use_int_reads=false
+        [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
+        [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
+    fi
 fi
 
 
 #################################
 # do stuff
 ################################
-OUT_DIR=$(readlink -f "$OUT_DIR")
-if [ -d "$OUT_DIR" ] && ! $FORCE; then
-    abort "Output directory $OUT_DIR exists, use --force to overwrite"
-fi
-
 if $use_int_reads; then
     int_reads=$(readlink -f "$INT_READS")
 else
@@ -154,26 +162,29 @@ else
     rev_reads=$(readlink -f "$REV_READS")
 fi
 
-$MKDIR -p "$OUT_DIR"
 
 # make local link for assembly
-assembly=$(basename "$ASSEMBLY")
-$LN -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
-
-cd "$OUT_DIR"
-info "Output / working directory is $OUT_DIR"
+#assembly=$(basename "$ASSEMBLY")
+assembly=$(realpath "$ASSEMBLY")
+#$LN -f -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
 
 # get a "name" from name of assembly file without suffix
 name=$(basename "$assembly")
 name=${name%.*}
 
 if $CHOP_ASSEMBLY; then
-    info "Chopping assembly into chunks..."
     chunk_file=${name}.chop.fa
+    if [ -e "$chunk_file" ] && ! $FORCE; then
+       abort "File exists: $chunk_file, use --force to override"
+    fi
+    info "Chopping assembly into chunks..."
     chop-contigs --input "$assembly" --output "$chunk_file"
-    assembly=$chunk_file
+    assembly=$(realpath "$chunk_file")
     name=${name}.chop
 fi
+
+# generate default index base if needed
+index_base=$(realpath "${INDEX_BASE:-${name}-index}")/$name
 
 alnSam=${name}_aligned.sam
 log=${name}.bowtie2.log
@@ -186,21 +197,34 @@ scafCov=${name}.cov
 #######################################
 #########      PIPELINE       #########
 #######################################
-if $INDEX; then
+index_dir=$(dirname "$index_base")
+if ls "${index_base}"* &> /dev/null; then
+    info "Re-using existing index at $index_dir"
+else
     info "Generating Index..."
-    # bwa index "$assembly"
-    bowtie2-build "$assembly" "$name" &> "$log"
+    $MKDIR -p -- "$index_dir"
+    bowtie2-build --threads "$CPUS" "$assembly" "$index_base" &> "$index_dir"/build.log
+    info "Index saved under $index_dir"
+fi
+$INDEX_ONLY && exit
+
+OUT_DIR=$(readlink -f "$OUT_DIR")
+if [ -d "$OUT_DIR" ] && ! $FORCE; then
+    abort "Output directory $OUT_DIR exists, use --force to overwrite"
 fi
 
+$MKDIR -p "$OUT_DIR"
+cd "$OUT_DIR"
+
 info "Aligning reads..."
-printf "\n[Running bowtie2]\n" >> "$log"
+printf "\n[Running bowtie2]\n" > "$log"
 if $use_int_reads; then
 	info "[NOTE] Using $int_reads for reads"
-        bowtie2 -x "$name" --interleaved "$int_reads" -S "$alnSam" &>> "$log"
+        bowtie2 -x "$index_base" --interleaved "$int_reads" -S "$alnSam" &>> "$log"
 else
         # this is also the compatibility option for bowtie2 <= 2.3.0
 	info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
-        bowtie2 -x "$name" -1 "$fwd_reads" -2 "$rev_reads" -S "$alnSam" &>> "$log"
+        bowtie2 -x "$index_base" -1 "$fwd_reads" -2 "$rev_reads" -S "$alnSam" &>> "$log"
 fi
 
 info "Fixing alignment artifacts and converting SAM to BAM..."
