@@ -1,3 +1,14 @@
+geo-omics-scripts (1.0.78-1) unstable; urgency=medium
+
+  * [assemble] Fix spelling
+  * [liba.sh] Guard against scripts using set -u
+  * [mapping] Improve indexing workflow
+  * [mapping] Fixed index re-use and related cmd line interface
+  * [docs] Update mapping section of pipeline documentation
+  * [binning] Fix argument passing
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 04 Jan 2018 14:55:47 -0500
+
 geo-omics-scripts (1.0.77-1) unstable; urgency=medium
 
   * [qc-check] Indicate if report is from before or after
