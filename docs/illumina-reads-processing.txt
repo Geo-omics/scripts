@@ -265,19 +265,21 @@ assembly with the contigs produced by the assembly. This allows us to calculate
 how many reads recruit to each contig.  This preparation for the binning step
 but also allows visualization via :program:`igv`.
 
-Mapping has to occur seperately for each sample and before the actual mapping
+Mapping has to occur separately for each sample and before the actual mapping
 the assembly needs to be indexed.  This indexing only needs to be performed
 once.  Also, in preparation to do binning with CONCOCT, the assembled contigs
 should be chopped-up into equal-sized chunks before doing any of these.  So
 assume the previous steps of the pipeline were followed there should be an
 assembly :file:`assembly.fa` and per-sample directories containing the reads
-for each sample.  Do this::
+for each sample.  The canonical way to use :program:`omics
+mapping` is as follows::
 
-    chop-contigs -i assembly.fa -o assembly.chop.fa
-    # TODO: how to do separate indexing
+    omics mapping --chop --index-only
     for i in sample_*; do
         cd $i
-        omics mapping --no-indexing --assembly assembly.chop.fa
+        omics mapping --index-dir ../bowtie2-index \
+            -a ../assembly.chop.fa \
+            -f good.fwd.fastq -r good.rev.fastq
         cd ..
     done
 

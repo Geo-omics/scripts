@@ -295,7 +295,7 @@ if $RUN_PHYLOSIFT; then
 	info "Erasing previous PhyloSift results..."
 	$RM -r -- "$psout"
     fi
-    info "Running PyloSift..."
+    info "Running PhyloSift..."
     phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
     info "done: PhyloSift results at $psout"
 fi
