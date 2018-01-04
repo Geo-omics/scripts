@@ -106,8 +106,9 @@ $MKDIR -p -- "$outdir"
 if [ -z "$COV_FILE" ]; then
     info "Collecting coverage data..."
     cov_file=$outdir/${name}.cov
-    # shellcheck disable=SC2068
-    merge-coverage "$VERBOSE_FLAG" -a "$assembly" -o "$cov_file" ${SAMPLE_DIRS[@]/%//$COV_PATH}
+    v_arg=()
+    [[ -z "$VERBOSE_FLAG" ]] || v_arg+=("$VERBOSE_FLAG")
+    merge-coverage "${v_arg[@]}" -a "$assembly" -o "$cov_file" "${SAMPLE_DIRS[@]/%//$COV_PATH}"
     info "Mean coverage data written to $cov_file, to be used with --coverage-file option in future invocations of binning"
 else
     cov_file=$(readlink -f "$COV_FILE")
@@ -116,8 +117,8 @@ fi
 [ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
 
 info "Running CONCOCT..."
-c_args=
-[[ -z $CPUS ]] || c_arg="$c_args -t $CPUS"
-[[ -z $MAX_CLUSTERS ]] || c_arg="$c_args -c $MAX_CLUSTERS"
-concoct $c_arg --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+c_args=()
+[[ -z $CPUS ]] || c_args+=(-t "$CPUS")
+[[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
+concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
 
