@@ -118,19 +118,8 @@ RUN_BLAST=true
 RUN_PHYLOSIFT=true
 RUN_QUAST=true
 
-# common path to reference data / c.f. flux switch below
-REF_DATA_DIR=/geomicro/data9/flux/reference-data
-
 # empty by default
 SAMPLE_DIRS=()
-
-if [ -d /dept/geology/geomicro ]; then
-    # for flux
-    ref_data_home=/dept/geology$REF_DATA_DIR
-else
-    # for cayman / vondamm
-    ref_data_home=$REF_DATA_DIR
-fi
 
 # Required Databases
 PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_128_SSURef_tax_silva.fasta"
@@ -152,6 +141,29 @@ fi
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=($@)
+fi
+
+# find valid ref data path
+if [[ -v OMICS_REFERENCE_DATA ]]; then
+    ref_data_home="$OMICS_REFERENCE_DATA"  # from environment
+else
+    common_ref_path=data9/flux/reference-data
+    alt_ref_data=(
+        /geomicro
+        /gmb
+        /dept/geology/geomicro/
+    )
+
+    for i in "${alt_ref_data[@]}"; do
+        if [[ -d $i/$common_ref_path ]]; then
+            ref_data_home=$i/$common_ref_path
+            break
+        fi
+    done
+fi
+if [[ ! -v ref_data_home ]]; then
+    error "Path to reference data not specified or not existing -- some step below may fail"
+    ref_data_home=.
 fi
 
 #################################
