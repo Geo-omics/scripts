@@ -4,11 +4,20 @@
 # https://phylosift.wordpress.com/tutorials/running-phylosift/phylosift-run-control-file/
 #
 
+use Env qw($OMICS_REFERENCE_DATA);
 
-my $ref_data_path = "/geomicro/data9/flux/reference-data/phylosift";
-if (! -d $ref_data_path) {
-    $ref_data_path = "/dept/geology$ref_data_path";
+my $common = "data9/flux/reference-data/phylosift";
+my @ref_alternatives = (
+    "$OMICS_REFERENCE_DATA/phylosift",
+    "/geomicro/$common",
+    "/gmb/$common",
+    "/dept/geology/geomicro/$common",
+);
+
+foreach (@ref_alternatives) {
+    $ref_data_path = $_ if (-d $_);
 }
+print "[phylosiftrc] using reference data from: $ref_data_path\n";
 
 $marker_path = "$ref_data_path";
 $ncbi_path = "$ref_data_path";
