@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.79-1) unstable; urgency=medium
+
+  * [assemble] allow specifying reference data path via environment
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Fri, 05 Jan 2018 11:15:43 -0500
+
 geo-omics-scripts (1.0.78-1) unstable; urgency=medium
 
   * [assemble] Fix spelling
