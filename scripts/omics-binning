@@ -122,3 +122,8 @@ c_args=()
 [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
 concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
 
+info "Compiling bins into fasta files..."
+bins2fasta -o "${outdir}/bins" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
+
+info "Running CheckM..."
+checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"

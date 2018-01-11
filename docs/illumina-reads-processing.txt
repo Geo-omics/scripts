@@ -7,19 +7,122 @@ Geomicro Illumina Reads processing Pipeline
 :Maintainer: Robert <heinro@umich.edu>
 
 Prerequisites
-=============
+-------------
 
     #. Have a user account on flux (with high-mem allocation), vondamm, or cayman
     #. Have access to long-term data storage
     #. Log into a terminal session on one of the servers
-    #. Have the :doc:`omics <omics>` module loaded
+    #. Have the :doc:`omics <omics>` module loaded (see next section)
+
+Working on FLUX
+---------------
+
+Environment setup
+""""""""""""""""""
+On FLUX, running this in your terminal's shell will set up you environment::
+
+    $ module use /dept/geology/geomicro/data9/flux/modulefiles
+    $ module load geomicro/omics
+
+This setup can be saved for subsequent logins by::
+
+    $ module save
+
+Loading the ``omics`` module will also load several additional modules in the
+background.  Usually it is okay to load modules as needed and save the setup as
+above.  In rare cases modules can interact strangely in ways that might be
+difficult to debug.  Refer to the documentation of the :command:`module`
+command, e.g. type ``module help``.
+
+The ``omics`` container
+"""""""""""""""""""""""
+
+To provide a more consistent, reproducible, setup for data analysis a
+`Singularity container`_ is provided.  This provides a standard linux
+environment (Debian stable) tailored for the pipeline but isolated from FLUX.
+Inside the container none of the software provided by FLUX or any modules is
+available, instead software installed in the container is used.  The container
+image is located at :file:`/dept/geology/geomicro/data9/flux/omics.img` and
+is executable, e.g. running::
+
+    $ /dept/geology/geomicro/data9/flux/omics.img
+
+on the flux command line will show a help screen documenting how the container
+can be used directly on FLUX without the need for the ``geomicro/omics``
+module.  The ``geomicro/omics`` module provides the commands :command:`omics
+container` and :command:`omics run` to access the container more conveniently.
+The specifics are documented separately for interactive use and non-interactive
+job-submission in sub-sections following this one.
+
+Copying the container image, a 3+GB file to your own computer gives you the
+same environment.  Installing ``singularity`` and runnning something like::
+
+    $ singularity shell omics.img
+
+will give you access.  If you have super-user rights you can make
+modifications, e.g. update or install software.  You can then copy your
+modified image back to flux and use it there.
+
+
+Interactive
+"""""""""""
+
+The pipeline's scripts can be run interactively on login nodes (for limited
+testing) or during an interactive FLUX session.  Commands can be run the FLUX
+environment, e.g. to print the help screen of the assemble script::
+
+    $ omics assemble -h
+
+The recommended way, however, is to first enter the omics container
+environment::
+
+    uniqname@flux-login:~$ omics container
+    Singularity: Invoking an interactive shell within container...
+
+    (omics) ~$
+
+You will be greeted with a special prompt starting with ``(omics)`` and run
+commands as usual::
+
+    (omics) ~$ omics assemble -h
+
+To exit the container type ``CTRL-D`` and you return to the usual FLUX
+environment.
+
+Submitting FLUX jobs
+""""""""""""""""""""
+
+When running pipeline scripts as part of a submitted FLUX job it is also
+recommended to use the ``omics`` container.  In this example PBS script::
+
+    #!/bin/bash
+    #PBS -N undergrads_0
+    #PBS -M heinro@umich.edu
+    #PBS -m abe
+    #PBS -V
+    #PBS -l walltime=7:00:00:00,nodes=1:ppn=20,mem=500gb
+    #PBS -q fluxm
+    #PBS -A schmidti_fluxm
+    #PBS -l qos=flux
+    #PBS -j oe
+
+    cd $PBS_O_WORKDIR
+    omics run omics prep /nfs/turbo/schmidt-lab/heinro/undergrads-2016/raw/66*
+    omics run omics qc 66*
+    omics run omics assemble --cpus 20 66*
+
+we run three commands corresponding to the first three steps of the pipeline.
+Each command is prepended by ``omics run`` which excecutes the rest of the
+command line inside the container.  To instead run everything in the FLUX
+environment you would just remove ``omics run`` from each of the last three
+lines.
 
 
 Illumina Data
-=============
+-------------
 
-Importing the raw sequence data:
-""""""""""""""""""""""""""""""""
+Importing the raw sequence data
+"""""""""""""""""""""""""""""""
 Data will generally be available from the UMich Sequencing core via FTP. In
 order to download the data, first make sure you have sufficient disk space. One
 lane of compressed Illumina HiSeq data may require 80GB. Next, use the FTP
@@ -43,18 +146,20 @@ Sometimes, rather than providing us one FASTQ file for each read direction, the
 reads are chopped into FASTQ files containing 4 million reads each. The file
 names looked like this:
 
-    :file:`9068_NoIndex_L007_R1_008.fastq.gz`
+    :file:`9068_NoIndex_L007_R1_001.fastq.gz`
 
-In this example, 9068 identifies the sample, L007 refers to the 7th lane, R1
-means forward directionality (R2 is reverse), and 008 means this is the 8th
-file in the series of chopped FASTQ files with forward directionality.
+In this example, ``9068`` identifies the sample, ``L007`` refers to the 7th
+lane, ``R1`` means forward directionality (``R2`` is reverse), and ``001``
+means this is the 1st file in the series of chopped ``FASTQ`` files with
+forward directionality.  These days files are not chopped anymore so the last
+part is always ``001``.
 
 The Pipeline
-============
+------------
 
 Raw sequencing data should be analyzed and transformed before it can be
 applied in a scientific context. The following pipeline will take you through
-the steps involved in transforming the data:
+the steps involved in processing the data:
 
     Steps:
 	0. Preparation
@@ -62,10 +167,15 @@ the steps involved in transforming the data:
 	2. Assembly
 	3. Mapping
 	4. Binning
-	5. Bin QC and Chimera Removal
+
+Each step has a corresponding section below.  All code examples below are for
+the :command:`bash` shell and shown without command prompt and should work in
+the ``omics`` container as well as outside the container on FLUX with the
+``geomicro/omics`` module loaded.
+
 
 Preparation
-===========
+-----------
 
 Input data for the pipeline and intermediate files should be stored temporarly
 in a fast, sufficiently large storage area.  This is not necessarily where you
@@ -92,21 +202,21 @@ distributes processing samples whose filenames start with the same four digits
 to the same CPU.
 
 Quality control module - :program:`qc`
-======================================
+--------------------------------------
 
 To ensure a computationally manageable assembly at Van acceptable level of
 quality the pipeline detailed below can be used.
 
-1.        Initial quality assessment.
-"""""""""""""""""""""""""""""""""""""
+Initial quality assessment
+""""""""""""""""""""""""""
 Before improving the quality it is important to see how good/bad the reads
 were to begin with. `FastQC`_ is a tool that automates this step. the pipeline
 runs this process in the background twice, once before making any changes to
 the reads file and once in the end to see if there was any improvement in the
 overall quality of the data.
 
-2.        Dereplicate Reads
-"""""""""""""""""""""""""""
+Dereplicate Reads
+"""""""""""""""""
 After concatenating the fastq files, we dereplicate the fastq to compress
 the size of the file. We do this using the :program:`dereplicate` script. This
 script goes through the fastq file and clusters together identical sequences
@@ -129,8 +239,8 @@ The script :program:`dereplicate` will create 2 files as its output, the
     This file contains a list of all representative sequences in the fastq
     file. The file is tab-delimited.
 
-3.        Adapter Removal
-"""""""""""""""""""""""""
+Adapter Removal
+"""""""""""""""
 Adapters used at the library prep stage often make their way into the final
 reads. Since these read fragments are not real biological signals, it becomes
 important to screen them out. This is where adapter removal comes handy. If you
@@ -139,20 +249,20 @@ know the adapters that were used, you can provide an adapter file and tell the
 is shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool is used to
 screen for adapters.
 
-4.        Trim the Data
-"""""""""""""""""""""""
+Trim the Data
+"""""""""""""
 Illumina reads often contain regions of low quality which can negatively
 impact assembly. `Sickle`_ is an adaptive read trimmer which uses a windowed
 approach to remove regions of low quality from all reads.
 
-5.        Final Quality Assessment
-""""""""""""""""""""""""""""""""""
+Final Quality Assessment
+""""""""""""""""""""""""
 Now that we’ve removed all the data with questionable quality from our
 dataset, we need to measure how much (if any) of an improvement was made. So,
 we run FastQC again in the background while we move on to the next steps.
 
-6.        Interleaving (Assembler Dependent)
-""""""""""""""""""""""""""""""""""""""""""""
+Interleaving (Assembler Dependent)
+""""""""""""""""""""""""""""""""""
 This is an optional, assembler dependent step. Current assembly pipeline
 requires an interleaved FASTA file. This portion of the pipeline simply pairs
 a forward and its corresponding reverse sequence such that they occur one
@@ -179,7 +289,7 @@ are more samples multiple `for` loops can be used with the globs (`*`) replaced
 with an apropriate number of sample ids.
 
 Assembly Module -- :program:`assemble`
-======================================
+--------------------------------------
 
 Assemblies can take a lot of computational time and resources. This script was
 written such that once you have QC-ed all your samples, you may run this
@@ -189,8 +299,8 @@ with the maximum possible resources and with least possible downtime between
 assemblies.
 
 
-1.        Assemble
-""""""""""""""""""
+Assemble
+""""""""
 As of October 2015, `IDBA_UD`_ remains the assembler of choice. Once the data is
 interleaved, IDBA uses just the interleaved reads for assembly. One merit of
 using IDBA_UD over other assemblers such as velvet is that, you may provide
@@ -203,8 +313,8 @@ super assembly. Although, IDBA produces a number of output files, we use
 :file:`scaffolds.fa` as the final output for this step.
 
 
-2.        Quality Check
-"""""""""""""""""""""""
+Quality Check
+"""""""""""""
 Once we’ve assembled our reads into scaffolds, we need to see how well we did?
 This is where `QUAST`_ comes in. Quast reads the assembled sequences and
 creates a report depicting how good the assembly was. It calculates the N50
@@ -212,8 +322,8 @@ creates a report depicting how good the assembly was. It calculates the N50
 produces some interactive plots as well.
 
 
-3.        Silva Blast
-"""""""""""""""""""""
+Silva Blast
+"""""""""""
 One of the more important reasons why we prefer de novo assembly over read
 mapping to references is that, the assembly gives us an opportunity to find
 novel organisms. In order to see if what we’ve assembled, we can compare our
@@ -224,14 +334,14 @@ ESOM. So we can seed the ESOM with known organisms thus helping in the binning
 of the unknowns.
 
 
-4.        NCBI Blast
-""""""""""""""""""""
+NCBI Blast
+""""""""""
 Like searching SILVA above but with a more expansive NCBI
 database.
 
 
-5.        Phylosift
-"""""""""""""""""""
+Phylosift
+"""""""""
 Generates a taxonomic profile of the metagenome based not just on the 16S data
 (like SILVA or NCBI Blasts) but using a curated marker set database. This is
 helpful especially because 16S regions can be notoriously difficult to
@@ -258,7 +368,7 @@ sample ids, as made with the :program:`omics prep` script.  You can replace the
 
 
 Mapping
-=======
+-------
 
 After performing an assembly, we can align the reads used to the create the
 assembly with the contigs produced by the assembly. This allows us to calculate
@@ -285,7 +395,7 @@ mapping` is as follows::
 
 
 Binning
-=======
+-------
 
 Do this::
 
@@ -301,3 +411,4 @@ Do this::
 .. _Sickle: https://github.com/najoshi/sickle
 .. _SILVA: https://www.arb-silva.de/
 .. _Trimmomatic: http://www.usadellab.org/cms/index.php?page=trimmomatic
+.. _Singularity container: http://singularity.lbl.gov/
