@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.81-1) unstable; urgency=medium
+
+  * [docs] Remove deprecated section, prep is internally multithreaded now
+  * [mapping] Run bowtie2 aligning multithreaded
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 11 Jan 2018 15:26:09 -0500
+
 geo-omics-scripts (1.0.80-1) unstable; urgency=medium
 
   * [binning] Run CheckM workflow after the binning
