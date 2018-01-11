@@ -14,6 +14,109 @@ Prerequisites
     #. Log into a terminal session on one of the servers
     #. Have the :doc:`omics <omics>` module loaded
 
+Working on FLUX
+---------------
+
+Environment setup
+""""""""""""""""""
+On FLUX, running this in your terminal's shell will set up you environment::
+
+    $ module use /dept/geology/geomicro/data9/flux/modulefiles
+    $ module load geomicro/omics
+
+This setup can be saved for subsequent logins by::
+
+    $ module save
+
+Loading the ``omics`` module will also load several additional modules in the
+background.  Usually it is okay to load modules as needed and save the setup as
+above.  In rare cases modules can interact strangely in ways that might be
+difficult to debug.  Refer to the documentation of the :command:`module`
+command, e.g. type ``module help``.
+
+The ``omics`` container
+"""""""""""""""""""""""
+
+To provide a more consistent, reproducible, setup for data analysis a
+`Singularity container`_ is provided.  This provides a standard linux
+environment (Debian stable) tailored for the pipeline but isolated from FLUX.
+Inside the container none of the software provided by FLUX or any modules is
+available, instead software installed in the container is used.  The container
+image is located at :file:`/dept/geology/geomicro/data9/flux/omics.img` and
+is executable, e.g. running::
+
+    $ /dept/geology/geomicro/data9/flux/omics.img
+
+on the flux command line will show a help screen documenting how the container
+can be used directly on FLUX without the need for the ``geomicro/omics``
+module.  The ``geomicro/omics`` module provides the commands :command:`omics
+container` and :command:`omics run` to access the container more conveniently.
+The specifics are documented separately for interactive use and non-interactive
+job-submission in sub-sections following this one.
+
+Copying the container image, a 3+GB file to your own computer gives you the
+same environment.  Installing ``singularity`` and runnning something like::
+
+    $ singularity shell omics.img
+
+will give you access.  If you have super-user rights you can make
+modifications, e.g. update or install software.  You can then copy your
+modified image back to flux and use it there.
+
+
+Interactive
+"""""""""""
+
+The pipeline's scripts can be run interactively on login nodes (for limited
+testing) or during an interactive FLUX session.  Commands can be run the FLUX
+environment, e.g. to print the help screen of the assemble script::
+
+    $ omics assemble -h
+
+The recommended way, however, is to first enter the omics container
+environment::
+
+    uniqname@flux-login:~$ omics container
+    Singularity: Invoking an interactive shell within container...
+
+    (omics) ~$
+
+You will be greeted with a special prompt starting with ``(omics)`` and run
+commands as usual::
+
+    (omics) ~$ omics assemble -h
+
+To exit the container type ``CTRL-D`` and you return to the usual FLUX
+environment.
+
+Submitting FLUX jobs
+""""""""""""""""""""
+
+When running pipeline scripts as part of a submitted FLUX job it is also
+recommended to use the ``omics`` container.  In this example PBS script::
+
+    #!/bin/bash
+    #PBS -N undergrads_0
+    #PBS -M heinro@umich.edu
+    #PBS -m abe
+    #PBS -V
+    #PBS -l walltime=7:00:00:00,nodes=1:ppn=20,mem=500gb
+    #PBS -q fluxm
+    #PBS -A schmidti_fluxm
+    #PBS -l qos=flux
+    #PBS -j oe
+
+    cd $PBS_O_WORKDIR
+    omics run omics prep /nfs/turbo/schmidt-lab/heinro/undergrads-2016/raw/66*
+    omics run omics qc 66*
+    omics run omics assemble --cpus 20 66*
+
+we run three commands corresponding to the first three steps of the pipeline.
+Each command is prepended by ``omics run`` which excecutes the rest of the
+command line inside the container.  To instead run everything in the FLUX
+environment you would just remove ``omics run`` from each of the last three
+lines.
+
 
 Illumina Data
 =============
