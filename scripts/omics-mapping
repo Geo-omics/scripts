@@ -217,14 +217,22 @@ cd "$OUT_DIR"
 
 info "Aligning reads..."
 printf "\n[Running bowtie2]\n" > "$log"
+bt2_args=(
+    --mm
+    --threads "$CPUS"
+    -x "$index_dir/$name"
+    -S "$alnSam"
+)
+
 if $use_int_reads; then
-	info "[NOTE] Using $int_reads for reads"
-        bowtie2 -x "$index_dir/$name" --interleaved "$int_reads" -S "$alnSam" &>> "$log"
+    info "[NOTE] Using $int_reads for reads"
+    bt2_args+=(--interleaved "$int_reads")
 else
-        # this is also the compatibility option for bowtie2 <= 2.3.0
-	info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
-        bowtie2 -x "$index_dir/$name" -1 "$fwd_reads" -2 "$rev_reads" -S "$alnSam" &>> "$log"
+    # this is also the compatibility option for bowtie2 <= 2.3.0
+    info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
+    bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
+bowtie2 "${bt2_args[@]}" &>> "$log"
 
 info "Fixing alignment artifacts and converting SAM to BAM..."
 samtools fixmate -O bam "$alnSam" "$sam2bam"
