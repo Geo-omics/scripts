@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.80-1) unstable; urgency=medium
+
+  * [binning] Run CheckM workflow after the binning
+  * [docs] Add 'Working on FLUX' section
+  * [doc] Work on pipeline docs, layout, headers, fixes
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 11 Jan 2018 14:28:07 -0500
+
 geo-omics-scripts (1.0.79-1) unstable; urgency=medium
 
   * [assemble] allow specifying reference data path via environment
