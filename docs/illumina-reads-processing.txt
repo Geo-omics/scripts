@@ -192,15 +192,6 @@ fastq files and put them into appropriately named directories::
     cd <work directory>
     omics prep <raw data directory>
 
-To make use of multiple CPUs replace the simple call to :program:`omics prep`
-with a line like::
-
-    for i in {0..9}; do omics prep /path/to/raw_reads/661${i}*.fastq & done
-
-to distribute the work across you available CPUs (10 in this example) that
-distributes processing samples whose filenames start with the same four digits
-to the same CPU.
-
 Quality control module - :program:`qc`
 --------------------------------------
 
