@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.82-1) unstable; urgency=medium
+
+  * [binning] Document -o option in help text
+  * [prep] Fix crash on input files with irregular filename
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 17 Jan 2018 14:47:10 -0500
+
 geo-omics-scripts (1.0.81-1) unstable; urgency=medium
 
   * [docs] Remove deprecated section, prep is internally multithreaded now
