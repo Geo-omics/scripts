@@ -6,11 +6,11 @@ dereplicate - dereplicate reads in fasta or fastq files
 
 =head1 SYNOPSIS
 
-B<dereplicate> B<-f> fasta_File B<-o>ut output.fasta
-OR
-B<dereplicate> B<-f>q fastq_File B<-o>ut output.fastq
-OR
-B<dereplicate> B<-f>q fastq_File B<-o>ut output.fasta B<-o>utfmt fasta
+B<dereplicate> B<-f> I<fasta_File> B<-out> I<output.fasta>
+
+B<dereplicate> B<-fq> I<fastq_File> B<-out> I<output.fastq>
+
+B<dereplicate> B<-fq> I<fastq_File> B<-out> I<output.fasta> B<-outfmt> fasta
 
 
 =head1 DESCRIPTION
@@ -22,21 +22,21 @@ Dereplicates fasta or fastq files at 100% identity over 100% coverage.  For fast
 
 =over 8
 
-=item B<-f> I<character>, B<-fasta> I<character>
+=item B<-f> I<file>, B<-fasta> I<file>
 
 fasta file input
 
-=item B<-fq> I<character>, B<-fastq> I<character>
+=item B<-fq> I<file>, B<-fastq> I<file>
 
 fastq file input
 
-=item B<-o> I<character>, B<-out> I<character>
+=item B<-o> I<file>, B<-out> I<file>
 
 dereplicated fasta/fastq file. Note that an output file will only be created if this option is provided.
 
-=item B<-outfmt>
+=item B<-outfmt> fasta
 
-["fasta"]	Use this if you wish that the output for your fastq input be fasta. See example #3 above.
+Use this if you wish that the output for your fastq input be fasta. See example #3 above.
 
 =item B<-n> I<integer>, B<-top> I<integer>
 
