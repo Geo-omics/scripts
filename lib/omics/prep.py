@@ -54,7 +54,7 @@ def group(files, keep_lanes=False):
         """
         m = re.match(raw_reads_file_pat, x.name)
         if m is None:
-            return x.name
+            return (x.name, 0, '')
         else:
             m = m.groupdict()
             if keep_lanes:
