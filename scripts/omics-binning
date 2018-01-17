@@ -19,6 +19,7 @@ ARG_HELP="
       --max-clusters        Maximum number of clusters, sets CONCOCT's -c parameter.
       --cpus                Number of CPUs/threads
       --force               Overwrite existing output
+  -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
 CHECK_PROGS="chop-contigs merge-coverage concoct"
