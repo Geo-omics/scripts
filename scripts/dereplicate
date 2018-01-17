@@ -15,8 +15,7 @@ B<dereplicate> B<-f>q fastq_File B<-o>ut output.fasta B<-o>utfmt fasta
 
 =head1 DESCRIPTION
 
-Dereplicates a Fasta file at 100% identity over 100% coverage. Picks a first sequence as the representative for the cluster.
-Dereplicates a Fastq file at 100% identity over 100% coverage. Picks the sequence with the best 'avg quality score' as the representative for the cluster.
+Dereplicates fasta or fastq files at 100% identity over 100% coverage.  For fasta, picks the first sequence as the representative for the cluster.  For fastq, picks the sequence with the best 'avg quality score' as the representative for the cluster.
 
 
 =head1 OPTIONS
@@ -48,24 +47,43 @@ Print top N sequence clusters. Default 10.
 
 =head1 NOTE
 
-## NOTE1: The Script DOES NOT look for sub-string matches.
-## NOTE2: Default Phred offset is 33
-## Note3: An output file will only be created if the '-o' option is provided.
+=over
+
+=item NOTE1:
+
+The Script DOES NOT look for sub-string matches.
+
+=item NOTE2:
+
+Default Phred offset is 33
+
+=item Note3:
+
+An output file will only be created if the '-o' option is provided.
+
+=back
 
 
 =head1 OUTPUT
 
 The script will create the following as its output, the ".clust", the ".clust.list" and optionaly the fasta/fastq file. These files are explained below.
-The ".clust" file:
+
+=over
+
+=item The ".clust" file:
+
 This file contains the cluster number, cluster size and the names of all sequences in that particular cluster. The third column in the file is the representative for each cluster. The file is tab-delimited.
 
-The ".clust.list" file:
+=item The ".clust.list" file:
+
 This file contains a list of all representative sequences in the fastq file. The file is tab-delimited.
 
+=back
 
 =head1 AUTHOR
 
 Sunit Jain, Oct, 2011
+
 sunitj [at] umich [dot] edu
 
 
