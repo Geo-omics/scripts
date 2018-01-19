@@ -17,6 +17,8 @@ def load(path):
         line = line.strip()
         if state is State.head:
             if not line[0] == '@':
+                if line[0] == '>':
+                    raise NotImplementedError('Fasta support not implemented')
                 raise RuntimeError('Expected fastq header: {}'.format(line))
             cur['header'] = line
             state = State.seq
@@ -84,6 +86,14 @@ def unique_pairs(fwd_data, rev_data):
             yield fwd_reads[0], rev_reads[0]
 
 
+def write_read(read, file):
+    file.write(
+        read.header + '\n'
+        + read.seq + '\n+\n'
+        + read.score + '\n'
+    )
+
+
 def main():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
@@ -91,6 +101,11 @@ def main():
     )
     argp.add_argument('forward_reads', type=argparse.FileType())
     argp.add_argument('reverse_reads', type=argparse.FileType())
+    argp.add_argument(
+        '-o', '--out-prefix',
+        default='derep_',
+        help='Prefix attached to output files',
+    )
     args = argp.parse_args()
 
     args.forward_reads.close()
@@ -105,8 +120,15 @@ def main():
     rev_data, rev_total = load(rev_reads)
     print('{}: total read count: {}, duplicates: {}'
           ''.format(rev_reads, rev_total, rev_total - len(rev_data)))
-    dupes = get_duplicates(fwd)
-    print('Found', len(dupes), '(unique) sequences with multiple occurrences')
+
+    fwd_out = fwd_reads.parent / (args.out_prefix + fwd_reads.name)
+    rev_out = rev_reads.parent / (args.out_prefix + rev_reads.name)
+
+    with fwd_out.open('w') as fout, rev_out.open('w') as rout:
+
+        for fwd_read, rev_read in unique_pairs(fwd_data, rev_data):
+            write_read(fwd_read, fout)
+            write_read(rev_read, rout)
 
     #print(fwd, rev)
 
