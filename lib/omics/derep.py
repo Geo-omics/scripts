@@ -1,18 +1,19 @@
 import argparse
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from enum import Enum
+from pathlib import Path
 
 from . import get_argparser
 
 
-def load(file):
+def load(path):
     Read = namedtuple('Read', ['header', 'seq', 'score'])
     State = Enum('State', 'head seq plus score')
     state = State.head
     data = {}
     cur = {}
     cur_id = None
-    for line in file:
+    for line in path.open():
         line = line.strip()
         if state is State.head:
             if not line[0] == '@':
@@ -40,6 +41,9 @@ def load(file):
             if cur_id is None or not cur:
                 raise RuntimeError('Bad internal state: {} {}\n{}'
                                    ''.format(cur_id, cur, line))
+            if len(cur['seq']) != len(cur['score']):
+                raise RuntimeError('Sanity check failed: sequence and quality '
+                                   'score length differ: {}'.format(cur))
             try:
                 data[cur_id] = Read(**cur)
             except Exception:
@@ -56,6 +60,23 @@ def load(file):
     return data
 
 
+def get_duplicates(data):
+    ID_mean = namedtuple('ID_mean', ['id', 'mean_score'])
+    seqs = defaultdict(list)
+    print('Searching for duplicates...', end='', flush=True)
+    for id, read in data.items():
+        mean_score = sum([ord(i) for i in read.score]) / len(read.score)
+        seqs[read.seq].append(ID_mean(id, mean_score))
+
+    print(' done')
+    dups = {}
+    for seq, id_means in seqs.items():
+        if len(id_means) > 1:
+            dups.update(seq=id_means)
+            
+    return dups
+
+
 def main():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
@@ -65,9 +86,21 @@ def main():
     argp.add_argument('reverse_reads', type=argparse.FileType())
     args = argp.parse_args()
 
-    fwd = load(args.forward_reads)
-    rev = load(args.reverse_reads)
-    print(fwd, rev)
+    args.forward_reads.close()
+    args.reverse_reads.close()
+
+    fwd_reads = Path(args.forward_reads.name)
+    rev_reads = Path(args.reverse_reads.name)
+
+    fwd = load(fwd_reads)
+    print('Loaded', len(fwd), 'reads from', fwd_reads)
+    dupes = get_duplicates(fwd)
+    print('Found', len(dupes), '(unique) sequences with multiple occurrences')
+    for k,v in list(dupes.items())[:10]:
+        print(k, v)
+
+    #rev = load(args.reverse_reads)
+    #print(fwd, rev)
 
 
 if __name__ == '__main__':
