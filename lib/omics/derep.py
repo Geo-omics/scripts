@@ -52,6 +52,36 @@ def load(path):
     return data, total_count
 
 
+def mean_quality_score(read):
+    return sum([ord(i) for i in read.score]) / len(read.score)
+
+
+def unique_pairs(fwd_data, rev_data):
+    if len(fwd_data) != len(rev_data):
+        raise RuntimeError('Sanity check failed, fwd vs. rev length difference:'
+                           '{} != {}'.format(len(fwd_data), len(rev_data)))
+
+    for (fwd_seq, fwd_reads), (rev_seq, rev_reads) \
+            in zip(fwd_data.items(), rev_data.items()):
+
+        if len(fwd_reads) != len(rev_reads):
+            raise RuntimeError(
+                'Sanity check failed: different number of replicates fwd vs. '
+                'rev:\n{}: {}\n{}: {}'
+                ''.format(fwd_seq, fwd_reads, rev_seq, rev_reads)
+            )
+
+        if len(fwd_reads) > 1:
+            best_mean = -1
+            best_pair = ()
+            for f, r in zip(fwd_reads, rev_reads):
+                mean = mean_quality_score(f) + mean_quality_score(r)
+                if best_mean < mean:
+                    best_mean = mean
+                    best_pair = (f, r)
+            yield f, r
+        else:
+            yield fwd_reads[0], rev_reads[0]
 
 
 def main():
