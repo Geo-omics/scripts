@@ -1,5 +1,5 @@
 import argparse
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from enum import Enum
 from pathlib import Path
 
@@ -7,7 +7,6 @@ from . import get_argparser
 
 
 def load(path):
-    Read = namedtuple('Read', ['header', 'seq', 'score'])
     State = Enum('State', 'head seq plus score')
     state = State.head
     data = OrderedDict()
@@ -38,11 +37,12 @@ def load(path):
                 raise RuntimeError('Sanity check failed: sequence and quality '
                                    'score length differ: {}'.format(cur))
 
-            read = Read(cur['header'], cur['seq'], cur['score'])
-            if cur['seq'] in data:
-                data[cur['seq']].append(read)
+            read = (cur['header'], cur['seq'], cur['score'])
+            seq_hash = cur['seq'].__hash__()
+            if seq_hash in data:
+                data[seq_hash].append(read)
             else:
-                data[cur['seq']] = [read]
+                data[seq_hash] = [read]
 
             cur = {}
             state = State.head
