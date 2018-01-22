@@ -12,11 +12,10 @@ def load(path):
     data = OrderedDict()
     cur = {}
     total_count = 0
-    for line in path.open():
-        line = line.strip()
+    for line in path.open('rb'):
         if state is State.head:
-            if not line[0] == '@':
-                if line[0] == '>':
+            if not line[0] == ord('@'):
+                if line[0] == ord('>'):
                     raise NotImplementedError('Fasta support not implemented')
                 raise RuntimeError('Expected fastq header: {}'.format(line))
             cur['header'] = line
@@ -25,7 +24,7 @@ def load(path):
             cur['seq'] = line
             state = State.plus
         elif state is State.plus:
-            if not line == '+':
+            if not line == b'+\n':
                 raise RuntimeError('Expected "+": {}'.format(line))
             state = State.score
         elif state is State.score:
