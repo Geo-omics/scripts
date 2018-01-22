@@ -5,29 +5,32 @@ from pathlib import Path
 
 from . import get_argparser
 
+ST_HEAD = 1
+ST_SEQ = 2
+ST_PLUS = 3
+ST_SCORE = 4
 
 def load(path):
-    State = Enum('State', 'head seq plus score')
-    state = State.head
+    state = ST_HEAD
     data = OrderedDict()
     cur = {}
     total_count = 0
     for line in path.open('rb'):
-        if state is State.head:
+        if state is ST_HEAD:
             if not line[0] == ord('@'):
                 if line[0] == ord('>'):
                     raise NotImplementedError('Fasta support not implemented')
                 raise RuntimeError('Expected fastq header: {}'.format(line))
             cur['header'] = line
-            state = State.seq
-        elif state is State.seq:
+            state = ST_SEQ
+        elif state is ST_SEQ:
             cur['seq'] = line
-            state = State.plus
-        elif state is State.plus:
+            state = ST_PLUS
+        elif state is ST_PLUS:
             if not line == b'+\n':
                 raise RuntimeError('Expected "+": {}'.format(line))
-            state = State.score
-        elif state is State.score:
+            state = ST_SCORE
+        elif state is ST_SCORE:
             cur['score'] = line
             if not cur:
                 raise RuntimeError('Bad internal state: {}:\n{}'
@@ -44,7 +47,7 @@ def load(path):
                 data[seq_hash] = [read]
 
             cur = {}
-            state = State.head
+            state = ST_HEAD
             total_count += 1
 
         else:
