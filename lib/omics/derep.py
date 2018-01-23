@@ -19,7 +19,6 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
     state = ST_HEAD
     data = {}
     fwd_read_pos = 0
-    rev_read_pos = 0
     paired_hash = None
     total_count = 0
     for fwd_line, rev_line in zip(fwd_in, rev_in):
@@ -50,24 +49,23 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                     # new best read goes first
                     data[paired_hash] = (
                         cur_mean,
-                        [(fwd_read_pos, rev_read_pos)] + pos_list
+                        [fwd_read_pos] + pos_list
                     )
                 else:
                     # read to be deleted, goes at end
                         data[paired_hash] = (
                             best_mean,
-                            pos_list + [(fwd_read_pos, rev_read_pos)]
+                            pos_list + [fwd_read_pos]
                         )
             else:
                 data[paired_hash] = (
                     cur_mean,
-                    [(fwd_read_pos, rev_read_pos)]
+                    [fwd_read_pos]
                 )
 
             state = ST_HEAD
             # set positions for next read
             fwd_read_pos = fwd_in.tell()
-            rev_read_pos = rev_in.tell()
             total_count += 1
 
         else:
@@ -90,7 +88,7 @@ def build_filter(data):
     refuse = set()
     for _, pos_list in data.values():
         for i in pos_list[1:]:
-            refuse.add(i[0])
+            refuse.add(i)
     return refuse
 
 
