@@ -10,10 +10,18 @@ ST_SEQ = 2
 ST_PLUS = 3
 ST_SCORE = 4
 
+
 def load(path):
+    """
+    Load data from given fastq file
+
+    Stores data in dictionary, one list of reads per unique sequence.
+    """
     state = ST_HEAD
     data = OrderedDict()
-    cur = {}
+    cur_head = None
+    cur_seq = None
+    cur_score = None
     total_count = 0
     for line in path.open('rb'):
         if state is ST_HEAD:
@@ -21,26 +29,27 @@ def load(path):
                 if line[0] == ord('>'):
                     raise NotImplementedError('Fasta support not implemented')
                 raise RuntimeError('Expected fastq header: {}'.format(line))
-            cur['header'] = line
+            cur_head = line
             state = ST_SEQ
         elif state is ST_SEQ:
-            cur['seq'] = line
+            cur_seq = line
             state = ST_PLUS
         elif state is ST_PLUS:
             if not line == b'+\n':
                 raise RuntimeError('Expected "+": {}'.format(line))
             state = ST_SCORE
         elif state is ST_SCORE:
-            cur['score'] = line
-            if not cur:
+            cur_score = line
+            if None in [cur_head, cur_seq]:
                 raise RuntimeError('Bad internal state: {}:\n{}'
-                                   ''.format(cur, line))
-            if len(cur['seq']) != len(cur['score']):
+                                   ''.format((cur_head, cur_seq), line))
+            if len(cur_seq) != len(cur_score):
                 raise RuntimeError('Sanity check failed: sequence and quality '
-                                   'score length differ: {}'.format(cur))
+                                   'score length differ:\n{}\n{}\n'
+                                   ''.format(cur_seq, cur_score))
 
-            read = (cur['header'], cur['seq'], cur['score'])
-            seq_hash = cur['seq'].__hash__()
+            read = (cur_head, cur_seq, cur_score)
+            seq_hash = cur_seq.__hash__()
             if seq_hash in data:
                 data[seq_hash].append(read)
             else:
