@@ -83,6 +83,15 @@ def mean_quality_score(score):
     return sum(score) / len(score)
 
 
+def build_filter(data):
+    """
+    Transform data from hash-indexed to set of read positions
+    """
+    refuse = set()
+    for _, pos_list in data.values():
+        for i in pos_list[1:]:
+            refuse.add(i[0])
+    return refuse
 
 
 def write_read(read, file):
@@ -125,6 +134,10 @@ def main():
 
     print('total read count: {}, duplicates: {}'
           ''.format(total_reads, total_reads - len(data)))
+
+    refuse = build_filter(data)
+
+    print('filter length:', len(refuse))
 
     fwd_out = fwd_reads.parent / (args.out_prefix + fwd_reads.name)
     rev_out = rev_reads.parent / (args.out_prefix + rev_reads.name)
