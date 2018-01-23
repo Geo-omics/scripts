@@ -9,15 +9,12 @@ ST_PLUS = 3
 ST_SCORE = 4
 
 
-def find_duplicates(fwd_path, rev_path=None, *, check=False):
+def find_duplicates(fwd_in, rev_in=None, *, check=False):
     """
     Find duplicate reads in given fastq files
     """
-    if rev_path is None:
+    if rev_in is None:
         raise NotImplemented('Single reads processing not implemented')
-
-    fwd_f = fwd_path.open('rb')
-    rev_f = rev_path.open('rb')
 
     state = ST_HEAD
     data = {}
@@ -25,17 +22,17 @@ def find_duplicates(fwd_path, rev_path=None, *, check=False):
     rev_read_pos = 0
     paired_hash = None
     total_count = 0
-    for fwd_line, rev_line in zip(fwd_f, rev_f):
+    for fwd_line, rev_line in zip(fwd_in, rev_in):
         if state is ST_HEAD:
             if check:
                 if ord('>') in [fwd_line[0], rev_line[0]]:
                     raise NotImplementedError('Fasta support not implemented')
                 if fwd_line[0] != ord('@'):
                     raise RuntimeError('Expected fastq header in {}: {}'
-                                       ''.format(fwd_path, fwd_line))
-                if fwd_line[0] != ord('@'):
+                                       ''.format(fwd_in.name, fwd_line))
+                if rev_line[0] != ord('@'):
                     raise RuntimeError('Expected fastq header in {}: {}'
-                                       ''.format(fwd_path, fwd_line))
+                                       ''.format(rev_in.name, rev_line))
             state = ST_SEQ
         elif state is ST_SEQ:
             paired_hash = (fwd_line + rev_line).__hash__()
@@ -69,8 +66,8 @@ def find_duplicates(fwd_path, rev_path=None, *, check=False):
 
             state = ST_HEAD
             # set positions for next read
-            fwd_read_pos = fwd_f.tell()
-            rev_read_pos = rev_f.tell()
+            fwd_read_pos = fwd_in.tell()
+            rev_read_pos = rev_in.tell()
             total_count += 1
 
         else:
@@ -147,7 +144,10 @@ def main():
     fwd_path = Path(args.forward_reads.name)
     rev_path = Path(args.reverse_reads.name)
 
-    data, total_reads = find_duplicates(fwd_path, rev_path, check=args.check)
+    fwd_in = fwd_path.open('rb')
+    rev_in = rev_path.open('rb')
+
+    data, total_reads = find_duplicates(fwd_in, rev_in, check=args.check)
 
     print('total read count: {}, duplicates: {}'
           ''.format(total_reads, total_reads - len(data)))
