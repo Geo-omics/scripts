@@ -1,7 +1,10 @@
+"""
+Find and remove replicated reads from fastq files.
+"""
 import argparse
 from pathlib import Path
 
-from . import get_argparser
+from . import get_argparser, DEFAULT_VERBOSITY
 
 ST_HEAD = 1
 ST_SEQ = 2
@@ -12,6 +15,11 @@ ST_SCORE = 4
 def find_duplicates(fwd_in, rev_in=None, *, check=False):
     """
     Find duplicate reads in given fastq files
+
+    Uses hash of sequence with newlines to detect replicated reads.  The
+    file offsets of each header-@ of forward reads is recorded and semi-ordered
+    such that the first offset listed belongs to the forward read of the
+    highest quality paired duplicate read.
     """
     if rev_in is None:
         raise NotImplemented('Single reads processing not implemented')
@@ -42,6 +50,7 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                                    ''.format(fwd_line, rev_line))
             state = ST_SCORE
         elif state is ST_SCORE:
+            # get mean score of concatenated quality with newlines
             cur_mean = mean_quality_score(fwd_line + rev_line)
             if paired_hash in data:
                 best_mean, pos_list = data[paired_hash]
@@ -158,12 +167,13 @@ def main():
 
     data, total_reads = find_duplicates(fwd_in, rev_in, check=args.check)
 
-    print('total read count: {}, duplicates: {}'
-          ''.format(total_reads, total_reads - len(data)))
+    if args.verbosity > DEFAULT_VERBOSITY:
+        print('total paired-read count: {}'.format(total_reads))
 
     refuse = build_filter(data)
 
-    print('filter length:', len(refuse))
+    if args.verbosity > DEFAULT_VERBOSITY:
+        print('replicated paired-reads:', len(refuse))
 
     fwd_in.seek(0)
     rev_in.seek(0)
@@ -174,10 +184,14 @@ def main():
     fwd_out = fwd_out_path.open('wb')
     rev_out = rev_out_path.open('wb')
 
-    print('writing dereplicated output to {} and {} ...'
-          ''.format(fwd_out_path, rev_out_path), end='', flush=True)
+    if args.verbosity > DEFAULT_VERBOSITY:
+        print('writing dereplicated output to {} and {} ...'
+              ''.format(fwd_out_path, rev_out_path), end='', flush=True)
+
     filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out)
-    print('done')
+
+    if args.verbosity > DEFAULT_VERBOSITY:
+        print('done')
 
 
 if __name__ == '__main__':
