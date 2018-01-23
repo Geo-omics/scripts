@@ -150,9 +150,9 @@ def main():
         help='Run sanity checks on input'
     )
     argp.add_argument(
-        '-o', '--out-prefix',
-        default='derep_',
-        help='Prefix attached to output files',
+        '-o', '--out-infix',
+        default='_derep',
+        help='Infix to contruct output filenames',
     )
     args = argp.parse_args()
 
@@ -178,8 +178,10 @@ def main():
     fwd_in.seek(0)
     rev_in.seek(0)
 
-    fwd_out_path = fwd_path.parent / (args.out_prefix + fwd_path.name)
-    rev_out_path = rev_path.parent / (args.out_prefix + rev_path.name)
+    fwd_out_path = fwd_path.parent \
+            / (fwd_path.stem + args.out_infix + fwd_path.suffix)
+    rev_out_path = rev_path.parent \
+            / (rev_path.stem + args.out_infix + rev_path.suffix)
 
     fwd_out = fwd_out_path.open('wb')
     rev_out = rev_out_path.open('wb')
