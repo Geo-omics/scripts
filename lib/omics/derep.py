@@ -94,12 +94,40 @@ def build_filter(data):
     return refuse
 
 
-def write_read(read, file):
-    file.write(
-        read.header + '\n'
-        + read.seq + '\n+\n'
-        + read.score + '\n'
-    )
+def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False):
+    """
+    Write out filtered data
+
+    :param set refuse: Set of file offset positions of the read headers @ of
+                       duplicated reads in the forward reads file.
+    """
+    if rev_in is None or rev_out is None:
+        raise NotImplemented('Single reads processing not implemented')
+
+    state = ST_HEAD
+    pos = fwd_in.tell()
+    for fwd_line, rev_line in zip(fwd_in, rev_in):
+        if pos not in refuse:
+            fwd_out.write(fwd_line)
+            rev_out.write(rev_line)
+
+        if state is ST_HEAD:
+            if check and not fwd_line[0] == rev_line[0] == ord('@'):
+                raise RuntimeError('Fastq header expected but found:\n{}\n{}'
+                                   ''.format(fwd_line, rev_line))
+            state = ST_SEQ
+        elif state is ST_SEQ:
+            state = ST_PLUS
+        elif state is ST_PLUS:
+            if check and not fwd_line == rev_line == b'+\n':
+                raise RuntimeError('Plus separator expected but found:\n{}\n{}'
+                                   ''.format(fwd_line, rev_line))
+            state = ST_SCORE
+        elif state is ST_SCORE:
+            state = ST_HEAD
+            pos = fwd_in.tell()
+        else:
+            raise RuntimeError('Illegal internal state: {}'.format(state))
 
 
 def main():
@@ -139,16 +167,19 @@ def main():
 
     print('filter length:', len(refuse))
 
-    fwd_out = fwd_reads.parent / (args.out_prefix + fwd_reads.name)
-    rev_out = rev_reads.parent / (args.out_prefix + rev_reads.name)
+    fwd_in.seek(0)
+    rev_in.seek(0)
 
-    with fwd_out.open('w') as fout, rev_out.open('w') as rout:
+    fwd_out_path = fwd_path.parent / (args.out_prefix + fwd_path.name)
+    rev_out_path = rev_path.parent / (args.out_prefix + rev_path.name)
 
-        for fwd_read, rev_read in unique_pairs(fwd_data, rev_data):
-            write_read(fwd_read, fout)
-            write_read(rev_read, rout)
+    fwd_out = fwd_out_path.open('wb')
+    rev_out = rev_out_path.open('wb')
 
-    #print(fwd, rev)
+    print('writing dereplicated output to {} and {} ...'
+          ''.format(fwd_out_path, rev_out_path), end='', flush=True)
+    filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out)
+    print('done')
 
 
 if __name__ == '__main__':
