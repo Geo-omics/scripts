@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.83-1) unstable; urgency=medium
+
+  * [qc] Replace dereplication script
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 24 Jan 2018 09:13:28 -0500
+
 geo-omics-scripts (1.0.82-1) unstable; urgency=medium
 
   * [binning] Document -o option in help text
