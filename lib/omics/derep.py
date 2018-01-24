@@ -191,6 +191,8 @@ def main():
               ''.format(fwd_out_path, rev_out_path), end='', flush=True)
 
     filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out)
+    fwd_out.close()
+    rev_out.close()
 
     if args.verbosity > DEFAULT_VERBOSITY:
         print('done')
