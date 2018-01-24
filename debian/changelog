@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.84-1) unstable; urgency=medium
+
+  * Minor src format fix
+  * [derep] Ensure data is written out before exiting
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 24 Jan 2018 16:09:27 -0500
+
 geo-omics-scripts (1.0.83-1) unstable; urgency=medium
 
   * [qc] Replace dereplication script
