@@ -179,9 +179,9 @@ def main():
     rev_in.seek(0)
 
     fwd_out_path = fwd_path.parent \
-            / (fwd_path.stem + args.out_infix + fwd_path.suffix)
+        / (fwd_path.stem + args.out_infix + fwd_path.suffix)
     rev_out_path = rev_path.parent \
-            / (rev_path.stem + args.out_infix + rev_path.suffix)
+        / (rev_path.stem + args.out_infix + rev_path.suffix)
 
     fwd_out = fwd_out_path.open('wb')
     rev_out = rev_out_path.open('wb')
