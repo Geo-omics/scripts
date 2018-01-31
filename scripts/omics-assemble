@@ -121,11 +121,6 @@ RUN_QUAST=true
 # empty by default
 SAMPLE_DIRS=()
 
-# Required Databases
-PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_128_SSURef_tax_silva.fasta"
-PATH2BACT="$ref_data_home/NCBI_RefSeq_RNA/latest/bacteria.rna.fasta"
-PATH2ARCH="$ref_data_home/NCBI_RefSeq_RNA/latest/archaea.rna.fasta"
-
 # other scripts
 if which quast.py &> /dev/null; then
     # this works on vondamm/cayman and flux
@@ -165,6 +160,11 @@ if [[ ! -v ref_data_home ]]; then
     error "Path to reference data not specified or not existing -- some step below may fail"
     ref_data_home=.
 fi
+
+# Required Databases
+PATH2SILVA="$ref_data_home/SILVA/latest/SILVA_128_SSURef_tax_silva.fasta"
+PATH2BACT="$ref_data_home/NCBI_RefSeq_RNA/latest/bacteria.rna.fasta"
+PATH2ARCH="$ref_data_home/NCBI_RefSeq_RNA/latest/archaea.rna.fasta"
 
 #################################
 # do stuff
