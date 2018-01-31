@@ -216,6 +216,7 @@ $MKDIR -p "$OUT_DIR"
 cd "$OUT_DIR"
 
 info "Aligning reads..."
+info "Log of bowtie2 run written to $log"
 printf "\n[Running bowtie2]\n" > "$log"
 bt2_args=(
     --mm
