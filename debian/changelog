@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.86-1) unstable; urgency=medium
+
+  * [mapping] Inform users of bowtie2 log file
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 31 Jan 2018 16:45:56 -0500
+
 geo-omics-scripts (1.0.85-1) unstable; urgency=medium
 
   * [assemble] Fix blast component, paths to DBs were not set correctly
