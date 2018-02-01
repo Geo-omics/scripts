@@ -212,6 +212,9 @@ done
 #
 # for color codes see:
 # https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+RED=
+ORANGE=
+ENDCOLOR=
 if [ "$USE_COLOR" == true ]; then
     if which tput >/dev/null 2>&1 && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
 	RED=$(tput setaf 1)
