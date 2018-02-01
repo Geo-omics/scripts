@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.87-1) unstable; urgency=medium
+
+  * Prevent possible low-impact / useless / misleading error message
+  * Teach separate-interleaved to handle FASTA files
+  * [upload] Update hostname
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 01 Feb 2018 13:32:24 -0500
+
 geo-omics-scripts (1.0.86-1) unstable; urgency=medium
 
   * [mapping] Inform users of bowtie2 log file
