@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.88-1) unstable; urgency=medium
+
+  * Fix scripts using set -u crashing when not using colors
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 01 Feb 2018 17:05:02 -0500
+
 geo-omics-scripts (1.0.87-1) unstable; urgency=medium
 
   * Prevent possible low-impact / useless / misleading error message
