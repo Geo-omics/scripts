@@ -92,7 +92,7 @@ USE_COLOR=true
 # where to unpack distibution package
 REMOTE_STAGE_DIR=/geomicro/data2/$(id --user --name)/packaging
 # name of remote host
-REMOTE_HOST=vondamm.geo.lsa.umich.edu
+REMOTE_HOST=vondamm.earth.lsa.umich.edu
 # Install to test destination
 TEST=false
 

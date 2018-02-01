@@ -1,24 +1,39 @@
 #!/usr/bin/env python3
 """
-Separate interleaved reads fastq file into forwards and reverse files.
+Separate interleaved-reads fasta/q file into forwards and reverse files.
 
-Input file must be in FASTQ format, Sequence and quality score must be on a
-single line each, separated by a '+', read headers must start with '@'.  It is
-not checked if two reads are actually paired-end reads.
+Input file must be in FASTQ or FASTA format, Sequence and quality score must be
+on a single line each, separated by a '+', read headers must start with '@' or
+'>'.  The script will auto-detect the file format based on the first header.
+
+It is not checked if two reads are actually paired-end reads, however an error
+will be raised if the input file containes an uneven number of sequences.
 """
 import argparse
 from pathlib import Path
+import sys
 
+FASTQ = 'fastq'
+FASTA = 'fasta'
 
 argp = argparse.ArgumentParser(description=__doc__)
 argp.add_argument(
     'inputfile',
     type=argparse.FileType('rb'),
-    help='Interleaved reads FASTQ file.',
+    nargs='?',
+    default=sys.stdin.buffer,
+    help='Interleaved-reads FASTA or FASTQ file.',
 )
 argp.add_argument(
-    '-p', '--prefix',
-    help='Prefix for output files.  A value is derived from the input '
+    '-f', '--fwd', '--forward-out',
+    metavar='FILE',
+    help='Name of forward output file.  A value is derived from the input'
+         'filename by default.',
+)
+argp.add_argument(
+    '-r', '--rev', '--reverse-out',
+    metavar='FILE',
+    help='Name of reverse output file.  A value is derived from the input'
          'filename by default.',
 )
 argp.add_argument(
@@ -30,13 +45,31 @@ argp.add_argument(
 )
 
 args = argp.parse_args()
-if args.prefix:
-    prefix = args.prefix
-else:
-    prefix = Path(args.inputfile.name).stem
 
-fwd = open('{}.fwd.fastq'.format(prefix), 'wb')
-rev = open('{}.rev.fastq'.format(prefix), 'wb')
+# detect file format
+fmt_indicator = args.inputfile.read(1)
+args.inputfile.seek(0)
+if fmt_indicator == b'@':
+    file_fmt = FASTQ
+elif fmt_indicator == b'>':
+    file_fmt = FASTA
+else:
+    argp.error('Bad file format: first character in {} is "{}", expect "@" or '
+               '">"'.format(args.inputfile.name,
+                            fmt_indicator.decode(errors='replace')))
+
+if args.verbosity >= 2:
+    print('Detected {} file format'.format(file_fmt))
+
+prefix = Path(args.inputfile.name).stem
+fwd_name = args.fwd or '{}.fwd.{}'.format(prefix, file_fmt)
+rev_name = args.rev or '{}.rev.{}'.format(prefix, file_fmt)
+
+if fwd_name == rev_name:
+    argp.error('Please choose distinct names for output files')
+
+fwd = open(fwd_name, 'wb')
+rev = open(rev_name, 'wb')
 
 # state space
 F = 0  # forward
@@ -44,8 +77,12 @@ R = 1  # reverse
 
 H = 0  # head
 S = 1  # sequence
-P = 2  # plus separator
-Q = 3  # quality
+if file_fmt is FASTA:
+    lines_per_seq = 2
+elif file_fmt is FASTQ:
+    P = 2  # plus separator
+    Q = 3  # quality
+    lines_per_seq = 4
 
 
 file = {F: fwd, R: rev}
@@ -56,32 +93,36 @@ linenum = 0
 for line in args.inputfile:
     linenum += 1
 
-    if state[0] not in [0, 1] or state[1] not in range(4):
+    if state[0] not in [0, 1] or state[1] not in range(lines_per_seq):
         raise RuntimeError('Illegal internal state: {}, line: {}'
                            ''.format(state, linenum))
 
-    if state[1] == H and line[0] != ord('@'):
-        raise RuntimeError('Line {} is not a fastq header:'
-                           ''.format(linenum, line.decode()))
+    if state[1] == H and line[0] != fmt_indicator[0]:
+        raise RuntimeError('Line {} is not a {} header: {}'
+                           ''.format(linenum, file_fmt, line.decode()))
 
-    if state[1] == P and line != b'+\n':
-        raise RuntimeError('Line {} is not the + seperator:'
+    if file_fmt is FASTQ and state[1] == P and line != b'+\n':
+        raise RuntimeError('Line {} is not the + separator as expected:'
                            ''.format(linenum, line.decode()))
 
     file[state[0]].write(line)
 
-    if state[1] == Q:
+    if file_fmt is FASTQ and state[1] == Q:
+        # go back to header and switch file
+        state = state[0] ^ 1, H
+    elif file_fmt is FASTA and state[1] == S:
         # go back to header and switch file
         state = state[0] ^ 1, H
     else:
-        state = state[0], (state[1] + 1) % 4
+        state = state[0], (state[1] + 1) % lines_per_seq
 
 args.inputfile.close()
 
-if linenum % 8 != 0:
+if linenum % (2 * lines_per_seq) != 0:
     raise RuntimeError(
-        'Data missing or file corrupt: Found {} lines in {}; not a '
-        'multiple of 8'.format(linenum, args.inputfile)
+        'Data missing or file corrupt: Found {} lines in {}; expected a '
+        'multiple of {}'.format(linenum, args.inputfile.name,
+                                2 * lines_per_seq)
     )
 
 for f in [fwd, rev]:
@@ -89,4 +130,4 @@ for f in [fwd, rev]:
     f.close()
     if args.verbosity >= 2:
         print('{} reads / {} bytes written to {}'
-              ''.format(int(linenum / 8), size, f.name))
+              ''.format(int(linenum / (2 * lines_per_seq)), size, f.name))

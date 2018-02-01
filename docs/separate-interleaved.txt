@@ -7,7 +7,7 @@ separate-interleaved
 Synopsis
 ========
 
-:program:`separate-interleaved` [:option:`-v`] [:option:`--prefix` PREFIX]  <fastq-file>
+:program:`separate-interleaved` [:option:`-v`] [:option:`-f` FILE] [:option:`-r` FILE] <fastq-file>
 
 
 Description
@@ -15,12 +15,13 @@ Description
 
 Separate interleaved reads fastq file into forwards and reverse files.
 
-Input file must be in FASTQ format, Sequence and quality score must be on a
-single line each, separated by a ``+``, read headers must start with ``@``.
-It is not checked if two reads are actually paired-end reads.
-
-This is a speedier reimplementation of Sunit Jain's
-:command:`separateInterleved` script.
+Separate interleaved-reads fasta/q file into forwards and reverse files. Input
+file must be in FASTQ or FASTA format, Sequence and quality score must be on a
+single line each, separated by a '+', read headers must start with '@' or '>'.
+The script will auto-detect the file format based on the first header. It is
+not checked if two reads are actually paired-end reads, however an error will
+be raised if the input file containes an uneven number of sequences.
+ 
 
 
 Options
@@ -29,10 +30,15 @@ Options
 
     show this help message and exit
 
-.. option:: -p PREFIX, --prefix PREFIX
+.. option:: -f FILE, --fwd FILE, --forward-out FILE
 
-    Prefix for output files.  A value is derived from the input filename by
-    default.
+    Name of forward output file. A value is derived from
+    the inputfilename by default.
+
+.. option:: -r FILE, --rev FILE, --reverse-out FILE
+
+    Name of reverse output file. A value is derived from
+    the inputfilename by default.
 
 .. option:: -v, --verbose
 
