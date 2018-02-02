@@ -121,7 +121,7 @@ if [ -n "$COV_PATH" ]; then
     cov_path=$COV_PATH
 else
     # assume BAMs were made with pipeline defaults
-    cov_path=MAPPING/${name}.genomeCovBeb.tsv
+    cov_path=MAPPING/${name}.genomeCovBed.tsv
 fi
 
 if [ -n "$BAM_PATH" ]; then
