@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.89-1) unstable; urgency=medium
+
+  * [binning] Add option to bin with MetaBAT
+  * Add downsample script
+  * [binning] Integrate metabat with checkm analysis
+  * [binning] Fix spelling in file path
+  * [downsample] Actually install the script
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Fri, 02 Feb 2018 16:34:53 -0500
+
 geo-omics-scripts (1.0.88-1) unstable; urgency=medium
 
   * Fix scripts using set -u crashing when not using colors
