@@ -168,6 +168,9 @@ if $USE_CONCOCT; then
     [[ -z $CPUS ]] || c_args+=(-t "$CPUS")
     [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
     concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+
+    info "Compiling bins into fasta files..."
+    bins2fasta -o "${outdir}/bins" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
 fi
 
 if $USE_METABAT; then
@@ -175,13 +178,14 @@ if $USE_METABAT; then
     (
         cd "$outdir"
         runMetaBat.sh -t "$CPUS" "$assembly" "${SAMPLE_DIRS[@]/%//$bam_path}"
+        bindir=$(basename "$assembly").metabat-bins${CPUS}
+        if [ -d "$bindir" ]; then
+            ln -s "$bindir" bins
+        else
+            warning "Failed to detect output directory with bins, downstream analysis may fail."
+        fi
     )
 fi
 
-info "Compiling bins into fasta files..."
-$USE_CONCOCT && bins2fasta -o "${outdir}/bins" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
-$USE_METABAT && echo "(not yet implemented for use with MetaBAT)"
-
 info "Running CheckM..."
-$USE_CONCOCT && checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
-$USE_METABAT && echo "(not yet implemented for use with MetaBAT)"
+checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
