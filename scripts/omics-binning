@@ -7,24 +7,38 @@ USAGE="[OPTIONS]... [SAMPLEDIRS]..."
 HELP="Implementation of the binning step of the Geomicro Illumina Reads Pipeline"
 ARG_HELP="
   -a, --assembly FILE       The fasta file containing the assembled contigs
+  --concoct                 Use the CONCOCT binner.  This is the default
+  --metabat                 Use the MetaBAT binner.
+
+ Options for binning with CONCOCT:
+
   -c, --coverage-file FILE  merged/shared per-sample-contig mean coverage file. If
 			    this option is not present, then this file will be
 			    compiled from the files found with the
 			    --coverage-path argument
       --coverage-path PATH  Path to coverage files relative to each sample directory;
-                            the default is MAPPING/assembly.chop.genomeCovBed.tsv.
+                            the default is MAPPING/<assembly-name>.genomeCovBed.tsv.
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
       --max-clusters        Maximum number of clusters, sets CONCOCT's -c parameter.
-      --cpus                Number of CPUs/threads
-      --force               Overwrite existing output
+
+ Options for binning with MetaBAT:
+
+  --bam-path PATH           Path to sorted (but not name-sorted) BAM file
+                            relative to each sample directory.  The default is
+                            MAPPING/<assembly-name>_sorted.bam
+
+ General options:
+
+  --cpus                    Number of CPUs/threads
+  --force                   Overwrite existing output
   -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
 CHECK_PROGS="chop-contigs merge-coverage concoct"
 SHORT_OPTIONS=a:c:o:
-LONG_OPTIONS=assembly:,cpus:,max-clusters:,coverage-file:,coverage-path:,force,out-dir:
+LONG_OPTIONS=assembly:,bam-path:,concoct,cpus:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -32,12 +46,23 @@ handle_options () {
 	(-a|--assembly)
 	    ASSEMBLY="$2"
 	    return 2;;
+        (--bam-path)
+            BAM_PATH="$2"
+            return 2;;
+        (--concoct)
+            USE_CONCOCT=true
+            USE_METABAT=false
+            return 1;;
 	(-c|--coverage-file)
 	    COV_FILE="$2"
 	    return 2;;
 	(--max-clusters)
 	    MAX_CLUSTERS="$2"
 	    return 2;;
+        (--metabat)
+            USE_CONCOCT=false
+            USE_METABAT=true
+            return 1;;
 	(--coverage-path)
 	    COV_PATH="$2"
 	    return 2;;
@@ -58,14 +83,19 @@ handle_options () {
 
 # Define defaults for cmdline options here
 ASSEMBLY=contigs.fa
+# default will be derived from assembly name (see below)
+BAM_PATH=
 # Empty be default, -c won't be set
 MAX_CLUSTERS=
 FORCE=false
 OUTDIR=BINNING
 # no default needed
 COV_FILE=
-# default as made by mapping script
-COV_PATH=MAPPING/assembly.chop.genomeCovBed.tsv
+# default will be derived from assembly name (see below)
+COV_PATH=
+# the default binner is CONCOCT
+USE_CONCOCT=true
+USE_METABAT=false
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -76,13 +106,7 @@ if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=($@)
 fi
 
-# check if input data exists before doing anything
-for i in "${SAMPLE_DIRS[@]}"; do
-    [ -d "$i" ] || abort "is not a directory: $i"
-    [ -r "$i/$COV_PATH" ] || abort "coverage file not found: $i/$COV_PATH"
-done
-
-if [[ -n "$MAX_CLUSTERS" ]]; then
+if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
     [[ $MAX_CLUSTERS -gt 0 ]] || abort "max-cluster parameter must be number greater than 0"
 fi
 
@@ -92,6 +116,27 @@ outdir=$(readlink -f "$OUTDIR")
 
 name=$(basename "$assembly")
 name="${name%.*}"  # the filename without suffix
+
+if [ -n "$COV_PATH" ]; then
+    cov_path=$COV_PATH
+else
+    # assume BAMs were made with pipeline defaults
+    cov_path=MAPPING/${name}.genomeCovBeb.tsv
+fi
+
+if [ -n "$BAM_PATH" ]; then
+    bam_path=$BAM_PATH
+else
+    # assume BAMs were made with pipeline defaults
+    bam_path=MAPPING/${name}_sorted.bam
+fi
+
+# check if input data exists before doing anything else
+for i in "${SAMPLE_DIRS[@]}"; do
+    [ -d "$i" ] || abort "is not a directory: $i"
+    ! $USE_CONCOCT || [ -r "$i/$cov_path" ] || abort "coverage file not found: $i/$cov_path"
+    ! $USE_METABAT || [ -r "$i/$cov_path" ] || abort "sorted bam file not found: $i/$bam_path"
+done
 
 [ -r "$assembly" ] || abort "Failed to read assembly file: $assembly"
 
@@ -104,27 +149,39 @@ if [ -d "$outdir" ]; then
 fi
 $MKDIR -p -- "$outdir"
 
-if [ -z "$COV_FILE" ]; then
-    info "Collecting coverage data..."
-    cov_file=$outdir/${name}.cov
-    v_arg=()
-    [[ -z "$VERBOSE_FLAG" ]] || v_arg+=("$VERBOSE_FLAG")
-    merge-coverage "${v_arg[@]}" -a "$assembly" -o "$cov_file" "${SAMPLE_DIRS[@]/%//$COV_PATH}"
-    info "Mean coverage data written to $cov_file, to be used with --coverage-file option in future invocations of binning"
-else
-    cov_file=$(readlink -f "$COV_FILE")
+if $USE_CONCOCT; then
+    if [ -z "$COV_FILE" ]; then
+        info "Collecting coverage data..."
+        cov_file=$outdir/${name}.cov
+        v_arg=()
+        [[ -z "$VERBOSE_FLAG" ]] || v_arg+=("$VERBOSE_FLAG")
+        merge-coverage "${v_arg[@]}" -a "$assembly" -o "$cov_file" "${SAMPLE_DIRS[@]/%//$cov_path}"
+        info "Mean coverage data written to $cov_file, to be used with --coverage-file option in future invocations of binning"
+    else
+        cov_file=$(readlink -f "$COV_FILE")
+    fi
+
+    [ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
+
+    info "Running CONCOCT..."
+    c_args=()
+    [[ -z $CPUS ]] || c_args+=(-t "$CPUS")
+    [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
+    concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
 fi
 
-[ -f "$cov_file" ] || abort "Failed to read coverage file: $cov_file"
-
-info "Running CONCOCT..."
-c_args=()
-[[ -z $CPUS ]] || c_args+=(-t "$CPUS")
-[[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
-concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+if $USE_METABAT; then
+    info "Running MetaBAT..."
+    (
+        cd "$outdir"
+        runMetaBat.sh -t "$CPUS" "$assembly" "${SAMPLE_DIRS[@]/%//$bam_path}"
+    )
+fi
 
 info "Compiling bins into fasta files..."
-bins2fasta -o "${outdir}/bins" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
+$USE_CONCOCT && bins2fasta -o "${outdir}/bins" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
+$USE_METABAT && echo "(not yet implemented for use with MetaBAT)"
 
 info "Running CheckM..."
-checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
+$USE_CONCOCT && checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
+$USE_METABAT && echo "(not yet implemented for use with MetaBAT)"
