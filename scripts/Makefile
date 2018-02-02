@@ -119,6 +119,7 @@ OTHER_EXECUTABLES = \
     createPhgDB \
     do2folder \
     do2list \
+    downsample \
     Ebot.Output.Extract.Gi.Title.Rev3 \
     extractEuks \
     firefox_already_running \
