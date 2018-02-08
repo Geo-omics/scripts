@@ -161,7 +161,8 @@ def main():
         'input',
         nargs='*',
         default=['.'],
-        help='List of directories or fasta files',
+        help='List of directories or fasta files.  The default is to take the '
+             'current diorectory.',
     )
     output_flags = argp.add_mutually_exclusive_group()
     output_flags.add_argument(
@@ -175,7 +176,7 @@ def main():
     output_flags.add_argument(
         '-o', '--out-dir',
         default='.',
-        help='Output directory.',
+        help='Output directory. The default is the current directory.',
     )
     argp.add_argument(
         '-v', '--verbose',
