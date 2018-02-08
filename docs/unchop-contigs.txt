@@ -1,0 +1,75 @@
+.. program:: unchop-contigs
+
+=================================================================
+unchop-contigs - Stitch together chopped up contigs after binning
+=================================================================
+
+Synopsis
+========
+
+:program:`unchop-contigs` [-h] [-i [BACKUP_SUFFIX] | -o OUT_DIR] [-v] [input [input ...]]
+
+
+Description
+===========
+
+The CONCOCT binner recommends to chop long contigs into even length chunks to
+reduce bias related to varying contigs sizes.  This script glues them back
+together for downstream analysis of bins.
+
+It is assumed that there is one fasta file per bin and that the fasta headers
+consist of the original contig id followed by a dotand a decimal chunk number.
+For example if a bin has three contig chunks named::
+
+    k141_531759.0
+    k141_531759.1
+    k141_531759.2
+
+they will be replaced by a single contig called::
+
+    k141_531759.0-2
+
+Contigs that do not have chunk information will be left alone.  However contigs
+will be sorted by contig id and numerical chunk number.  A consequence is that
+applying unchop-contig a second time may change the order of some contigs.
+
+
+Options
+=======
+
+.. option:: input
+
+    List of directories or fasta files. The default is to  take the
+    current diorectory.
+
+.. option:: -h, --help
+
+    show this help message and exit
+
+.. option:: -i [BACKUP_SUFFIX], --in-place [BACKUP_SUFFIX]
+
+    Replace input file. If provided, backup of each file  is made using
+    the provided suffix.
+
+.. option:: -o OUT_DIR, --out-dir OUT_DIR
+
+    Output directory. The default is the current  directory.
+
+.. option:: -v, --verbose
+
+    Print diagnostic output.
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`
+

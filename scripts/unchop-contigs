@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""
+Stitch together chopped up contigs after binning
+
+The CONCOCT binner recommends to chop long contigs into even length chunks to
+reduce bias related to varying contigs sizes.  This script glues them back
+together for downstream analysis of bins.
+
+It is assumed that there is one fasta file per bin and that the fasta headers
+consist of the original contig id followed by a dotand a decimal chunk number.
+For example if a bin has three contig chunks named
+
+    k141_531759.0
+    k141_531759.1
+    k141_531759.2
+
+they will be replaced by a single contig called
+
+    k141_531759.0-2
+
+Contigs that do not have chunk information will be left alone.  However contigs
+will be sorted by contig id and numerical chunk number.  A consequence is that
+applying unchop-contig a second time may change the order of some contigs.
+"""
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from itertools import groupby
+from operator import itemgetter
+from pathlib import Path
+import re
+
+
+contig_re = re.compile(r'^(?P<contig_id>.+?)(\.(?P<chunk>[0-9]+))?$')
+""" regex for contig id, a trailing .## is the (optional) chunk identifier """
+
+
+def load(file, verbosity=1):
+    """
+    Load fasta data
+
+    Generates triples of contig, chunk, list of sequence lines
+    """
+    if verbosity >= 2:
+        print('{}: '.format(file.name), end='')
+
+    contig = None
+    chunk = None
+    seq = None
+    count = 0
+    for line in file:
+        line = line.strip()
+        if line.startswith('>'):
+
+            if contig is not None:
+                yield contig, chunk, seq
+
+            count += 1
+            m = re.match(contig_re, line.lstrip('>'))
+            # should always match
+            contig = m.groupdict()['contig_id']
+            try:
+                chunk = int(m.groupdict()['chunk'])
+            except TypeError:
+                # chunk info didn't match
+                chunk = None
+            seq = []
+        else:
+            seq.append(line)
+
+    if contig is not None:
+        yield contig, chunk, seq
+
+    if verbosity >= 2:
+        print('{} sequences read'.format(count))
+
+
+def sort(data):
+    """
+    Sort sequences by contig id and chunk number
+
+    i.e. sort by contig id and chunk
+    """
+    return sorted(data, key=itemgetter(0, 1))
+
+
+def glue(data, verbosity=1):
+    """
+    Glue consecutive chunks together
+    """
+    for contig, group in groupby(data, key=itemgetter(0)):
+        first = last = None
+        contig_seq = []
+        for _, chunk, chunk_seq in group:
+            if first is None:
+                first = last = chunk
+                contig_seq = chunk_seq
+            else:
+                if last + 1 == chunk:
+                    last = chunk
+                    if len(contig_seq) == 1 and len(chunk_seq) == 1:
+                        # keep single line
+                        contig_seq = [contig_seq[0] + chunk_seq[0]]
+                    else:
+                        contig_seq += chunk_seq
+                else:
+                    if verbosity >= 2:
+                        for i in range(last + 1, chunk):
+                            print('chunk missing: {}.{}'
+                                  ''.format(contig, i))
+
+                    yield contig, first, last, contig_seq
+
+                    first = last = chunk
+                    contig_seq = chunk_seq
+
+        # data of last group
+        yield contig, first, last, contig_seq
+
+
+def write(file, data, verbosity=1):
+    """
+    Write data to fasta file
+
+    Data is iterable of 4-tuples of type (str, int, int, list of str)
+    """
+    count = 0
+    for contig, first_chunk, last_chunk, seq in data:
+        if first_chunk is None and last_chunk is None:
+            chunk_info = ''
+        elif first_chunk == last_chunk:
+            chunk_info = '.{}'.format(first_chunk)
+        else:
+            chunk_info = '.{}-{}'.format(first_chunk, last_chunk)
+        file.write('>{}{}\n{}\n'.format(contig, chunk_info, '\n'.join(seq)))
+        count += 1
+
+    if verbosity >= 2:
+        print('{}: {} sequences written'.format(file.name, count))
+
+
+def get_files(paths):
+    for p in paths:
+        p = Path(p)
+        if p.is_dir():
+            for i in p.iterdir():
+                if i.is_file():
+                    yield i
+        elif p.is_file:
+            yield p
+        else:
+            raise FileNotFoundError
+
+
+def main():
+
+    argp = ArgumentParser(
+        description=__doc__.splitlines()[1],
+        epilog='\n'.join(__doc__.splitlines()[3:]),
+        formatter_class=RawDescriptionHelpFormatter,
+    )
+    argp.add_argument(
+        'input',
+        nargs='*',
+        default=['.'],
+        help='List of directories or fasta files.  The default is to take the '
+             'current diorectory.',
+    )
+    output_flags = argp.add_mutually_exclusive_group()
+    output_flags.add_argument(
+        '-i', '--in-place',
+        nargs='?',   # without arg dest value will be None, meaning no backup
+        default='',  # empty string indicates -i NOT given by user, use -o
+        dest='backup_suffix',
+        help='Replace input file.  If provided, backup of each file is made '
+             'using the provided suffix.',
+    )
+    output_flags.add_argument(
+        '-o', '--out-dir',
+        default='.',
+        help='Output directory. The default is the current directory.',
+    )
+    argp.add_argument(
+        '-v', '--verbose',
+        action='count',
+        dest='verbosity',
+        default=1,
+        help='Print diagnostic output.',
+    )
+    args = argp.parse_args()
+
+    if args.backup_suffix == '':
+        # write to output dir
+        replace = False
+        backup = False
+        args.out_dir = Path(args.out_dir)
+        try:
+            args.out_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            argp.error('Bad argument for output directory: {}: {}'
+                       ''.format(e.__class__.__name__, e))
+    else:
+        # replace input files
+        replace = True
+        if args.backup_suffix is None:
+            backup = False
+        else:
+            backup = True
+        args.out_dir = None
+
+    for infile in get_files(args.input):
+        with infile.open() as fin:
+
+            if fin.read(1) == '>':
+
+                fin.seek(0)
+
+                if replace:
+                    if backup:
+                        infile.rename(infile.with_suffix(
+                            infile.suffix + args.backup_suffix)
+                        )
+                    outfile = infile
+                else:
+                    outfile = args.out_dir / infile.name
+
+                data = load(fin, args.verbosity)
+                data = glue(sort(data), args.verbosity)
+
+                with outfile.open('w') as fout:
+                    write(fout, data, args.verbosity)
+            else:
+                print('Not a fasta file (skipping): {}'.format(infile))
+
+
+if __name__ == '__main__':
+    main()

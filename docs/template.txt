@@ -1,0 +1,38 @@
+.. program:: $program
+
+$header_line
+$program - $short_description
+$header_line
+
+Synopsis
+========
+
+:program:`$program` $usage_args
+
+
+Description
+===========
+
+$long_description
+
+
+Options
+=======
+
+$positional_args
+
+$optional_args
+
+
+Exit Status
+===========
+
+Exits with non-zero upon encountering an error.
+
+.. only:: man
+
+    See Also
+    ========
+
+    :manpage:`omics(7)`,
+    :manpage:`illumina-reads-processing(7)`

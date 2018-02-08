@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""
+Generate docs from programs help printout
+"""
+import argparse
+from pathlib import Path
+import re
+import subprocess
+from string import Template
+from textwrap import wrap, indent
+
+
+DEFAULT_TEMPLATE = 'docs/template.txt'
+
+OPTION_TMPL = Template("""\
+.. option:: $args
+
+$help
+
+""")
+
+
+HELP_RE = (r'^usage: (?P<program>[-\w]+) (?P<usage_args>.*?)'
+           r'\n\n(?P<short_description>[^\n]*)$'
+           r'\n\npositional arguments:\n(?P<positional_args>.*)'
+           r'\n\noptional arguments:\n(?P<optional_args>.*?)'
+           r'\n\n(?P<long_description>.*)')
+
+OPTION_RE = r'^  (?P<args>[^\n]*?[^\s])(  +|\n)(?P<help>.*?)(?=(^  [^\s]|\Z))'
+
+
+def parse_help(help_text):
+    """
+    Parse help and return dictionary of text elements
+    """
+    m = re.match(HELP_RE, help_text, re.MULTILINE | re.DOTALL)
+    if m is None:
+        raise RuntimeError('Failed to parse help text')
+
+    return m.groupdict()
+
+
+def fix_options(opt_section):
+    ret = ''
+    for m in re.finditer(OPTION_RE, opt_section, re.MULTILINE | re.DOTALL):
+        sub = m.groupdict()
+        # rm existing formatting:
+        sub['help'] = re.sub(r' \s+', ' ', sub['help']).strip()
+        sub['help'] = '\n'.join(wrap(sub['help']))
+        sub['help'] = indent(sub['help'], '    ')
+
+        ret += OPTION_TMPL.substitute(sub)
+
+    ret = ret.rstrip()
+    return ret
+
+
+def main():
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'program',
+        help='Path and name of the program',
+    )
+    argp.add_argument(
+        '-t', '--template',
+        default=DEFAULT_TEMPLATE,
+        help='Path to template file.',
+    )
+    args = argp.parse_args()
+
+    prog = Path(args.program)
+    if not prog.is_file():
+        argp.error('Program file not found: {}'.format(prog))
+
+    template = Path(args.template)
+    if not template.is_file():
+        argp.error('Template file not found: {}'.format(template))
+
+    p = subprocess.run([str(prog), '-h'], stdout=subprocess.PIPE)
+    help_text = p.stdout.decode()
+
+    template = Template(template.read_text())
+
+    # print(help_text)
+    sub = parse_help(help_text)
+    sub['usage_args'] = re.sub(r'\s+', ' ', sub['usage_args'])  # rm newlines
+    sub['positional_args'] = fix_options(sub['positional_args'])
+    sub['optional_args'] = fix_options(sub['optional_args'])
+    sub['header_line'] = \
+        '=' * (len(sub['program']) + 3 + len(sub['short_description']))
+    print(template.substitute(**sub))
+
+
+if __name__ == '__main__':
+    main()
