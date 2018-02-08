@@ -222,12 +222,13 @@ def main():
                 else:
                     outfile = args.out_dir / infile.name
 
-            data = load(fin, args.verbosity)
+                data = load(fin, args.verbosity)
+                data = glue(sort(data), args.verbosity)
 
-            data = glue(sort(data), args.verbosity)
-
-            with outfile.open('w') as fout:
-                write(fout, data, args.verbosity)
+                with outfile.open('w') as fout:
+                    write(fout, data, args.verbosity)
+            else:
+                print('Not a fasta file (skipping): {}'.format(infile))
 
 
 if __name__ == '__main__':
