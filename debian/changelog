@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.90-1) unstable; urgency=medium
+
+  * Introduce checkm result file utilities
+  * Add unchop script
+  * [unchop-contigs] Add man page
+  * [binning] Reverse contig chopping after binning
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 08 Feb 2018 16:41:35 -0500
+
 geo-omics-scripts (1.0.89-1) unstable; urgency=medium
 
   * [binning] Add option to bin with MetaBAT
