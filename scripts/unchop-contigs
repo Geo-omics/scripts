@@ -83,7 +83,7 @@ def glue(data, verbosity=1):
     """
     Glue consecutive chunks together
     """
-    for contig, group in groupby(data, key=lambda x: x[0]):
+    for contig, group in groupby(data, key=itemgetter(0)):
         first = last = None
         contig_seq = []
         for _, chunk, chunk_seq in group:
