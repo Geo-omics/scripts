@@ -39,6 +39,9 @@ def load(file, verbosity=1):
 
     Generates triples of contig, chunk, list of sequence lines
     """
+    if verbosity >= 2:
+        print('{}: '.format(file.name), end='')
+
     contig = None
     chunk = None
     seq = None
@@ -67,7 +70,7 @@ def load(file, verbosity=1):
         yield contig, chunk, seq
 
     if verbosity >= 2:
-        print('{}: {} sequences read'.format(file.name, count))
+        print('{} sequences read'.format(count))
 
 
 def sort(data):
