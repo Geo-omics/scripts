@@ -24,6 +24,7 @@ applying unchop-contig a second time may change the order of some contigs.
 """
 import argparse
 from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 import re
 
@@ -73,9 +74,9 @@ def sort(data):
     """
     Sort sequences by contig id and chunk number
 
-    i.e. sort by first and second component of data triple
+    i.e. sort by contig id and chunk
     """
-    return sorted(data, key=lambda x: (x[0], x[1]))
+    return sorted(data, key=itemgetter(0, 1))
 
 
 def glue(data, verbosity=1):
