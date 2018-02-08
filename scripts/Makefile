@@ -145,6 +145,7 @@ OTHER_EXECUTABLES = \
     separate-interleaved\
     setup_metapathways \
     silva-db \
+    unchop-contigs \
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\
