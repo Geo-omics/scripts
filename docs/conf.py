@@ -368,6 +368,8 @@ man_pages = [
      [author], 1),
     ('bins2fasta', 'bins2fasta', 'generate per-bin fasta files',
      [author], 1),
+    ('unchop-contigs', 'unchop-contigs', 'glue contigs back together',
+     [author], 1),
 ]
 
 # If true, show URL addresses after external links.
