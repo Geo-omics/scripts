@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 
 
-contig_re = re.compile(r'^(?P<contig_id>.*?)(\.(?P<chunk>[0-9]+))?$')
+contig_re = re.compile(r'^(?P<contig_id>.+?)(\.(?P<chunk>[0-9]+))?$')
 """ regex for contig id, a trailing .## is the (optional) chunk identifier """
 
 
@@ -40,7 +40,11 @@ def load(file, verbosity=1):
             m = re.match(contig_re, line.lstrip('>'))
             # should always match
             contig = m.groupdict()['contig_id']
-            chunk = int(m.groupdict()['chunk'])
+            try:
+                chunk = int(m.groupdict()['chunk'])
+            except TypeError:
+                # chunk info didn't match
+                chunk = None
             seq = []
         else:
             seq.append(line)
