@@ -85,6 +85,8 @@ handle_options () {
 ASSEMBLY=contigs.fa
 # default will be derived from assembly name (see below)
 BAM_PATH=
+#
+CPUS=4
 # Empty be default, -c won't be set
 MAX_CLUSTERS=
 FORCE=false
@@ -135,7 +137,7 @@ fi
 for i in "${SAMPLE_DIRS[@]}"; do
     [ -d "$i" ] || abort "is not a directory: $i"
     ! $USE_CONCOCT || [ -r "$i/$cov_path" ] || abort "coverage file not found: $i/$cov_path"
-    ! $USE_METABAT || [ -r "$i/$cov_path" ] || abort "sorted bam file not found: $i/$bam_path"
+    ! $USE_METABAT || [ -r "$i/$bam_path" ] || abort "sorted bam file not found: $i/$bam_path"
 done
 
 [ -r "$assembly" ] || abort "Failed to read assembly file: $assembly"
@@ -176,19 +178,31 @@ fi
 if $USE_METABAT; then
     info "Running MetaBAT..."
     (
+        # compile list of name-sorted bams:
+        bams=()
+        for i in "${SAMPLE_DIRS[@]}"; do
+            bams+=("$(realpath "${i}/$bam_path")")
+        done
+        assembly=$(realpath "$assembly")
         cd "$outdir"
-        runMetaBat.sh -t "$CPUS" "$assembly" "${SAMPLE_DIRS[@]/%//$bam_path}"
+        runMetaBat.sh -t "$CPUS" "$assembly" "${bams[@]}"
         bindir=$(basename "$assembly").metabat-bins${CPUS}
         if [ -d "$bindir" ]; then
-            ln -s "$bindir" bins.chop
+            ln -sf "$bindir" bins.chop
         else
             warning "Failed to detect output directory with bins, downstream analysis may fail."
         fi
     )
 fi
 
+ls "$outdir"/bins.chop/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
+
 info "Putting chopped-up contigs back together..."
-unchop-contigs -o "$outdir/bins" "$outdir/bins.chop/*.fa"
+unchop-contigs -o "$outdir/bins" "$outdir"/bins.chop/*.fa
 
 info "Running CheckM..."
-checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
+checkm lineage_wf \
+    -t "$CPUS" --pplacer_threads "$CPUS" \
+    -x fa \
+    -f "$outdir"/checkm/bin_stats.csv --tab_table \
+    "$outdir/bins" "$outdir/checkm"
