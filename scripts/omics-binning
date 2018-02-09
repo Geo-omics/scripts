@@ -188,7 +188,7 @@ if $USE_METABAT; then
         runMetaBat.sh -t "$CPUS" "$assembly" "${bams[@]}"
         bindir=$(basename "$assembly").metabat-bins${CPUS}
         if [ -d "$bindir" ]; then
-            ln -s "$bindir" bins.chop
+            ln -sf "$bindir" bins.chop
         else
             warning "Failed to detect output directory with bins, downstream analysis may fail."
         fi
