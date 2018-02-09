@@ -195,6 +195,8 @@ if $USE_METABAT; then
     )
 fi
 
+ls "$outdir"/bins.chop/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
+
 info "Putting chopped-up contigs back together..."
 unchop-contigs -o "$outdir/bins" "$outdir/bins.chop/*.fa"
 
