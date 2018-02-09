@@ -201,4 +201,8 @@ info "Putting chopped-up contigs back together..."
 unchop-contigs -o "$outdir/bins" "$outdir"/bins.chop/*.fa
 
 info "Running CheckM..."
-checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
+checkm lineage_wf \
+    -t "$CPUS" --pplacer_threads "$CPUS" \
+    -x fa \
+    -f "$outdir"/checkm/bin_stats.csv --tab_table \
+    "$outdir/bins" "$outdir/checkm"
