@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.91-2) unstable; urgency=medium
+
+  * Remove broken script, not ready for primetime
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Fri, 09 Feb 2018 11:37:57 -0500
+
 geo-omics-scripts (1.0.91-1) unstable; urgency=medium
 
   * [binning] Ensure CPUS variable is non-empty
