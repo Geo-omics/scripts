@@ -140,7 +140,8 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False):
 def main():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
-        description=__doc__
+        description=__doc__,
+        threads=False,
     )
     argp.add_argument('forward_reads', type=argparse.FileType())
     argp.add_argument('reverse_reads', type=argparse.FileType())
