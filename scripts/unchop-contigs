@@ -144,10 +144,10 @@ def get_files(paths):
             for i in p.iterdir():
                 if i.is_file():
                     yield i
-        elif p.is_file:
+        elif p.is_file():
             yield p
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError(p)
 
 
 def main():
