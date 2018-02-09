@@ -178,8 +178,14 @@ fi
 if $USE_METABAT; then
     info "Running MetaBAT..."
     (
+        # compile list of name-sorted bams:
+        bams=()
+        for i in "${SAMPLE_DIRS[@]}"; do
+            bams+=("$(realpath "${i}/$bam_path")")
+        done
+        assembly=$(realpath "$assembly")
         cd "$outdir"
-        runMetaBat.sh -t "$CPUS" "$assembly" "${SAMPLE_DIRS[@]/%//$bam_path}"
+        runMetaBat.sh -t "$CPUS" "$assembly" "${bams[@]}"
         bindir=$(basename "$assembly").metabat-bins${CPUS}
         if [ -d "$bindir" ]; then
             ln -s "$bindir" bins.chop
