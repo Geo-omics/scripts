@@ -198,7 +198,7 @@ fi
 ls "$outdir"/bins.chop/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
 
 info "Putting chopped-up contigs back together..."
-unchop-contigs -o "$outdir/bins" "$outdir/bins.chop/*.fa"
+unchop-contigs -o "$outdir/bins" "$outdir"/bins.chop/*.fa
 
 info "Running CheckM..."
 checkm lineage_wf -t "$CPUS" -x fa "$outdir/bins" "$outdir/checkm"
