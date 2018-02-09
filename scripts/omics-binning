@@ -85,6 +85,8 @@ handle_options () {
 ASSEMBLY=contigs.fa
 # default will be derived from assembly name (see below)
 BAM_PATH=
+#
+CPUS=4
 # Empty be default, -c won't be set
 MAX_CLUSTERS=
 FORCE=false
