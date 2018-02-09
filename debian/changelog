@@ -1,3 +1,18 @@
+geo-omics-scripts (1.0.91-1) unstable; urgency=medium
+
+  * [binning] Ensure CPUS variable is non-empty
+  * [binning] Fix check for existing input files
+  * [binning] Fix building metabat cmd line
+  * [binning] Fix crash when using --force
+  * [binning] Add check that some bins were generated before using them
+  * [binning] Fix glob
+  * [binning] Improve checkm performance and save statistics table
+  * [unchop-contigs] Fix existence check for input files
+  * [derep] Remove unused cmd line option
+  * Add interleave script
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Fri, 09 Feb 2018 11:26:28 -0500
+
 geo-omics-scripts (1.0.90-1) unstable; urgency=medium
 
   * Introduce checkm result file utilities
