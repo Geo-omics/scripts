@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import subprocess
 from string import Template
+import sys
 from textwrap import wrap, indent
 
 
@@ -21,10 +22,10 @@ $help
 
 
 HELP_RE = (r'^usage: (?P<program>[-\w]+) (?P<usage_args>.*?)'
-           r'\n\n(?P<short_description>[^\n]*)$'
+           r'\n\n(?P<description_1>*)$'
            r'\n\npositional arguments:\n(?P<positional_args>.*)'
            r'\n\noptional arguments:\n(?P<optional_args>.*?)'
-           r'\n\n(?P<long_description>.*)')
+           r'\n\n(?P<description_2>.*)')
 
 OPTION_RE = r'^  (?P<args>[^\n]*?[^\s])(  +|\n)(?P<help>.*?)(?=(^  [^\s]|\Z))'
 
@@ -59,7 +60,9 @@ def main():
     argp = argparse.ArgumentParser(description=__doc__)
     argp.add_argument(
         'program',
-        help='Path and name of the program',
+        nargs='?',
+        help='Path and name of the program.  If this is not given, then the '
+             'program expects the help text to be provided via stdin.',
     )
     argp.add_argument(
         '-t', '--template',
@@ -68,16 +71,19 @@ def main():
     )
     args = argp.parse_args()
 
-    prog = Path(args.program)
-    if not prog.is_file():
-        argp.error('Program file not found: {}'.format(prog))
+    if args.program is None:
+        help_text = sys.stdin.read()
+    else:
+        prog = Path(args.program)
+        if not prog.is_file():
+            argp.error('Program file not found: {}'.format(prog))
+
+        p = subprocess.run([str(prog), '-h'], stdout=subprocess.PIPE)
+        help_text = p.stdout.decode()
 
     template = Path(args.template)
     if not template.is_file():
         argp.error('Template file not found: {}'.format(template))
-
-    p = subprocess.run([str(prog), '-h'], stdout=subprocess.PIPE)
-    help_text = p.stdout.decode()
 
     template = Template(template.read_text())
 
@@ -87,7 +93,7 @@ def main():
     sub['positional_args'] = fix_options(sub['positional_args'])
     sub['optional_args'] = fix_options(sub['optional_args'])
     sub['header_line'] = \
-        '=' * (len(sub['program']) + 3 + len(sub['short_description']))
+        '=' * (len(sub['program']) + 3 + len(sub['description_1']))
     print(template.substitute(**sub))
 
 

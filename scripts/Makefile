@@ -117,6 +117,7 @@ OTHER_EXECUTABLES = \
     bins2fasta \
     chop-contigs \
     createPhgDB \
+    comics \
     do2folder \
     do2list \
     downsample \
