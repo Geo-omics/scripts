@@ -236,7 +236,7 @@ V=$VERBOSE_FLAG
 ####################################
 # check presence of necessary tools
 ####################################
-for i in $CHECK_PROGS; do
+for i in ${CHECK_PROGS:-}; do
     which "$i" > /dev/null 2>&1 || abort "$i command is not available."
 done
 
