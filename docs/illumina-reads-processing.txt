@@ -272,12 +272,20 @@ is run for each sample::
 You can easily process multiple samples in parallel by doing something like::
 
     cd <working directory>
-    for i in *; do (cd $i && omics qc &); done
+    omics qc --threads 8 *
 
-The :program:`omics qc` script makes use of two CPUs in parallel so the above
-works best when the number of CPUs is twice the number of samples.  If there
-are more samples multiple `for` loops can be used with the globs (`*`) replaced
-with an apropriate number of sample ids.
+For the ``--threads`` parameter a low multiple of two is recommended as per the
+following reasoning:  Between the individual QC steps intermediate data is
+saved in your working directory.  This means your fastq data (5 - 10 GB per
+sample) will be read and written 6 or 7 times (per sample again.)  Usually,
+your storage is network-attached, e.g. ``/scratch`` on FLUX is not hosted by
+your computing node but accessed via the network, storage on the geomicro
+servers is organized likewise.  As such, temporarily storing intermediate
+results may easily saturate the network and become the bottleneck for this
+pipeline step.  The severity depends on the workload of other users sharing
+FLUX or the geomicro servers.  Since the script will always process the two
+read directions in parallel it makes sense to allocate a multiple of two
+threads for QC.
 
 Assembly Module -- :program:`assemble`
 --------------------------------------
