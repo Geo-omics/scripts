@@ -119,8 +119,8 @@ fi
 if [ -z "$IMAGE" ]; then
     image=
     for i in "${CONTAINER_PATH[@]}"; do
-        if [[ -d "$i" ]]; then
-            image=$i/$IMAGE_NAME
+        image=$i/$IMAGE_NAME
+        if [[ -f "$image" ]]; then
             [[ $VERBOSITY -lt 2 ]] || info "Found image: $image"
             break
         fi
