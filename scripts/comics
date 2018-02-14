@@ -13,7 +13,7 @@ IMAGE_NAME=omics.img
 # Image file search paths
 CONTAINER_PATH=(
 /dept/geology/geomicro/data9/flux
-/data9/flux
+/geomicro/data9/flux
 ~/src/omics-singularity-container
 )
 
