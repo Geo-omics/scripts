@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.93-1) unstable; urgency=medium
+
+  * [comics] Fix path to container
+  * [comics] Fix existence check, check for image file not directory
+  * [docs] Document changes how omics container is run
+  * [docs] Add discussion on parallel processing in QC
+  * [prep] Allow adapter indices to contain dashes
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Wed, 07 Mar 2018 15:01:59 -0500
+
 geo-omics-scripts (1.0.92-1) unstable; urgency=medium
 
   * Fix possible crash when scripts use set -u
