@@ -15,8 +15,8 @@ FORWARD_READS_FILE = 'fwd.fastq'
 REVERSE_READS_FILE = 'rev.fastq'
 
 raw_reads_file_pat = re.compile(
-    r'(?P<sampleid>[^_]+)_((?P<index>[a-zA-Z]+)_)?S(?P<snum>\d+)_'
-    r'L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
+    r'(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?_S(?P<snum>\d+)'
+    r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
 )
 
 
