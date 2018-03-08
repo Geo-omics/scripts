@@ -101,7 +101,8 @@ def build_filter(data):
     return refuse
 
 
-def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False):
+def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
+                 dupe_file=None):
     """
     Write out filtered data
 
@@ -114,7 +115,10 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False):
     state = ST_HEAD
     pos = fwd_in.tell()
     for fwd_line, rev_line in zip(fwd_in, rev_in):
-        if pos not in refuse:
+        if pos in refuse:
+            if state is ST_HEAD and dupe_file is not None:
+                dupe_file.write(fwd_line)
+        else:
             fwd_out.write(fwd_line)
             rev_out.write(rev_line)
 
@@ -152,8 +156,16 @@ def main():
     )
     argp.add_argument(
         '-o', '--out-infix',
-        default='_derep',
-        help='Infix to contruct output filenames',
+        default='.derep',
+        help='Infix to construct output filenames',
+    )
+    argp.add_argument(
+        '--replicates-list',
+        default=None,
+        metavar='FILE',
+        type=argparse.FileType('wb'),
+        help='If provided, the list of replicated reads is written to the '
+             'given file',
     )
     args = argp.parse_args()
 
@@ -191,7 +203,8 @@ def main():
         print('writing dereplicated output to {} and {} ...'
               ''.format(fwd_out_path, rev_out_path), end='', flush=True)
 
-    filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out)
+    filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out,
+                 dupe_file=args.replicates_list)
     fwd_out.close()
     rev_out.close()
 
