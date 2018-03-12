@@ -2,6 +2,7 @@
 Find and remove replicated reads from fastq files.
 """
 import argparse
+from binascii import hexlify
 from pathlib import Path
 
 from . import get_argparser, DEFAULT_VERBOSITY
@@ -117,7 +118,12 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
     for fwd_line, rev_line in zip(fwd_in, rev_in):
         if pos in refuse:
             if state is ST_HEAD and dupe_file is not None:
-                dupe_file.write(fwd_line)
+                dupe_file.write(fwd_line.rstrip() + b'\t')
+            if state is ST_SEQ and dupe_file is not None:
+                hash_ = (fwd_line + rev_line).__hash__()
+                hash_ = hash_.to_bytes(length=8, byteorder='big', signed=True)
+                hash_ = hexlify(hash_)
+                dupe_file.write(hash_ + b'\n')
         else:
             fwd_out.write(fwd_line)
             rev_out.write(rev_line)
@@ -165,7 +171,7 @@ def main():
         metavar='FILE',
         type=argparse.FileType('wb'),
         help='If provided, the list of replicated reads is written to the '
-             'given file',
+             'given file.',
     )
     args = argp.parse_args()
 
