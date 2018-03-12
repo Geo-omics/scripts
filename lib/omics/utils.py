@@ -2,6 +2,7 @@
 Omics utilities collection
 """
 from collections import defaultdict
+from matplotlib.pyplot import subplots
 from pathlib import Path
 
 
@@ -58,16 +59,13 @@ def scatter(points):
     """
     Diplay scatterplot
     """
-    import matplotlib.pyplot as plt
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    fig, ax = subplots()
     ax.scatter(
         [i[0] for i in points],
         [i[1] for i in points],
         marker='.',
     )
-    plt.show()
-    plt.close()
+    fig.show()
 
 
 def hist(data):
