@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.94-1) unstable; urgency=medium
+
+  * [derep] Add option to save list of replicated reads
+  * Add utils module with small, odd collection of functions
+  * [downsample] Implement downsampling of interleaved files
+  * [derep] Add sequence hashes to duplicate reads output file
+  * [utils] Make more proper (OO) use of matplotlib API
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Mon, 12 Mar 2018 15:38:46 -0400
+
 geo-omics-scripts (1.0.93-1) unstable; urgency=medium
 
   * [comics] Fix path to container
