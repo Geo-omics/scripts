@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.97-1) unstable; urgency=medium
+
+  * [test] Fix option parsing
+  * [mapping] Fix regression, use new infix schema for default file names
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 13 Mar 2018 15:43:19 -0400
+
 geo-omics-scripts (1.0.96-1) unstable; urgency=medium
 
   * [assemble] Fix regression, adjust default input file name
