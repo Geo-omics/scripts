@@ -126,11 +126,11 @@ use IO::Handle;
 #######################
 ## PARAMETERS
 #######################
-my ($fwd, $rev, $prefix, $fastq, $old, $outfmt);
+my ($fwd, $rev, $infix, $fastq, $old, $outfmt);
 my $version="interleave.pl v0.3.7";
 
 GetOptions(
-	"o|out|p|prefix=s"	=>	\$prefix,
+	"i|in|inf|infix=s"	=>	\$infix,
 	"fastq"=>	\$fastq,
 	"fwd|forward=s"	=>	\$fwd,
 	"rev|reverse=s"	=>	\$rev,
@@ -148,16 +148,10 @@ die "FastQ/Fasta reverse file required" if (! $rev);
 my ($out, $fwdS, $revS);
 my $seqType= $fastq ? "fastq" : "fasta";
 if (! $outfmt){$outfmt = $seqType};
-if (! $prefix){
-	$out=$$."int.".$outfmt;
-	$fwdS=$$.".sfwd.".$outfmt;
-	$revS=$$.".srev.".$outfmt;
-}
-else{
-	$out=$prefix."_int.".$outfmt;
-	$fwdS=$prefix."_sfwd.".$outfmt;
-	$revS=$prefix."_srev.".$outfmt;
-}
+if (! $infix){$infix=$$};
+$out="int.".$infix.".".$outfmt;
+$fwdS="sfwd.".$infix.".".$outfmt;
+$revS="srev.".$infix.".".$outfmt;
 
 $/ = $fastq ? "\n" : ">";
 my $beginsWith= $fastq ? "@" : ">";
