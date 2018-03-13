@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+# Copyright (c) 2018 Regents of The University of Michigan.
+# All Rights Reserved.
+#
+set -ue
+# shellcheck disable=SC2034
+USAGE="[--help|-h|-t] [-- [<first>]-[<last>]]"
+# shellcheck disable=SC2034
+SHORT_OPTIONS=t:
+# shellcheck disable=SC2034
+LONG_OPTIONS=threads:
+# shellcheck disable=SC2034
+HELP="Run omics SOP tests"
+handle_options () {
+    if [ "$#" -gt 0 ]; then
+        case "$1" in
+            -t|--threads)
+                THREADS=$1
+                return 2;;
+        esac
+    else
+        return 0
+    fi
+}
+# shellcheck disable=SC1090
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+
+# default values
+STEPS=(prep qc assemble mapping binning)
+THREADS=4
+DATA_DIR=data.01
+TMPDIR=/tmp
+
+if [ "$#" -gt 0 ]; then
+    if echo "$1" | grep -q -; then
+        first=$(echo "$1" | cut -d- -f1)
+        last=$(echo "$1" | cut -d- -f2)
+    else
+        first=$1
+        last=$1
+    fi
+fi
+
+# The default: run all steps
+first=${first:-${STEPS[0]}}
+last=${last:-${STEPS[-1]}}
+
+pick_step=false
+last_ok=false
+steps=()
+for i in "${STEPS[@]}"; do
+    [ "$i" == "$first" ] && pick_step=true
+    $pick_step && steps+=($i)
+    [ "$i" == "$last" ] && last_ok=true && break
+done
+
+[ ${#steps[@]} == 0 ] && abort "Unknown first step: $first"
+$last_ok || abort "Unknown last step: $last"
+
+data=($(find "$(realpath "$(dirname "$0")")"/$DATA_DIR -type f -name "*.fastq.gz"))
+
+do_prep () {
+    omics prep --cpus $THREADS "${data[@]}"
+}
+
+do_qc () {
+    omics qc -t $THREADS 66*
+}
+
+do_assemble () {
+    omics assemble --cpus $THREADS --megahit 66*
+}
+
+do_mapping () {
+    omics mapping --cpus $THREADS --chop --index-only
+    for i in 66*; do (
+        cd "$i"
+        omics mapping --cpus $THREADS --index-dir ../bowtie2-index \
+            -a ../assembly.chop.fa \
+            -f good.fwd.fastq -r good.rev.fastq
+        cd ..
+    ) done
+}
+
+do_binning () {
+    omics binning --cpus $THREADS --assembly assembly.chop.fa 66*
+}
+
+tmpdir=$(mktemp -d --tmpdir=$TMPDIR omics_test.XXXXXXX)
+info "Created working directory: $tmpdir"
+cd "$tmpdir"
+
+for i in "${steps[@]}"; do
+    case $i in
+        prep) do_prep;;
+        qc) do_qc;;
+        assemble) do_assemble;;
+        mapping) do_mapping;;
+        binning) do_binning;;
+        *) abort "runtime error: illegal step: $i";;
+    esac
+done
+
+
+info "Ran $first to $last, results in $tmpdir"
+
