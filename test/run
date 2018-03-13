@@ -16,21 +16,22 @@ handle_options () {
     if [ "$#" -gt 0 ]; then
         case "$1" in
             -t|--threads)
-                THREADS=$1
+                THREADS=$2
                 return 2;;
         esac
     else
         return 0
     fi
 }
-# shellcheck disable=SC1090
-. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 # default values
 STEPS=(prep qc assemble mapping binning)
 THREADS=4
 DATA_DIR=data.01
 TMPDIR=/tmp
+
+# shellcheck disable=SC1090
+. "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 if [ "$#" -gt 0 ]; then
     if echo "$1" | grep -q -; then
