@@ -69,7 +69,7 @@ do_qc () {
 }
 
 do_assemble () {
-    omics assemble --cpus $THREADS --megahit 66*
+    omics assemble --cpus $THREADS --skip-phylosift --megahit 66*
 }
 
 do_mapping () {
