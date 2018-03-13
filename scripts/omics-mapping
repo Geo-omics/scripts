@@ -25,7 +25,7 @@ ARG_HELP="
   -r, --rev-reads FILE  Fastq file with reverse reads, in same order
   -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
                         can also be single-paired reads,
-			The default is good_int.fastq
+			The default is int.good.fastq
                         Incompatible with bowtie2 <= 2.3.0
   -x PATH, --index-dir PATH
                         Path and base name of bowtie2 index db files
@@ -51,14 +51,14 @@ MEM_PER_THREAD=16G
 #
 FORCE=false
 # no defaults needed
-FWD_READS=good.fwd.fastq
-REV_READS=good.rev.fastq
+FWD_READS=fwd.good.fastq
+REV_READS=rev.good.fastq
 # whether to run indexing
 INDEX_ONLY=false
 # location for bowtie2 index files, relative to $PWD
 INDEX_DIR=bowtie2-index
 #
-INT_READS=good_int.fastq
+INT_READS=int.good.fastq
 # Path to assembly / contigs file relative to $PWD
 ASSEMBLY=assembly.fa
 # Location for per-sample mapping output, relative to sample directory
