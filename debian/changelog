@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.95-1) unstable; urgency=medium
+
+  * [liba.sh] Fix in case script has no further options
+  * Add test script
+  * [interleave] Insert infix instead of prefix for output filename
+  * [qc] Use infix convention to name intermediate files
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 13 Mar 2018 14:59:20 -0400
+
 geo-omics-scripts (1.0.94-1) unstable; urgency=medium
 
   * [derep] Add option to save list of replicated reads
