@@ -14,6 +14,7 @@ HELP="quality control for a sample's fastq files"
 ARG_HELP="
   -f, --fwd             Fastq file with forward reads, default is fwd.fastq
   -r, --rev             Fastq file with reverse reads default is rev.fastq
+      --final INFIX     Infix used for final output files.  Default is 'good'
       --clean-only      Delete previously created files and stop.
   -a, --adapters=FILE   Specifies the adapters file to be used.  By default the
                         Illumina adapter file TruSeq3-PE-2.fa as distributed by
@@ -28,7 +29,8 @@ ARG_HELP="
 
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
-                        interleaved fastq will still be build
+                        interleaved fastq will still be build.  This option is
+                        redundant when --no-interleaved is used.
 
       --no-re-separation
                         Skip making the final set of forward and reversed reads
@@ -36,7 +38,8 @@ ARG_HELP="
                         in the same order.  These can be used, alternatively,
                         for assembly and mapping, as some downstream tools can
                         only use on kind of input.  By default the separated
-                        read files are generated
+                        read files are generated.  This has no effect when the
+                        --no-interleave option is used.
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -47,7 +50,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,keep-all,no-dereplicate,no-fasta-interleave,no-interleave,no-re-separation
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,no-interleave,no-re-separation
 }
 
 handle_options () {
@@ -58,6 +61,9 @@ handle_options () {
 		return 2;;
 	    (-r|--rev)
 		REV_FASTQ=$2
+		return 2;;
+	    (--final)
+		FINAL=$2
 		return 2;;
 	    (-a|--adapters)
 		ADAPTERS=$2
@@ -108,6 +114,8 @@ FWD_FASTQ=fwd.fastq
 REV_FASTQ=rev.fastq
 #
 CLEAN_ONLY=false
+# infix for final output files
+FINAL=good
 # Remove intermediate results by default
 KEEPALL=false
 #
@@ -149,18 +157,16 @@ clean_all () {
     clean_intermediates
     # clean final results
     $RM -rf -- FASTQC
-    $RM -f -- {"$fwd","$rev"}{_derep,}_scythe_sickle.fastq
-    $RM -f -- good_int.fast{a,q} good.{fwd,rev}.fastq
+    $RM -f -- {"$fwd","$rev"}{.derep,}.scythe.sickle.fastq
+    $RM -f -- int."$FINAL".fast{a,q} {"$fwd","$rev"}."$FINAL".fastq
 }
 
 clean_intermediates () {
     # clean up intermediate results
-    $RM -f -- {"$fwd","$rev"}_derep.fastq
-    $RM -f -- {"$fwd","$rev"}{_derep,}_scythe.fastq
-    $RM -f -- {"$fwd","$rev"}{_derep,}_matches.fastq
+    $RM -f -- {"$fwd","$rev"}.derep.fastq
+    $RM -f -- {"$fwd","$rev"}{.derep,}.scythe.fastq
+    $RM -f -- {"$fwd","$rev"}{.derep,}_matches.fastq
     $RM -f -- {"$fwd","$rev"}.clust{.list,}
-    $RM -f -- good_s{fwd,rev}.fast{a,q}
-    
 }
 
 
@@ -176,7 +182,7 @@ base=""
 
 if $DEREPLICATION; then
     info1 "dereplicating..."
-    base="_derep"
+    base=".derep"
     python3 -m omics.derep --check "$FWD_FASTQ" "$REV_FASTQ"
 
     cur_fwd=$fwd$base.fastq
@@ -189,32 +195,40 @@ fi
 
 info1 "adapter trimming..."
 oldbase=$base
-base="${base}_scythe"
-scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}_matches.fastq" -o "$fwd$base.fastq" "$cur_fwd" &
-scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}_matches.fastq" -o "$rev$base.fastq" "$cur_rev"
+base="${base}.scythe"
+scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd$base.fastq" "$cur_fwd" &
+scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev$base.fastq" "$cur_rev"
 wait %scythe
+$KEEPALL || rm -f -- "$cur_fwd" "$cur_rev"
 info1 "quality score trimming..."
 oldbase=$base
-base="${base}_sickle"
+base="${base}.sickle"
 sickle se -t sanger -f "$fwd$oldbase.fastq" -o "$fwd$base.fastq" &
 sickle se -t sanger -f "$rev$oldbase.fastq" -o "$rev$base.fastq"
 wait %sickle
-info1 "post-QC fastqc run..."
-wait %fastqc
-fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}$base.fastq &>> FASTQC/fastqc.log &
+$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
+oldbase=$base
+base="$FINAL"
 if $INTERLEAVE; then
     info1 "interleaving..."
     if $INTERLEAVE_FASTA; then
-        interleave -fastq -outfmt fasta -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -infix "good" &
+        interleave -fastq -outfmt fasta -fwd "$fwd$oldbase.fastq" -rev "$rev$oldbase.fastq" -infix "$base" &
     fi
-    interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" --infix good
-    ! $INTERLEAVE_FASTA || wait %interleave
-fi
-if $SEPARATE_AGAIN; then
-    info1 "Generate final set of separate read files..."
-    separate-interleaved -f good.fwd.fastq -r good.rev.fastq good_int.fastq
+    interleave -fastq -fwd "$fwd$oldbase.fastq" -rev "$rev$oldbase.fastq" -infix "$base"
+    if $SEPARATE_AGAIN; then
+        info1 "Generate final set of separate read fastq files..."
+        separate-interleaved -f "$fwd.$base".fastq -r "$rev.$base".fastq int."$base".fastq
+    fi
+else
+    mv "$fwd$oldbase.fastq" "$fwd.$base.fastq"
+    mv "$rev$oldbase.fastq" "$rev.$base.fastq"
 fi
 wait %fastqc
+info1 "post-QC fastqc run..."
+fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}."$base".fastq &>> FASTQC/fastqc.log &
+wait %fastqc
+! $INTERLEAVE_FASTA || wait %interleave
+$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 $KEEPALL || clean_intermediates
 info1 "Done!"
 
