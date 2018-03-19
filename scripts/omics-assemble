@@ -212,7 +212,9 @@ else
         else
             # idba requires a single read file
             echo "Concatenating reads..."
-            reads=$READS.cat.fasta
+            reads=${READS/%.fasta}  # remove sufix .fasta or .fa
+            reads=${reads/%.fa}
+            reads=$(echo $reads | sed -r 's/\.([^.]+)$/.cat./1')  # insert .cat. suffix
             if [ -e "$reads" ]; then
             $FORCE || abort "File $reads exists.  Use --force to overwrite."
             $RM "$reads"
