@@ -205,16 +205,23 @@ else
     done
 
     if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
-        echo "Concatenating reads..."
-        reads=$READS.cat.fasta
-        if [ -e $reads ]; then
-	$FORCE || abort "File $reads exists.  Use --force to overwrite."
-	$RM "$reads"
+        if $MEGAHIT; then
+            # make comma-separated list of read files for megahit
+            reads_=("${SAMPLE_DIRS[@]/%/$reads}")
+            reads=$(echo "${reads_[@]}" | sed -r 's/ /,/g')
+        else
+            # idba requires a single read file
+            echo "Concatenating reads..."
+            reads=$READS.cat.fasta
+            if [ -e "$reads" ]; then
+            $FORCE || abort "File $reads exists.  Use --force to overwrite."
+            $RM "$reads"
+            fi
+            for i in "${SAMPLE_DIRS[@]}"; do
+                cat "$i/$READS" >> "$reads"
+                echo "  $i/$READS"
+            done
         fi
-        for i in "${SAMPLE_DIRS[@]}"; do
-	cat "$i/$READS" >> $reads
-	echo "  $i/$READS"
-        done
     else
         # descend into single sample directory or working directory, output goes here, too
         cd "${SAMPLE_DIRS[0]}"
