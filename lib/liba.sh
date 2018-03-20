@@ -134,7 +134,7 @@ abort() {
 }
 
 # get name of this script
-SCRIPT_NAME=$(basename "$0")
+SCRIPT_NAME=${SCRIPT_NAME:-$(basename "$0")}
 
 ##########################
 # default variable values
