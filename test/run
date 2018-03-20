@@ -33,6 +33,10 @@ TMPDIR=/tmp
 # shellcheck disable=SC1090
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
+# set script name here to prefix script output more meaningfully
+# shellcheck disable=2034
+SCRIPT_NAME="omics test"
+
 if [ "$#" -gt 0 ]; then
     if echo "$1" | grep -q -; then
         first=$(echo "$1" | cut -d- -f1)
