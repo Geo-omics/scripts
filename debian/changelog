@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.99-1) unstable; urgency=medium
+
+  * [assemble] Skip avail progs check, these programs are not technically necessary
+  * [assemble] Fix megahit command line construction
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 20 Mar 2018 10:13:42 -0400
+
 geo-omics-scripts (1.0.98-1) unstable; urgency=medium
 
   * [test] Fix file names
