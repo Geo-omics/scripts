@@ -388,7 +388,7 @@ mapping` is as follows::
         cd $i
         omics mapping --index-dir ../bowtie2-index \
             -a ../assembly.chop.fa \
-            -f good.fwd.fastq -r good.rev.fastq
+            -f fwd.good.fastq -r rev.good.fastq
         cd ..
     done
 
