@@ -37,7 +37,6 @@ ARG_HELP="
 MORE_HELP="
 The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for MEGAHIT.
 "
-CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 # shellcheck disable=SC2100
 LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
