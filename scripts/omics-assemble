@@ -212,7 +212,7 @@ else
     if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
         if $MEGAHIT; then
             # make comma-separated list of read files for megahit
-            reads_=("${SAMPLE_DIRS[@]/%/$reads}")
+            reads_=("${SAMPLE_DIRS[@]/%//$READS}")
             reads=$(echo "${reads_[@]}" | sed -r 's/ /,/g')
         else
             # idba requires a single read file
