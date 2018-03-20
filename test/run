@@ -26,7 +26,7 @@ handle_options () {
 
 # default values
 STEPS=(prep qc assemble mapping binning)
-THREADS=4
+THREADS=32
 DATA_DIR=data.01
 TMPDIR=/tmp
 
