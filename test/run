@@ -79,7 +79,7 @@ do_mapping () {
         cd "$i"
         omics mapping --cpus $THREADS --index-dir ../bowtie2-index \
             -a ../assembly.chop.fa \
-            -f fwd.good.fastq -r rev.good.fastq
+            -f good.fwd.fastq -r good.rev.fastq
         cd ..
     ) done
 }
