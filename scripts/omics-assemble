@@ -15,6 +15,9 @@ ARG_HELP="
       --assembly-only     Stop after finishing the assembly
       --assembly FILE     Skip assembly step but continue down-stream analysis
 			  with the provided contigs / scaffolds.
+      --name NAME         User-defined identifier for assembly.  Used as the
+                          final assemblies file name in the working directory.
+                          The default is 'assembly'.
       --cpus N	          How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
       --maxk N            min k parameter, must be odd with --megahit
@@ -36,7 +39,7 @@ The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for 
 "
 CHECK_PROGS="idba_ud quast.py blastn top5 extractSubSeq"
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,assembly:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
 
 handle_options () {
@@ -47,6 +50,9 @@ handle_options () {
 	    return 1;;
 	(--assembly)
 	    ASSEMBLY="$2"
+	    return 2;;
+	(--name)
+	    ASSEMBLY_NAME="$2"
 	    return 2;;
 	(--cpus)
 	    CPUS="$2"
@@ -102,7 +108,7 @@ ASSEMBLY_LEVEL=contig
 # Stop after finishing assembly when set to `true`
 ASSEMBLY_ONLY=false
 # Name of the (link to the) finished assembly
-ASSEMBLY_LINK=assembly.fa
+ASSEMBLY_NAME=assembly
 # Number of CPUs to use in parallel
 CPUS=4
 # Overwrite existing files if `true`
@@ -257,9 +263,9 @@ if $run_assembly; then
 	echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
 	idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
     fi
-    # make convenience link
-    $LN -f "$assembly" $ASSEMBLY_LINK
-    info "done: Assembly at $assembly"
+    # make convenience (hard) link
+    $LN -f "$assembly" "$ASSEMBLY_NAME".fa
+    info "done: Final assembly at $ASSEMBLY_NAME, intermediate steps under $assembly"
 fi
 
 ! $ASSEMBLY_ONLY || exit 0
