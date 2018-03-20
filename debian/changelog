@@ -1,3 +1,15 @@
+geo-omics-scripts (1.0.98-1) unstable; urgency=medium
+
+  * [test] Fix file names
+  * [doc] Fix file name to new default
+  * [assemble] Skip catenating reads for megahit, not needed
+  * [assemble] Fix inserting the .cat. infix for concatenated reads file
+  * [assemble] Make assembly name user-definable via option
+  * [test] Run tests quicker by default
+  * [test] Fix input file names for mapping step
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Tue, 20 Mar 2018 09:33:11 -0400
+
 geo-omics-scripts (1.0.97-1) unstable; urgency=medium
 
   * [test] Fix option parsing
