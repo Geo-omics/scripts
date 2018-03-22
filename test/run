@@ -33,6 +33,10 @@ TMPDIR=/tmp
 # shellcheck disable=SC1090
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
+# set script name here to prefix script output more meaningfully
+# shellcheck disable=2034
+SCRIPT_NAME="omics test"
+
 if [ "$#" -gt 0 ]; then
     if echo "$1" | grep -q -; then
         first=$(echo "$1" | cut -d- -f1)
@@ -79,7 +83,7 @@ do_mapping () {
         cd "$i"
         omics mapping --cpus $THREADS --index-dir ../bowtie2-index \
             -a ../assembly.chop.fa \
-            -f good.fwd.fastq -r good.rev.fastq
+            -f fwd.good.fastq -r rev.good.fastq
         cd ..
     ) done
 }
@@ -88,21 +92,22 @@ do_binning () {
     omics binning --cpus $THREADS --assembly assembly.chop.fa 66*
 }
 
+do_steps () {
+    for i in "${steps[@]}"; do
+        case $i in
+            prep) do_prep;;
+            qc) do_qc;;
+            assemble) do_assemble;;
+            mapping) do_mapping;;
+            binning) do_binning;;
+            *) abort "runtime error: illegal step: $i";;
+        esac
+    done
+}
+
 tmpdir=$(mktemp -d --tmpdir=$TMPDIR omics_test.XXXXXXX)
 info "Created working directory: $tmpdir"
 cd "$tmpdir"
-
-for i in "${steps[@]}"; do
-    case $i in
-        prep) do_prep;;
-        qc) do_qc;;
-        assemble) do_assemble;;
-        mapping) do_mapping;;
-        binning) do_binning;;
-        *) abort "runtime error: illegal step: $i";;
-    esac
-done
-
-
+time do_steps
 info "Ran $first to $last, results in $tmpdir"
 

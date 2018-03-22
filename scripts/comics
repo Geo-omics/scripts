@@ -9,12 +9,13 @@
 set -eEu
 
 # Default name of image file
-IMAGE_NAME=omics.img
+DEFAULT_IMAGE_NAME=omics.img
 # Image file search paths
 CONTAINER_PATH=(
+${PWD}
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
-~/src/omics-singularity-container
+~heinro/src/omics-singularity-container/omics
 )
 
 # shellcheck disable=SC2034
@@ -34,7 +35,7 @@ options with unintended consequences likely.
                 common storage will be available.
     -i <PATH>, --container-image <PATH>
                 Full path to singularity container image.  By default
-                image is $IMAGE_NAME, search path is
+                image is $DEFAULT_IMAGE_NAME, search path is
                 ${CONTAINER_PATH[*]}
 
     -k, --keep-env
@@ -83,7 +84,7 @@ handle_options () {
 ##########################
 
 # default will be generated below if needed
-IMAGE=
+IMAGE=$DEFAULT_IMAGE_NAME
 # use clean environment by default to reduce interactions betwen host and container
 KEEP_ENV=false
 KEEP_ENV_MODULES=false
@@ -100,14 +101,14 @@ SINGULARITY_ARGS=()
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
-POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo 1>&2 "Failed to source script library"; exit 1)
 
 ###############
 # sanity check
 ###############
 
 if [[ -n "${SINGULARITY_CONTAINER:-}" ]]; then
-    warning "Singularity container already running"
+    warning 1>&2 "Singularity container already running"
     eval "$@"
     exit $?
 fi
@@ -116,23 +117,22 @@ fi
 # do stuff
 ################################
 
-if [ -z "$IMAGE" ]; then
-    image=
-    for i in "${CONTAINER_PATH[@]}"; do
-        image=$i/$IMAGE_NAME
+if [[ -f "$IMAGE" ]]; then
+    image=$IMAGE
+else
+    for p in "${CONTAINER_PATH[@]}"; do
+        image=$p/$IMAGE
         if [[ -f "$image" ]]; then
-            [[ $VERBOSITY -lt 2 ]] || info "Found image: $image"
+            [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Using image: $image"
             break
         fi
     done
-else
-    image=$IMAGE
 fi
 
 for i in "${MOUNT_POINTS[@]}"; do
     if [ -d "${i%:ro}" ]; then
         SINGULARITY_ARGS+=(-B "$i")
-        [[ $VERBOSITY -lt 2 ]] || info "Mounting: $i"
+        [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Mounting: $i"
     fi
 done
 
