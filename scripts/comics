@@ -101,14 +101,14 @@ SINGULARITY_ARGS=()
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
-POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
+POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo 1>&2 "Failed to source script library"; exit 1)
 
 ###############
 # sanity check
 ###############
 
 if [[ -n "${SINGULARITY_CONTAINER:-}" ]]; then
-    warning "Singularity container already running"
+    warning 1>&2 "Singularity container already running"
     eval "$@"
     exit $?
 fi
@@ -123,7 +123,7 @@ else
     for p in "${CONTAINER_PATH[@]}"; do
         image=$p/$IMAGE
         if [[ -f "$image" ]]; then
-            [[ $VERBOSITY -lt 2 ]] || info "Found image: $image"
+            [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Using image: $image"
             break
         fi
     done
@@ -132,7 +132,7 @@ fi
 for i in "${MOUNT_POINTS[@]}"; do
     if [ -d "${i%:ro}" ]; then
         SINGULARITY_ARGS+=(-B "$i")
-        [[ $VERBOSITY -lt 2 ]] || info "Mounting: $i"
+        [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Mounting: $i"
     fi
 done
 
