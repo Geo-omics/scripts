@@ -189,6 +189,26 @@ install: install-docs install-data
 	cd lib && $(MAKE) install
 	cd scripts && $(MAKE) install
 
+install-comics-local: prog = scripts/comics
+install-comics-local: insert_tmp := $(shell mktemp)
+install-comics-local: dest = /usr/local/bin/comics
+install-comics-local: destdir = $(shell dirname $(dest))
+install-comics-local:
+	# local installation of the comics script:
+	# 1. get liba.sh, from trap command to end
+	# 2. replace the "source liba.sh" call, including shellcheck comments with a mark (BORK42)
+	# 3. write insert after mark
+	# 4. remove mark
+	sed -n '/^trap/,/not accessible/p' lib/liba.sh > $(insert_tmp)
+	mkdir -p -- $(destdir)
+	cat $(prog) \
+	    | sed "/liba.sh/,/liba.sh/c BORK42" \
+	    | sed "/BORK42/r $(insert_tmp)" \
+	    | sed "/BORK42/d" \
+	    > $(dest)
+	chmod +x -- $(dest)
+	rm -f -- $(insert_tmp)
+
 uninstall:
 	$(info Removing documentation...)
 	$(RM) -r -- $(DESTDIR)/$(docdir)/$(package_name)
