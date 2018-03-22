@@ -1,3 +1,16 @@
+geo-omics-scripts (1.0.100-1) unstable; urgency=medium
+
+  * [test] Revert "fix", it was fixed already
+  * [liba.sh] Allow setting alternative script names
+  * [test] Make test script output better recognizable
+  * [test] measure time of test runs
+  * [liba.sh] Fix usage parameter handling for abort function
+  * [Makefile] Add local installation target for comics script
+  * [comics] Improve container image search function
+  * [comics] Keep stdout clean
+
+ -- Robert <heinro@csheikMP.earth.lsa.umich.edu>  Thu, 22 Mar 2018 15:42:03 -0400
+
 geo-omics-scripts (1.0.99-1) unstable; urgency=medium
 
   * [assemble] Skip avail progs check, these programs are not technically necessary
