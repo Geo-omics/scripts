@@ -126,8 +126,8 @@ abort() {
     # write an error message and exit.  If the last positional parameter is 'usage' then also print the usage text.
     >&2 echo -e "[$SCRIPT_NAME] [${RED}ABORT${ENDCOLOR}] $1"
     if [ "$VERBOSITY" -ge 0 ]; then
-	if [ $# -ge 0 ]; then
-	    [ "${!#}" == "usage" ] && usage
+	if [[ $# -eq 2 ]]; then
+	    [[ "$2" == "usage" ]] && usage
 	fi
     fi
     exit 1
