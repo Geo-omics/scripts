@@ -15,7 +15,7 @@ CONTAINER_PATH=(
 ${PWD}
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
-~heinro/src/omics-singularity-container/omics
+/var/local/containers
 )
 
 # shellcheck disable=SC2034
