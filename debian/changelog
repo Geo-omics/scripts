@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.102-1) unstable; urgency=medium
+
+  * d/control: add sphinx-related build dependency
+  * [comics] Fix check if container is a directory/sandbox
+
+ -- Robert <heinro@med.umich.edu>  Mon, 02 Apr 2018 17:09:58 -0400
+
 geo-omics-scripts (1.0.101-1) unstable; urgency=medium
 
   * Add plot-megahit-log script
