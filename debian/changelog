@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.101-1) unstable; urgency=medium
+
+  * Add plot-megahit-log script
+  * [comics] Add new standard path for local images
+  * [mapping,binning] Replace underscore by dots in some output filenames
+  * [mapping] Reduce disk usage and increase speed
+
+ -- Robert <heinro@med.umich.edu>  Mon, 02 Apr 2018 17:03:14 -0400
+
 geo-omics-scripts (1.0.100-1) unstable; urgency=medium
 
   * [test] Revert "fix", it was fixed already
