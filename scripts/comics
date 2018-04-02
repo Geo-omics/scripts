@@ -149,7 +149,7 @@ else
     SINGULARITY_ARGS+=(--cleanenv)
 fi
 
-if [ ! -f "$image" ]; then
+if [ ! -e "$image" ]; then
     abort "Failed to find omics container image: $image"
 fi
 
