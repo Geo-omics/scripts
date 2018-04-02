@@ -185,13 +185,12 @@ fi
 # generate default index dir if needed
 index_dir=$(realpath "$INDEX_DIR")
 
-alnSam=${name}_aligned.sam
 log=${name}.bowtie2.log
-sam2bam=${name}_fixmate.bam
-sortBam=${name}_sorted.bam
-nameSortBam=${name}_name_sorted.bam
+sortBam=${name}.sorted.bam
+nameSortBam=${name}.name_sorted.bam
 bedOut=${name}.genomeCovBed.tsv
 scafCov=${name}.cov
+sam_sort_tmp=/tmp
 
 #######################################
 #########      PIPELINE       #########
@@ -215,14 +214,13 @@ fi
 $MKDIR -p "$OUT_DIR"
 cd "$OUT_DIR"
 
-info "Aligning reads..."
-info "Log of bowtie2 run written to $log"
+info "Aligning reads and processing alignments..."
+info "Alignment log run written to $log"
 printf "\n[Running bowtie2]\n" > "$log"
 bt2_args=(
     --mm
     --threads "$CPUS"
     -x "$index_dir/$name"
-    -S "$alnSam"
 )
 
 if $use_int_reads; then
@@ -233,19 +231,14 @@ else
     info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
     bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
-bowtie2 "${bt2_args[@]}" &>> "$log"
 
-info "Fixing alignment artifacts and converting SAM to BAM..."
-samtools fixmate -O bam "$alnSam" "$sam2bam"
-
-info "Sorting BAM by Name..."
-samtools sort -n -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$nameSortBam" -T samSort.tmp "$sam2bam"
-
-info "Sorting BAM by Position..."
-samtools sort -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$sortBam" -T samSort.tmp "$sam2bam"
-
-info "Indexing Sorted BAM..."
-samtools index "$sortBam"
+bowtie2 "${bt2_args[@]}" \
+    | samtools fixmate -O bam - - \
+    | tee >(samtools sort -n -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$nameSortBam" -T "$sam_sort_tmp" -) \
+    | samtools sort -m $MEM_PER_THREAD -@ "$CPUS" -O bam -T "$sam_sort_tmp" - \
+    | tee "$sortBam" \
+    | samtools index - "$sortBam.bai" \
+    2>"$log"
 
 info "Calculating Coverage..."
 echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
