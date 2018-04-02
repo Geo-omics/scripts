@@ -187,9 +187,9 @@ index_dir=$(realpath "$INDEX_DIR")
 
 alnSam=${name}_aligned.sam
 log=${name}.bowtie2.log
-sam2bam=${name}_fixmate.bam
-sortBam=${name}_sorted.bam
-nameSortBam=${name}_name_sorted.bam
+sam2bam=${name}.fixmate.bam
+sortBam=${name}.sorted.bam
+nameSortBam=${name}.name_sorted.bam
 bedOut=${name}.genomeCovBed.tsv
 scafCov=${name}.cov
 
