@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.105-1) xenial; urgency=medium
+
+  * [binning] Use assembly name for bin directory names
+  * [docs] Various updates to pipeline doc
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Tue, 03 Apr 2018 15:43:16 -0400
+
 geo-omics-scripts (1.0.104-1) xenial; urgency=medium
 
   * [mapping] Fix bowtie2 logging
