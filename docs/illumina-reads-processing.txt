@@ -49,7 +49,7 @@ is executable, e.g. running::
 
 on the flux command line will show a help screen documenting how the container
 can be used directly on FLUX without the need for the ``geomicro/omics``
-module.  for convenience, the ``geomicro/omics`` module provides the command
+module.  For convenience, the ``geomicro/omics`` module provides the command
 :command:`comics` to access the container.  The specifics are documented
 separately for interactive use and non-interactive job-submission in
 sub-sections following this one.
@@ -107,15 +107,25 @@ recommended to use the ``omics`` container.  In this example PBS script::
     #PBS -j oe
 
     cd $PBS_O_WORKDIR
-    comics omics prep /nfs/turbo/schmidt-lab/heinro/undergrads-2016/raw/66*
-    comics omics qc 66*
-    comics omics assemble --cpus 20 66*
+    comics -- omics prep /nfs/turbo/schmidt-lab/heinro/undergrads-2016/raw/66*
+    comics -- omics qc 66*
+    comics -- omics assemble --cpus 20 66*
 
 we run three commands corresponding to the first three steps of the pipeline.
-Each command is prepended by ``comics`` which excecutes the rest of the
+Each command is prepended by ``comics --`` which excecutes the rest of the
 command line inside the container.  To instead run everything in the FLUX
-environment you would just remove ``comics`` from each of the last three
+environment you would just remove ``comics --`` from each of the last three
 lines.
+
+Working on the Geomicrobiology servers
+--------------------------------------
+
+On ``cayman`` and ``vondamm`` the ``omics`` container is located at
+:file:`/geomicro/data9/flux/omics.img`.  The command :command:`comics` is
+available to conveniently enter the container.  The servers each have 64 CPUs
+and 754 GB RAM available.  These resources are shared cooperatively between
+users so some judgment is needed when deciding how many threads or CPUs to use
+for a command.
 
 
 Illumina Data
@@ -171,7 +181,9 @@ the steps involved in processing the data:
 Each step has a corresponding section below.  All code examples below are for
 the :command:`bash` shell and shown without command prompt and should work in
 the ``omics`` container as well as outside the container on FLUX with the
-``geomicro/omics`` module loaded.
+``geomicro/omics`` module loaded.  The examples command lines only show what's
+essential to run the pipeline and are missing some highly-recommended options
+like e.g. ``--cpus``.
 
 
 Preparation
@@ -208,7 +220,7 @@ overall quality of the data.
 
 Dereplicate Reads
 """""""""""""""""
-After concatenating the fastq files, we dereplicate the fastq to compress
+[outdated] After concatenating the fastq files, we dereplicate the fastq to compress
 the size of the file. We do this using the :program:`dereplicate` script. This
 script goes through the fastq file and clusters together identical sequences
 such that all sequences that are 100% identical over 100% lengths form 1
