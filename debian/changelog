@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.104-1) xenial; urgency=medium
+
+  * [mapping] Fix bowtie2 logging
+  * [mapping] Improve infos printed to user
+  * [mapping] Drop questionable -m option to samtools sort
+
+ -- Robert <heinro@med.umich.edu>  Tue, 03 Apr 2018 11:22:57 -0400
+
 geo-omics-scripts (1.0.103-1) xenial; urgency=medium
 
   * [comics] Improved handling of -i option
