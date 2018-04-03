@@ -117,16 +117,19 @@ fi
 # do stuff
 ################################
 
-if [[ -f "$IMAGE" ]]; then
+image=
+if [[ -e "$IMAGE" ]]; then
     image=$IMAGE
 else
     for p in "${CONTAINER_PATH[@]}"; do
-        image=$p/$IMAGE
-        if [[ -f "$image" ]]; then
-            [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Using image: $image"
-            break
-        fi
+        _image=$p/$IMAGE
+        [[ -e "$_image" ]] && image=$_image && break
     done
+fi
+if [ -n "$image" ]; then
+    [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Using image: $image"
+else
+    abort "Failed to find omics container image: $IMAGE"
 fi
 
 for i in "${MOUNT_POINTS[@]}"; do
@@ -148,11 +151,6 @@ if $KEEP_ENV; then
 else
     SINGULARITY_ARGS+=(--cleanenv)
 fi
-
-if [ ! -e "$image" ]; then
-    abort "Failed to find omics container image: $image"
-fi
-
 
 if [ "$#" -gt 0 ]; then
    exec singularity run "${SINGULARITY_ARGS[@]}" "$image" "$@"
