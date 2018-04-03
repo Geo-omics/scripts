@@ -44,10 +44,6 @@ CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 CHOP_ASSEMBLY=false
 #
 CPUS=4
-# Maximum memory per thread used for some samtools commands with -m option
-# On a flux high-mem node we could use 25G but on cayman/vondamm we calculate
-# 512GB / 32 CPUs
-MEM_PER_THREAD=16G
 #
 FORCE=false
 # no defaults needed
@@ -215,7 +211,7 @@ $MKDIR -p "$OUT_DIR"
 cd "$OUT_DIR"
 
 info "Aligning reads and processing alignments..."
-info "Alignment log run written to $log"
+info "  + Alignment log run written to $log"
 printf "\n[Running bowtie2]\n" > "$log"
 bt2_args=(
     --mm
@@ -224,28 +220,35 @@ bt2_args=(
 )
 
 if $use_int_reads; then
-    info "[NOTE] Using $int_reads for reads"
+    info "  + Using $int_reads for reads"
     bt2_args+=(--interleaved "$int_reads")
 else
     # this is also the compatibility option for bowtie2 <= 2.3.0
-    info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
+    info "  + Using $fwd_reads AND $rev_reads for reads"
     bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
 
-bowtie2 "${bt2_args[@]}" \
+sort_args=(
+ -@ "$CPUS"
+ -O bam
+ -T "$sam_sort_tmp"
+)
+
+bowtie2 "${bt2_args[@]}" 2>"$log" \
     | samtools fixmate -O bam - - \
-    | tee >(samtools sort -n -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$nameSortBam" -T "$sam_sort_tmp" -) \
-    | samtools sort -m $MEM_PER_THREAD -@ "$CPUS" -O bam -T "$sam_sort_tmp" - \
+    | tee >(samtools sort "${sort_args[@]}" -n -o "$nameSortBam" -) \
+    | samtools sort "${sort_args[@]}" - \
     | tee "$sortBam" \
     | samtools index - "$sortBam.bai" \
-    2>"$log"
 
 info "Calculating Coverage..."
 echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
 genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
+info "Result at $bedOut"
 
 info "Calculating Coverage Per Scaffold..."
 coveragePerScaffold -bed "$bedOut" > "$scafCov"
+info "Result at $scafCov"
 
 info "Mapping done, find results in $OUT_DIR"
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
