@@ -44,10 +44,6 @@ CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 CHOP_ASSEMBLY=false
 #
 CPUS=4
-# Maximum memory per thread used for some samtools commands with -m option
-# On a flux high-mem node we could use 25G but on cayman/vondamm we calculate
-# 512GB / 32 CPUs
-MEM_PER_THREAD=16G
 #
 FORCE=false
 # no defaults needed
@@ -232,10 +228,16 @@ else
     bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
 
+sort_args=(
+ -@ "$CPUS"
+ -O bam
+ -T "$sam_sort_tmp"
+)
+
 bowtie2 "${bt2_args[@]}" 2>"$log" \
     | samtools fixmate -O bam - - \
-    | tee >(samtools sort -n -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$nameSortBam" -T "$sam_sort_tmp" -) \
-    | samtools sort -m $MEM_PER_THREAD -@ "$CPUS" -O bam -T "$sam_sort_tmp" - \
+    | tee >(samtools sort "${sort_args[@]}" -n -o "$nameSortBam" -) \
+    | samtools sort "${sort_args[@]}" - \
     | tee "$sortBam" \
     | samtools index - "$sortBam.bai" \
 
