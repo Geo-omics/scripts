@@ -232,13 +232,12 @@ else
     bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
 
-bowtie2 "${bt2_args[@]}" \
+bowtie2 "${bt2_args[@]}" 2>"$log" \
     | samtools fixmate -O bam - - \
     | tee >(samtools sort -n -m $MEM_PER_THREAD -@ "$CPUS" -O bam -o "$nameSortBam" -T "$sam_sort_tmp" -) \
     | samtools sort -m $MEM_PER_THREAD -@ "$CPUS" -O bam -T "$sam_sort_tmp" - \
     | tee "$sortBam" \
     | samtools index - "$sortBam.bai" \
-    2>"$log"
 
 info "Calculating Coverage..."
 echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
