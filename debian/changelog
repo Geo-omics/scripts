@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.103-1) xenial; urgency=medium
+
+  * [comics] Improved handling of -i option
+
+ -- Robert <heinro@med.umich.edu>  Tue, 03 Apr 2018 09:56:30 -0400
+
 geo-omics-scripts (1.0.102-1) unstable; urgency=medium
 
   * d/control: add sphinx-related build dependency
