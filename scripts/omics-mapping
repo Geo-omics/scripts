@@ -215,7 +215,7 @@ $MKDIR -p "$OUT_DIR"
 cd "$OUT_DIR"
 
 info "Aligning reads and processing alignments..."
-info "Alignment log run written to $log"
+info "  + Alignment log run written to $log"
 printf "\n[Running bowtie2]\n" > "$log"
 bt2_args=(
     --mm
@@ -224,11 +224,11 @@ bt2_args=(
 )
 
 if $use_int_reads; then
-    info "[NOTE] Using $int_reads for reads"
+    info "  + Using $int_reads for reads"
     bt2_args+=(--interleaved "$int_reads")
 else
     # this is also the compatibility option for bowtie2 <= 2.3.0
-    info "[NOTE] Using $fwd_reads AND $rev_reads for reads"
+    info "  + Using $fwd_reads AND $rev_reads for reads"
     bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
 
@@ -242,9 +242,11 @@ bowtie2 "${bt2_args[@]}" 2>"$log" \
 info "Calculating Coverage..."
 echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
 genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
+info "Result at $bedOut"
 
 info "Calculating Coverage Per Scaffold..."
 coveragePerScaffold -bed "$bedOut" > "$scafCov"
+info "Result at $scafCov"
 
 info "Mapping done, find results in $OUT_DIR"
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
