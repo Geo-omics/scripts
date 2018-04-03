@@ -151,6 +151,9 @@ if [ -d "$outdir" ]; then
 fi
 $MKDIR -p -- "$outdir"
 
+chopbindir=$outdir/$name.chop.bins
+bindir=$outdir/$name.bins
+
 if $USE_CONCOCT; then
     if [ -z "$COV_FILE" ]; then
         info "Collecting coverage data..."
@@ -172,7 +175,7 @@ if $USE_CONCOCT; then
     concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
 
     info "Compiling bins into fasta files..."
-    bins2fasta -o "${outdir}/bins.chop" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
+    bins2fasta -o "$chopbindir" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
 fi
 
 if $USE_METABAT; then
@@ -186,23 +189,25 @@ if $USE_METABAT; then
         assembly=$(realpath "$assembly")
         cd "$outdir"
         runMetaBat.sh -t "$CPUS" "$assembly" "${bams[@]}"
-        bindir=$(basename "$assembly").metabat-bins${CPUS}
-        if [ -d "$bindir" ]; then
-            ln -sf "$bindir" bins.chop
+        mbat_bindir=$(basename "$assembly").metabat-bins${CPUS}
+        if [ -d "$mbat_bindir" ]; then
+            ln -sf "$mbat_bindir" "$chopbindir"
         else
             warning "Failed to detect output directory with bins, downstream analysis may fail."
         fi
     )
 fi
 
-ls "$outdir"/bins.chop/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
+ls "$chopbindir"/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
 
 info "Putting chopped-up contigs back together..."
-unchop-contigs -o "$outdir/bins" "$outdir"/bins.chop/*.fa
+unchop-contigs -o "$bindir" "$chopbindir"/*.fa
+info "Bins with (presumely) chopped contigs in $chopbindir"
+info "Bins with glued-back-together contigs in $bindir"
 
 info "Running CheckM..."
 checkm lineage_wf \
     -t "$CPUS" --pplacer_threads "$CPUS" \
     -x fa \
-    -f "$outdir"/checkm/bin_stats.csv --tab_table \
-    "$outdir/bins" "$outdir/checkm"
+    -f "$outdir"/checkm/"$name".bin_stats.csv --tab_table \
+    "$bindir" "$outdir/checkm"
