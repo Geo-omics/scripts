@@ -165,22 +165,15 @@ if $DEREPLICATION; then
     info1 "dereplicating..."
     base=".derep"
     python3 -m omics.derep --check "$FWD_FASTQ" "$REV_FASTQ"
-
-    cur_fwd=$fwd$base.fastq
-    cur_rev=$rev$base.fastq
-else
-    base=""
-    cur_fwd=$FWD_FASTQ
-    cur_rev=$REV_FASTQ
 fi
 
 info1 "adapter trimming..."
 oldbase=$base
 base="${base}.scythe"
-scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd$base.fastq" "$cur_fwd" &
-scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev$base.fastq" "$cur_rev"
+scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd$base.fastq" "$fwd$oldbase.fastq" &
+scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev$base.fastq" "$rev$oldbase.fastq"
 wait %scythe
-$KEEPALL || rm -f -- "$cur_fwd" "$cur_rev"
+! $DEREPLICATION || $KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 info1 "interleaving reads..."
 interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -infix "$base"
 info1 "quality score trimming..."
