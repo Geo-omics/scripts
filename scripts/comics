@@ -52,10 +52,12 @@ options with unintended consequences likely.
                 to 'singularity run'.  The empty space between the
                 option and its parameter must be protected by quotes
                 to prevent premature word splitting by the shell.
+    -w, --write Make container writable, requires sudo rights
+                and a writable container image.
 
 "
-SHORT_OPTIONS=B:i:kms:
-LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,singularity-opt:
+SHORT_OPTIONS=B:i:kms:w
+LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,singularity-opt:,write
 }
 
 handle_options () {
@@ -73,6 +75,9 @@ handle_options () {
 	    (-s|--singularity)
                 SINGULARITY_ARGS+=($2)
 		return 2;;
+            (-w|--write)
+                WRITE=true
+                return 1;;
         esac
     else
         return 0
@@ -98,6 +103,8 @@ MOUNT_POINTS=(
 /geomicro
 )
 SINGULARITY_ARGS=()
+# read-only by default
+WRITE=false
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -108,9 +115,14 @@ POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (ech
 ###############
 
 if [[ -n "${SINGULARITY_CONTAINER:-}" ]]; then
-    warning 1>&2 "Singularity container already running"
-    eval "$@"
-    exit $?
+    _msg="Singularity container already running"
+    if $WRITE; then
+        $WRITE && abort "$_msg"
+    else
+        warning 1>&2 "$_msg"
+        eval "$@"
+        exit $?
+    fi
 fi
 
 #################################
@@ -153,7 +165,15 @@ else
 fi
 
 if [ "$#" -gt 0 ]; then
-   exec singularity run "${SINGULARITY_ARGS[@]}" "$image" "$@"
+    if $WRITE; then
+        exec sudo singularity run "${SINGULARITY_ARGS[@]}" -w "$image" "$@"
+    else
+        exec singularity run "${SINGULARITY_ARGS[@]}" "$image" "$@"
+    fi
 else
-   exec singularity shell "${SINGULARITY_ARGS[@]}" "$image"
+    if $WRITE; then
+        exec sudo singularity shell -w "${SINGULARITY_ARGS[@]}" "$image"
+    else
+        exec singularity shell "${SINGULARITY_ARGS[@]}" "$image"
+    fi
 fi
