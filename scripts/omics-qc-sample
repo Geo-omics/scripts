@@ -25,21 +25,10 @@ ARG_HELP="
                         computing time
 
       --no-dereplicate  Skip the de-replication step
-      --no-interleave   Skip building the interleaved reads file
-
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
                         interleaved fastq will still be build.  This option is
                         redundant when --no-interleaved is used.
-
-      --no-re-separation
-                        Skip making the final set of forward and reversed reads
-                        file, containing the same reads as the interleaved file
-                        in the same order.  These can be used, alternatively,
-                        for assembly and mapping, as some downstream tools can
-                        only use on kind of input.  By default the separated
-                        read files are generated.  This has no effect when the
-                        --no-interleave option is used.
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -50,7 +39,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,no-interleave,no-re-separation
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave
 }
 
 handle_options () {
@@ -77,14 +66,8 @@ handle_options () {
 	    (--no-dereplicate)
 	        DEREPLICATION=false
 	        return 1;;
-	    (--no-interleave)
-	        INTERLEAVE=false
-	        return 1;;
 	    (--no-fasta-interleave)
 	        INTERLEAVE_FASTA=false
-	        return 1;;
-	    (--no-re-separation)
-	        SEPARATE_AGAIN=false
 	        return 1;;
         esac
     else
@@ -120,9 +103,7 @@ FINAL=good
 KEEPALL=false
 #
 DEREPLICATION=true
-INTERLEAVE=true
 INTERLEAVE_FASTA=true
-SEPARATE_AGAIN=true
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -200,34 +181,31 @@ scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd$base.
 scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev$base.fastq" "$cur_rev"
 wait %scythe
 $KEEPALL || rm -f -- "$cur_fwd" "$cur_rev"
+info1 "interleaving reads..."
+interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -infix "$base"
 info1 "quality score trimming..."
 oldbase=$base
 base="${base}.sickle"
-sickle se -t sanger -f "$fwd$oldbase.fastq" -o "$fwd$base.fastq" &
-sickle se -t sanger -f "$rev$oldbase.fastq" -o "$rev$base.fastq"
-wait %sickle
-$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
+sickle pe -t sanger -c "int$oldbase.fastq" -M "int$base.fastq"
+$KEEPALL || rm -f -- "int$oldbase.fastq"
+
 oldbase=$base
-base="$FINAL"
-if $INTERLEAVE; then
-    info1 "interleaving..."
-    if $INTERLEAVE_FASTA; then
-        interleave -fastq -outfmt fasta -fwd "$fwd$oldbase.fastq" -rev "$rev$oldbase.fastq" -infix "$base" &
-    fi
-    interleave -fastq -fwd "$fwd$oldbase.fastq" -rev "$rev$oldbase.fastq" -infix "$base"
-    if $SEPARATE_AGAIN; then
-        info1 "Generate final set of separate read fastq files..."
-        separate-interleaved -f "$fwd.$base".fastq -r "$rev.$base".fastq int."$base".fastq
-    fi
-else
-    mv "$fwd$oldbase.fastq" "$fwd.$base.fastq"
-    mv "$rev$oldbase.fastq" "$rev.$base.fastq"
+base=".$FINAL"
+ln "int$oldbase.fastq" "int$base.fastq"
+
+if $INTERLEAVE_FASTA; then
+    info1 "Making interleaved fasta..."
+    python3 -m omics.fastq2fasta < "int$base.fastq" > "int$base.fasta" &
 fi
+
+info1 "Generate final set of separate read fastq files..."
+separate-interleaved -f "$fwd$base.fastq" -r "$rev$base.fastq" "int$base.fastq"
+
 wait %fastqc
 info1 "post-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}."$base".fastq &>> FASTQC/fastqc.log &
 wait %fastqc
-! $INTERLEAVE_FASTA || wait %interleave
+wait %python3
 $KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 $KEEPALL || clean_intermediates
 info1 "Done!"
