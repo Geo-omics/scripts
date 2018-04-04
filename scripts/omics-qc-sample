@@ -197,7 +197,7 @@ wait %fastqc
 info1 "post-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}."$base".fastq &>> FASTQC/fastqc.log &
 wait %fastqc
-wait %python3
+$INTERLEAVE_FASTA && wait %python3
 $KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 $KEEPALL || clean_intermediates
 info1 "Done!"
