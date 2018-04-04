@@ -1,3 +1,15 @@
+geo-omics-scripts (1.0.106-1) unstable; urgency=medium
+
+  * [comics] Add --write option
+  * Add omics.fastq2fastq module
+  * [qc] Switch sickle to paired-end processing
+  * [qc] Fix --clean mode: removed original fastq sometimes
+  * [qc] Fix interleaved output file name
+  * [qc] Fix --clean mode: remove correct files
+  * [qc] Fix: only wait for background process if it is running
+
+ -- Robert <heinro@med.umich.edu>  Wed, 04 Apr 2018 16:37:48 -0400
+
 geo-omics-scripts (1.0.105-1) xenial; urgency=medium
 
   * [binning] Use assembly name for bin directory names
