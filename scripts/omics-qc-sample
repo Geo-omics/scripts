@@ -138,16 +138,15 @@ clean_all () {
     clean_intermediates
     # clean final results
     $RM -rf -- FASTQC
-    $RM -f -- {"$fwd","$rev"}{.derep,}.scythe.sickle.fastq
-    $RM -f -- int."$FINAL".fast{a,q} {"$fwd","$rev"}."$FINAL".fastq
+    $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
+    $RM -f -- {"$fwd","$rev"}{.derep,}.matches.fastq
+    $RM -f -- {int,"$fwd","$rev"}."$FINAL".fast{a,q}
 }
 
 clean_intermediates () {
     # clean up intermediate results
     $RM -f -- {"$fwd","$rev"}.derep.fastq
-    $RM -f -- {"$fwd","$rev"}{.derep,}.scythe.fastq
-    $RM -f -- {"$fwd","$rev"}{.derep,}_matches.fastq
-    $RM -f -- {"$fwd","$rev"}.clust{.list,}
+    $RM -f -- {int,"$fwd","$rev"}{.derep,}.scythe{.sickle,}.fastq
 }
 
 
