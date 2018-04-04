@@ -175,7 +175,7 @@ scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev$base.
 wait %scythe
 ! $DEREPLICATION || $KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 info1 "interleaving reads..."
-interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -infix "$base"
+interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -infix "${base#.}"
 info1 "quality score trimming..."
 oldbase=$base
 base="${base}.sickle"
