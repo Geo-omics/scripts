@@ -1,6 +1,7 @@
 import argparse
 from enum import Enum
 from pathlib import Path
+import sys
 
 from . import get_argparser
 
@@ -67,9 +68,11 @@ def main():
         help='Run sanity checks on input'
     )
     argp.add_argument(
-        '-o', '--out',
-        default='_int',
-        help='Infix to contruct output filenames',
+        '-o', '--output',
+        nargs='?',
+        default=None,
+        help='Path to output file.  If not provided output is written to '
+             'stdout.',
     )
     args = argp.parse_args()
 
@@ -82,16 +85,14 @@ def main():
     fwd_in = fwd_path.open('rb')
     rev_in = rev_path.open('rb')
 
-    # generate output filename
-    sm = difflib.SequenceMatcher(None, fwd_path.name, rev_path.name)
-    common_part = ''.join([
-        fwd_path.name[m.a:m.a + m.size]
-        for m
-        in sm.get_matching_blocks()
-    ])
-    if common_part.startswith('.'):
-        out_name = args.out_infix + common_part
+    if args.output is None:
+        out = sys.stdout.buffer
     else:
+        try:
+            out = Path(args.output).open('wb')
+        except Exception as e:
+            argp.error('Failed to open file for writing: {}: {}: {}'
+                       ''.format(args.output, e.__class__.__name__, e))
 
     for i in interleave(fwd_in, rev_in, check=args.check):
         out.write(i)
