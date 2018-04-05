@@ -2,13 +2,16 @@ import argparse
 from enum import Enum
 from pathlib import Path
 
+from . import get_argparser
+
 
 FileFormat = Enum('FileFormat', 'fasta fastq')
 
 format_info = {
-    FileFormat.fasta: { 'lines': 2, 'headchar' : '>' },
-    FileFormat.fastq: { 'lines': 4, 'headchar' : '@' },
+    FileFormat.fasta: {'lines': 2, 'headchar': '>'},
+    FileFormat.fastq: {'lines': 4, 'headchar': '@'},
 }
+
 
 def record(file, fmt=FileFormat.fastq):
     """
@@ -26,7 +29,7 @@ def interleave(fwd_in, rev_in, check=False):
     """
     first = fwd_in.read(1)
     for fmt in FileFormat:
-        if first == format_info[fmt][headchar]:
+        if first == format_info[fmt]['headchar']:
             break
 
     fwd_in.seek(0)
@@ -36,11 +39,11 @@ def interleave(fwd_in, rev_in, check=False):
         if check:
             fwd_rec = list(fwd_rec)
             rev_rec = list(rev_rec)
-            for rec in [fwd_rec, rev_rec]
-                if rec[0][0] != ord(format_info[fmt][headchar]):
+            for rec in [fwd_rec, rev_rec]:
+                if rec[0][0] != ord(format_info[fmt]['headchar']):
                     raise RuntimeError('Expected header: {}'.format(rec[0]))
             if fmt is FileFormat.fastq:
-                for rec in [fwd_rec, rev_rec]
+                for rec in [fwd_rec, rev_rec]:
                     if rec[2] != b'+\n':
                         raise RuntimeError('Expected + separator line: {}'
                                            ''.format(rec[2]))
@@ -52,7 +55,9 @@ def interleave(fwd_in, rev_in, check=False):
 def main():
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
-        description=__doc__
+        description=__doc__,
+        project_home=False,
+        threads=False,
     )
     argp.add_argument('forward_reads', type=argparse.FileType())
     argp.add_argument('reverse_reads', type=argparse.FileType())
@@ -88,8 +93,7 @@ def main():
         out_name = args.out_infix + common_part
     else:
 
-    with 
-    for i in interleave(fwd_int, rev_int, check=args.check):
+    for i in interleave(fwd_in, rev_in, check=args.check):
         out.write(i)
 
 
