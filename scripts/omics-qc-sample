@@ -274,8 +274,42 @@ fastqc -o FASTQC -f fastq -t 2 "$fwd_fastqc_2_in" "$rev_fastqc_2_in" &>> FASTQC/
 #$INTERLEAVE_FASTA && wait %python3
 #$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 $KEEPALL || clean_intermediates
-wait
-info1 "Done!"
+
+# map cmd-line sub-strings to job description
+declare -A wait_list
+wait_list=(
+[ fastqc ]="FASTQC"
+[omics.derep]="dereplication"
+[ scythe ]="adapter trimming"
+[omics.interleave]="interleaving"
+[ sickle ]="quality trimming"
+[omics.fastq2fasta]="converting to fasta format"
+[separate-interleave]="separating read directions again"
+)
+
+# map PIDs to job wait list
+declare -A pids
+while read -r line; do
+    pid=$(echo "$line" | sed -r 's/[ ]+/ /g' | cut -d' ' -f2)
+    for i in "${!wait_list[@]}"; do
+        if echo "$line" | grep -q "$i"; then
+            pids["$pid"]="$i"
+            break
+        fi
+    done
+done < <(jobs -l)
+
+# wait for jobs to finish
+for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
+    if wait "$p"; then
+       info1 "Done: ${wait_list[${pids[$p]}]}"
+   else
+       error "${wait_list[${pids[$p]}]}: exit status $?, PID: $pid"
+   fi
+done
+
+wait # to be sure
+info1 "All done!"
 
 
 # gmb: input: fwd.fastq
