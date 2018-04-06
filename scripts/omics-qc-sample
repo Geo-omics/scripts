@@ -246,9 +246,8 @@ if $INTERLEAVE_FASTA; then
     sickle_out_orig=$sickle_out
     sickle_out=$sickle_out.copy
     q2a_in=$tmpd/q2a_in
-    #mkfifo "$sickle_out" "$q2a_in"
-    #mkfifo "$q2a_in"
-    tee "$q2a_in" < "$sickle_out_orig" > "$sickle_out" 
+    mkfifo "$sickle_out" "$q2a_in"
+    tee "$q2a_in" < "$sickle_out_orig" > "$sickle_out" &
     python3 -m omics.fastq2fasta "${V[@]}" < "$q2a_in" > "int$base.fasta" &
 fi
 
@@ -266,7 +265,7 @@ fwd_final=$fwd$base.fastq
 rev_final=$rev$base.fastq
 fwd_fastqc_2_in=$tmpd/fqc/$fwd$base.fastq
 rev_fastqc_2_in=$tmpd/fqc/$rev$base.fastq
-#mkfifo "$fwd_fastqc_2_in" "$rev_fastqc_2_in"
+mkfifo "$fwd_fastqc_2_in" "$rev_fastqc_2_in"
 tee "$fwd_fastqc_2_in" < "$fwd_sep_out" > "$fwd_final" &
 tee "$rev_fastqc_2_in" < "$rev_sep_out" > "$rev_final" &
 info1 "Starting post-QC fastqc run..."
