@@ -28,12 +28,28 @@ def interleave(fwd_in, rev_in, check=False):
     """
     Interleave reads from two files
     """
-    first = fwd_in.read(1)
-    for fmt in FileFormat:
-        if first == format_info[fmt]['headchar']:
-            break
+    fmt = None
+    for file in [fwd_in, rev_in]:
+        try:
+            fmt_indicator = file.peek(1)[0]
+        except IndexError:
+            raise RuntimeError('File empty?: {}'.format(file.name))
 
-    fwd_in.seek(0)
+        for _fmt, info in format_info.items():
+            if fmt_indicator == ord(info['headchar']):
+                if fmt is None:
+                    fmt = _fmt
+                else:
+                    if fmt != _fmt:
+                        raise RuntimeError(
+                            'Fileformat mismatch: {} is {} but {} is {}.'
+                            ''.format(fwd_in.name, fmt.name, rev_in.name,
+                                      _fmt.name))
+                break
+        if fmt is None:
+            raise RuntimeError('Bad file format: {}: expected'
+                               ' > or @ as first character but got {}'
+                               ''.format(file.name, chr(fmt_indicator)))
 
     for fwd_rec, rev_rec in zip(record(fwd_in, fmt=fmt),
                                 record(rev_in, fmt=fmt)):
