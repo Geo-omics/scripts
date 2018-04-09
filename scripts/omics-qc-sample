@@ -178,7 +178,7 @@ clean_up () {
     rm -rf -- "$tmpd"
 }
 trap clean_up EXIT
-tmpd=$(mktemp -d --tmpdir=/dev/shm)
+tmpd=$(mktemp -d)
 debug "Using temp dir: $tmpd"
 mkdir "$tmpd"/fqc
 
