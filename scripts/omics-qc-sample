@@ -39,7 +39,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave"
 SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,high-mem,keep-all,no-dereplicate,no-fasta-interleave
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave
 }
 
 handle_options () {
@@ -60,9 +60,6 @@ handle_options () {
 	    (--clean-only)
 	        CLEAN_ONLY=true
 	        return 1;;
-            (--high-mem)
-                LOW_MEM=false
-                return 1;;
 	    (--keep-all)
 	        KEEPALL=true
 	        return 1;;
@@ -102,8 +99,6 @@ REV_FASTQ=rev.fastq
 CLEAN_ONLY=false
 # infix for final output files
 FINAL=good
-# accommodate low memory, laptops etc by default
-LOW_MEM=true
 # Remove intermediate results by default
 KEEPALL=false
 #
@@ -182,30 +177,9 @@ tmpd=$(mktemp -d)
 debug "Using temp dir: $tmpd"
 mkdir "$tmpd"/fqc
 
-if $DEREPLICATION && $LOW_MEM; then
-    # low-mem with derep: read input twice, straight from source
-    fwd_fastqc_1_in=$FWD_FASTQ
-    fwd_derep_in=$FWD_FASTQ
-    rev_fastqc_1_in=$REV_FASTQ
-    rev_derep_in=$REV_FASTQ
-else
-    # use named pipes for all except input for derep
-    info1 "Reading fastq data into memory..."
-    fwd_fastqc_1_in=$tmpd/fqc/$fwd.fastq
-    rev_fastqc_1_in=$tmpd/fqc/$rev.fastq
-    fwd_derep_in=$tmpd/$fwd.fastq
-    rev_derep_in=$tmpd/$rev.fastq
-    mkfifo "$fwd_fastqc_1_in" "$rev_fastqc_1_in"
-    # derep needs seekable files, so skip mkfifo
-    $DEREPLICATION || mkfifo "$fwd_derep_in" "$rev_derep_in"
-    tee "$fwd_derep_in" < "$FWD_FASTQ" > "$fwd_fastqc_1_in" &
-    tee "$rev_derep_in" < "$REV_FASTQ" > "$rev_fastqc_1_in" &
-    tee_jobs=($(jobs -p))
-fi
-
 $MKDIR -p FASTQC
 info1 "Starting pre-QC fastqc..."
-fastqc -o FASTQC -f fastq -t 2 "$fwd_fastqc_1_in" "$rev_fastqc_1_in" &> FASTQC/fastqc.log &
+fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 
 # basename for files
 base=""
@@ -213,8 +187,6 @@ base=""
 # scythe_in is what derep puts out
 
 if $DEREPLICATION; then
-    # derep needs a seekable file, so wait for copying to be done
-    wait "${tee_jobs[@]}"
     info1 "Starting derep..."
     base=".derep"
     fwd_derep_out=$tmpd/$fwd$base.fastq
@@ -232,7 +204,7 @@ if $DEREPLICATION; then
         fwd_scythe_in=$fwd_derep_out
         rev_scythe_in=$rev_derep_out
     fi
-    python3 -m omics.derep "${V[@]}" --check "$fwd_derep_in" "$rev_derep_in" --out-dir "$tmpd" &
+    python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
 else
     fwd_scythe_in=$tmpd/$fwd$base.fastq
     rev_scythe_in=$tmpd/$rev$base.fastq
