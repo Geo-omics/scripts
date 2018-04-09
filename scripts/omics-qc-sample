@@ -161,12 +161,23 @@ clean_intermediates () {
 clean_all
 ! $CLEAN_ONLY || exit 0
 
-clean_tmp () {
+clean_up () {
+    # kill background
+    j_long=$(jobs -l)
+    if [[ -n $j_long ]]; then
+        warning "The QC pipeline did not finish properly"
+        warning "Still running background processes will be terminated, see errors below:"
+    fi
+    for j in $(jobs -p); do
+        error "Terminating $(echo "$j_long" | grep "$j")"
+        kill -s 15 "$j"
+    done
+    # clean temp data
     [[ -v tmpd ]] || exit 0
     debug "$(ls -Rlrth "$tmpd")"
     rm -rf -- "$tmpd"
 }
-trap clean_tmp EXIT
+trap clean_up EXIT
 tmpd=$(mktemp -d --tmpdir=/dev/shm)
 debug "Using temp dir: $tmpd"
 mkdir "$tmpd"/fqc
@@ -308,7 +319,6 @@ for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
    fi
 done
 
-wait # to be sure
 info1 "All done!"
 
 
