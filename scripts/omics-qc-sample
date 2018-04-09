@@ -21,9 +21,6 @@ ARG_HELP="
 			the Trimmomatic project will be used.
       --keep-all	Keep all intermediate files, by default some not-so-important
 			intermediate results will be deleted to save disk space
-      --less-mem        Use less memory during de-replication at the expense of
-                        computing time
-
       --no-dereplicate  Skip the de-replication step
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
