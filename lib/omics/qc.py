@@ -10,7 +10,7 @@ from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
 
 
 def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
-              less_mem=False, no_dereplicate=False, no_interleave=False,
+              no_dereplicate=False, no_interleave=False,
               no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
               project=None):
     """
@@ -25,7 +25,6 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
     not keep_all or args.append('--keep-all')
     if adapters:
         args += ['--adapters', adapters]
-    not less_mem or args.append('--less-mem')
     not no_dereplicate or args.append('--no-dereplicate')
     not no_interleave or args.append('--no-interleave')
     not no_fasta_interleave or args.append('--no-fasta-interleave')
@@ -42,7 +41,7 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
 
 
 def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
-       less_mem=False, no_dereplicate=False, no_interleave=False,
+       no_dereplicate=False, no_interleave=False,
        no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
        threads=DEFAULT_THREADS, project=None):
     """
@@ -51,12 +50,8 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
     :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
-    if less_mem:
-        # qc-sample script uses two threads internally
-        threads = int(threads / 2)
-    else:
-        # qc-sample script uses four threads internally
-        threads = int(threads / 4)
+    # qc-sample script is IO-bound and in practice keeps less than 4 CPUs busy
+    threads = int(threads / 4)
     threads = max(1, threads)
 
     errors = []
@@ -70,7 +65,6 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
                 clean_only=clean_only,
                 adapters=adapters,
                 keep_all=keep_all,
-                less_mem=less_mem,
                 no_dereplicate=no_dereplicate,
                 no_interleave=no_interleave,
                 no_fasta_interleave=no_fasta_interleave,
@@ -129,13 +123,6 @@ def main():
              'intermediate results will be deleted to save disk space.',
     )
     argp.add_argument(
-        '--less-mem',
-        action='store_true',
-        help='This option will reduce the dominating memory requirements for '
-             'the de-replication step by half, typically, and double the '
-             'computation time.',
-    )
-    argp.add_argument(
         '--no-dereplicate',
         action='store_true',
         help='Option to skip the de-replication step',
@@ -163,7 +150,6 @@ def main():
             clean_only=args.clean_only,
             adapters=args.adapters,
             keep_all=args.keep_all,
-            less_mem=args.less_mem,
             no_dereplicate=args.no_dereplicate,
             no_interleave=args.no_interleave,
             no_fasta_interleave=args.no_fasta_interleave,
