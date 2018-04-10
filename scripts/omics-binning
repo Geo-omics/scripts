@@ -151,8 +151,13 @@ if [ -d "$outdir" ]; then
 fi
 $MKDIR -p -- "$outdir"
 
-chopbindir=$outdir/$name.chop.bins
-bindir=$outdir/$name.bins
+chopbindir=$outdir/$name.bins
+if [[ $name =~ .chop$ ]]; then
+    # name follows omics pipeline conventions
+    bindir=$outdir/${name/%.chop//}.bins
+else
+    bindir=$outdir/$name.unchop.bins
+fi
 
 if $USE_CONCOCT; then
     if [ -z "$COV_FILE" ]; then
