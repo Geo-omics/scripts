@@ -47,16 +47,18 @@ argp.add_argument(
 args = argp.parse_args()
 
 # detect file format
-fmt_indicator = args.inputfile.read(1)
-args.inputfile.seek(0)
-if fmt_indicator == b'@':
-    file_fmt = FASTQ
-elif fmt_indicator == b'>':
-    file_fmt = FASTA
+try:
+    fmt_indicator = args.inputfile.peek(1)[0]
+except IndexError:
+    argp.error('Input file is empty')
 else:
-    argp.error('Bad file format: first character in {} is "{}", expect "@" or '
-               '">"'.format(args.inputfile.name,
-                            fmt_indicator.decode(errors='replace')))
+    if fmt_indicator == ord('@'):
+        file_fmt = FASTQ
+    elif fmt_indicator == ord('>'):
+        file_fmt = FASTA
+    else:
+        argp.error('Bad file format: first character in {} is "{}", expect "@"'
+                   ' or ">"'.format(args.inputfile.name, chr(fmt_indicator)))
 
 if args.verbosity >= 2:
     print('Detected {} file format'.format(file_fmt))
@@ -90,6 +92,7 @@ file = {F: fwd, R: rev}
 
 state = F, H
 linenum = 0
+bytes_written = {F: 0, R: 0}
 for line in args.inputfile:
     linenum += 1
 
@@ -97,7 +100,7 @@ for line in args.inputfile:
         raise RuntimeError('Illegal internal state: {}, line: {}'
                            ''.format(state, linenum))
 
-    if state[1] == H and line[0] != fmt_indicator[0]:
+    if state[1] == H and line[0] != fmt_indicator:
         raise RuntimeError('Line {} is not a {} header: {}'
                            ''.format(linenum, file_fmt, line.decode()))
 
@@ -105,7 +108,7 @@ for line in args.inputfile:
         raise RuntimeError('Line {} is not the + separator as expected:'
                            ''.format(linenum, line.decode()))
 
-    file[state[0]].write(line)
+    bytes_written[state[0]] += file[state[0]].write(line)
 
     if file_fmt is FASTQ and state[1] == Q:
         # go back to header and switch file
@@ -125,9 +128,11 @@ if linenum % (2 * lines_per_seq) != 0:
                                 2 * lines_per_seq)
     )
 
-for f in [fwd, rev]:
-    size = f.tell()
-    f.close()
-    if args.verbosity >= 2:
+if args.verbosity >= 2:
+    for i, f in file.items():
         print('{} reads / {} bytes written to {}'
-              ''.format(int(linenum / (2 * lines_per_seq)), size, f.name))
+              ''.format(
+                  int(linenum / (2 * lines_per_seq)),
+                  bytes_written[i],
+                  f.name)
+              )
