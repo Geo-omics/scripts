@@ -12,7 +12,8 @@ from omics import get_argparser, DEFAULT_VERBOSITY
 DEFAULT_FASTQC_DIR = 'FASTQC'
 DEFAULT_FWD_PREFIX = 'fwd'
 DEFAULT_REV_PREFIX = 'rev'
-DEFAULT_POST_QC_INFIX = 'derep_scythe_sickle'
+DEFAULT_POST_QC_INFIX = 'good'
+BASENAME_SEPARATOR = '.'  # As used by omics-qc; Note: FASTQC also uses _ sep
 
 
 def get_test_marks(*paths, fastqc_dir=DEFAULT_FASTQC_DIR, prefixes=None,
@@ -35,7 +36,7 @@ def get_test_marks(*paths, fastqc_dir=DEFAULT_FASTQC_DIR, prefixes=None,
 
     if infixes is None:
         # what omics-qc creates by default
-        infixes = ['derep_scythe_sickle']  # post-qc files only
+        infixes = [DEFAULT_POST_QC_INFIX]  # post-qc files only
 
     query = ['FAIL']
     if warnings:
@@ -64,16 +65,15 @@ def get_test_marks(*paths, fastqc_dir=DEFAULT_FASTQC_DIR, prefixes=None,
                                 yield result(p, pref, inf, test_name, mark)
 
 
-def get_basename(prefix, infix):
+def get_basename(prefix, infix, sep=BASENAME_SEPARATOR):
     """
     Build base of relevant filenames
     """
-    if prefix and infix:
-        basename = prefix + '_' + infix
-    else:
-        # one is empty (at least) so no _ separator
-        basename = prefix + infix
-    return basename + '_fastqc'
+    parts = [prefix, infix]
+    parts = filter(None, parts)
+    basename = sep.join(parts)
+    basename += '_fastqc'
+    return basename
 
 
 def get_details(path, fastqc_dir, prefix, infix, test):

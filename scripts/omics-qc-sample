@@ -21,9 +21,6 @@ ARG_HELP="
 			the Trimmomatic project will be used.
       --keep-all	Keep all intermediate files, by default some not-so-important
 			intermediate results will be deleted to save disk space
-      --less-mem        Use less memory during de-replication at the expense of
-                        computing time
-
       --no-dereplicate  Skip the de-replication step
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
@@ -112,6 +109,9 @@ INTERLEAVE_FASTA=true
 info1 () { info "[$(basename "$PWD")] $1" ; }
 abort1 () { abort "[$(basename "$PWD")] $1" ; }
 
+# mangle verbosity args
+[[ -v V ]] && if [[ -n "$V" ]]; then V=("$V"); else V=(); fi
+
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     abort1 "Unknown parameters: ${*}"
@@ -153,54 +153,165 @@ clean_intermediates () {
 clean_all
 ! $CLEAN_ONLY || exit 0
 
+clean_up () {
+    # kill background
+    j_long=$(jobs -l)
+    if [[ -n $j_long ]]; then
+        warning "The QC pipeline did not finish properly"
+        warning "Still running background processes will be terminated, see errors below:"
+    fi
+    for j in $(jobs -p); do
+        error "Terminating $(echo "$j_long" | grep "$j")"
+        kill -s 15 "$j"
+    done
+    # clean temp data
+    [[ -v tmpd ]] || exit 0
+    debug "$(ls -Rlrth "$tmpd")"
+    rm -rf -- "$tmpd"
+}
+trap clean_up EXIT
+tmpd=$(mktemp -d)
+debug "Using temp dir: $tmpd"
+mkdir "$tmpd"/fqc
+
 $MKDIR -p FASTQC
-info1 "pre-QC fastqc running..."
+info1 "Starting pre-QC fastqc..."
 fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 
 # basename for files
 base=""
 
+# scythe_in is what derep puts out
+
 if $DEREPLICATION; then
-    info1 "dereplicating..."
+    info1 "Starting derep..."
     base=".derep"
-    python3 -m omics.derep --check "$FWD_FASTQ" "$REV_FASTQ"
+    fwd_derep_out=$tmpd/$fwd$base.fastq
+    rev_derep_out=$tmpd/$rev$base.fastq
+    mkfifo "$fwd_derep_out" "$rev_derep_out"
+    if $KEEPALL; then
+        fwd_scythe_in=$fwd_derep_out.copy
+        rev_scythe_in=$rev_derep_out.copy
+        mkfifo "$fwd_scythe_in" "$rev_scythe_in"
+        # shellcheck disable=SC2094
+        tee "./$(basename "$fwd_derep_out")" < "$fwd_derep_out" > "$fwd_scythe_in" &
+        # shellcheck disable=SC2094
+        tee "./$(basename "$rev_derep_out")" < "$rev_derep_out" > "$rev_scythe_in" &
+    else
+        fwd_scythe_in=$fwd_derep_out
+        rev_scythe_in=$rev_derep_out
+    fi
+    python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
+else
+    fwd_scythe_in=$tmpd/$fwd$base.fastq
+    rev_scythe_in=$tmpd/$rev$base.fastq
 fi
 
-info1 "adapter trimming..."
+info1 "Start adapter trimming..."
 oldbase=$base
 base="${base}.scythe"
-scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd$base.fastq" "$fwd$oldbase.fastq" &
-scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev$base.fastq" "$rev$oldbase.fastq"
-wait %scythe
-! $DEREPLICATION || $KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
-info1 "interleaving reads..."
-interleave -fastq -fwd "$fwd$base.fastq" -rev "$rev$base.fastq" -infix "${base#.}"
-info1 "quality score trimming..."
+# scythe_out to be fed into interleaver
+fwd_scythe_out=$tmpd/$fwd$base.fastq
+rev_scythe_out=$tmpd/$rev$base.fastq
+mkfifo "$fwd_scythe_out" "$rev_scythe_out"
+scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd_scythe_out" "$fwd_scythe_in" &
+scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev_scythe_out" "$rev_scythe_in" &
+info1 "Start interleaving reads..."
+if $KEEPALL; then
+    fwd_int_in=$tmpd/fwd.int_in.fastq
+    rev_int_in=$tmpd/rev.int_in.fastq
+    mkfifo "$fwd_int_in" "$rev_int_in"
+    # shellcheck disable=SC2094
+    tee "./$(basename "$fwd_scythe_out")" < "$fwd_scythe_out" > "$fwd_int_in" &
+    # shellcheck disable=SC2094
+    tee "./$(basename "$rev_scythe_out")" < "$rev_scythe_out" > "$rev_int_in" &
+else
+    fwd_int_in=$fwd_scythe_out
+    rev_int_in=$rev_scythe_out
+fi
+sickle_in=$tmpd/int$base.fastq
+mkfifo "$sickle_in"
+python3 -m omics.interleave "${V[@]}" "$fwd_int_in" "$rev_int_in" > "$sickle_in" &
+info1 "Start quality score trimming..."
 oldbase=$base
 base="${base}.sickle"
-sickle pe -t sanger -c "int$oldbase.fastq" -M "int$base.fastq"
-$KEEPALL || rm -f -- "int$oldbase.fastq"
+sickle_out=$tmpd/int$base.fastq
+mkfifo "$sickle_out"
+sickle pe -t sanger -c "$sickle_in" -M "$sickle_out" &
+# $KEEPALL || rm -f -- "int$oldbase.fastq"
 
 oldbase=$base
 base=".$FINAL"
-ln "int$oldbase.fastq" "int$base.fastq"
 
 if $INTERLEAVE_FASTA; then
-    info1 "Making interleaved fasta..."
-    python3 -m omics.fastq2fasta < "int$base.fastq" > "int$base.fasta" &
+    info1 "Start converting to fasta..."
+    # copy sickle_out
+    sickle_out_orig=$sickle_out
+    sickle_out=$sickle_out.copy
+    q2a_in=$tmpd/q2a_in
+    mkfifo "$sickle_out" "$q2a_in"
+    tee "$q2a_in" < "$sickle_out_orig" > "$sickle_out" &
+    python3 -m omics.fastq2fasta "${V[@]}" < "$q2a_in" > "int$base.fasta" &
 fi
 
-info1 "Generate final set of separate read fastq files..."
-separate-interleaved -f "$fwd$base.fastq" -r "$rev$base.fastq" "int$base.fastq"
+info1 "Separating read directions again..."
+fwd_sep_out=$tmpd/$fwd$oldbase.fastq
+rev_sep_out=$tmpd/$rev$oldbase.fastq
+sep_in=$tmpd/sep_in
+int_final=int$base.fastq
+mkfifo "$fwd_sep_out" "$rev_sep_out" "$sep_in"
+tee "$sep_in" < "$sickle_out" > "$int_final" &
+separate-interleaved "${V[@]}" -f "$fwd_sep_out" -r "$rev_sep_out" "$sep_in" &
 
-wait %fastqc
-info1 "post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 {"$fwd","$rev"}."$base".fastq &>> FASTQC/fastqc.log &
-wait %fastqc
-$INTERLEAVE_FASTA && wait %python3
-$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
+# copy separate output 
+fwd_final=$fwd$base.fastq
+rev_final=$rev$base.fastq
+fwd_fastqc_2_in=$tmpd/fqc/$fwd$base.fastq
+rev_fastqc_2_in=$tmpd/fqc/$rev$base.fastq
+mkfifo "$fwd_fastqc_2_in" "$rev_fastqc_2_in"
+tee "$fwd_fastqc_2_in" < "$fwd_sep_out" > "$fwd_final" &
+tee "$rev_fastqc_2_in" < "$rev_sep_out" > "$rev_final" &
+info1 "Starting post-QC fastqc run..."
+fastqc -o FASTQC -f fastq -t 2 "$fwd_fastqc_2_in" "$rev_fastqc_2_in" &>> FASTQC/fastqc.log &
+#wait %fastqc
+#$INTERLEAVE_FASTA && wait %python3
+#$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
 $KEEPALL || clean_intermediates
-info1 "Done!"
+
+# map cmd-line sub-strings to job description
+declare -A wait_list
+wait_list=(
+[ fastqc ]="FASTQC"
+[omics.derep]="dereplication"
+[ scythe ]="adapter trimming"
+[omics.interleave]="interleaving"
+[ sickle ]="quality trimming"
+[omics.fastq2fasta]="converting to fasta format"
+[separate-interleave]="separating read directions again"
+)
+
+# map PIDs to job wait list
+declare -A pids
+while read -r line; do
+    pid=$(echo "$line" | sed -r 's/[ ]+/ /g' | cut -d' ' -f2)
+    for i in "${!wait_list[@]}"; do
+        if echo "$line" | grep -q "$i"; then
+            pids["$pid"]="$i"
+            break
+        fi
+    done
+done < <(jobs -l)
+
+# wait for jobs to finish
+for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
+    if wait "$p"; then
+       info1 "Done: ${wait_list[${pids[$p]}]}"
+   else
+       error "${wait_list[${pids[$p]}]}: exit status $?, PID: $pid"
+   fi
+done
+
+info1 "All done!"
 
 
 # gmb: input: fwd.fastq

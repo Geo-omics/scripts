@@ -5,7 +5,7 @@
 # from a bash prompt
 
 base=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
-export PATH=$PATH:$base/scripts
-export PYTHONPATH=$PYTHONPATH:$base/lib
+export PATH=$base/scripts:$PATH
+export PYTHONPATH=$base/lib:$PYTHONPATH
 mkdir -p $base/share/geo-omics-scripts
 ln -f -s -t $base/share/geo-omics-scripts/ ../../lib/liba.sh

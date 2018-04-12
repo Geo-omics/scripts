@@ -161,9 +161,15 @@ def main():
         help='Run sanity checks on input'
     )
     argp.add_argument(
-        '-o', '--out-infix',
+        '-i', '--infix',
         default='.derep',
         help='Infix to construct output filenames',
+    )
+    argp.add_argument(
+        '-o', '--out-dir',
+        default='.',
+        help='Output directory, by default this is the current working '
+             'directory. The directory must exist.',
     )
     argp.add_argument(
         '--replicates-list',
@@ -174,6 +180,10 @@ def main():
              'given file.',
     )
     args = argp.parse_args()
+
+    out_dir = Path(args.out_dir)
+    if not out_dir.is_dir():
+        argp.error('Directory does not exist: {}'.out_dir)
 
     args.forward_reads.close()
     args.reverse_reads.close()
@@ -197,10 +207,8 @@ def main():
     fwd_in.seek(0)
     rev_in.seek(0)
 
-    fwd_out_path = fwd_path.parent \
-        / (fwd_path.stem + args.out_infix + fwd_path.suffix)
-    rev_out_path = rev_path.parent \
-        / (rev_path.stem + args.out_infix + rev_path.suffix)
+    fwd_out_path = out_dir / (fwd_path.stem + args.infix + fwd_path.suffix)
+    rev_out_path = out_dir / (rev_path.stem + args.infix + rev_path.suffix)
 
     fwd_out = fwd_out_path.open('wb')
     rev_out = rev_out_path.open('wb')
