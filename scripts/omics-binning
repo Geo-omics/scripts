@@ -27,7 +27,7 @@ ARG_HELP="
 
   --bam-path PATH           Path to sorted (but not name-sorted) BAM file
                             relative to each sample directory.  The default is
-                            MAPPING/<assembly-name>_sorted.bam
+                            MAPPING/<assembly-name>.sorted.bam
 
  General options:
 
