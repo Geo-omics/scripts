@@ -52,12 +52,16 @@ options with unintended consequences likely.
                 to 'singularity run'.  The empty space between the
                 option and its parameter must be protected by quotes
                 to prevent premature word splitting by the shell.
+    -u, --update
+                Update the container specified by -i with its sandbox version
+                located at /var/local/container/NAME.sandbox where NAME is the
+                basename of the container image
     -w, --write Make container writable, requires sudo rights
                 and a writable container image.
 
 "
-SHORT_OPTIONS=B:i:kms:w
-LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,singularity-opt:,write
+SHORT_OPTIONS=B:i:kms:uw
+LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,singularity-opt:,update,write
 }
 
 handle_options () {
@@ -77,6 +81,9 @@ handle_options () {
 		return 2;;
             (-w|--write)
                 WRITE=true
+                return 1;;
+            (-u|--update)
+                UPDATE=true
                 return 1;;
         esac
     else
@@ -103,6 +110,8 @@ MOUNT_POINTS=(
 /geomicro
 )
 SINGULARITY_ARGS=()
+#
+UPDATE=false
 # read-only by default
 WRITE=false
 
@@ -117,7 +126,9 @@ POSIXLY_CORRECT=1 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (ech
 if [[ -n "${SINGULARITY_CONTAINER:-}" ]]; then
     _msg="Singularity container already running"
     if $WRITE; then
-        $WRITE && abort "$_msg"
+        abort "$_msg"
+    elif $UPDATE; then
+        abort "$_msg, please exit and retry the update"
     else
         warning 1>&2 "$_msg"
         eval "$@"
@@ -142,6 +153,18 @@ if [ -n "$image" ]; then
     [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Using image: $image"
 else
     abort "Failed to find omics container image: $IMAGE"
+fi
+
+if $UPDATE; then
+    sandbox=/var/local/containers/"$(basename -s .img "$image")".sandbox
+    [[ -d "$sandbox" ]] || abort "Sandbox does not exists: $sandbox"
+    new_image=${image}.new
+    singularity build "$new_image" "$sandbox"
+    mv -v --backup=numbered "$new_image" "$image"
+    info "New image at $image"
+    info "Saved backup images:"
+    ls -l "$image".~*~
+    exit
 fi
 
 for i in "${MOUNT_POINTS[@]}"; do
