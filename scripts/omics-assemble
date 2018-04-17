@@ -143,6 +143,8 @@ if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
 fi
 
+$RUN_QUAST && [[ -z $QUAST ]] && warning "QUAST is unavailable"
+
 # find valid ref data path
 if [[ -v OMICS_REFERENCE_DATA ]]; then
     ref_data_home="$OMICS_REFERENCE_DATA"  # from environment
@@ -268,7 +270,7 @@ fi
 
 ! $ASSEMBLY_ONLY || exit 0
 
-if $RUN_QUAST; then
+if $RUN_QUAST && [[ -n $QUAST ]]; then
     info "Making assembly stats..."
     if $run_assembly && ! $MEGAHIT; then
         quast_opts=(-l "Scaffolds, Contigs" "$out/scaffold.fa" "$out/contig.fa")
