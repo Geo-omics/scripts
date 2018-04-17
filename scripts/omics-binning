@@ -105,7 +105,7 @@ USE_METABAT=false
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    SAMPLE_DIRS=($@)
+    SAMPLE_DIRS=("$@")
 fi
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
