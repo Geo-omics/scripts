@@ -219,7 +219,7 @@ else
         else
             # idba requires a single read file
             echo "Concatenating reads..."
-            reads=$(basename -s .fa -s .fasta "$reads").cat.fa
+            reads=$(basename -s .fa -s .fasta "$READS").cat.fa
             if [ -e "$reads" ]; then
                 $FORCE || abort "Concatenated reads file $reads exists.  Use --force to overwrite."
                 $RM "$reads"
