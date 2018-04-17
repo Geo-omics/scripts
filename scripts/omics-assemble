@@ -217,17 +217,16 @@ else
         else
             # idba requires a single read file
             echo "Concatenating reads..."
-            reads=${READS/%.fasta}  # remove sufix .fasta or .fa
-            reads=${reads/%.fa}
-            reads=$(echo $reads | sed -r 's/\.([^.]+)$/.cat./1')  # insert .cat. suffix
+            reads=$(basename -s .fa -s .fasta "$reads").cat.fa
             if [ -e "$reads" ]; then
-            $FORCE || abort "File $reads exists.  Use --force to overwrite."
-            $RM "$reads"
+                $FORCE || abort "Concatenated reads file $reads exists.  Use --force to overwrite."
+                $RM "$reads"
             fi
             for i in "${SAMPLE_DIRS[@]}"; do
                 cat "$i/$READS" >> "$reads"
                 echo "  $i/$READS"
             done
+            info "Reads were saved to $reads, you may delete this file after assembly."
         fi
     else
         # descend into single sample directory or working directory, output goes here, too
