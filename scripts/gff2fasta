@@ -7,7 +7,7 @@ gff2fasta - Do this.
 
 =head1 SYNOPSIS
 
-B<gff2fasta> B<-g>ff file.gff B<-contig> file.fasta B<-genes> output_file.fasta
+B<gff2fasta> B<-gff> I<gff-file> B<-contig> I<fasta-file> B<-genes> I<output_fasta_file>
 
 
 =head1 DESCRIPTION
@@ -19,29 +19,29 @@ Do this.
 
 =over 8
 
-=item B<-prefix>, B<-p> I<CHAR>
+=item B<-prefix>, B<-p> I<prefix>
 
 Uniq project identifier added before sequence header.
 
-=item B<-genes>, B<-g> I<CHAR>
+=item B<-genes>, B<-g> I<filename>
 
 output fasta file
 
-=item B<-gff> I<CHAR>
+=item B<-gff> I<filename>
 
 input GFF file
 
-=item B<-contig>, B<-c> I<CHAR>
+=item B<-contig>, B<-c> I<filename>
 
 Contigs/Scaffolds Input
 
-=item B<-version>, B<-v> I<BOOLEAN>
+=item B<-version>, B<-v>
 
 version of the current script
 
-=item B<-help>, B<-h> I<BOOLEAN>
+=item B<-help>, B<-h>
 
-This message.
+Print help.
 
 =back
 
@@ -49,6 +49,7 @@ This message.
 =head1 AUTHOR
 
 Sunit Jain, (Fri Mar  6 12:18:22 EST 2015)
+
 sunitj [AT] umich [DOT] edu
 
 

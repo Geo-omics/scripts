@@ -48,9 +48,11 @@ def get_timestamps(file, verbose=False):
                 print('skipping:', line)
             continue
 
+        m = m.groupdict()
+
         try:
             ts = datetime.strptime(m['ts'], '%a %b %d %H:%M:%S %Y')
-        except Exception as e:
+        except Exception:
             print('Failed to parse timestamp:', line)
             raise
         yield ts, m
@@ -60,7 +62,6 @@ tss = []
 timestamp_matches = list(get_timestamps(args.log_file, args.verbose))
 
 for ts, m in timestamp_matches:
-    m = m.groupdict()
     ts_struct = None
     for i in ['k_extr_s', 'k_extr_e', 'k_bg', 'k_ac', 'k_la', 'other_txt']:
         if i in m and m[i] is not None:
@@ -107,7 +108,7 @@ xvals = np.arange(len(steps))
 
 # draw stacked barplot
 fig, ax = subplots()
-ax.bar(xvals, ex, tick_label=list(steps.keys()))
+ax.bar(xvals, ex, tick_label=list(sorted(steps.keys())))
 ax.bar(xvals, bg, bottom=ex)
 ax.bar(xvals, ac, bottom=ex + bg)
 ax.bar(xvals, la, bottom=ex + bg + ac)

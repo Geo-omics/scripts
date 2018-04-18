@@ -140,8 +140,10 @@ fi
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    SAMPLE_DIRS=($@)
+    SAMPLE_DIRS=("$@")
 fi
+
+$RUN_QUAST && [[ -z $QUAST ]] && warning "QUAST is unavailable"
 
 # find valid ref data path
 if [[ -v OMICS_REFERENCE_DATA ]]; then
@@ -217,17 +219,16 @@ else
         else
             # idba requires a single read file
             echo "Concatenating reads..."
-            reads=${READS/%.fasta}  # remove sufix .fasta or .fa
-            reads=${reads/%.fa}
-            reads=$(echo $reads | sed -r 's/\.([^.]+)$/.cat./1')  # insert .cat. suffix
+            reads=$(basename -s .fa -s .fasta "$READS").cat.fa
             if [ -e "$reads" ]; then
-            $FORCE || abort "File $reads exists.  Use --force to overwrite."
-            $RM "$reads"
+                $FORCE || abort "Concatenated reads file $reads exists.  Use --force to overwrite."
+                $RM "$reads"
             fi
             for i in "${SAMPLE_DIRS[@]}"; do
                 cat "$i/$READS" >> "$reads"
                 echo "  $i/$READS"
             done
+            info "Reads were saved to $reads, you may delete this file after assembly."
         fi
     else
         # descend into single sample directory or working directory, output goes here, too
@@ -269,7 +270,7 @@ fi
 
 ! $ASSEMBLY_ONLY || exit 0
 
-if $RUN_QUAST; then
+if $RUN_QUAST && [[ -n $QUAST ]]; then
     info "Making assembly stats..."
     if $run_assembly && ! $MEGAHIT; then
         quast_opts=(-l "Scaffolds, Contigs" "$out/scaffold.fa" "$out/contig.fa")

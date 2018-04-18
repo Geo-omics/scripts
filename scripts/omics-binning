@@ -27,7 +27,7 @@ ARG_HELP="
 
   --bam-path PATH           Path to sorted (but not name-sorted) BAM file
                             relative to each sample directory.  The default is
-                            MAPPING/<assembly-name>_sorted.bam
+                            MAPPING/<assembly-name>.sorted.bam
 
  General options:
 
@@ -105,7 +105,7 @@ USE_METABAT=false
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    SAMPLE_DIRS=($@)
+    SAMPLE_DIRS=("$@")
 fi
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
@@ -153,8 +153,8 @@ $MKDIR -p -- "$outdir"
 
 chopbindir=$outdir/$name.bins
 if [[ $name =~ .chop$ ]]; then
-    # name follows omics pipeline conventions
-    bindir=$outdir/${name/%.chop//}.bins
+    # name follows omics pipeline conventions, remove .chop again
+    bindir=$outdir/${name%.chop}.bins
 else
     bindir=$outdir/$name.unchop.bins
 fi
