@@ -1,3 +1,18 @@
+geo-omics-scripts (1.0.108-1) unstable; urgency=medium
+
+  * [comics] Add image deployment function via --update
+  * [plot-megahit-log] Bugfixes
+  * [binning] Fix option help, correct file name
+  * [gff2fasta] Fix typesetting in help text
+  * [asm] Increase robustness of cmd line parsing
+  * [asm] Fix naming of concatenating reads file
+  * [asm] Avoid cryptic error when QUAST is unavailable
+  * [asm] Fix concatenated reads file name
+  * [binning] Increase robustness of option parsing
+  * [binning] Fix final, unchopped bin directory name
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Wed, 18 Apr 2018 09:48:51 -0400
+
 geo-omics-scripts (1.0.107-1) unstable; urgency=medium
 
   * add interleave script
