@@ -159,7 +159,7 @@ if $UPDATE; then
     sandbox=/var/local/containers/"$(basename -s .img "$image")".sandbox
     [[ -d "$sandbox" ]] || abort "Sandbox does not exists: $sandbox"
     new_image=${image}.new
-    singularity build "$new_image" "$sandbox"
+    fakeroot singularity build "$new_image" "$sandbox"
     mv -v --backup=numbered "$new_image" "$image"
     info "New image at $image"
     info "Saved backup images:"
