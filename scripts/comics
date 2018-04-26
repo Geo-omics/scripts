@@ -12,7 +12,7 @@ set -eEu
 DEFAULT_IMAGE_NAME=omics.img
 # Image file search paths
 CONTAINER_PATH=(
-${PWD}
+"${PWD}"
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
 /var/local/containers
@@ -77,7 +77,7 @@ handle_options () {
                 KEEP_ENV_MODULES=true;
                 return 1;;
 	    (-s|--singularity)
-                SINGULARITY_ARGS+=($2)
+                SINGULARITY_ARGS+=("$2")
 		return 2;;
             (-w|--write)
                 WRITE=true
