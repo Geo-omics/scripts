@@ -203,6 +203,7 @@ install-comics-local:
 	# 2. replace the "source liba.sh" call, including shellcheck comments with a mark (BORK42)
 	# 3. write insert after mark
 	# 4. remove mark
+	$(info Installing $(prog) to $(dest) ...)
 	sed -n '/^trap/,/not accessible/p' lib/liba.sh > $(insert_tmp)
 	mkdir -p -- $(destdir)
 	cat $(prog) \
@@ -212,6 +213,7 @@ install-comics-local:
 	    > $(dest)
 	chmod +x -- $(dest)
 	rm -f -- $(insert_tmp)
+	$(info done)
 
 uninstall:
 	$(info Removing documentation...)
