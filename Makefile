@@ -235,6 +235,10 @@ distclean: clean
 
 debug:
 	$(info share: $(datadir) bin: $(bindir))
+	$(info Version 0: $(version0))
+	$(info Version 1: $(version1))
+	$(info Version 2: $(version2))
+	$(info Version 3: $(version3))
 	$(info Version: $(version))
 	$(info major version: $(major_version))
 	$(info minor version: $(minor_version))
