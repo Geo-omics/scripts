@@ -19,6 +19,7 @@ version1 := $(shell cat VERSION 2>/dev/null)
 version2 := $(git_version)$(date_version_appendix)
 version3 := $(shell basename $$(pwd) | grep -o -P "(?<=$(package_name)-).*")
 
+ifneq ($(MAKECMDGOALS),install-comics-local)
 version := $(strip $(if $(version0),\
         $(version0),\
         $(if $(version1),\
@@ -32,6 +33,7 @@ version := $(strip $(if $(version0),\
                 )\
         )\
 ))
+endif
 
 export
 .SILENT:
@@ -90,6 +92,7 @@ sphinx-docs:
 scripts-man:
 	cd scripts && $(MAKE) man
 
+ifneq ($(MAKECMDGOALS),install-comics-local)
 # version arithmetic:
 # 0. check $version is compatible with `git describe` output
 #    with 1.2.3 sematic versioning tags
@@ -105,6 +108,7 @@ patch_version := $(word 3,$(_sem_versions))
 # 2. increment patch level
 inc_patch_version := $(shell echo $(patch_version)+1 | bc)
 inc_version := $(major_version).$(minor_version).$(inc_patch_version)
+endif
 
 distmkdir:
 	mkdir -p -- "$(dist_dir)"
