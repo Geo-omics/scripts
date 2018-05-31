@@ -16,9 +16,9 @@ ARG_HELP="
   -r, --rev             Fastq file with reverse reads default is rev.fastq
       --final INFIX     Infix used for final output files.  Default is 'good'
       --clean-only      Delete previously created files and stop.
-  -a, --adapters=FILE   Specifies the adapters file to be used.  By default the
-                        Illumina adapter file TruSeq3-PE-2.fa as distributed by
-			the Trimmomatic project will be used.
+  -a, --adapters=FILE   Specifies the adapters file to be used.  By default a
+                        file based on the Illumina adapter file TruSeq3-PE-2.fa
+                        as distributed by the Trimmomatic project.
       --keep-all	Keep all intermediate files, by default some not-so-important
 			intermediate results will be deleted to save disk space
       --no-dereplicate  Skip the de-replication step
@@ -26,6 +26,8 @@ ARG_HELP="
                         Skip building the interleaved fasta file,
                         interleaved fastq will still be build.  This option is
                         redundant when --no-interleaved is used.
+  -T, --trimmomatic     Use Trimmomatic for adapter and quality trimming.  By default
+                        scythe ans sickle are used.
 "
 MORE_HELP="
 qc implements the QC part of the Geomicro Illumina Reads Pipline.  At each
@@ -35,8 +37,8 @@ generated files.
 qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave"
-SHORT_OPTIONS=a:,f:,r:
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave
+SHORT_OPTIONS=a:,f:,r:,T
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,trimmomatic
 }
 
 handle_options () {
@@ -66,6 +68,9 @@ handle_options () {
 	    (--no-fasta-interleave)
 	        INTERLEAVE_FASTA=false
 	        return 1;;
+            (-T|--trimmomatic)
+                TRIMMOMATIC=true
+                return 1;;
         esac
     else
         return 0
@@ -101,6 +106,8 @@ KEEPALL=false
 #
 DEREPLICATION=true
 INTERLEAVE_FASTA=true
+# Use sickle/scythe by default
+TRIMMOMATIC=false
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -181,7 +188,7 @@ fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
 # basename for files
 base=""
 
-# scythe_in is what derep puts out
+# trim_in is what derep puts out, input for trimming
 
 if $DEREPLICATION; then
     info1 "Starting derep..."
@@ -190,54 +197,58 @@ if $DEREPLICATION; then
     rev_derep_out=$tmpd/$rev$base.fastq
     mkfifo "$fwd_derep_out" "$rev_derep_out"
     if $KEEPALL; then
-        fwd_scythe_in=$fwd_derep_out.copy
-        rev_scythe_in=$rev_derep_out.copy
-        mkfifo "$fwd_scythe_in" "$rev_scythe_in"
+        fwd_trim_in=$fwd_derep_out.copy
+        rev_trim_in=$rev_derep_out.copy
+        mkfifo "$fwd_trim_in" "$rev_trim_in"
         # shellcheck disable=SC2094
-        tee "./$(basename "$fwd_derep_out")" < "$fwd_derep_out" > "$fwd_scythe_in" &
+        tee "./$(basename "$fwd_derep_out")" < "$fwd_derep_out" > "$fwd_trim_in" &
         # shellcheck disable=SC2094
-        tee "./$(basename "$rev_derep_out")" < "$rev_derep_out" > "$rev_scythe_in" &
+        tee "./$(basename "$rev_derep_out")" < "$rev_derep_out" > "$rev_trim_in" &
     else
-        fwd_scythe_in=$fwd_derep_out
-        rev_scythe_in=$rev_derep_out
+        fwd_trim_in=$fwd_derep_out
+        rev_trim_in=$rev_derep_out
     fi
     python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
 else
-    fwd_scythe_in=$tmpd/$fwd$base.fastq
-    rev_scythe_in=$tmpd/$rev$base.fastq
+    fwd_trim_in=$tmpd/$fwd$base.fastq
+    rev_trim_in=$tmpd/$rev$base.fastq
 fi
 
-info1 "Start adapter trimming..."
-oldbase=$base
-base="${base}.scythe"
-# scythe_out to be fed into interleaver
-fwd_scythe_out=$tmpd/$fwd$base.fastq
-rev_scythe_out=$tmpd/$rev$base.fastq
-mkfifo "$fwd_scythe_out" "$rev_scythe_out"
-scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd_scythe_out" "$fwd_scythe_in" &
-scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev_scythe_out" "$rev_scythe_in" &
-info1 "Start interleaving reads..."
-if $KEEPALL; then
-    fwd_int_in=$tmpd/fwd.int_in.fastq
-    rev_int_in=$tmpd/rev.int_in.fastq
-    mkfifo "$fwd_int_in" "$rev_int_in"
-    # shellcheck disable=SC2094
-    tee "./$(basename "$fwd_scythe_out")" < "$fwd_scythe_out" > "$fwd_int_in" &
-    # shellcheck disable=SC2094
-    tee "./$(basename "$rev_scythe_out")" < "$rev_scythe_out" > "$rev_int_in" &
+if $TRIMMOMATIC; then
+   :
 else
-    fwd_int_in=$fwd_scythe_out
-    rev_int_in=$rev_scythe_out
+    info1 "Start adapter trimming..."
+    oldbase=$base
+    base="${base}.scythe"
+    # scythe_out to be fed into interleaver
+    fwd_scythe_out=$tmpd/$fwd$base.fastq
+    rev_scythe_out=$tmpd/$rev$base.fastq
+    mkfifo "$fwd_scythe_out" "$rev_scythe_out"
+    scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd_scythe_out" "$fwd_trim_in" &
+    scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev_scythe_out" "$rev_trim_in" &
+    info1 "Start interleaving reads..."
+    if $KEEPALL; then
+        fwd_int_in=$tmpd/fwd.int_in.fastq
+        rev_int_in=$tmpd/rev.int_in.fastq
+        mkfifo "$fwd_int_in" "$rev_int_in"
+        # shellcheck disable=SC2094
+        tee "./$(basename "$fwd_scythe_out")" < "$fwd_scythe_out" > "$fwd_int_in" &
+        # shellcheck disable=SC2094
+        tee "./$(basename "$rev_scythe_out")" < "$rev_scythe_out" > "$rev_int_in" &
+    else
+        fwd_int_in=$fwd_scythe_out
+        rev_int_in=$rev_scythe_out
+    fi
+    sickle_in=$tmpd/int$base.fastq
+    mkfifo "$sickle_in"
+    python3 -m omics.interleave "${V[@]}" "$fwd_int_in" "$rev_int_in" > "$sickle_in" &
+    info1 "Start quality score trimming..."
+    oldbase=$base
+    base="${base}.sickle"
+    post_trim=$tmpd/int$base.fastq
+    mkfifo "$post_trim"
+    sickle pe -t sanger -c "$sickle_in" -M "$post_trim" &
 fi
-sickle_in=$tmpd/int$base.fastq
-mkfifo "$sickle_in"
-python3 -m omics.interleave "${V[@]}" "$fwd_int_in" "$rev_int_in" > "$sickle_in" &
-info1 "Start quality score trimming..."
-oldbase=$base
-base="${base}.sickle"
-sickle_out=$tmpd/int$base.fastq
-mkfifo "$sickle_out"
-sickle pe -t sanger -c "$sickle_in" -M "$sickle_out" &
 # $KEEPALL || rm -f -- "int$oldbase.fastq"
 
 oldbase=$base
@@ -245,12 +256,12 @@ base=".$FINAL"
 
 if $INTERLEAVE_FASTA; then
     info1 "Start converting to fasta..."
-    # copy sickle_out
-    sickle_out_orig=$sickle_out
-    sickle_out=$sickle_out.copy
+    # copy post_trim
+    post_trim_orig=$post_trim
+    post_trim=$post_trim.copy
     q2a_in=$tmpd/q2a_in
-    mkfifo "$sickle_out" "$q2a_in"
-    tee "$q2a_in" < "$sickle_out_orig" > "$sickle_out" &
+    mkfifo "$post_trim" "$q2a_in"
+    tee "$q2a_in" < "$post_trim_orig" > "$post_trim" &
     python3 -m omics.fastq2fasta "${V[@]}" < "$q2a_in" > "int$base.fasta" &
 fi
 
@@ -260,7 +271,7 @@ rev_sep_out=$tmpd/$rev$oldbase.fastq
 sep_in=$tmpd/sep_in
 int_final=int$base.fastq
 mkfifo "$fwd_sep_out" "$rev_sep_out" "$sep_in"
-tee "$sep_in" < "$sickle_out" > "$int_final" &
+tee "$sep_in" < "$post_trim" > "$int_final" &
 separate-interleaved "${V[@]}" -f "$fwd_sep_out" -r "$rev_sep_out" "$sep_in" &
 
 # copy separate output 
