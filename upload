@@ -24,6 +24,8 @@ user_help() {
 -n --no-install     Don't run the installer, just copy and unpack
    --no-color       Disable colorful output.
    --no-google-drive Skip uploading docs to goodle drive
+   --google-drive-only
+                    Only do the google drive upload
    --stage-dir      Remote directory where to unpack distribution package
 -t --test	    Upload to test installation
 -v		    Verbosity: use multiple -v to increase output.
@@ -79,6 +81,7 @@ GOOGLE_DRIVE_UPLOAD=true
 GOOGLE_DRIVE_FILES=(
     docs/_build/latex/Geomicro-Illumina-Reads-Processing-Pipeline.pdf
 )
+GOOGLE_DRIVE_ONLY=false
 # Force overriding safety checks
 FORCE=false
 #
@@ -100,7 +103,7 @@ TEST=false
 # command line parameter handling
 ###################################
 GETOPT_SHORT=fhntv
-GETOPT_LONG=force,help,host:,no-install,no-color,no-google-drive,stage-dir:,test,verbosity:
+GETOPT_LONG=force,help,host:,no-install,no-color,no-google-drive,google-drive-only,stage-dir:,test,verbosity:
 if which getopt >/dev/null 2>&1; then
     if [ "$(getopt -T > /dev/null 2>&1; echo $?)" == 4 ]; then
         # GNU getopt available 
@@ -128,6 +131,7 @@ while [ "$#" -gt 0 ]; do
 	(-n|--no-install) NO_INSTALL=true;;
 	(--no-color) USE_COLOR=false;;
 	(--no-google-drive) GOOGLE_DRIVE_UPLOAD=false;;
+	(--google-drive-only) GOOGLE_DRIVE_ONLY=true;;
 	(--stage-dir) REMOTE_STAGE_DIR=$2; shift;;
 	(-t|--test) TEST=true;;
 	(-v) VERBOSITY=$((VERBOSITY+1));;
@@ -205,6 +209,19 @@ else
     abort "Failed to find distribution package $package, run 'make <dist|release>' first!"
 fi
 
+if $GOOGLE_DRIVE_UPLOAD && ! $TEST; then
+    # requires an existing open connection, via Gnome Files or so
+    google_drive=/run/user/$(id --user)/gvfs/google-drive:host=umich.edu,user=$(id --user --name)
+    google_drive_dest="Geomicrobiology Lab/Bioinformatics Tutorials"
+    if [ -d "$google_drive" ]; then
+        info "Uploading to google drive..."
+	cp "${GOOGLE_DRIVE_FILES[@]}" "$google_drive/$google_drive_dest/"
+    else
+	warning "Google drive is not mounted at $google_drive"
+    fi
+    $GOOGLE_DRIVE_ONLY && exit
+fi
+
 if ! $FORCE; then
     # shellcheck disable=SC2029
     # shellcheck disable=SC2087
@@ -239,17 +256,6 @@ ssh -q "$REMOTE_HOST" << EOF
     $remote_env finster install $finster_verbose "$REMOTE_STAGE_DIR/$(basename "$package")" &&
     echo "done"
 EOF
-
-if $GOOGLE_DRIVE_UPLOAD && ! $TEST; then
-    google_drive=/run/user/$(id --user)/gvfs/google-drive:host=umich.edu,user=$(id --user --name)
-    google_drive_dest="Geomicrobiology Lab/Bioinformatics Tutorials"
-    if [ -d "$google_drive" ]; then
-        info "Uploading to google drive..."
-	cp "${GOOGLE_DRIVE_FILES[@]}" "$google_drive/$google_drive_dest/"
-    else
-	warning "Google drive is not mounted at $google_drive"
-    fi
-fi
 
 $NO_INSTALL || info "Installation done"
 exit 0
