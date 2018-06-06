@@ -343,5 +343,5 @@ class OmicsProject(dict):
             if not isinstance(self[key], type_):
                 try:
                     self[key] = get_funs[type_](*args)
-                except KeyError as e:
+                except KeyError:
                     pass
