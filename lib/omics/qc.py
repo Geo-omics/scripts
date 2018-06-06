@@ -12,6 +12,7 @@ from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
 def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
               no_dereplicate=False, no_interleave=False,
               no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
+              trimmomatic=False, threads=DEFAULT_THREADS,
               project=None):
     """
     Do QC for a single sample
@@ -28,8 +29,12 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
     not no_dereplicate or args.append('--no-dereplicate')
     not no_interleave or args.append('--no-interleave')
     not no_fasta_interleave or args.append('--no-fasta-interleave')
+    not trimmomatic or args.append('--trimmomatic')
+    if threads is not None:
+        args += ['--threads', str(threads)]
     if verbosity > DEFAULT_VERBOSITY:
         args.append('--verbosity={}'.format(verbosity))
+        print('[qc] Calling qc-sample with arguments: {}'.format(args))
 
     p = subprocess.run(
         [script] + args,
@@ -43,6 +48,7 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
 def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
        no_dereplicate=False, no_interleave=False,
        no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
+       trimmomatic=False,
        threads=DEFAULT_THREADS, project=None):
     """
     Do quality control on multiple samples
@@ -50,13 +56,22 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
     :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
-    # qc-sample script is IO-bound and in practice keeps less than 4 CPUs busy
-    threads = int(threads / 4)
-    threads = max(1, threads)
+    # number of workers: how many samples are processed in parallel
+    # HOWTO distribute CPUs among workers:
+    #   1. allow at most (hard-coded) 6 workers
+    #   2. # of workers is the least of 6, # of CPUs, and # of samples
+    #   3. # of CPUs/worker at least 1
+    MAX_WORKERS = 6
+    num_workers = min(MAX_WORKERS, len(samples), threads)
+    threads_per_worker = max(1, int(threads / num_workers))
+
+    if verbosity > DEFAULT_VERBOSITY:
+        print('[qc] Processing {} samples in parallel, using {} threads each'
+              ''.format(num_workers, threads_per_worker))
 
     errors = []
 
-    with ThreadPoolExecutor(max_workers=threads) as e:
+    with ThreadPoolExecutor(max_workers=num_workers) as e:
         futures = {}
         for path in samples:
             futures[e.submit(
@@ -68,8 +83,10 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
                 no_dereplicate=no_dereplicate,
                 no_interleave=no_interleave,
                 no_fasta_interleave=no_fasta_interleave,
+                trimmomatic=trimmomatic,
                 verbosity=verbosity,
                 project=project,
+                threads=threads_per_worker,
             )] = path
 
         for fut in as_completed(futures.keys()):
@@ -138,6 +155,11 @@ def main():
         help='Skip building the interleaved fasta file, interleaved fastq '
              'files will still be build.',
     )
+    argp.add_argument(
+        '-T', '--trimmomatic',
+        action='store_true',
+        help='Use Trimmomatic instead of (the default) scythe + sickle',
+    )
     args = argp.parse_args()
     args.samples = [Path(i) for i in args.samples]
     for i in args.samples:
@@ -153,6 +175,7 @@ def main():
             no_dereplicate=args.no_dereplicate,
             no_interleave=args.no_interleave,
             no_fasta_interleave=args.no_fasta_interleave,
+            trimmomatic=args.trimmomatic,
             verbosity=args.verbosity,
             threads=args.threads,
             project=args.project,

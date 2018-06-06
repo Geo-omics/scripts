@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""
+plot start and end sites of blast alignments
+
+This script takes a blastn format 6 table as input.  This was develop to help
+with analysing where adapters and other contamination end up in reads.  It
+assumes a small number of queries (contaminant sequences) against a larger
+number of subject sequences (reads).
+"""
+import argparse
+from matplotlib import pyplot
+
+
+DEFAULT_LIMIT = 10
+
+
+def load(file, subject_mode=False):
+    """
+    load tab-separated table
+
+    1st col is query id
+    2nd col is subject id
+    7th col: query start
+    8th col: query end
+    9th col: subj start
+    10th col: subj end
+    """
+    data = []
+    for line in file:
+        row = line.strip().split('\t')
+        if subject_mode:
+            id = row[1]
+            start = row[6]
+            end = row[7]
+        else:
+            id = row[0]
+            start = row[8]
+            end = row[9]
+        try:
+            data.append([id, int(start), int(end)])
+        except ValueError:
+            if not data:
+                # first row might be header, skip this
+                continue
+            raise
+    return data
+
+
+def test_prefix(query, incl, excl, exact=False):
+    if exact:
+        def test(s):
+            return query == s
+    else:
+        test = query.startswith
+
+    if incl:
+        for i in incl:
+            if test(i):
+                return i
+        return None
+    else:
+        # complement mode
+        for i in excl:
+            if test(i):
+                return None
+        # also the default if prefs is empty
+        return query
+
+
+def group(data, incl, excl, exact=False):
+    """
+    Group data by query
+    """
+    groups = {}
+    for row in data:
+        pref = test_prefix(row[0], incl, excl, exact=exact)
+        if pref is not None:
+            if pref not in groups:
+                groups[pref] = {'start': [], 'end': []}
+
+            groups[pref]['start'].append(row[1])
+            groups[pref]['end'].append(row[2])
+
+    return groups
+
+
+def plot(groups, title='', save=False, limit=DEFAULT_LIMIT):
+    fig, ax = pyplot.subplots()
+    data = []
+    labels = []
+
+    # sort data largest group first
+    for pref, dat in sorted(groups.items(), key=lambda x: -len(x[1]['start'])):
+        data += [
+            dat['start'],
+            dat['end'],
+        ]
+        for i in ['start', 'end']:
+            labels.append('{} {} ({})'.format(pref, i, len(dat[i])))
+
+    # for limits: make an 'other' category and append to data/labels
+    if len(data) > 2 * limit:
+        rest = data[2 * limit:]
+        count_rest = int(len(rest) / 2)
+        start_rest = []
+        end_rest = []
+        for i in range(0, count_rest * 2, 2):
+            start_rest += rest[i]
+            end_rest += rest[i+1]
+
+        data = data[:2 * limit] + [start_rest, end_rest]
+        labels = labels[:2 * limit] \
+            + ['{} others start ({})'.format(count_rest, len(start_rest))] \
+            + ['{} others end ({})'.format(count_rest, len(start_rest))]
+
+    # hist:
+    # reverse data and labels to have legend ordered the right way
+    # bins: range to max sequence index + 2 (+2 to make last and next-to-last
+    # bins correct
+    ax.hist(
+        list(reversed(data)),
+        bins=range(1, max([max(i) for i in data]) + 2),
+        label=list(reversed(labels)),
+        histtype='step',
+    )
+    ax.set_title(title)
+    ax.legend()
+    if save:
+        # use input file's basename, save to $PWD
+        _, _, name = title.rpartition('/')  # basename
+        name, _, _ = name.rpartition('.')  # strip file suffix
+        fig.savefig('{}.pdf'.format(name), dpi=2500)
+    else:
+        pyplot.show()
+
+
+def main():
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'inputfile',
+        type=argparse.FileType(),
+        help='Blastn output in format 6',
+    )
+    argp.add_argument(
+        '--incl', '-i',
+        metavar='PATTERN',
+        nargs='*',
+        default=[],
+        help='Prefixes of query sequence id to be included',
+    )
+    argp.add_argument(
+        '--excl', '-e',
+        metavar='PATTERN',
+        nargs='*',
+        default=[],
+        help='Prefixes of query sequence id to be excluded.  This is ignores '
+             'if -i is given',
+    )
+    argp.add_argument(
+        '--subject',
+        action='store_true',
+        help='Use "subject mode", i.e. group by blast search subject and '
+             'display query coordinates, the default is to group by query and '
+             'display subject coordinates.',
+    )
+    argp.add_argument(
+        '--exact',
+        action='store_true',
+        help='Interpret -i and -e arguments to be exact sequent names, by '
+             'default they are prefixes',
+    )
+    argp.add_argument(
+        '--save',
+        action='store_true',
+        help='Save plot as PDF',
+    )
+    argp.add_argument(
+        '--limit',
+        metavar='N',
+        type=int,
+        default=DEFAULT_LIMIT,
+        help='How many different queries to show, defaults to {}'
+             ''.format(DEFAULT_LIMIT),
+    )
+    args = argp.parse_args()
+
+    data = load(args.inputfile, subject_mode=args.subject)
+    data = group(data, args.incl, args.excl, exact=args.exact)
+    plot(data, title=args.inputfile.name, save=args.save, limit=args.limit)
+
+
+if __name__ == '__main__':
+    main()

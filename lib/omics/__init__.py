@@ -25,6 +25,58 @@ class OmicsArgParser(argparse.ArgumentParser):
     Assumes the parser is populated by get_argparser(), relevant changes there
     may need to be reflected here.
     """
+    def __init__(self, *args, project_home=True, threads=True, **kwargs):
+        """
+        Provide the canonical omics argparse argument parser
+
+        :param bool project_home: Include a --project-home option.
+        :param: *args and **kwargs are handed over to argparse.ArgumentParser()
+
+        :return: A new argparse.ArgumentParser object
+
+        Does not use the normal help option since out help option shall go into
+        the common group.  --project-dir is made optional as it does not go
+        into the init script.
+        """
+        super().__init__(*args, add_help=False, **kwargs)
+        common = self.add_argument_group('common omics options')
+
+        # help option is inspired by argparse.py
+        common.add_argument(
+            '-h', '--help',
+            action='help', default=argparse.SUPPRESS,
+            help='show this help and exit',
+        )
+        if project_home:
+            common.add_argument(
+                '--project-home',
+                metavar='PATH',
+                help='Omics project directory, by default, this is the '
+                     'current directory.',
+            )
+        if threads:
+            common.add_argument(
+                '--cpus', '--threads', '-t',
+                type=int,
+                metavar='N',
+                dest='threads',
+                default=None,  # None signifies option not given on cmd line
+                help='Number of threads / CPUs to employ',
+            )
+        common.add_argument(
+            '-v', '--verbose',
+            action='count',
+            default=DEFAULT_VERBOSITY,
+            dest='verbosity',
+            help='Show increased diagnostic output.',
+        )
+        common.add_argument(
+            '--traceback',
+            action='store_true',
+            help='Show python stack trace in case of some internal errors for '
+                 'debugging.',
+        )
+
     def format_help(self):
         """
         Like parent method but abbreviate common options in usage text
@@ -62,9 +114,20 @@ class OmicsArgParser(argparse.ArgumentParser):
                 pass
 
         try:
-            args.threads = project['threads']
-        except (TypeError, AttributeError, KeyError):
-            args.threads = DEFAULT_THREADS
+            args.threads
+        except AttributeError:
+            # constructed with threads=False
+            pass
+        else:
+            if args.threads is None:
+                try:
+                    args.threads = project['threads']
+                except (TypeError, AttributeError, KeyError):
+                    args.threads = DEFAULT_THREADS
+            else:
+                if args.threads <= 0:
+                    self.error('The number of threads given via --threads '
+                               'must be >=1')
 
         return args
 
@@ -103,59 +166,14 @@ def get_num_cpus():
     return num_cpus
 
 
-def get_argparser(*args, project_home=True, threads=True, **kwargs):
+def get_argparser(*args, **kwargs):
     """
     Provide a canonical omics argparse argument parser
 
-    :param bool project_home: Include a --project-home option.
-    :param: *args and **kwargs are handed over to argparse.ArgumentParser()
-
-    :return: A new argparse.ArgumentParser object
-
-    Does not use the normal help option since out help option shall go into
-    the common group.  --project-dir is made optional as it does not go into
-    the init script.
+    This function is deprecated and for compatibility only.  Use the
+    OmicsArgParser contructor directly.
     """
-    argp = OmicsArgParser(*args, add_help=False, **kwargs)
-
-    common = argp.add_argument_group('common omics options')
-
-    # help option is inspired by argparse.py
-    common.add_argument(
-        '-h', '--help',
-        action='help', default=argparse.SUPPRESS,
-        help='show this help and exit',
-    )
-    if project_home:
-        common.add_argument(
-            '--project-home',
-            metavar='PATH',
-            help='Omics project directory, by default, this is the current '
-                 'directory.',
-        )
-    if threads:
-        common.add_argument(
-            '--cpus', '--threads', '-t',
-            type=int,
-            metavar='N',
-            dest='threads',
-            default=None,  # None signifies option not given on cmd line
-            help='Number of threads / CPUs to employ',
-        )
-    common.add_argument(
-        '-v', '--verbose',
-        action='count',
-        default=DEFAULT_VERBOSITY,
-        dest='verbosity',
-        help='Show increased diagnostic output.',
-    )
-    common.add_argument(
-        '--traceback',
-        action='store_true',
-        help='Show python stack trace in case of some internal errors for '
-             'debugging.',
-    )
-    return argp
+    return OmicsArgParser(*args, **kwargs)
 
 
 def process_command_line(command, options, script_dir=Path()):
@@ -325,5 +343,5 @@ class OmicsProject(dict):
             if not isinstance(self[key], type_):
                 try:
                     self[key] = get_funs[type_](*args)
-                except KeyError as e:
+                except KeyError:
                     pass

@@ -19,6 +19,7 @@ version1 := $(shell cat VERSION 2>/dev/null)
 version2 := $(git_version)$(date_version_appendix)
 version3 := $(shell basename $$(pwd) | grep -o -P "(?<=$(package_name)-).*")
 
+ifneq ($(MAKECMDGOALS),install-comics-local)
 version := $(strip $(if $(version0),\
         $(version0),\
         $(if $(version1),\
@@ -32,6 +33,7 @@ version := $(strip $(if $(version0),\
                 )\
         )\
 ))
+endif
 
 export
 .SILENT:
@@ -90,6 +92,7 @@ sphinx-docs:
 scripts-man:
 	cd scripts && $(MAKE) man
 
+ifneq ($(MAKECMDGOALS),install-comics-local)
 # version arithmetic:
 # 0. check $version is compatible with `git describe` output
 #    with 1.2.3 sematic versioning tags
@@ -105,6 +108,7 @@ patch_version := $(word 3,$(_sem_versions))
 # 2. increment patch level
 inc_patch_version := $(shell echo $(patch_version)+1 | bc)
 inc_version := $(major_version).$(minor_version).$(inc_patch_version)
+endif
 
 distmkdir:
 	mkdir -p -- "$(dist_dir)"
@@ -199,6 +203,7 @@ install-comics-local:
 	# 2. replace the "source liba.sh" call, including shellcheck comments with a mark (BORK42)
 	# 3. write insert after mark
 	# 4. remove mark
+	$(info Installing $(prog) to $(dest) ...)
 	sed -n '/^trap/,/not accessible/p' lib/liba.sh > $(insert_tmp)
 	mkdir -p -- $(destdir)
 	cat $(prog) \
@@ -208,6 +213,7 @@ install-comics-local:
 	    > $(dest)
 	chmod +x -- $(dest)
 	rm -f -- $(insert_tmp)
+	$(info done)
 
 uninstall:
 	$(info Removing documentation...)
@@ -229,6 +235,10 @@ distclean: clean
 
 debug:
 	$(info share: $(datadir) bin: $(bindir))
+	$(info Version 0: $(version0))
+	$(info Version 1: $(version1))
+	$(info Version 2: $(version2))
+	$(info Version 3: $(version3))
 	$(info Version: $(version))
 	$(info major version: $(major_version))
 	$(info minor version: $(minor_version))
