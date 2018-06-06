@@ -114,9 +114,20 @@ class OmicsArgParser(argparse.ArgumentParser):
                 pass
 
         try:
-            args.threads = project['threads']
-        except (TypeError, AttributeError, KeyError):
-            args.threads = DEFAULT_THREADS
+            args.threads
+        except AttributeError:
+            # constructed with threads=False
+            pass
+        else:
+            if args.threads is None:
+                try:
+                    args.threads = project['threads']
+                except (TypeError, AttributeError, KeyError):
+                    args.threads = DEFAULT_THREADS
+            else:
+                if args.threads <= 0:
+                    self.error('The number of threads given via --threads '
+                               'must be >=1')
 
         return args
 
