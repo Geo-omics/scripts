@@ -121,6 +121,8 @@ CPUS=2
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 info1 () { info "[$(basename "$PWD")] $1" ; }
+warning1 () { warning "[$(basename "$PWD")] $1" ; }
+error1 () { error "[$(basename "$PWD")] $1" ; }
 abort1 () { abort "[$(basename "$PWD")] $1" ; }
 
 # mangle verbosity args
@@ -171,11 +173,11 @@ clean_up () {
     # kill background
     j_long=$(jobs -l)
     if [[ -n $j_long ]]; then
-        warning "The QC pipeline did not finish properly"
-        warning "Still running background processes will be terminated, see errors below:"
+        warning1 "The QC pipeline did not finish properly"
+        warning1 "Still running background processes will be terminated, see errors below:"
     fi
     for j in $(jobs -p); do
-        error "Terminating $(echo "$j_long" | grep "$j")"
+        error1 "Terminating $(echo "$j_long" | grep "$j")"
         kill -s 15 "$j"
     done
     # clean temp data
@@ -373,7 +375,7 @@ for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
     if wait "$p"; then
        info1 "Done: ${wait_list[${pids[$p]}]}"
    else
-       error "${wait_list[${pids[$p]}]}: exit status $?, PID: $pid"
+       error1 "${wait_list[${pids[$p]}]}: exit status $?, PID: $pid"
    fi
 done
 
