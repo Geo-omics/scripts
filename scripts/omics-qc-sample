@@ -40,7 +40,7 @@ qc is part of the omics(1) tool chain.
 "
 CHECK_PROGS="fastqc scythe sickle interleave"
 SHORT_OPTIONS=a:,f:,r:,t:,T
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,trimmomatic,thread:,cpus:
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,trimmomatic,threads:,cpus:
 }
 
 handle_options () {
