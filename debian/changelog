@@ -1,3 +1,17 @@
+geo-omics-scripts (1.0.109-1) unstable; urgency=medium
+
+  * [comics] Reduce number of permission warning when upgrading an image
+  * Makefile: Fix install-comics-local goal when run as sudo+nfs
+  * Makefile: Print more info for install-comics-local target
+  * Makefile: Print version candidates in debug target
+  * Add plot_alignment script
+  * comics: Be more verbose about container building
+  * upload: Add option to only upload to google drive
+  * [qc] Implement optional trimming with Trimmomatic
+  * [omics] Fix arg parsing of the --threads option
+
+ -- Robert <heinro@cayman.earth.lsa.umich.edu>  Wed, 06 Jun 2018 16:00:26 -0400
+
 geo-omics-scripts (1.0.108-1) unstable; urgency=medium
 
   * [comics] Add image deployment function via --update
