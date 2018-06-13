@@ -24,6 +24,27 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
         if verbose:
             print(*msg, sep=sep, end=end, file=sys.stderr, flush=True)
 
+    if len(inputfiles) != len(set(inputfiles)):
+        # check for non-unique input files
+        raise RuntimeError('Found multiple occurrences of some input coverage '
+                           'file')
+
+    # generate sample ids from variable parts
+    ids = [list(i.parts) for i in inputfiles]
+    while True:
+        # strip common prefix
+        if len(set([i[0] for i in ids])) == 1:
+            ids = [i[1:] for i in ids]
+        else:
+            break
+    while True:
+        # strip common suffix
+        if len(set([i[-1] for i in ids])) == 1:
+            ids = [i[:-1] for i in ids]
+        else:
+            break
+    ids = [''.join(i) for i in ids]
+
     header = ['contig']
     if with_length:
         header.append('length')
@@ -47,16 +68,15 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
     ])
     info('done')
 
-    for i in inputfiles:
-        with i.open() as inf:
+    for path, sample_id in zip(inputfiles, ids):
+        with path.open() as inf:
             # check header
             head = inf.readline().strip().split('\t')
             if not head == ['Contig', 'Depth', 'bases_with_depth',
                             'contigLen', 'fraction_bases_with_depth']:
                 raise RuntimeError('Unexpected header found in {}'
-                                   ''.format(i.name))
+                                   ''.format(path))
 
-            sample_id = i.parts[0]
             info('Reading {}... '.format(sample_id), end='')
             header.append(sample_id)
 
@@ -87,7 +107,7 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
                     except ValueError as e:
                         raise RuntimeError(
                             'Failed to parse length field, not a number?: '
-                            'line: {}, file: {}'.format(line, i)
+                            'line: {}, file: {}'.format(line, path)
                         )
 
                     if out_data[contig]['length'] is None:
@@ -98,7 +118,7 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
                             raise RuntimeError(
                                 'Unexpected contig length found: {}\nwhole '
                                 'line: {}\nfile: {}'
-                                ''.format(line[3], line, i)
+                                ''.format(line[3], line, path)
                             )
 
                     try:
@@ -106,7 +126,7 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
                     except ValueError as e:
                         raise RuntimeError(
                             'Field contents is not a number: line: {}, file: '
-                            '{}'.format(line, i)
+                            '{}'.format(line, path)
                         )
 
                 # add mean coverage
@@ -146,9 +166,9 @@ if __name__ == '__main__':
         'inputfiles',
         metavar='FILE',
         nargs='+',
-        help='List of input coverage files.  Files should be in different '
-             'directories.  The first component of each path is taken to '
-             'identify the sample.'
+        help='List of input coverage files, on per sample. '
+             'The variable parts of these paths are used as'
+             'sample identifier.'
     )
     argp.add_argument(
         '-o', '--out',
