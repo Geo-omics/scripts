@@ -6,6 +6,24 @@ Geomicro Illumina Reads processing Pipeline
 :Online version: available as `google doc`_
 :Maintainer: Robert <heinro@umich.edu>
 
+Preface
+-------
+
+These notes document the best-practices of the University of Michigan
+Geomicrobiology group for processing meta-genomic sequencing data.  It is
+assumed that that reader has DNA sequencing data obtained from the Illumina
+HiSeq platform.  This document is intended to be descriptive and subject to
+ongoing revision.  Contributions and comments should be directed at the
+`maintainer`_.  This is a guide for newcomers as well as a reference for the
+more experienced.
+
+Other sources of information
+----------------------------
+
+    * The Bioinformatics Tutorial at the `Geomicrobiology Google Drive`_.
+    * The `um-microbiomics forum`_.
+
+
 Prerequisites
 -------------
 
@@ -423,3 +441,6 @@ Do this::
 .. _SILVA: https://www.arb-silva.de/
 .. _Trimmomatic: http://www.usadellab.org/cms/index.php?page=trimmomatic
 .. _Singularity container: http://singularity.lbl.gov/
+.. _Geomicrobiology Google Drive: https://drive.google.com/open?id=0B3q4ORuyGjkwfjV0Wjh4c1ZVOWVZem5XU1drNWVkeDMxMGZwcGdtd1BRYnc5Tm90VElhejA
+.. _maintainer: mailto:heinro@umich.edu
+.. _um-microbiomics forum: https://groups.google.com/forum/#!forum/um-microbiomics
