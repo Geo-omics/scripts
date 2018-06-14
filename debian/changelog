@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.110-1) unstable; urgency=medium
+
+  * [qc] Add sample name to more error/warning messages
+  * [binning] Drop assumption that sample directories are immediate subdirectories
+  * [doc] Add preface and links to external info sections to pipline manual
+  * [doc] Small tweaks to pipeline manual
+
+ -- Robert <heinro@med.umich.edu>  Thu, 14 Jun 2018 10:48:53 -0400
+
 geo-omics-scripts (1.0.109-1) unstable; urgency=medium
 
   * [comics] Reduce number of permission warning when upgrading an image
