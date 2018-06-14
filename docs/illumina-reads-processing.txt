@@ -27,17 +27,16 @@ Other sources of information
 Prerequisites
 -------------
 
-    #. Have a user account on flux (with high-mem allocation), vondamm, or cayman
+    #. Have a user account on FLUX (with high-mem allocation), or the Geomicrobiology servers
     #. Have access to long-term data storage
     #. Log into a terminal session on one of the servers
-    #. Have the :doc:`omics <omics>` module loaded (see next section)
 
 Working on FLUX
 ---------------
 
 Environment setup
 """"""""""""""""""
-On FLUX, running this in your terminal's shell will set up you environment::
+On FLUX, running this in your terminal's shell will set up your environment::
 
     $ module use /dept/geology/geomicro/data9/flux/modulefiles
     $ module load geomicro/omics
