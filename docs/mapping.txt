@@ -30,6 +30,11 @@ Options
     Chop up contigs of assembly before mapping.  This should be done before
     binning with CONCOCT.
 
+.. option:: --chunk-size N
+
+    Size of chunks for chopping, the default is $DEFAULT_CHUNK_SIZE,
+    implies ``--chop``.
+
 .. option:: -f, --fwd-reads FILE
 
     Fastq file with either forward reads or single-end reads, by default this
