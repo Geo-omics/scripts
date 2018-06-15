@@ -222,7 +222,7 @@ cd "$OUT_DIR"
 
 info "Aligning reads and processing alignments..."
 info "  + Alignment log run written to $log"
-printf "\n[Running bowtie2]\n" > "$log"
+printf "\\n[Running bowtie2]\\n" > "$log"
 bt2_args=(
     --mm
     --threads "$CPUS"
@@ -252,7 +252,7 @@ bowtie2 "${bt2_args[@]}" 2>"$log" \
     | samtools index - "$sortBam.bai" \
 
 info "Calculating Coverage..."
-echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
+echo -e 'Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth' > "$bedOut"
 genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
 info "Result at $bedOut"
 
