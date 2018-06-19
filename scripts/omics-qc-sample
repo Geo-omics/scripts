@@ -196,6 +196,7 @@ clean_up () {
     [[ -v tmpd ]] || exit 0
     debug "$(ls -Rlrth "$tmpd")"
     rm -rf -- "$tmpd"
+    debug "Cleanup done"
 }
 trap clean_up EXIT
 tmpd=$(mktemp -d)
