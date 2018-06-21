@@ -57,6 +57,7 @@ EXTRA_DIST = \
 
 data_files = \
 	phylosiftrc \
+	TruSeq3-PE-2+omics.fa \
 
 doc_files = COPYRIGHT README.md
 
