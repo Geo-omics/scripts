@@ -198,11 +198,11 @@ $MEGAHIT || [ "$ASSEMBLY_LEVEL" == contig ] || [ "$ASSEMBLY_LEVEL" == scaffold ]
 run_assembly=true
 if [ -n "$ASSEMBLY" ]; then
     if [ -f "$ASSEMBLY" ]; then
-	assembly=$ASSEMBLY
-	out=${WORK_DIR}
-	run_assembly=false
+        assembly=$ASSEMBLY
+        out=${WORK_DIR}
+        run_assembly=false
     else
-	abort "Existing assembly not found: $ASSEMBLY"
+        abort "Existing assembly not found: $ASSEMBLY"
     fi
 else
     # check if reads exists before doing anything
@@ -212,28 +212,22 @@ else
     done
 
     if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
+        reads=("${SAMPLE_DIRS[@]/%//$READS}")
         if $MEGAHIT; then
             # make comma-separated list of read files for megahit
-            reads_=("${SAMPLE_DIRS[@]/%//$READS}")
-            reads=$(echo "${reads_[@]}" | sed -r 's/ /,/g')
+            # This assumes no spaces in file or dir names
+            reads_arg=$(echo "${reads[@]}" | sed -r 's/ /,/g')
         else
             # idba requires a single read file
-            echo "Concatenating reads..."
-            reads=$(basename -s .fa -s .fasta "$READS").cat.fa
-            if [ -e "$reads" ]; then
-                $FORCE || abort "Concatenated reads file $reads exists.  Use --force to overwrite."
-                $RM "$reads"
-            fi
-            for i in "${SAMPLE_DIRS[@]}"; do
-                cat "$i/$READS" >> "$reads"
-                echo "  $i/$READS"
-            done
-            info "Reads were saved to $reads, you may delete this file after assembly."
+            info "Setting up piping of reads into IDBA_UD..."
+            reads_arg=$(mktemp -u)
+            mkfifo --mode=600 "$reads_arg"
+            cat "${reads[@]}" > "$reads_arg" &
         fi
     else
         # descend into single sample directory or working directory, output goes here, too
         cd "${SAMPLE_DIRS[0]}"
-        reads=$READS
+        reads_arg=$READS
     fi
 
     if [ -d "$out" ]; then
@@ -256,12 +250,13 @@ fi
 if $run_assembly; then
     info "Assembling..."
     if $MEGAHIT; then
-	$MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
-	megahit -o "$out" --12 "$reads" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
+        $MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
+        megahit -o "$out" --12 "$reads_arg" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
     else
-	$MKDIR -p "$out"
-	echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-	idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+        $MKDIR -p "$out"
+        echo idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+        idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+        rm -rf -- "$reads_arg"  # remove named pipe
     fi
     # make convenience (hard) link
     $LN -f "$assembly" "$ASSEMBLY_NAME".fa
@@ -278,11 +273,11 @@ if $RUN_QUAST && [[ -n $QUAST ]]; then
         quast_opts=(-l "Assembly" "$assembly")
     fi
     if $QUAST --version 2>&1 | grep -q '^QUAST v4'; then
-	# Quast version >= 4 available
-	QUAST_T_OPT=-t
+        # Quast version >= 4 available
+        QUAST_T_OPT=-t
     else
-	# assume Quast version 2 or so available (on vondamm only?)
-	QUAST_T_OPT=-T
+        # assume Quast version 2 or so available (on vondamm only?)
+        QUAST_T_OPT=-T
     fi
     quast_out="$out/QUAST_RESULTS"
     $QUAST -f --mgm $QUAST_T_OPT "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
@@ -313,14 +308,14 @@ fi
 
 if $RUN_PHYLOSIFT; then
     if [ -f "$PHYLOSIFTRC" ]; then
-	info "Will use $PHYLOSIFTRC as config file for PhyloSift"
+        info "Will use $PHYLOSIFTRC as config file for PhyloSift"
     else
-	abort "Missing Phylosift configuration file, file not found: $PHYLOSIFTRC -- use --phylosiftrc to specify an alternative configuration that tells Phylosift where to find its reference data"
+        abort "Missing Phylosift configuration file, file not found: $PHYLOSIFTRC -- use --phylosiftrc to specify an alternative configuration that tells Phylosift where to find its reference data"
     fi
     psout="$out/PS"
     if [ -d "$psout" ]; then
-	info "Erasing previous PhyloSift results..."
-	$RM -r -- "$psout"
+        info "Erasing previous PhyloSift results..."
+        $RM -r -- "$psout"
     fi
     info "Running PhyloSift..."
     phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"

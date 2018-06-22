@@ -9,12 +9,17 @@ set -eEu
 
 # shellcheck disable=SC2034
 {
+DEFAULT_CHUNK_SIZE=10000
 USAGE="[OPTIONS]..."
 HELP="mapping script"
 ARG_HELP="
   -a, --assembly FILE   Fasta file assembly i.e. contigs or scaffolds
   -c, --chop		Chop up assembly contigs into even size before
-                        mapping
+                        mapping.  It is suggested to use this if CONCOCT binning
+                        is used downstream. The chopped-up assembly is saved in
+                        a fasta file that includes 'chop' as part of the name.
+      --chunk-size N    Size of chops, the default is $DEFAULT_CHUNK_SIZE, implies
+                        --chop
       --index-only      Index the assembly and stop.  Useful when processing
                         a joint assembly from several samples.  In this work-
                         flow run --index-only once and then re-use the index
@@ -32,7 +37,7 @@ ARG_HELP="
   -o, --out-dir DIR     Name of output directory, default: MAPPING
 "
 SHORT_OPTIONS=a:cf:i:o:r:x:
-LONG_OPTIONS=chop,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:
+LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:
 CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 }
 
@@ -42,6 +47,7 @@ CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 # chop up assembly into pieces of equal size,
 # should be done when using CONCOCT
 CHOP_ASSEMBLY=false
+CHUNK_SIZE=$DEFAULT_CHUNK_SIZE
 #
 CPUS=4
 #
@@ -74,7 +80,11 @@ handle_options () {
 	    (-c|--chop)
 		CHOP_ASSEMBLY=true
 		return 1;;
-	    (--cpus)
+            (--chunk-size)
+                CHOP_ASSEMBLY=true
+                CHUNK_SIZE=$2
+                return 2;;
+            (--cpus)
 	        CPUS="$2"
 	        return 2;;
 	    (-f|--fwd-reads)
@@ -173,7 +183,7 @@ if $CHOP_ASSEMBLY; then
        abort "File exists: $chunk_file, use --force to override"
     fi
     info "Chopping assembly into chunks..."
-    chop-contigs --input "$assembly" --output "$chunk_file"
+    chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
     assembly=$(realpath "$chunk_file")
     name=${name}.chop
 fi
@@ -212,7 +222,7 @@ cd "$OUT_DIR"
 
 info "Aligning reads and processing alignments..."
 info "  + Alignment log run written to $log"
-printf "\n[Running bowtie2]\n" > "$log"
+printf "\\n[Running bowtie2]\\n" > "$log"
 bt2_args=(
     --mm
     --threads "$CPUS"
@@ -242,7 +252,7 @@ bowtie2 "${bt2_args[@]}" 2>"$log" \
     | samtools index - "$sortBam.bai" \
 
 info "Calculating Coverage..."
-echo -e "Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth" > "$bedOut"
+echo -e 'Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth' > "$bedOut"
 genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
 info "Result at $bedOut"
 
