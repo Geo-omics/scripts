@@ -212,28 +212,22 @@ else
     done
 
     if [ ${#SAMPLE_DIRS[@]} -gt 1 ]; then
+        reads=("${SAMPLE_DIRS[@]/%//$READS}")
         if $MEGAHIT; then
             # make comma-separated list of read files for megahit
-            reads_=("${SAMPLE_DIRS[@]/%//$READS}")
-            reads=$(echo "${reads_[@]}" | sed -r 's/ /,/g')
+            # This assumes no spaces in file or dir names
+            reads_arg=$(echo "${reads[@]}" | sed -r 's/ /,/g')
         else
             # idba requires a single read file
-            echo "Concatenating reads..."
-            reads=$(basename -s .fa -s .fasta "$READS").cat.fa
-            if [ -e "$reads" ]; then
-                $FORCE || abort "Concatenated reads file $reads exists.  Use --force to overwrite."
-                $RM "$reads"
-            fi
-            for i in "${SAMPLE_DIRS[@]}"; do
-                cat "$i/$READS" >> "$reads"
-                echo "  $i/$READS"
-            done
-            info "Reads were saved to $reads, you may delete this file after assembly."
+            info "Setting up piping of reads into IDBA_UD..."
+            reads_arg=$(mktemp -u)
+            mkfifo --mode=600 "$reads_arg"
+            cat "${reads[@]}" > "$reads_arg" &
         fi
     else
         # descend into single sample directory or working directory, output goes here, too
         cd "${SAMPLE_DIRS[0]}"
-        reads=$READS
+        reads_arg=$READS
     fi
 
     if [ -d "$out" ]; then
@@ -257,11 +251,12 @@ if $run_assembly; then
     info "Assembling..."
     if $MEGAHIT; then
 	$MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
-	megahit -o "$out" --12 "$reads" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
+	megahit -o "$out" --12 "$reads_arg" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
     else
 	$MKDIR -p "$out"
-	echo idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-	idba_ud -o "$out" -r "$reads" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+	echo idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+	idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+    rm -rf -- "$reads_arg"  # remove named pipe
     fi
     # make convenience (hard) link
     $LN -f "$assembly" "$ASSEMBLY_NAME".fa
