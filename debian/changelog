@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.111-1) unstable; urgency=medium
+
+  * [mapping] Expose and pass --chunk-size option to chop-contigs script
+  * [qc] Provide default adapter file for QC with Trimmomatic
+  * [asm] Speed-up input data reading into IDBA_UD
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Fri, 22 Jun 2018 11:36:23 -0400
+
 geo-omics-scripts (1.0.110-1) unstable; urgency=medium
 
   * [qc] Add sample name to more error/warning messages
