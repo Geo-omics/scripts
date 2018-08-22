@@ -1,3 +1,12 @@
+geo-omics-scripts (1.0.112-1) unstable; urgency=medium
+
+  * [qc] Add debug output
+  * [docs] Pipeline manual updated
+  * [comics] Fix use of -w option with sudo/PWD/permission interaction
+  * [dedup] Deduplicate only within the same flowcell/lane
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Wed, 22 Aug 2018 16:24:46 -0400
+
 geo-omics-scripts (1.0.111-1) unstable; urgency=medium
 
   * [mapping] Expose and pass --chunk-size option to chop-contigs script
