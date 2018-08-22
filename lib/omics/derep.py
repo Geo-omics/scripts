@@ -13,11 +13,26 @@ ST_PLUS = 3
 ST_SCORE = 4
 
 
+def hash_read_pair(fwd_head, fwd_seq, rev_head='', rev_seq=''):
+    """
+    Hash function for reads, reverse read may be omitted
+
+    Uses built-in hash of flowcell + lane + sequence
+    """
+    return b':'.join(
+        fwd_head.strip().split(b':')[:4] +
+        [fwd_seq.strip()] +
+        rev_head.strip().split(b':')[:4] +
+        [rev_seq.strip()]
+    ).__hash__()
+
+
 def find_duplicates(fwd_in, rev_in=None, *, check=False):
     """
     Find duplicate reads in given fastq files
 
-    Uses hash of sequence with newlines to detect replicated reads.  The
+    Calculates hash of concatenation of flowcell + lane part of header with
+    whitespace-trimmed sequence string to detect replicated reads.  The
     file offsets of each header-@ of forward reads is recorded and semi-ordered
     such that the first offset listed belongs to the forward read of the
     highest quality paired duplicate read.
@@ -29,6 +44,8 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
     data = {}
     fwd_read_pos = 0
     paired_hash = None
+    fwd_head = None
+    rev_head = None
     total_count = 0
     for fwd_line, rev_line in zip(fwd_in, rev_in):
         if state is ST_HEAD:
@@ -41,9 +58,12 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                 if rev_line[0] != ord('@'):
                     raise RuntimeError('Expected fastq header in {}: {}'
                                        ''.format(rev_in.name, rev_line))
+            fwd_head = fwd_line
+            rev_head = rev_line
             state = ST_SEQ
         elif state is ST_SEQ:
-            paired_hash = (fwd_line + rev_line).__hash__()
+            paired_hash = hash_read_pair(fwd_head, fwd_line,
+                                         rev_head, rev_line)
             state = ST_PLUS
         elif state is ST_PLUS:
             if check and not fwd_line == rev_line == b'+\n':
@@ -115,12 +135,16 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
 
     state = ST_HEAD
     pos = fwd_in.tell()
+    if dupe_file is not None:
+        fwd_head = rev_head = None
     for fwd_line, rev_line in zip(fwd_in, rev_in):
         if pos in refuse:
             if state is ST_HEAD and dupe_file is not None:
-                dupe_file.write(fwd_line.rstrip() + b'\t')
+                fwd_head = fwd_line
+                rev_head = rev_line
+                dupe_file.write(fwd_head.rstrip() + b'\t')
             if state is ST_SEQ and dupe_file is not None:
-                hash_ = (fwd_line + rev_line).__hash__()
+                hash_ = hash_read_pair(fwd_head, fwd_line, rev_head, rev_line)
                 hash_ = hash_.to_bytes(length=8, byteorder='big', signed=True)
                 hash_ = hexlify(hash_)
                 dupe_file.write(hash_ + b'\n')

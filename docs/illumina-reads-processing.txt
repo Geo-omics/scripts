@@ -208,10 +208,10 @@ Preparation
 
 Input data for the pipeline and intermediate files should be stored temporarly
 in a fast, sufficiently large storage area.  This is not necessarily where you
-keep your raw data.  It is recommended to create and use a work directory such
-as :file:`/fast/{username}` on vondamm and cayman and
-:file:`/scratch/{flux_allocation}/{username}` on flux.  These directories
-should be cleaned up after use so other users have the space available.
+keep your raw data.  On FLUX you would work under
+:file:`/scratch/{flux_allocation}/{username}` and move the results somewhere
+else when you're done. The Geomicrobiology servers don't have a separate
+scratch partition and you should work in your home directory.
 
 The QC step assumes the raw data to be available in uncompressed FASTQ format,
 one file per read direction and each sample's data in its own directory.  The
@@ -224,7 +224,7 @@ fastq files and put them into appropriately named directories::
 Quality control module - :program:`qc`
 --------------------------------------
 
-To ensure a computationally manageable assembly at Van acceptable level of
+To ensure a computationally manageable assembly at an acceptable level of
 quality the pipeline detailed below can be used.
 
 Initial quality assessment
@@ -237,27 +237,12 @@ overall quality of the data.
 
 Dereplicate Reads
 """""""""""""""""
-[outdated] After concatenating the fastq files, we dereplicate the fastq to compress
-the size of the file. We do this using the :program:`dereplicate` script. This
-script goes through the fastq file and clusters together identical sequences
-such that all sequences that are 100% identical over 100% lengths form 1
-cluster. The script also makes the sequence in a cluster that has the highest
-quality score the 'representative' for the cluster.
-
-Output:
-
-
-The script :program:`dereplicate` will create 2 files as its output, the
-".clust" and the ".clust.list". These files are explained below.
-
-:The ".clust" file:
-    This file contains the cluster number, cluster size and the names of all
-    sequences in that particular cluster. The third column in the file is the
-    representative for each cluster. The file is tab-delimited.
-
-:The ".clust.list" file:
-    This file contains a list of all representative sequences in the fastq
-    file. The file is tab-delimited.
+Due to limits of the Illumina sequencing technology an DNA fragment may be
+"replicated" and sequenced multiple times, resulting in a number of identical
+reads beyond what one expects by pure change.  This step identifies sets of
+identical reads per sample (both forward and reverse reads, respectively, must
+match exacly over the whole length) and retains only the one with the highest
+average quality score.
 
 Adapter Removal
 """""""""""""""
@@ -265,15 +250,16 @@ Adapters used at the library prep stage often make their way into the final
 reads. Since these read fragments are not real biological signals, it becomes
 important to screen them out. This is where adapter removal comes handy. If you
 know the adapters that were used, you can provide an adapter file and tell the
-:program:`omics qc` script to use it.  Otherwise a standand adapter file that
-is shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool is used to
-screen for adapters.
+:program:`omics qc` script to use it.  Otherwise a standard adapter file that
+is shipped by the `Trimmomatic`_ tool is used.  The `Scythe`_ tool or
+Trimmomatic can be used to screen for adapters.
 
 Trim the Data
 """""""""""""
-Illumina reads often contain regions of low quality which can negatively
-impact assembly. `Sickle`_ is an adaptive read trimmer which uses a windowed
-approach to remove regions of low quality from all reads.
+Illumina reads often contain regions of low quality, usually at the beginning
+and the end, which can negatively impact assembly. Both, the Trimmomatic tool
+and `Sickle`_ are adaptive read trimmers which use a windowed approach to
+remove regions of low quality from all reads.
 
 Final Quality Assessment
 """"""""""""""""""""""""
@@ -329,7 +315,8 @@ assemblies.
 
 Assemble
 """"""""
-As of October 2015, `IDBA_UD`_ remains the assembler of choice. Once the data is
+To assemble the QC'd reads into contigs the pipeline offers the choice between the 
+`IDBA_UD`_ and the `MEGAHIT`_ assemblers. Once the data is
 interleaved, IDBA uses just the interleaved reads for assembly. One merit of
 using IDBA_UD over other assemblers such as velvet is that, you may provide
 IDBA with a range of *k*-mer sizes (default: 58 <= *k* <= 92) and a step size
@@ -400,7 +387,7 @@ Mapping
 
 After performing an assembly, we can align the reads used to the create the
 assembly with the contigs produced by the assembly. This allows us to calculate
-how many reads recruit to each contig.  This preparation for the binning step
+how many reads recruit to each contig.  This prepares for the binning step
 but also allows visualization via :program:`igv`.
 
 Mapping has to occur separately for each sample and before the actual mapping
@@ -443,3 +430,4 @@ Do this::
 .. _Geomicrobiology Google Drive: https://drive.google.com/open?id=0B3q4ORuyGjkwfjV0Wjh4c1ZVOWVZem5XU1drNWVkeDMxMGZwcGdtd1BRYnc5Tm90VElhejA
 .. _maintainer: mailto:heinro@umich.edu
 .. _um-microbiomics forum: https://groups.google.com/forum/#!forum/um-microbiomics
+.. _MEGAHIT: https://github.com/voutcn/megahit
