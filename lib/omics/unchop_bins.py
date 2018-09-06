@@ -1,7 +1,9 @@
 """
 Module dealing with chopped bins.
 """
+import argparse
 from itertools import groupby
+from pathlib import Path
 import sys
 
 
@@ -159,3 +161,23 @@ def main(asm, chopped_asm, bin_path):
     print('[done]')
 
     return contig_info, bin_info
+
+
+if __name__ == '__main__':
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        '-a', '--assembly',
+        type=argparse.FileType(),
+        help='The (presumely) chopped assembly in fasta format',
+    )
+    argp.add_argument(
+        '-b', '--bin-path',
+        help='Directory were bins are stored',
+    )
+    args = argp.parse_args()
+    args.bin_path = Path(args.bin_path)
+    args.assembly.close()
+    args.assembly = Path(args.assembly.name)
+
+    c, _ = main(None, args.assembly, args.bin_path)
+    print_split_contigs(c)
