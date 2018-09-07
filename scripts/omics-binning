@@ -6,9 +6,12 @@ set -eE
 USAGE="[OPTIONS]... [SAMPLEDIRS]..."
 HELP="Implementation of the binning step of the Geomicro Illumina Reads Pipeline"
 ARG_HELP="
-  -a, --assembly FILE       The fasta file containing the assembled contigs
-  --concoct                 Use the CONCOCT binner.  This is the default
-  --metabat                 Use the MetaBAT binner.
+  -a, --assembly FILE           The fasta file containing the whole assembled contigs
+  -u, --chopped-assembly FILE   The fasta file containing the chopped-up contigs.
+                                The contigs in this file will be binned if it is given,
+                                otherwise the contigs in the file given by -a
+  --concoct                     Use the CONCOCT binner.  This is the default
+  --metabat                     Use the MetaBAT binner.
 
  Options for binning with CONCOCT:
 
@@ -36,15 +39,17 @@ ARG_HELP="
   -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
-CHECK_PROGS="chop-contigs merge-coverage concoct"
-SHORT_OPTIONS=a:c:o:
-LONG_OPTIONS=assembly:,bam-path:,concoct,cpus:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
+SHORT_OPTIONS=a:c:o:u:
+LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
 	(-a|--assembly)
-	    ASSEMBLY="$2"
+	    REAL_ASSEMBLY="$2"
+	    return 2;;
+	(-u|-chopped-assembly)
+	    CHOPPED_ASSEMBLY="$2"
 	    return 2;;
         (--bam-path)
             BAM_PATH="$2"
@@ -82,7 +87,8 @@ handle_options () {
 }
 
 # Define defaults for cmdline options here
-ASSEMBLY=contigs.fa
+REAL_ASSEMBLY=assembly.fa
+CHOPPED_ASSEMBLY=
 # default will be derived from assembly name (see below)
 BAM_PATH=
 #
@@ -113,7 +119,14 @@ if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
 fi
 
 # your script comes here --->
-assembly=$(readlink -f "$ASSEMBLY")
+if [ -n "$CHOPPED_ASSEMBLY" ]; then
+    # bin via chopped assembly if given
+    using_chopped_asm=true
+    assembly=$(readlink -f "$CHOPPED_ASSEMBLY")
+else
+    using_chopped_asm=false
+    assembly=$(readlink -f "$REAL_ASSEMBLY")
+fi
 outdir=$(readlink -f "$OUTDIR")
 
 name=$(basename "$assembly")
@@ -151,7 +164,6 @@ if [ -d "$outdir" ]; then
 fi
 $MKDIR -p -- "$outdir"
 
-chopbindir=$outdir/$name.bins
 if [[ $name =~ .chop$ ]]; then
     # name follows omics pipeline conventions, remove .chop again
     bindir=$outdir/${name%.chop}.bins
@@ -178,9 +190,7 @@ if $USE_CONCOCT; then
     [[ -z $CPUS ]] || c_args+=(-t "$CPUS")
     [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
     concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
-
-    info "Compiling bins into fasta files..."
-    bins2fasta -o "$chopbindir" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
+    binstable=$outdir/clustering_gt1000.csv
 fi
 
 if $USE_METABAT; then
@@ -193,22 +203,16 @@ if $USE_METABAT; then
         done
         assembly=$(realpath "$assembly")
         cd "$outdir"
-        runMetaBat.sh -t "$CPUS" "$assembly" "${bams[@]}"
-        mbat_bindir=$(basename "$assembly").metabat-bins${CPUS}
-        if [ -d "$mbat_bindir" ]; then
-            ln -sf "$mbat_bindir" "$chopbindir"
-        else
-            warning "Failed to detect output directory with bins, downstream analysis may fail."
-        fi
+        runMetaBat.sh -t "$CPUS" --noBinOut --saveCls "$assembly" "${bams[@]}"
     )
+    binstable=$outdir/$(basename "$assembly").metabat-bins${CPUS}/bin
 fi
 
-ls "$chopbindir"/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
-
-info "Putting chopped-up contigs back together..."
-unchop-contigs -o "$bindir" "$chopbindir"/*.fa
-info "Bins with (presumely) chopped contigs in $chopbindir"
-info "Bins with glued-back-together contigs in $bindir"
+info "Compiling bins into fasta files at $bindir ..."
+b2fargs=(-o "$bindir" "$VERBOSE_FLAG" -s fa "$binstable")
+using_chopped_asm && b2fargs+=("$(realpath "$REAL_ASSEMBLY")")
+b2fargs+=("$assembly")
+bins2fasta "${b2fargs[@]}"
 
 info "Running CheckM..."
 checkm lineage_wf \
