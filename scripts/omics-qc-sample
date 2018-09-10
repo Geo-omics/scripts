@@ -26,8 +26,6 @@ ARG_HELP="
       --no-dereplicate  Skip the de-replication step
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
-                        interleaved fastq will still be build.  This option is
-                        redundant when --no-interleaved is used.
                         interleaved fastq will still be build.
   -S, --scythe-sickle   Use the former way of QC with scythe and sickle.  The default
                         is to use Trimmomatic for adapter and quality trimming

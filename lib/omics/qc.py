@@ -26,7 +26,6 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
     if adapters:
         args += ['--adapters', adapters]
     not no_dereplicate or args.append('--no-dereplicate')
-    not no_interleave or args.append('--no-interleave')
     not no_fasta_interleave or args.append('--no-fasta-interleave')
     not scythe_sickle or args.append('--scythe-sickle')
     if threads is not None:
@@ -45,9 +44,8 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
 
 
 def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
-       no_dereplicate=False, no_interleave=False,
-       no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
-       scythe_sickle=False,
+       no_dereplicate=False, no_fasta_interleave=False,
+       verbosity=DEFAULT_VERBOSITY, scythe_sickle=False,
        threads=DEFAULT_THREADS, project=None):
     """
     Do quality control on multiple samples
@@ -80,7 +78,6 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
                 adapters=adapters,
                 keep_all=keep_all,
                 no_dereplicate=no_dereplicate,
-                no_interleave=no_interleave,
                 no_fasta_interleave=no_fasta_interleave,
                 scythe_sickle=scythe_sickle,
                 verbosity=verbosity,
@@ -144,11 +141,6 @@ def main():
         help='Option to skip the de-replication step',
     )
     argp.add_argument(
-        '--no-interleave',
-        action='store_true',
-        help='Option to skip building the interleaved reads file',
-    )
-    argp.add_argument(
         '--no-fasta-interleave',
         action='store_true',
         help='Skip building the interleaved fasta file, interleaved fastq '
@@ -172,7 +164,6 @@ def main():
             adapters=args.adapters,
             keep_all=args.keep_all,
             no_dereplicate=args.no_dereplicate,
-            no_interleave=args.no_interleave,
             no_fasta_interleave=args.no_fasta_interleave,
             scythe_sickle=args.scythe_sickle,
             verbosity=args.verbosity,
