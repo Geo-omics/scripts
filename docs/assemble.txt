@@ -14,10 +14,10 @@ Description
 ===========
 
 This script implements the assembly step of the Geomicro Illumina Reads
-processing Pipeline.  It uses :command:`idba_ud` for the assembly and
-parameters for k-mer range and step size can be passed along.  The script will
-check the quality of the assembly with QUAST, attempt to classify contigs, and
-run PhyloSift on the assembly.
+processing Pipeline.  It uses :command:`megahit` or :command:`idba_ud` for the
+assembly and parameters for k-mer range and step size can be passed along.  The
+script will check the quality of the assembly with QUAST, attempt to classify
+contigs, and run PhyloSift on the assembly.
 
 
 Options
@@ -41,6 +41,10 @@ Options
     Overwrite existing results, by default will exit with an error message when
     the output file exist.
 
+.. option:: --idba-ud
+
+    Use the IDBA_UD assembler instead of the default MEGAHIT
+
 .. option:: --mink=N, 
 
     parameter for minimum k-mer size
@@ -60,7 +64,7 @@ Options
 
 .. option:: --megahit
 
-    Use the MEGAHIT assembler. The default is to use IDBA_UD.
+    Use the MEGAHIT assembler. This is the default.
 
 .. option:: --out PATH
 
