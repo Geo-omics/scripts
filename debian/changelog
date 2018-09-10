@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.113-1) unstable; urgency=medium
+
+  * [mapping] Fix re-using bowtie index made from large assemblies
+  * Add new upchop tools module
+  * [asm] Make MEGAHIT the default assembler
+  * [qc] Make Trimmomatic the default, allow old way with -S option
+  * [qc] Update docs, remove help for obsolete options
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Mon, 10 Sep 2018 10:56:30 -0400
+
 geo-omics-scripts (1.0.112-1) unstable; urgency=medium
 
   * [qc] Add debug output
