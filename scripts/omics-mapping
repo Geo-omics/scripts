@@ -202,7 +202,7 @@ sam_sort_tmp=/tmp
 #########      PIPELINE       #########
 #######################################
 
-if ls "${index_dir}/${name}".[0-9]*.bt2 &> /dev/null; then
+if ls "${index_dir}/${name}".[0-9]*.bt2* &> /dev/null; then
     info "Re-using existing index at $index_dir with base name $name"
 else
     info "Generating Index..."

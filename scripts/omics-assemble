@@ -20,13 +20,14 @@ ARG_HELP="
                           The default is 'assembly'.
       --cpus N	          How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
+      --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
       --maxk N            min k parameter, must be odd with --megahit
       --mink N            max k parameter, must be odd with --megahit
       --step N            k steps parameter, must be even with --megahit
       --level LEVEL       Specifies the assembly level to use for downstream analysis.
                           Can be either contig (the default) or scaffold.  This is
 			  ignored when using --megahit
-      --megahit           Use MEGAHIT assembler, default is to use IDBA_UD
+      --megahit           Use MEGAHIT assembler, this is the default
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
       --reads FILE        Interleaved reads file, by default this is 'int.good.fasta'
@@ -38,7 +39,7 @@ MORE_HELP="
 The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for MEGAHIT.
 "
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
 }
 
 handle_options () {
@@ -58,6 +59,9 @@ handle_options () {
 	    return 2;;
 	(--force)
 	    FORCE=true
+	    return 1;;
+	(--idba-ud)
+	    MEGAHIT=false
 	    return 1;;
 	(--maxk)
 	    MAXK="$2"
@@ -112,8 +116,8 @@ ASSEMBLY_NAME=assembly
 CPUS=4
 # Overwrite existing files if `true`
 FORCE=false
-# Use megahit, if false, then use idba_ud (the default)
-MEGAHIT=false
+# Use megahit by default, if false, then use idba_ud
+MEGAHIT=true
 # PhyloSift run control file
 PHYLOSIFTRC="$(dirname "$0")/../share/geo-omics-scripts/phylosiftrc"
 # interleaved reads as made by qc script

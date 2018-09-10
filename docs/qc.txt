@@ -14,11 +14,24 @@ Description
 ===========
 
 The :program:`omics qc` script takes raw reads from multiple samples and runs
-them past quality assessment (FastQC), dereplication, adapter removal (Scythe),
-and quality-trimming (Sickle) steps and then prepares a FASTA-formatted
-interleaved reads file that can be used as input for the IDBA assembler.  A
-second run of FastQC allows a before-after comparison to see if these steps led
-to an improvement in the quality of the data.
+them past quality assessment (FastQC), dereplication, adapter removal and
+quality-trimming with Trimmomatic (or alternatively with Scythe and Sickle)
+steps and then prepares a FASTA-formatted interleaved reads file that can be
+used as input for the assembler.  A second run of FastQC allows a before-after
+comparison to see if these steps led to an improvement in the quality of the
+data.
+
+
+positional arguments
+====================
+
+.. option:: samples
+
+    List of directories, one per sample that contain the sample's reads. The
+    default is to take the current directory and process a single sample. The
+    names of the reads files must be fwd.fastq and rev.fastq, currently this
+    can not be set manually. Use the omics-qc-sample script directly to
+    specify filenames, omics-qc is just a wrapper after all.
 
 
 Options
@@ -39,23 +52,18 @@ Options
     Keep all intermediate files, by default some not-so-important intermediate
     results will be deleted to save disk space
 
-.. option:: --less-mem
-
-    This option will reduce the dominating memory requirements for the
-    de-replication step by half, typically, and double the computation time.
-
 .. option:: --no-dereplicate
 
     Option to skip the de-replication step
-
-.. option:: --no-interleave
-
-    Option to skip building the interleaved reads file
 
 .. option:: --no-fasta-interleave
 
     Skip building the interleaved fasta file, interleaved fastq files will
     still be build.
+
+.. option:: -S, --scythe-sickle
+
+    Use scythe + sickle instead of (the default) Trimmomatic
 
 .. option:: --cpus N, --threads N, -t N
     Number of threads / CPUs to employ
