@@ -28,8 +28,9 @@ ARG_HELP="
                         Skip building the interleaved fasta file,
                         interleaved fastq will still be build.  This option is
                         redundant when --no-interleaved is used.
-  -T, --trimmomatic     Use Trimmomatic for adapter and quality trimming.  By default
-                        scythe ans sickle are used.
+                        interleaved fastq will still be build.
+  -S, --scythe-sickle   Use the former way of QC with scythe and sickle.  The default
+                        is to use Trimmomatic for adapter and quality trimming
   -t N, --threads N, --cpus N
                         Number of parallel threads to employ (for Trimmomatic)
 "
@@ -40,9 +41,8 @@ generated files.
 
 qc is part of the omics(1) tool chain.
 "
-CHECK_PROGS="fastqc scythe sickle interleave"
-SHORT_OPTIONS=a:,f:,r:,t:,T
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,trimmomatic,threads:,cpus:
+SHORT_OPTIONS=a:,f:,r:,t:,S
+LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,scythe-sickle,threads:,cpus:
 }
 
 handle_options () {
@@ -72,8 +72,8 @@ handle_options () {
 	    (--no-fasta-interleave)
 	        INTERLEAVE_FASTA=false
 	        return 1;;
-            (-T|--trimmomatic)
-                TRIMMOMATIC=true
+            (-S|--scythe-sickle)
+                TRIMMOMATIC=false
                 return 1;;
             (-t|--threads|--cpus)
                 CPUS=$2
@@ -115,8 +115,9 @@ KEEPALL=false
 #
 DEREPLICATION=true
 INTERLEAVE_FASTA=true
-# Use sickle/scythe by default
-TRIMMOMATIC=false
+# Use Trimmomatic by default
+# if this is false, then scythe and sickle will be used, this is the old way
+TRIMMOMATIC=true
 #
 CPUS=2
 

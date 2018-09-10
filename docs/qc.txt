@@ -14,11 +14,12 @@ Description
 ===========
 
 The :program:`omics qc` script takes raw reads from multiple samples and runs
-them past quality assessment (FastQC), dereplication, adapter removal (Scythe),
-and quality-trimming (Sickle) steps and then prepares a FASTA-formatted
-interleaved reads file that can be used as input for the IDBA assembler.  A
-second run of FastQC allows a before-after comparison to see if these steps led
-to an improvement in the quality of the data.
+them past quality assessment (FastQC), dereplication, adapter removal and
+quality-trimming with Trimmomatic (or alternatively with Scythe and Sickle)
+steps and then prepares a FASTA-formatted interleaved reads file that can be
+used as input for the assembler.  A second run of FastQC allows a before-after
+comparison to see if these steps led to an improvement in the quality of the
+data.
 
 
 Options
@@ -56,6 +57,10 @@ Options
 
     Skip building the interleaved fasta file, interleaved fastq files will
     still be build.
+
+.. option:: -S, --scythe-sickle
+
+    Use scythe + sickle instead of (the default) Trimmomatic
 
 .. option:: --cpus N, --threads N, -t N
     Number of threads / CPUs to employ

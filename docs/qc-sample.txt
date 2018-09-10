@@ -68,6 +68,10 @@ Options
     Skip building the interleaved fasta file, interleaved fastq files will
     still be build.
 
+.. option:: -S, --scythe-sickle
+
+    Use scythe + sickle instead of (the default) Trimmomatic
+
 .. option::  --working-dir=DIR
 
     Directory under which output is stored. By default this is the current

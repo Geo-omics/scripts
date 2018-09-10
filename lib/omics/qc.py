@@ -10,10 +10,9 @@ from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
 
 
 def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
-              no_dereplicate=False, no_interleave=False,
-              no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
-              trimmomatic=False, threads=DEFAULT_THREADS,
-              project=None):
+              no_dereplicate=False, no_fasta_interleave=False,
+              verbosity=DEFAULT_VERBOSITY, scythe_sickle=False,
+              threads=DEFAULT_THREADS, project=None):
     """
     Do QC for a single sample
 
@@ -29,7 +28,7 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
     not no_dereplicate or args.append('--no-dereplicate')
     not no_interleave or args.append('--no-interleave')
     not no_fasta_interleave or args.append('--no-fasta-interleave')
-    not trimmomatic or args.append('--trimmomatic')
+    not scythe_sickle or args.append('--scythe-sickle')
     if threads is not None:
         args += ['--threads', str(threads)]
     if verbosity > DEFAULT_VERBOSITY:
@@ -48,7 +47,7 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
 def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
        no_dereplicate=False, no_interleave=False,
        no_fasta_interleave=False, verbosity=DEFAULT_VERBOSITY,
-       trimmomatic=False,
+       scythe_sickle=False,
        threads=DEFAULT_THREADS, project=None):
     """
     Do quality control on multiple samples
@@ -83,7 +82,7 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
                 no_dereplicate=no_dereplicate,
                 no_interleave=no_interleave,
                 no_fasta_interleave=no_fasta_interleave,
-                trimmomatic=trimmomatic,
+                scythe_sickle=scythe_sickle,
                 verbosity=verbosity,
                 project=project,
                 threads=threads_per_worker,
@@ -156,9 +155,9 @@ def main():
              'files will still be build.',
     )
     argp.add_argument(
-        '-T', '--trimmomatic',
+        '-S', '--scythe-sickle',
         action='store_true',
-        help='Use Trimmomatic instead of (the default) scythe + sickle',
+        help='Use scythe + sickle instead of (the default) Trimmomatic',
     )
     args = argp.parse_args()
     args.samples = [Path(i) for i in args.samples]
@@ -175,7 +174,7 @@ def main():
             no_dereplicate=args.no_dereplicate,
             no_interleave=args.no_interleave,
             no_fasta_interleave=args.no_fasta_interleave,
-            trimmomatic=args.trimmomatic,
+            scythe_sickle=args.scythe_sickle,
             verbosity=args.verbosity,
             threads=args.threads,
             project=args.project,
