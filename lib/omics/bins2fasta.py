@@ -137,8 +137,9 @@ def load_contig_chunk_info(file):
     for line in file:
         if line.startswith('>'):
             line = line.lstrip('>')
+            contig_id = line.split()[0]
             try:
-                contig, chunk = parse_contig_chunk(line)
+                contig, chunk = parse_contig_chunk(contig_id)
             except Exception as e:
                 raise RuntimeError(
                     'Failed to parse contig id in {}: {}: {}: {}'
