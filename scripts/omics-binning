@@ -254,7 +254,9 @@ if $USE_METABAT; then
 fi
 
 info "Compiling bins into fasta files at $bindir ..."
-b2fargs=(-o "$bindir" "$VERBOSE_FLAG" -s fa "$binstable")
+b2fargs=(-o "$bindir" -s fa)
+[[ -n $VERBOSE_FLAG ]] && b2fargs+=("$VERBOSE_FLAG")
+b2fargs+=("$binstable")
 $using_chopped_asm && b2fargs+=("$(realpath "$REAL_ASSEMBLY")")
 b2fargs+=("$assembly")
 bins2fasta "${b2fargs[@]}"
