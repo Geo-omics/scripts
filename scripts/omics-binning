@@ -170,10 +170,38 @@ if [[ $name =~ .chop$ ]]; then
     # name follows omics pipeline conventions, remove .chop again
     bindir=$outdir/${name%.chop}.bins
 else
-    bindir=$outdir/$name.unchop.bins
+    bindir=$outdir/$name.bins
 fi
 
 if $USE_CONCOCT; then
+    function log_progress () {
+        # gets number of current iterations, requires concoct to be called with --converge_out
+        local max_iter=${ITERATIONS:-500}  # assume 500 is concoct's default
+        local -a r_csvs
+        local plog=$outdir/log.txt
+        local last=0
+        local cur
+        while true; do
+            sleep 1m
+            mapfile -t r_csvs < <(find "$outdir" -maxdepth 1 -regex "$outdir/r[0-9][0-9]?\.csv")
+            [[ ${#r_csvs[@]} == 0 ]] && continue
+            [[ -w "$plog" ]] || continue
+            # concoct will add one line per iteration to each rNN.csv file,
+            # $cur will be the mean fraction of the expected final number of lines
+            # across all found rNN.csv files
+            cur=$(echo "scale=0; 100 * $(cat "${r_csvs[@]}" | wc -l) / ${#r_csvs[@]} / $max_iter" | bc)
+            if [[ $cur != $last ]]; then
+                echo "$(date) ${cur}%" >> "$plog"
+                last=$cur
+            fi
+        done
+    }
+
+    function plog_clean_up () {
+        [[ -n $log_progress_job ]] && kill "$log_progress_job" &>/dev/null || true
+    }
+    trap plog_clean_up EXIT
+
     if [ -z "$COV_FILE" ]; then
         info "Collecting coverage data..."
         cov_file=$outdir/${name}.cov
@@ -191,7 +219,10 @@ if $USE_CONCOCT; then
     c_args=()
     [[ -z $CPUS ]] || c_args+=(-t "$CPUS")
     [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
+    log_progress &
+    log_progress_job=$!
     concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+    kill $log_progress_job
     binstable=$outdir/clustering_gt1000.csv
 fi
 
