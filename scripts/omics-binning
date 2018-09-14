@@ -24,6 +24,7 @@ ARG_HELP="
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
+  -i, --iterations N        Iterations option passed to CONCOCT
       --max-clusters        Maximum number of clusters, sets CONCOCT's -c parameter.
 
  Options for binning with MetaBAT:
@@ -39,8 +40,8 @@ ARG_HELP="
   -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
-SHORT_OPTIONS=a:c:o:u:
-LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
+SHORT_OPTIONS=a:c:i:o:u:
+LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,iterations:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -61,6 +62,9 @@ handle_options () {
 	(-c|--coverage-file)
 	    COV_FILE="$2"
 	    return 2;;
+        (-i|--iterations)
+            ITERATIONS=$2
+            return 2;;
 	(--max-clusters)
 	    MAX_CLUSTERS="$2"
 	    return 2;;
@@ -93,6 +97,8 @@ CHOPPED_ASSEMBLY=
 BAM_PATH=
 #
 CPUS=4
+# Number of vbgmm iterations for CONCOCT, default is to use CONCOCTs default (500)
+ITERATIONS=
 # Empty be default, -c won't be set
 MAX_CLUSTERS=
 FORCE=false
@@ -217,11 +223,12 @@ if $USE_CONCOCT; then
 
     info "Running CONCOCT..."
     c_args=()
+    [[ -z $ITERATIONS ]] || c_args+=(-i "$ITERATIONS")
     [[ -z $CPUS ]] || c_args+=(-t "$CPUS")
     [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
     log_progress &
     log_progress_job=$!
-    concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+    concoct "${c_args[@]}" --converge_out --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
     kill $log_progress_job
     binstable=$outdir/clustering_gt1000.csv
 fi
