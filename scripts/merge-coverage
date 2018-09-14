@@ -105,7 +105,7 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
                     # more sanity checks
                     try:
                         this_length = int(line[3])
-                    except ValueError as e:
+                    except ValueError:
                         raise RuntimeError(
                             'Failed to parse length field, not a number?: '
                             'line: {}, file: {}'.format(line, path)
@@ -124,7 +124,7 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
 
                     try:
                         cov_bases += int(line[1]) * int(line[2])
-                    except ValueError as e:
+                    except ValueError:
                         raise RuntimeError(
                             'Field contents is not a number: line: {}, file: '
                             '{}'.format(line, path)
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     argp = argparse.ArgumentParser(description=__doc__)
     argp.add_argument(
         '-a', '--assembly',
-        metavar='FILE',
+        metavar='ASSEMBLY',
         nargs='?',
         default=None,
         help='The assembly file.  This is to be compatible with the CONCOCT '
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     )
     argp.add_argument(
         'inputfiles',
-        metavar='FILE',
+        metavar='INFILE',
         nargs='+',
         help='List of input coverage files, on per sample. '
              'The variable parts of these paths are used as'
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     )
     argp.add_argument(
         '-o', '--out',
-        metavar='FILE',
+        metavar='OUTFILE',
         nargs='?',
         type=argparse.FileType('w'),
         default=sys.stdout,
