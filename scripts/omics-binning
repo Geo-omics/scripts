@@ -3,7 +3,7 @@ set -eE
 
 # shellcheck disable=SC2034
 {
-USAGE="[OPTIONS]... [SAMPLEDIRS]..."
+USAGE="[OPTIONS]... SAMPLEDIRS..."
 HELP="Implementation of the binning step of the Geomicro Illumina Reads Pipeline"
 ARG_HELP="
   -a, --assembly FILE           The fasta file containing the whole assembled contigs
@@ -112,6 +112,8 @@ USE_METABAT=false
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
+else
+    abort "Sample data directories must be listed as positional parameters." usage
 fi
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
