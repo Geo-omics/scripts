@@ -255,7 +255,7 @@ fi
 
 info "Compiling bins into fasta files at $bindir ..."
 b2fargs=(-o "$bindir" "$VERBOSE_FLAG" -s fa "$binstable")
-using_chopped_asm && b2fargs+=("$(realpath "$REAL_ASSEMBLY")")
+$using_chopped_asm && b2fargs+=("$(realpath "$REAL_ASSEMBLY")")
 b2fargs+=("$assembly")
 bins2fasta "${b2fargs[@]}"
 
