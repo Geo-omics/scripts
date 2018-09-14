@@ -35,6 +35,7 @@ def get_argp():
     )
     argp.add_argument(
         'chopped_assembly',
+        nargs='?',
         metavar='chopped-assembly',
         type=argparse.FileType(),
         help='Filename of chopped assembly',
@@ -65,7 +66,7 @@ def main():
     if args.verbose:
         print('Loading chunk info... ', end='', flush=True)
 
-    cdata = load_contig_chunk_info(args.chopped_assembly)
+    cdata = load_contig_chunk_info(args.chopped_assembly or args.real_assembly)
 
     if args.verbose:
         print('done')
@@ -89,6 +90,10 @@ def main():
 
     if args.verbose:
         print('Writing fasta files for bins... ', end='', flush=True)
+
+    if args.real_assembly.closed:
+        # when chopped asm was not given, file would be used and closed earlier
+        args.real_assembly = open(args.real_assembly.name)
 
     files_written = bin_fasta(
         outdir=outdir,
