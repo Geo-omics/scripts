@@ -29,21 +29,22 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
         raise RuntimeError('Found multiple occurrences of some input coverage '
                            'file')
 
-    # generate sample ids from variable parts
+    # generate sample ids from variable parts (if more than one inputfile)
     ids = [list(i.parts) for i in inputfiles]
-    while True:
-        # strip common prefix
-        if len(set([i[0] for i in ids])) == 1:
-            ids = [i[1:] for i in ids]
-        else:
-            break
-    while True:
-        # strip common suffix
-        if len(set([i[-1] for i in ids])) == 1:
-            ids = [i[:-1] for i in ids]
-        else:
-            break
-    ids = [''.join(i) for i in ids]
+    if len(ids) > 1:
+        while True:
+            # strip common prefix
+            if len(set([i[0] for i in ids])) == 1:
+                ids = [i[1:] for i in ids]
+            else:
+                break
+        while True:
+            # strip common suffix
+            if len(set([i[-1] for i in ids])) == 1:
+                ids = [i[:-1] for i in ids]
+            else:
+                break
+    ids = ['_'.join(i) for i in ids]
 
     header = ['contig']
     if with_length:
