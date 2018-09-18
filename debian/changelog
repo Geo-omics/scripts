@@ -1,3 +1,23 @@
+geo-omics-scripts (1.0.114-1) unstable; urgency=medium
+
+  * [bins2fasta] Complete rewrite, new policy, works for CONCOCT and MetaBAT alike
+  * [binning] Fix crash when processing only a single sample
+  * [binning/bins2fasta] Allow more general sequence headers when reading in (chopped) contigs
+  * [binning] Enable non-chopped bin compilation
+  * [binning] Check for and document that sample dirs must be given on cmdline
+  * [binning] Print progress to CONCOCT log file (every 5 minutes at most)
+  * [binning] Add option to set iterations for CONCOCT
+  * [binning] Fix output directory/file name for MetaBAT
+  * [binning] Fix crash (syntax/misspelled variable)
+  * [binning] Fix passing -v argument
+  * [mapping] Fix the combination of options --chop and --index-only
+  * [mapping] Implement multi-sample processing
+  * [mapping] Include sample id in progress messages
+  * [mapping] Allow saving results based on different assemblies in same output directory
+  * [asm] Skip blast and phylosift sections due to general brokeness
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Tue, 18 Sep 2018 17:04:33 -0400
+
 geo-omics-scripts (1.0.113-1) unstable; urgency=medium
 
   * [mapping] Fix re-using bowtie index made from large assemblies
