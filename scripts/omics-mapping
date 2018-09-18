@@ -125,6 +125,37 @@ if [ "$#" -gt 0 ]; then
     abort "Unknown parameters: ${*}"
 fi
 
+#########################
+# some input sanitation
+#########################
+[ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
+
+assembly=$(realpath "$ASSEMBLY")
+
+# get a "name" from name of assembly file without suffix
+name=$(basename "$assembly")
+name=${name%.*}
+
+# HANDLE INDEXING
+index_dir=$(realpath "$INDEX_DIR")
+
+if ls "${index_dir}/${name}".[0-9]*.bt2* &> /dev/null; then
+    index_exists=true
+else
+    index_exists=false
+fi
+
+if $index_exists && ! $INDEX_ONLY; then
+    info "Re-using existing index at $index_dir with base name $name"
+else
+    info "Generating Index..."
+    $MKDIR -p -- "$index_dir"
+    bowtie2-build --threads "$CPUS" "$assembly" "$index_dir/$name" &>> "$index_dir"/build.log
+    info "Index saved under $index_dir/$name*"
+    $INDEX_ONLY && exit
+fi
+# END INDEXING
+
 # more options checking
 if $opts_int; then
     ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
@@ -137,12 +168,6 @@ else
 	abort usage "Use --fwd-reads to also specify reverse reads"
     fi
 fi
-
-#########################
-# some input sanitation
-#########################
-[ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
-[ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
 
 if ! $INDEX_ONLY; then
     # find read files
@@ -168,15 +193,6 @@ else
 fi
 
 
-# make local link for assembly
-#assembly=$(basename "$ASSEMBLY")
-assembly=$(realpath "$ASSEMBLY")
-#$LN -f -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
-
-# get a "name" from name of assembly file without suffix
-name=$(basename "$assembly")
-name=${name%.*}
-
 if $CHOP_ASSEMBLY; then
     chunk_file=${name}.chop.fa
     if [ -e "$chunk_file" ] && ! $FORCE; then
@@ -188,9 +204,6 @@ if $CHOP_ASSEMBLY; then
     name=${name}.chop
 fi
 
-# generate default index dir if needed
-index_dir=$(realpath "$INDEX_DIR")
-
 log=${name}.bowtie2.log
 sortBam=${name}.sorted.bam
 nameSortBam=${name}.name_sorted.bam
@@ -201,16 +214,6 @@ sam_sort_tmp=/tmp
 #######################################
 #########      PIPELINE       #########
 #######################################
-
-if ls "${index_dir}/${name}".[0-9]*.bt2* &> /dev/null; then
-    info "Re-using existing index at $index_dir with base name $name"
-else
-    info "Generating Index..."
-    $MKDIR -p -- "$index_dir"
-    bowtie2-build --threads "$CPUS" "$assembly" "$index_dir/$name" &>> "$index_dir"/build.log
-    info "Index saved under $index_dir/$name*"
-fi
-$INDEX_ONLY && exit
 
 OUT_DIR=$(readlink -f "$OUT_DIR")
 if [ -d "$OUT_DIR" ] && ! $FORCE; then
