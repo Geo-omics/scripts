@@ -136,6 +136,19 @@ assembly=$(realpath "$ASSEMBLY")
 name=$(basename "$assembly")
 name=${name%.*}
 
+# HANDLE CHOPPING
+if $CHOP_ASSEMBLY; then
+    chunk_file=${name}.chop.fa
+    if [ -e "$chunk_file" ] && ! $FORCE; then
+       abort "File exists: $chunk_file, use --force to override or use -a $chunk_file without --chop to re-use the existing chopped assembly"
+    fi
+    info "Chopping assembly into chunks..."
+    chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
+    assembly=$(realpath "$chunk_file")
+    name=${name}.chop
+fi
+# END CHOPPING
+
 # HANDLE INDEXING
 index_dir=$(realpath "$INDEX_DIR")
 
@@ -190,18 +203,6 @@ if $use_int_reads; then
 else
     fwd_reads=$(readlink -f "$FWD_READS")
     rev_reads=$(readlink -f "$REV_READS")
-fi
-
-
-if $CHOP_ASSEMBLY; then
-    chunk_file=${name}.chop.fa
-    if [ -e "$chunk_file" ] && ! $FORCE; then
-       abort "File exists: $chunk_file, use --force to override"
-    fi
-    info "Chopping assembly into chunks..."
-    chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
-    assembly=$(realpath "$chunk_file")
-    name=${name}.chop
 fi
 
 log=${name}.bowtie2.log
