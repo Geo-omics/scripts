@@ -288,6 +288,7 @@ if $RUN_QUAST && [[ -n $QUAST ]]; then
     info "done: Quast results at $quast_out"
 fi
 
+$RUN_BLAST && RUN_BLAST=false && info "Skipping analysis via BLAST [currently not supported]"
 if $RUN_BLAST; then
     info "Searching for scaffolds with 16S..."
     blast_out="$out/BLASTN"
@@ -310,6 +311,7 @@ if $RUN_BLAST; then
     info "done: classification results at $blast_out"
 fi
 
+$RUN_PHYLOSIFT && RUN_PHYLOSIFT=false && info "Skipping analysis with Phylosift [currently not supported]"
 if $RUN_PHYLOSIFT; then
     if [ -f "$PHYLOSIFTRC" ]; then
         info "Will use $PHYLOSIFTRC as config file for PhyloSift"
