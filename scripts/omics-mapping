@@ -137,6 +137,13 @@ if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
 fi
 
+# re-define info and abort from liba.sh
+eval "_$(declare -f info)"
+eval "_$(declare -f abort)"
+info () { if [[ -n ${sample_dir:-} ]]; then _info "[${sample_dir:-}] $1"; else _info "$1"; fi; }
+abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else _abort "$1"; fi; }
+
+
 #########################
 # some input sanitation
 #########################
