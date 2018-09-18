@@ -10,9 +10,13 @@ set -eEu
 # shellcheck disable=SC2034
 {
 DEFAULT_CHUNK_SIZE=10000
-USAGE="[OPTIONS]..."
+USAGE="[OPTIONS...] [SAMPLE_DIRS...]"
 HELP="mapping script"
 ARG_HELP="
+Positional parameters:  Names of sample directories
+
+Optional parameters:
+
   -a, --assembly FILE   Fasta file assembly i.e. contigs or scaffolds
   -c, --chop		Chop up assembly contigs into even size before
                         mapping.  It is suggested to use this if CONCOCT binning
@@ -20,20 +24,26 @@ ARG_HELP="
                         a fasta file that includes 'chop' as part of the name.
       --chunk-size N    Size of chops, the default is $DEFAULT_CHUNK_SIZE, implies
                         --chop
+
+  -x PATH, --index-dir PATH
+                        Path and base name of bowtie2 index db files
+
       --index-only      Index the assembly and stop.  Useful when processing
                         a joint assembly from several samples.  In this work-
                         flow run --index-only once and then re-use the index
                         for mapping reads from each sample.
       --cpus N          Number of CPUs to use for parallel processing
       --force           Overwrite any previous results
-  -f, --fwd-reads FILE  Fastq file with forward reads
-  -r, --rev-reads FILE  Fastq file with reverse reads, in same order
+
+Optional parameters for which arguments are relative to each sample directory:
+
+  -f, --fwd-reads FILE  Fastq file with forward reads, default: fwd.good.fasta
+  -r, --rev-reads FILE  Fastq file with reverse reads, in same order,
+                        default: rev.good.fasta
   -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
                         can also be single-paired reads,
 			The default is int.good.fastq
                         Incompatible with bowtie2 <= 2.3.0
-  -x PATH, --index-dir PATH
-                        Path and base name of bowtie2 index db files
   -o, --out-dir DIR     Name of output directory, default: MAPPING
 "
 SHORT_OPTIONS=a:cf:i:o:r:x:
@@ -65,6 +75,8 @@ INT_READS=int.good.fastq
 ASSEMBLY=assembly.fa
 # Location for per-sample mapping output, relative to sample directory
 OUT_DIR=MAPPING
+# Samples to map, default is only current directory
+SAMPLE_DIRS=(./)
 
 # option parsing state variables
 opts_fwd=false
@@ -122,7 +134,7 @@ handle_options () {
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    abort "Unknown parameters: ${*}"
+    SAMPLE_DIRS=("$@")
 fi
 
 #########################
@@ -169,7 +181,15 @@ else
 fi
 # END INDEXING
 
-# more options checking
+# BEGIN PER SAMPLE LOOP
+for sample_dir in "${SAMPLE_DIRS[@]}"; do
+
+[ -d "$sample_dir" ] || abort "Not a directory: $sample_dir"
+(
+cd "$sample_dir"
+# BEGIN PER SAMPLE LOOP
+
+# sample-relative options checking
 if $opts_int; then
     ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
     use_int_reads=true
@@ -181,7 +201,6 @@ else
 	abort usage "Use --fwd-reads to also specify reverse reads"
     fi
 fi
-
 # find read files
 if $use_int_reads; then
     [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
@@ -262,6 +281,12 @@ coveragePerScaffold -bed "$bedOut" > "$scafCov"
 info "Result at $scafCov"
 
 info "Mapping done, find results in $OUT_DIR"
+
+# END OF PER SAMPLE LOOP
+)
+done
+# END OF PER SAMPLE LOOP
+
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
 # gmb: output:
 # gmb: args: --cpus {{ cpus }} --no-color
