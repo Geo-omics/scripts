@@ -182,18 +182,15 @@ else
     fi
 fi
 
-if ! $INDEX_ONLY; then
-    # find read files
-    if $use_int_reads; then
-        [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
-    else
-        # this is also the default if no cmd line options were given
-        use_int_reads=false
-        [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
-        [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
-    fi
+# find read files
+if $use_int_reads; then
+    [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
+else
+    # this is also the default if no cmd line options were given
+    use_int_reads=false
+    [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
+    [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
 fi
-
 
 #################################
 # do stuff
