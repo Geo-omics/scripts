@@ -7,7 +7,7 @@ mapping - mapping reads to assembly
 Synopsis
 ========
 
-:program:`omics mapping` [OPTIONS]...
+:program:`omics mapping` [OPTIONS...] [SAMPLE_DIRS...]
 
 
 Description
@@ -51,7 +51,7 @@ Options
 
 .. option::  -o, --out-dir DIR
 
-    Name of output directory, default is :file:`MAPPING` in the working
+    Name of output directory, default is :file:`MAPPING` in the sample
     directory
 
 .. option:: --no-indexing

@@ -399,14 +399,7 @@ assembly :file:`assembly.fa` and per-sample directories containing the reads
 for each sample.  The canonical way to use :program:`omics
 mapping` is as follows::
 
-    omics mapping --chop --index-only
-    for i in sample_*; do
-        cd $i
-        omics mapping --index-dir ../bowtie2-index \
-            -a ../assembly.chop.fa \
-            -f fwd.good.fastq -r rev.good.fastq
-        cd ..
-    done
+    omics mapping --chop --cpus 8 *
 
 
 Binning

@@ -10,9 +10,13 @@ set -eEu
 # shellcheck disable=SC2034
 {
 DEFAULT_CHUNK_SIZE=10000
-USAGE="[OPTIONS]..."
+USAGE="[OPTIONS...] [SAMPLE_DIRS...]"
 HELP="mapping script"
 ARG_HELP="
+Positional parameters:  Names of sample directories
+
+Optional parameters:
+
   -a, --assembly FILE   Fasta file assembly i.e. contigs or scaffolds
   -c, --chop		Chop up assembly contigs into even size before
                         mapping.  It is suggested to use this if CONCOCT binning
@@ -20,20 +24,26 @@ ARG_HELP="
                         a fasta file that includes 'chop' as part of the name.
       --chunk-size N    Size of chops, the default is $DEFAULT_CHUNK_SIZE, implies
                         --chop
+
+  -x PATH, --index-dir PATH
+                        Path and base name of bowtie2 index db files
+
       --index-only      Index the assembly and stop.  Useful when processing
                         a joint assembly from several samples.  In this work-
                         flow run --index-only once and then re-use the index
                         for mapping reads from each sample.
       --cpus N          Number of CPUs to use for parallel processing
       --force           Overwrite any previous results
-  -f, --fwd-reads FILE  Fastq file with forward reads
-  -r, --rev-reads FILE  Fastq file with reverse reads, in same order
+
+Optional parameters for which arguments are relative to each sample directory:
+
+  -f, --fwd-reads FILE  Fastq file with forward reads, default: fwd.good.fasta
+  -r, --rev-reads FILE  Fastq file with reverse reads, in same order,
+                        default: rev.good.fasta
   -i, --int-reads FILE  Fastq file with paired-end, interleaved reads,
                         can also be single-paired reads,
 			The default is int.good.fastq
                         Incompatible with bowtie2 <= 2.3.0
-  -x PATH, --index-dir PATH
-                        Path and base name of bowtie2 index db files
   -o, --out-dir DIR     Name of output directory, default: MAPPING
 "
 SHORT_OPTIONS=a:cf:i:o:r:x:
@@ -65,6 +75,8 @@ INT_READS=int.good.fastq
 ASSEMBLY=assembly.fa
 # Location for per-sample mapping output, relative to sample directory
 OUT_DIR=MAPPING
+# Samples to map, default is only current directory
+SAMPLE_DIRS=(./)
 
 # option parsing state variables
 opts_fwd=false
@@ -122,10 +134,69 @@ handle_options () {
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
-    abort "Unknown parameters: ${*}"
+    SAMPLE_DIRS=("$@")
 fi
 
-# more options checking
+# re-define info and abort from liba.sh
+eval "_$(declare -f info)"
+eval "_$(declare -f abort)"
+info () { if [[ -n ${sample_dir:-} ]]; then _info "[${sample_dir:-}] $1"; else _info "$1"; fi; }
+abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else _abort "$1"; fi; }
+
+
+#########################
+# some input sanitation
+#########################
+[ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
+
+assembly=$(realpath "$ASSEMBLY")
+
+# get a "name" from name of assembly file without suffix
+name=$(basename "$assembly")
+name=${name%.*}
+
+# HANDLE CHOPPING
+if $CHOP_ASSEMBLY; then
+    chunk_file=${name}.chop.fa
+    if [ -e "$chunk_file" ] && ! $FORCE; then
+       abort "File exists: $chunk_file, use --force to override or use -a $chunk_file without --chop to re-use the existing chopped assembly"
+    fi
+    info "Chopping assembly into chunks..."
+    chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
+    assembly=$(realpath "$chunk_file")
+    name=${name}.chop
+fi
+# END CHOPPING
+
+# HANDLE INDEXING
+index_dir=$(realpath "$INDEX_DIR")
+
+if ls "${index_dir}/${name}".[0-9]*.bt2* &> /dev/null; then
+    index_exists=true
+else
+    index_exists=false
+fi
+
+if $index_exists && ! $INDEX_ONLY; then
+    info "Re-using existing index at $index_dir with base name $name"
+else
+    info "Generating Index..."
+    $MKDIR -p -- "$index_dir"
+    bowtie2-build --threads "$CPUS" "$assembly" "$index_dir/$name" &>> "$index_dir"/build.log
+    info "Index saved under $index_dir/$name*"
+    $INDEX_ONLY && exit
+fi
+# END INDEXING
+
+# BEGIN PER SAMPLE LOOP
+for sample_dir in "${SAMPLE_DIRS[@]}"; do
+
+[ -d "$sample_dir" ] || abort "Not a directory: $sample_dir"
+(
+cd "$sample_dir"
+# BEGIN PER SAMPLE LOOP
+
+# sample-relative options checking
 if $opts_int; then
     ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
     use_int_reads=true
@@ -137,25 +208,15 @@ else
 	abort usage "Use --fwd-reads to also specify reverse reads"
     fi
 fi
-
-#########################
-# some input sanitation
-#########################
-[ -d "$WORK_DIR" ] || abort "$WORK_DIR is not accessible."
-[ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
-
-if ! $INDEX_ONLY; then
-    # find read files
-    if $use_int_reads; then
-        [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
-    else
-        # this is also the default if no cmd line options were given
-        use_int_reads=false
-        [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
-        [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
-    fi
+# find read files
+if $use_int_reads; then
+    [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
+else
+    # this is also the default if no cmd line options were given
+    use_int_reads=false
+    [ -e "$FWD_READS" ] || abort "Reads file not found: $FWD_READS"
+    [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
 fi
-
 
 #################################
 # do stuff
@@ -166,30 +227,6 @@ else
     fwd_reads=$(readlink -f "$FWD_READS")
     rev_reads=$(readlink -f "$REV_READS")
 fi
-
-
-# make local link for assembly
-#assembly=$(basename "$ASSEMBLY")
-assembly=$(realpath "$ASSEMBLY")
-#$LN -f -s "$(readlink -f "$ASSEMBLY")" "$OUT_DIR/$assembly"
-
-# get a "name" from name of assembly file without suffix
-name=$(basename "$assembly")
-name=${name%.*}
-
-if $CHOP_ASSEMBLY; then
-    chunk_file=${name}.chop.fa
-    if [ -e "$chunk_file" ] && ! $FORCE; then
-       abort "File exists: $chunk_file, use --force to override"
-    fi
-    info "Chopping assembly into chunks..."
-    chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
-    assembly=$(realpath "$chunk_file")
-    name=${name}.chop
-fi
-
-# generate default index dir if needed
-index_dir=$(realpath "$INDEX_DIR")
 
 log=${name}.bowtie2.log
 sortBam=${name}.sorted.bam
@@ -202,19 +239,9 @@ sam_sort_tmp=/tmp
 #########      PIPELINE       #########
 #######################################
 
-if ls "${index_dir}/${name}".[0-9]*.bt2* &> /dev/null; then
-    info "Re-using existing index at $index_dir with base name $name"
-else
-    info "Generating Index..."
-    $MKDIR -p -- "$index_dir"
-    bowtie2-build --threads "$CPUS" "$assembly" "$index_dir/$name" &>> "$index_dir"/build.log
-    info "Index saved under $index_dir/$name*"
-fi
-$INDEX_ONLY && exit
-
 OUT_DIR=$(readlink -f "$OUT_DIR")
-if [ -d "$OUT_DIR" ] && ! $FORCE; then
-    abort "Output directory $OUT_DIR exists, use --force to overwrite"
+if [ -e "$OUT_DIR/$log" ] && ! $FORCE; then
+    abort "It looks like there is existing mapping data for $assembly at $OUT_DIR, use --force to overwrite any or delete the existing data"
 fi
 
 $MKDIR -p "$OUT_DIR"
@@ -261,6 +288,12 @@ coveragePerScaffold -bed "$bedOut" > "$scafCov"
 info "Result at $scafCov"
 
 info "Mapping done, find results in $OUT_DIR"
+
+# END OF PER SAMPLE LOOP
+)
+done
+# END OF PER SAMPLE LOOP
+
 # gmb: input: scaffold.fa fwd.fastq rev.fastq
 # gmb: output:
 # gmb: args: --cpus {{ cpus }} --no-color

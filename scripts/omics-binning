@@ -3,12 +3,15 @@ set -eE
 
 # shellcheck disable=SC2034
 {
-USAGE="[OPTIONS]... [SAMPLEDIRS]..."
+USAGE="[OPTIONS]... SAMPLEDIRS..."
 HELP="Implementation of the binning step of the Geomicro Illumina Reads Pipeline"
 ARG_HELP="
-  -a, --assembly FILE       The fasta file containing the assembled contigs
-  --concoct                 Use the CONCOCT binner.  This is the default
-  --metabat                 Use the MetaBAT binner.
+  -a, --assembly FILE           The fasta file containing the whole assembled contigs
+  -u, --chopped-assembly FILE   The fasta file containing the chopped-up contigs.
+                                The contigs in this file will be binned if it is given,
+                                otherwise the contigs in the file given by -a
+  --concoct                     Use the CONCOCT binner.  This is the default
+  --metabat                     Use the MetaBAT binner.
 
  Options for binning with CONCOCT:
 
@@ -21,6 +24,7 @@ ARG_HELP="
 			    These files are made by the mapping script and correspond
 			    to the asm_pair-smds.bam files made by CONCOCTs
 			    map-bowtie2-markduplicates.sh
+  -i, --iterations N        Iterations option passed to CONCOCT
       --max-clusters        Maximum number of clusters, sets CONCOCT's -c parameter.
 
  Options for binning with MetaBAT:
@@ -36,15 +40,17 @@ ARG_HELP="
   -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
-CHECK_PROGS="chop-contigs merge-coverage concoct"
-SHORT_OPTIONS=a:c:o:
-LONG_OPTIONS=assembly:,bam-path:,concoct,cpus:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
+SHORT_OPTIONS=a:c:i:o:u:
+LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,iterations:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
 	(-a|--assembly)
-	    ASSEMBLY="$2"
+	    REAL_ASSEMBLY="$2"
+	    return 2;;
+	(-u|-chopped-assembly)
+	    CHOPPED_ASSEMBLY="$2"
 	    return 2;;
         (--bam-path)
             BAM_PATH="$2"
@@ -56,6 +62,9 @@ handle_options () {
 	(-c|--coverage-file)
 	    COV_FILE="$2"
 	    return 2;;
+        (-i|--iterations)
+            ITERATIONS=$2
+            return 2;;
 	(--max-clusters)
 	    MAX_CLUSTERS="$2"
 	    return 2;;
@@ -82,11 +91,14 @@ handle_options () {
 }
 
 # Define defaults for cmdline options here
-ASSEMBLY=contigs.fa
+REAL_ASSEMBLY=assembly.fa
+CHOPPED_ASSEMBLY=
 # default will be derived from assembly name (see below)
 BAM_PATH=
 #
 CPUS=4
+# Number of vbgmm iterations for CONCOCT, default is to use CONCOCTs default (500)
+ITERATIONS=
 # Empty be default, -c won't be set
 MAX_CLUSTERS=
 FORCE=false
@@ -106,6 +118,8 @@ USE_METABAT=false
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
+else
+    abort "Sample data directories must be listed as positional parameters." usage
 fi
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
@@ -113,7 +127,15 @@ if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
 fi
 
 # your script comes here --->
-assembly=$(readlink -f "$ASSEMBLY")
+if [ -n "$CHOPPED_ASSEMBLY" ]; then
+    # bin via chopped assembly if given
+    using_chopped_asm=true
+    assembly=$CHOPPED_ASSEMBLY
+else
+    using_chopped_asm=false
+    assembly=$REAL_ASSEMBLY
+fi
+assembly=$(realpath "$assembly")
 outdir=$(readlink -f "$OUTDIR")
 
 name=$(basename "$assembly")
@@ -151,15 +173,42 @@ if [ -d "$outdir" ]; then
 fi
 $MKDIR -p -- "$outdir"
 
-chopbindir=$outdir/$name.bins
 if [[ $name =~ .chop$ ]]; then
     # name follows omics pipeline conventions, remove .chop again
     bindir=$outdir/${name%.chop}.bins
 else
-    bindir=$outdir/$name.unchop.bins
+    bindir=$outdir/$name.bins
 fi
 
 if $USE_CONCOCT; then
+    function log_progress () {
+        # gets number of current iterations, requires concoct to be called with --converge_out
+        local max_iter=${ITERATIONS:-500}  # assume 500 is concoct's default
+        local -a r_csvs
+        local plog=$outdir/log.txt
+        local last=0
+        local cur
+        while true; do
+            sleep 1m
+            mapfile -t r_csvs < <(find "$outdir" -maxdepth 1 -regex "$outdir/r[0-9][0-9]?\\.csv")
+            [[ ${#r_csvs[@]} == 0 ]] && continue
+            [[ -w "$plog" ]] || continue
+            # concoct will add one line per iteration to each rNN.csv file,
+            # $cur will be the mean fraction of the expected final number of lines
+            # across all found rNN.csv files
+            cur=$(echo "scale=0; 100 * $(cat "${r_csvs[@]}" | wc -l) / ${#r_csvs[@]} / $max_iter" | bc)
+            if [[ $cur != "$last" ]]; then
+                echo "$(date) ${cur}%" >> "$plog"
+                last=$cur
+            fi
+        done
+    }
+
+    function plog_clean_up () {
+        { [[ -n $log_progress_job ]] && kill "$log_progress_job" &>/dev/null; } || true
+    }
+    trap plog_clean_up EXIT
+
     if [ -z "$COV_FILE" ]; then
         info "Collecting coverage data..."
         cov_file=$outdir/${name}.cov
@@ -175,12 +224,14 @@ if $USE_CONCOCT; then
 
     info "Running CONCOCT..."
     c_args=()
+    [[ -z $ITERATIONS ]] || c_args+=(-i "$ITERATIONS")
     [[ -z $CPUS ]] || c_args+=(-t "$CPUS")
     [[ -z $MAX_CLUSTERS ]] || c_args+=(-c "$MAX_CLUSTERS")
-    concoct "${c_args[@]}" --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
-
-    info "Compiling bins into fasta files..."
-    bins2fasta -o "$chopbindir" -s fa "$outdir/clustering_gt1000.csv" "$assembly"
+    log_progress &
+    log_progress_job=$!
+    concoct "${c_args[@]}" --converge_out --coverage_file "$cov_file" --composition_file "$assembly" -b "$outdir"
+    kill $log_progress_job
+    binstable=$outdir/clustering_gt1000.csv
 fi
 
 if $USE_METABAT; then
@@ -191,24 +242,24 @@ if $USE_METABAT; then
         for i in "${SAMPLE_DIRS[@]}"; do
             bams+=("$(realpath "${i}/$bam_path")")
         done
-        assembly=$(realpath "$assembly")
         cd "$outdir"
-        runMetaBat.sh -t "$CPUS" "$assembly" "${bams[@]}"
-        mbat_bindir=$(basename "$assembly").metabat-bins${CPUS}
-        if [ -d "$mbat_bindir" ]; then
-            ln -sf "$mbat_bindir" "$chopbindir"
-        else
-            warning "Failed to detect output directory with bins, downstream analysis may fail."
-        fi
+        # (sigh) The argument in the metabat command line below which comes just before the first argument which is an existing file
+        # i.e. the 1 of "--seed 1" before "$assembly" is taken by runMetabat.sh as output name and concatenated to make the output
+        # directories' name.  This is why we have the seed option there, pretty harmless but it gives us a predictable, simple name.
+        # This all could be easily fixed in runMetabat.sh (@$@#$@#$!!)
+        runMetaBat.sh -t "$CPUS" --noBinOut --saveCls --seed 1 "$assembly" "${bams[@]}"
     )
+    # This direcotry name is generated by runMetaBat.sh, see also above
+    binstable=$outdir/$(basename "$assembly").metabat-bins1/bin
 fi
 
-ls "$chopbindir"/*.fa &> /dev/null || abort "Bins directory empty? It seems no bins were generated"
-
-info "Putting chopped-up contigs back together..."
-unchop-contigs -o "$bindir" "$chopbindir"/*.fa
-info "Bins with (presumely) chopped contigs in $chopbindir"
-info "Bins with glued-back-together contigs in $bindir"
+info "Compiling bins into fasta files at $bindir ..."
+b2fargs=(-o "$bindir" -s fa)
+[[ -n $VERBOSE_FLAG ]] && b2fargs+=("$VERBOSE_FLAG")
+b2fargs+=("$binstable")
+$using_chopped_asm && b2fargs+=("$(realpath "$REAL_ASSEMBLY")")
+b2fargs+=("$assembly")
+bins2fasta "${b2fargs[@]}"
 
 info "Running CheckM..."
 checkm lineage_wf \
