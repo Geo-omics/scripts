@@ -240,8 +240,8 @@ sam_sort_tmp=/tmp
 #######################################
 
 OUT_DIR=$(readlink -f "$OUT_DIR")
-if [ -d "$OUT_DIR" ] && ! $FORCE; then
-    abort "Output directory $OUT_DIR exists, use --force to overwrite"
+if [ -e "$OUT_DIR/$log" ] && ! $FORCE; then
+    abort "It looks like there is existing mapping data for $assembly at $OUT_DIR, use --force to overwrite any or delete the existing data"
 fi
 
 $MKDIR -p "$OUT_DIR"
