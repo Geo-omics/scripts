@@ -130,11 +130,12 @@ fi
 if [ -n "$CHOPPED_ASSEMBLY" ]; then
     # bin via chopped assembly if given
     using_chopped_asm=true
-    assembly=$(readlink -f "$CHOPPED_ASSEMBLY")
+    assembly=$CHOPPED_ASSEMBLY
 else
     using_chopped_asm=false
-    assembly=$(readlink -f "$REAL_ASSEMBLY")
+    assembly=$REAL_ASSEMBLY
 fi
+assembly=$(realpath "$assembly")
 outdir=$(readlink -f "$OUTDIR")
 
 name=$(basename "$assembly")
@@ -189,14 +190,14 @@ if $USE_CONCOCT; then
         local cur
         while true; do
             sleep 1m
-            mapfile -t r_csvs < <(find "$outdir" -maxdepth 1 -regex "$outdir/r[0-9][0-9]?\.csv")
+            mapfile -t r_csvs < <(find "$outdir" -maxdepth 1 -regex "$outdir/r[0-9][0-9]?\\.csv")
             [[ ${#r_csvs[@]} == 0 ]] && continue
             [[ -w "$plog" ]] || continue
             # concoct will add one line per iteration to each rNN.csv file,
             # $cur will be the mean fraction of the expected final number of lines
             # across all found rNN.csv files
             cur=$(echo "scale=0; 100 * $(cat "${r_csvs[@]}" | wc -l) / ${#r_csvs[@]} / $max_iter" | bc)
-            if [[ $cur != $last ]]; then
+            if [[ $cur != "$last" ]]; then
                 echo "$(date) ${cur}%" >> "$plog"
                 last=$cur
             fi
@@ -204,7 +205,7 @@ if $USE_CONCOCT; then
     }
 
     function plog_clean_up () {
-        [[ -n $log_progress_job ]] && kill "$log_progress_job" &>/dev/null || true
+        { [[ -n $log_progress_job ]] && kill "$log_progress_job" &>/dev/null; } || true
     }
     trap plog_clean_up EXIT
 
@@ -241,7 +242,6 @@ if $USE_METABAT; then
         for i in "${SAMPLE_DIRS[@]}"; do
             bams+=("$(realpath "${i}/$bam_path")")
         done
-        assembly=$(realpath "$assembly")
         cd "$outdir"
         # (sigh) The argument in the metabat command line below which comes just before the first argument which is an existing file
         # i.e. the 1 of "--seed 1" before "$assembly" is taken by runMetabat.sh as output name and concatenated to make the output
