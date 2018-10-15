@@ -91,6 +91,12 @@ handle_options () {
     fi
 }
 
+if [[ -d /dept/geology/geomicro ]]; then
+    geomicro_base=/dept/geology
+else
+    geomicro_base=
+fi
+
 ##########################
 # default variable values
 ##########################
@@ -105,7 +111,8 @@ MOUNT_POINTS=(
 /scratch
 /nfs
 /dept
-/dept/geology/geomicro/data9/flux/reference-data/omics-reference-data:ro
+"${geomicro_base}"/geomicro/data9/flux/reference-data:ro
+"${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
 /omics
 /geomicro
 )
@@ -172,7 +179,8 @@ if $UPDATE; then
 fi
 
 for i in "${MOUNT_POINTS[@]}"; do
-    if [ -d "${i%:ro}" ]; then
+    # assume no colon in pathname
+    if [[ -d "${i%%:*}" ]]; then
         SINGULARITY_ARGS+=(-B "$i")
         [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Mounting: $i"
     fi
