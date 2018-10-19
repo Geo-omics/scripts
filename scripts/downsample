@@ -22,7 +22,8 @@ FASTQ = 'fastq'
 
 INTERLEAVED = 'interleaved'
 PAIRED = 'paired'
-MODE = {1: INTERLEAVED, 2: PAIRED}
+SINGLE = 'single'
+MODE = {1: INTERLEAVED, 2: PAIRED, 3: SINGLE}
 
 argp = argparse.ArgumentParser(description=__doc__)
 argp.add_argument(
@@ -32,6 +33,11 @@ argp.add_argument(
     help='Input files in either FASTA or FASTQ files.  This must be either a '
          'single interleaved file or, if two files, the forwards reads file '
          'followed by the reverse reads file.',
+)
+argp.add_argument(
+    '-s', '--single',
+    action='store_true',
+    help='Single, non-paired reads, mode',
 )
 argp.add_argument(
     '--seed',
@@ -64,11 +70,19 @@ argp.add_argument(
 )
 args = argp.parse_args()
 
+if len(args.inputfiles) >= 3:
+    argp.error('To many input files given, only 1 or 2 are allowed.')
+
 try:
     mode = MODE[len(args.inputfiles)]
 except KeyError:
     argp.error('1 or 2 input files must be provided, not {}'
                ''.format(len(args.inputfiles)))
+
+if args.single:
+    if len(args.inputfiles) > 1:
+        argp.error('Only one input file is supported in single mode')
+    mode = SINGLE
 
 if not 0.0 <= args.fraction <= 1.0:
     argp.error('The sampling fraction must be between 0 and 1')
