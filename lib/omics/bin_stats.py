@@ -100,11 +100,15 @@ def get_args():
 
 def main():
     args = get_args()
-    print(args)
+    print(args, file=sys.stderr)
     if args.bin_stats_analyse is not None:
         s = bin_stats_convert(args.bin_stats_analyse)
-        for i in s:
-            print(*i, sep='\t')
+        for row in s:
+            for i in range(len(row)):
+                if isinstance(row[i], float):
+                    row[i] = '{:.4f}'.format(row[i])
+            print(*row, sep='\t')
+    return
     make_statistics(
         checkm_table=args.checkm_table,
         bin_stats=args.bin_stats_analyse,
