@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.115-1) unstable; urgency=medium
+
+  * [comics] Mount ref data at fixed location
+  * [downsample] Support single, non-paired file mode
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Fri, 19 Oct 2018 00:23:12 -0400
+
 geo-omics-scripts (1.0.114-1) unstable; urgency=medium
 
   * [bins2fasta] Complete rewrite, new policy, works for CONCOCT and MetaBAT alike
