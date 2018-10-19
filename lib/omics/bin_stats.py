@@ -31,8 +31,13 @@ def bin_stats_convert(infile):
         row = [bin_id]
         for i in data:
             col_id, value = i.split(': ')
+            col_id = col_id.strip("'")
+
+            if 'scaffold' in col_id:
+                continue
+
             if is_first_row:
-                header.append(col_id.strip("'"))
+                header.append(col_id)
 
             try:
                 value = int(value)
