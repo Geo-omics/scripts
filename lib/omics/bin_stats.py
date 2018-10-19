@@ -27,8 +27,6 @@ def bin_stats_convert(infile):
         data = data.lstrip('{').rstrip('}').split(', ')
         if is_first_row:
             header = ['bin id']
-        else:
-            is_first_row = False
 
         row = [bin_id]
         for i in data:
@@ -48,6 +46,7 @@ def bin_stats_convert(infile):
                     )
             row.append(value)
         if is_first_row:
+            is_first_row = False
             yield header
 
         yield row
