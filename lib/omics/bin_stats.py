@@ -8,7 +8,13 @@ from pathlib import Path
 import sys
 
 
-def make_statistics(checkm_table, bin_stats_analyse, bin_dir, out):
+SUMMARY = 'summary'
+TEST = 'test'
+
+SUBCOMMANDS = [SUMMARY, TEST]
+
+
+def make_statistics(args, bin_stats):
     ...
 
 
@@ -140,8 +146,25 @@ def sort_table(table, key, rev=False):
     ))
 
 
+def make_summary(stats_a, stats_checkm, args):
+    """ Print summary table, selected columns from input tables """
+    cols1 = ['# contigs', 'Genome size', '# predicted genes']
+    cols2 = ['Marker lineage', 'Completeness', 'Contamination',
+             'Strain heterogeneity']
+    stats_a = pick_columns(stats_a, *cols1)
+    stats_checkm = pick_columns(stats_checkm, *cols2)
+    data = join_tables(stats_a, stats_checkm)
+    data = sort_table(data, 'Genome size', rev=True)
+    pprint_table_dict(data)
+
+
 def get_args():
     argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'command',
+        choices=SUBCOMMANDS,
+        help='The action that will be performed.',
+    )
     argp.add_argument(
         '-c', '--checkm-table',
         metavar='FILE',
@@ -171,22 +194,52 @@ def get_args():
     return argp.parse_args()
 
 
+def pprint_table_dict(data):
+    """ Pretty print a dict data structure """
+
+    def _format(values):
+        """ float formatting helper function """
+        ret = []
+        for i in values:
+            if isinstance(i, float):
+                i = '{:.4f}'.format(i)
+            ret.append(i)
+        return ret
+
+    # print header
+    if data:
+        print('', *list(list(data.values())[0].keys()), sep='\t')
+        for k, v in data.items():
+            print(k, *_format(v.values()), sep='\t')
+
+
 def main():
     args = get_args()
-    print(args, file=sys.stderr)
-    if args.bin_stats_analyse is not None:
-        s = bin_stats_convert(args.bin_stats_analyse)
-        for row in s:
-            for i in range(len(row)):
-                if isinstance(row[i], float):
-                    row[i] = '{:.4f}'.format(row[i])
-            print(*row, sep='\t')
-    return
+    if args.command == TEST:
+        print(args, file=sys.stderr)
+
+    if args.bin_stats_analyse is None:
+        bin_stats_tab = []
+    else:
+        bin_stats_tab = bin_stats_convert(args.bin_stats_analyse)
+
+    checkm_tab = load_table(args.checkm_table)
+
     make_statistics(
-        checkm_table=args.checkm_table,
-        bin_stats=args.bin_stats_analyse,
-        bin_dir=args.bin_dir,
-        out=args.out,
+        args,
+        bin_stats=bin_stats_tab,
     )
+
+    if args.command == SUMMARY:
+        make_summary(bin_stats_tab, checkm_tab, args)
+    elif args.command == TEST:
+        print('Printing bin stats table:')
+        pprint_table_dict(bin_stats_tab)
+        print()
+        print()
+        pprint_table_dict(checkm_tab)
+    else:
+        pass
+
 if __name__ == '__main__':
     main()
