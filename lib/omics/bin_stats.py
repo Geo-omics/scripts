@@ -2,6 +2,7 @@
 Module to compile statistics for bins
 """
 import argparse
+import csv
 from pathlib import Path
 import sys
 
@@ -12,49 +13,33 @@ def make_statistics(checkm_table, bin_stats_analyse, bin_dir, out):
 
 def bin_stats_convert(infile):
     """
-    Convert the bin_stats.analyse.tsv file into a real tab-delimited table
+    Convert the bin_stats.analyse.tsv file into a proper dict
     """
-    is_first_row = True
+    data = {}
+
     for line in infile:
         line = line.strip()
         try:
-            bin_id, data = line.split('\t')
+            bin_id, row = line.split('\t')
         except Exception:
             raise RuntimeError('Failed parsing {}: expected two elements '
                                'separated by a tab:\n{}'
                                ''.format(infile.name, line))
 
-        data = data.lstrip('{').rstrip('}').split(', ')
-        if is_first_row:
-            header = ['bin id']
+        row = row.lstrip('{').rstrip('}').split(', ')
 
-        row = [bin_id]
-        for i in data:
+        data[bin_id] = {}
+        for i in row:
             col_id, value = i.split(': ')
             col_id = col_id.strip("'")
 
             if 'scaffold' in col_id:
+                # FIXME: for now skip scaffold info
                 continue
 
-            if is_first_row:
-                header.append(col_id)
+            data[bin_id][col_id] = type_conv(value)
 
-            try:
-                value = int(value)
-            except Exception:
-                try:
-                    value = float(value)
-                except Exception:
-                    raise RuntimeError(
-                        'Failed to parse value {} in line:\n{}\nin file {}'
-                        ''.format(value, line, infile.name)
-                    )
-            row.append(value)
-        if is_first_row:
-            is_first_row = False
-            yield header
-
-        yield row
+    return data
 
 
 class DirectoryAction(argparse.Action):
@@ -65,6 +50,55 @@ class DirectoryAction(argparse.Action):
 
     def __call__(self, _, np, vals, opts=None):
         setattr(np, self.dest, Path(vals))
+
+
+def type_conv(val):
+    """ Helper function to convert numerical values """
+    for t in int, float:
+        try:
+            val = t(val)
+        except ValueError:
+            pass
+        else:
+            break
+    return val
+
+
+def load_table(file, sep='\t', header=True, to_dict=True, row_id_col=0):
+    """ Load a csv/tsv into dict or array"""
+    if header and to_dict:
+        id_col_name = file.buffer.peek().decode().splitlines()[0].split(sep)[0]
+    else:
+        id_col_name = None
+
+    if to_dict:
+        reader_func = csv.DictReader
+        data = {}
+    else:
+        reader_func = csv.reader
+        data = []
+
+    for row in reader_func(file, delimiter=sep):
+        if to_dict:
+            for k, v in row.items():
+                # NOTE: also converts row ids
+                row[k] = type_conv(v)
+
+            try:
+                rowid = row[id_col_name]
+            except KeyError:
+                raise RuntimeError(
+                    'Expected row identifier "{}" but that is not in csv '
+                    'parsed data: {}'.format(id_col_name, row)
+                )
+
+            data[rowid] = row
+            del row[id_col_name]
+        else:
+            # FIXME: (or not) converts header row too, unlike if to_dict
+            data.append([type_conv(i) for i in row])
+
+    return data
 
 
 def get_args():
