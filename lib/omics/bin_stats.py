@@ -2,6 +2,7 @@
 Module to compile statistics for bins
 """
 import argparse
+from collections import OrderedDict
 import csv
 from pathlib import Path
 import sys
@@ -15,7 +16,7 @@ def bin_stats_convert(infile):
     """
     Convert the bin_stats.analyse.tsv file into a proper dict
     """
-    data = {}
+    data = OrderedDict()
 
     for line in infile:
         line = line.strip()
@@ -28,7 +29,7 @@ def bin_stats_convert(infile):
 
         row = row.lstrip('{').rstrip('}').split(', ')
 
-        data[bin_id] = {}
+        data[bin_id] = OrderedDict()
         for i in row:
             col_id, value = i.split(': ')
             col_id = col_id.strip("'")
@@ -72,17 +73,20 @@ def load_table(file, sep='\t', header=True, to_dict=True, row_id_col=0):
         id_col_name = None
 
     if to_dict:
-        reader_func = csv.DictReader
-        data = {}
+        csv_reader_func = csv.DictReader
+        data = OrderedDict()
     else:
-        reader_func = csv.reader
+        csv_reader_func = csv.reader
         data = []
 
-    for row in reader_func(file, delimiter=sep):
+    csv_reader = csv_reader_func(file, delimiter=sep)
+    for row0 in csv_reader:
         if to_dict:
-            for k, v in row.items():
+            # preserve order and convert type
+            row = OrderedDict()
+            for k in csv_reader.fieldnames:
                 # NOTE: also converts row ids
-                row[k] = type_conv(v)
+                row[k] = type_conv(row0[k])
 
             try:
                 rowid = row[id_col_name]
