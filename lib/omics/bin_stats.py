@@ -105,6 +105,41 @@ def load_table(file, sep='\t', header=True, to_dict=True, row_id_col=0):
     return data
 
 
+def pick_columns(data, *cols):
+    """
+    Picks given columns from table data
+
+    Returns a new dict of dicts
+    """
+    ret = OrderedDict()
+    for row_id, row_dat in data.items():
+        ret[row_id] = OrderedDict()
+        for col_id in cols:
+            ret[row_id][col_id] = row_dat[col_id]
+
+    return ret
+
+
+def join_tables(*tables):
+    """ Join two or more tables in dict format """
+    data = OrderedDict()
+    for i in tables:
+        for k, v in i.items():
+            if k not in data:
+                data[k] = OrderedDict()
+            data[k].update(v)
+
+    return data
+
+
+def sort_table(table, key, rev=False):
+    return OrderedDict(sorted(
+        table.items(),
+        key=lambda x: x[1][key],
+        reverse=rev
+    ))
+
+
 def get_args():
     argp = argparse.ArgumentParser(description=__doc__)
     argp.add_argument(
