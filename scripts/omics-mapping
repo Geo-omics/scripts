@@ -44,10 +44,14 @@ Optional parameters for which arguments are relative to each sample directory:
                         can also be single-paired reads,
 			The default is int.good.fastq
                         Incompatible with bowtie2 <= 2.3.0
+  -u, --unpaired FILE   Unpaired fastq file
   -o, --out-dir DIR     Name of output directory, default: MAPPING
+
+Use either -f/-r, or -i, -or the -u option to specify read files but don't mix them.
+If no read files are specified, then the default forward and reverse files are used.
 "
-SHORT_OPTIONS=a:cf:i:o:r:x:
-LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:
+SHORT_OPTIONS=a:cf:i:o:r:u:x:
+LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,unpaired
 CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 }
 
@@ -77,11 +81,14 @@ ASSEMBLY=assembly.fa
 OUT_DIR=MAPPING
 # Samples to map, default is only current directory
 SAMPLE_DIRS=(./)
+# no default unpaired file
+UNPAIRED_READS=
 
 # option parsing state variables
 opts_fwd=false
 opts_rev=false
 opts_int=false
+opts_unp=false
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -120,6 +127,10 @@ handle_options () {
 	    (--index-only)
 		INDEX_ONLY=true
 		return 1;;
+	    (-u|--unpaired)
+	        UNPAIRED_READS="$2"
+		opts_unp=true
+	        return 2;;
 	    (-x|--index-dir)
 		INDEX_DIR="$2"
 		return 2;;
@@ -198,8 +209,11 @@ cd "$sample_dir"
 
 # sample-relative options checking
 if $opts_int; then
-    ! ($opts_fwd || $opts_rev) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads" usage
+    ! ($opts_fwd || $opts_rev || $opts_unp) || abort "Option --int-reads can not be combined with --fwd-reads or --rev-reads or --unpaired" usage
     use_int_reads=true
+elif $opts_unp; then
+    ! ($opts_fwd || $opts_rev || $opts_int) || abort "Option --unpaired can not be combined with --fwd-reads or --rev-reads or --int-reads" usage
+    use_int_reads=false
 else
     use_int_reads=false  # this is also the default if no cmd line options given
     if $opts_fwd; then
@@ -211,6 +225,8 @@ fi
 # find read files
 if $use_int_reads; then
     [ -e "$INT_READS" ] || abort "Reads file not found: $INT_READS"
+elif $opts_unp; then
+    [ -e "$UNPAIRED_READS" ] || abort "Reads file not found: $UNPAIRED_READS"
 else
     # this is also the default if no cmd line options were given
     use_int_reads=false
@@ -223,6 +239,8 @@ fi
 ################################
 if $use_int_reads; then
     int_reads=$(readlink -f "$INT_READS")
+elif $opts_unp; then
+    unp_reads=$(readlink -f "$UNPAIRED_READS")
 else
     fwd_reads=$(readlink -f "$FWD_READS")
     rev_reads=$(readlink -f "$REV_READS")
@@ -257,8 +275,11 @@ bt2_args=(
 )
 
 if $use_int_reads; then
-    info "  + Using $int_reads for reads"
+    info "  + using $int_reads for reads"
     bt2_args+=(--interleaved "$int_reads")
+elif $opts_unp; then
+    info "  + using $unp_reads for reads"
+    bt2_args+=(-U "$unp_reads")
 else
     # this is also the compatibility option for bowtie2 <= 2.3.0
     info "  + Using $fwd_reads AND $rev_reads for reads"
