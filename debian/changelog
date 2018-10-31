@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.116-1) unstable; urgency=medium
+
+  * Add bin statistics module
+  * [mapping] Add option to map against unpaired read files
+  * [binning] Add omics.bin_coverage module
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Tue, 30 Oct 2018 22:59:43 -0400
+
 geo-omics-scripts (1.0.115-1) unstable; urgency=medium
 
   * [comics] Mount ref data at fixed location
