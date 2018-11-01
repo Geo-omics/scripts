@@ -6,45 +6,70 @@ extractSubSeq - extract matching subsequences
 
 =head1 SYNOPSIS
 
-B<extractSubSeq> -f <fasta file> -tsv <custom tab-delimited file>
-OR
-B<extractSubSeq> -f <fasta file> -blast <blast file> -query
-OR
-B<extractSubSeq> -f <fasta file> -gff <gff3 file>
+B<extractSubSeq> B<-f> I<fasta_file> B<-tsv> I<custom_tab-delimited_file>
+
+B<extractSubSeq> B<-f> I<fasta_file> B<-blast> I<blast_file> B<-query>
+
+B<extractSubSeq> B<-f> I<fasta_file> B<-gff> I<gff3_file>
 
 
-=head1 OPTIONAL
+=head1 OPTIONS
 
+=head2 For Blast Output
 
+=over
 
+=item B<-query> Do you want sub sequences of your queries?
 
-=head1 For Blast Output
+=item B<-subj>	Do you want sub sequences of your matches/subjects?
 
--query	Do you want sub sequences of your queries?
--subj	Do you want sub sequences of your matches/subjects?
+=back
 
+=head2 For GFF3
 
-=head1 For GFF3
+=over
 
--map	If you wish to replace the names of the contigs, give it a "map" file;
-column1=name you wish to change to
-column2=name of the contig in the GFF file
+=item B<-map>
 
--header	only use the tag from attributes column as sequence header (example: "locus_tag" or "id"); default: scaffoldName__locus_tag=####__[start-end]
--feat or feature_type	only extract genes of a certain type (example: "cds" or "exon"); default: all.
+If you wish to replace the names of the contigs, give it a "map" file;
+    column1=name you wish to change to
+    column2=name of the contig in the GFF file
 
+=item B<-header>
 
-=head1 General Options
+only use the tag from attributes column as sequence header (example: "locus_tag" or "id"); default: scaffoldName__locus_tag=####__[start-end]
 
--start <start coordinate coloumn Number>; default: 7 for blast query; 9 for blast subject; 2 for custom tabbed file; 4 for GFF3
--stop <stop coordinate coloumn Number>; default: 8 for blast query; 10 for blast subject; 3 for custom tabbed file; 5 for GFF3
--o <output fileName>; default processID.fasta
--n <Column number>; default: 1
--l <set minimum alignment length>; default: 0
--p <set minimum % identity>; default: 0
--s <set minimum bit score>; default: 0
--top flag to only get the top hit for each query.
+=item B<-feat>, B<-feature_type> I<type>
 
+only extract genes of a certain type (example: "cds" or "exon"); default: all.
+
+=back
+
+=head2 General Options
+
+=over
+
+=item B<-start> I<n>
+
+start coordinate column Number; default: 7 for blast query; 9 for blast subject; 2 for custom tabbed file; 4 for GFF3
+
+=item B<-stop> I<n>
+
+stop coordinate column Number; default: 8 for blast query; 10 for blast subject; 3 for custom tabbed file; 5 for GFF3
+
+=item B<-o> I<output fileName>  default processID.fasta
+
+=item B<-n> I<n>    Column number>; default: 1
+
+=item B<-l> I<n>    set minimum alignment length>; default: 0
+
+=item B<-p> I<n>    set minimum % identity>; default: 0
+
+=item B<-s> I<n>    set minimum bit score>; default: 0
+
+=item B<-top>   flag to only get the top hit for each query.
+
+=back
 
 =head1 AUTHOR
 
