@@ -28,3 +28,10 @@ $ncbi_path = "$ref_data_path";
 $cm_align_long_mxsize = "10000";
 $cm_align_short_mxsize = "10000";
 
+# Use last-align bundled binaries if available
+
+$lastdb        = "/usr/lib/phylosift/lastdb";
+$lastal        = "/usr/lib/phylosift/lastal";
+
+-e $lastdb or $lastdb="";
+-e $lastal or $lastal="";
