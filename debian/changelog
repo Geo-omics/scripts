@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.117-1) unstable; urgency=medium
+
+  * [extractSubSeq] Fix up help/POD formatting/layout/spelling
+  * Let phylosift use bundled last-align binaries
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Fri, 09 Nov 2018 15:51:11 -0500
+
 geo-omics-scripts (1.0.116-1) unstable; urgency=medium
 
   * Add bin statistics module
