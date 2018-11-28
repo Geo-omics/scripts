@@ -199,16 +199,19 @@ else
     SINGULARITY_ARGS+=(--cleanenv)
 fi
 
-if [ "$#" -gt 0 ]; then
-    if $WRITE; then
-        cd / && exec sudo singularity run "${SINGULARITY_ARGS[@]}" -w "$image" "$@"
-    else
-        exec singularity run "${SINGULARITY_ARGS[@]}" "$image" "$@"
-    fi
-else
-    if $WRITE; then
-        cd / && exec sudo singularity shell -w "${SINGULARITY_ARGS[@]}" "$image"
-    else
-        exec singularity shell "${SINGULARITY_ARGS[@]}" "$image"
-    fi
+s_cmd=()
+if $WRITE; then
+    SINGULARITY_ARGS+=(--writable)
+    s_cmd+=(exec sudo)
 fi
+s_cmd+=(singularity)
+[[ $VERBOSITY == 0 ]] && s_cmd+=(--quiet)
+[[ $VERBOSITY == 3 ]] && S_cmd+=(--verbose)
+if [ "$#" -gt 0 ]; then
+    s_cmd+=(exec)
+else
+    s_cmd+=(shell)
+fi
+
+[[ $VERBOSITY -lt 2 ]] || info >&2 "Singularity command: ${s_cmd[*]} ${SINGULARITY_ARGS[*]} $image $*"
+"${s_cmd[@]}" "${SINGULARITY_ARGS[@]}" "$image" "$@" || exit

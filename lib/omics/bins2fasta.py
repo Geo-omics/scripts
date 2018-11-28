@@ -193,6 +193,9 @@ def load_bins(cdata, file):
     if b',' in peeked:
         mode = CONCOCT
         sep = ','
+        if peeked.startswith(b'contig_id'):
+            # consume header row for CONCOCT >=0.5.0
+            file.readline()
     elif b'\t' in peeked:
         mode = METABAT
         sep = '\t'

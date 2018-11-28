@@ -158,7 +158,7 @@ fi
 # check if input data exists before doing anything else
 for i in "${SAMPLE_DIRS[@]}"; do
     [ -d "$i" ] || abort "is not a directory: $i"
-    ! $USE_CONCOCT || [ -r "$i/$cov_path" ] || abort "coverage file not found: $i/$cov_path"
+    ! $USE_CONCOCT || [[ -n $COV_FILE ]] || [ -r "$i/$cov_path" ] || abort "coverage file not found: $i/$cov_path"
     ! $USE_METABAT || [ -r "$i/$bam_path" ] || abort "sorted bam file not found: $i/$bam_path"
 done
 
