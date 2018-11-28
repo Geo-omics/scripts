@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.118-1) unstable; urgency=medium
+
+  * [comics] pass verbosity to singlarity, use exec to run commands
+  * [binning] Add compatibility with concoct >=0.5.0
+  * [binning] Fix use of --coverage-file option
+
+ -- Robert <heinro@umich.edu>  Wed, 28 Nov 2018 15:47:53 -0500
+
 geo-omics-scripts (1.0.117-1) unstable; urgency=medium
 
   * [extractSubSeq] Fix up help/POD formatting/layout/spelling
