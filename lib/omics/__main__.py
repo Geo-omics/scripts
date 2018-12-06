@@ -1,7 +1,8 @@
 """
-Invoke omics scripts
+Invoke omics scripts and sub-commands
 """
 import argparse
+from importlib import import_module
 from pathlib import Path
 import subprocess
 import sys
@@ -40,6 +41,30 @@ def main():
         argp.error('Not a directory: {}'.format(args.script_dir))
 
     if args.command:
+        # try locating command as submodule
+        import_err = None
+        try:
+            cmd_module = import_module('.' + args.command[0],
+                                       package=__package__)
+        except Exception as e:
+            import_err = e
+            if args.dry_run or args.verbosity > 1:
+                print('{}: {}'.format(e.__class__.__name__, e))
+        else:
+            try:
+                cmd_module.main(args.command[1:])
+            except Exception as e:
+                if args.traceback:
+                    raise
+                else:
+                    argp.error(
+                        'Command {} failed: {}: {}'
+                        ''.format(args.command[0], e.__class__.__name__, e)
+                    )
+            else:
+                sys.exit()
+
+        # try calling as shellscript
         cmd = args.command[0]
         cmd_opts = args.command[1:]
         cmdline = process_command_line(
@@ -56,13 +81,17 @@ def main():
                 if args.traceback:
                     raise
                 else:
-                    argp.error('Not a valid omics command: {}\n({})'
-                               ''.format(cmd, e))
-            except Exception as e:
+                    msg1 = '\n  {}: {}'.format(import_err.__class__.__name__,
+                                               import_err)
+                    msg2 = '  {}: {}'.format(e.__class__.__name__, e)
+                    msg3 = '  ==> Not a valid omics command: {}'.format(cmd)
+                    argp.error('\n'.join([msg1, msg2, msg3]))
+            except Exception as e2:
                 if args.traceback:
                     raise
                 else:
-                    argp.error('{}: {}'.format(e.__class__.__name__, e))
+                    argp.error('Command "{}" failed: {}: {}'
+                               ''.format(cmdline, e2.__class__.__name__, e2))
             else:
                 argp.exit(status=p.returncode)
     else:
