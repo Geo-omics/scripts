@@ -153,8 +153,8 @@ def get_num_cpus():
         # `lscpu -p=cpu` prints list of cpu ids, starting with 0, so take last
         # line, divide by 2 (sharing the system) add 1 is the number of CPUs
         # used
-        p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
         try:
+            p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
             p.check_returncode()
             num_cpus = p.stdout.decode().splitlines()[-1].strip()
             num_cpus = int(int(num_cpus) / 2) + 1
