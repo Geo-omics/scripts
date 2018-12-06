@@ -3,6 +3,7 @@ Invoke omics scripts and sub-commands
 """
 import argparse
 from importlib import import_module
+import inspect
 from pathlib import Path
 import subprocess
 import sys
@@ -52,7 +53,26 @@ def main():
                 print('{}: {}'.format(e.__class__.__name__, e))
         else:
             try:
-                cmd_module.main(args.command[1:])
+                try:
+                    cmd_module.main(args.command[1:])
+                except (AttributeError, TypeError) as e:
+                    # May happen when there is no function main() or
+                    # main() does not take a positional arg
+                    # so we need to distinguish the cases:
+                    if hasattr(cmd_module, 'main') and \
+                      inspect.isfunction(cmd_module.main) and \
+                      len(inspect.signature(cmd_module.main).parameters) > 1:
+                        # We assume that call to main() itself succeeded,
+                        # so normal error while running the command
+                        # to be caught in outer try block
+                        raise
+                    else:
+                        # like import error, try calling script later
+                        import_err = e
+                else:
+                    # successful run of command
+                    sys.exit()
+
             except Exception as e:
                 if args.traceback:
                     raise
@@ -61,8 +81,6 @@ def main():
                         'Command {} failed: {}: {}'
                         ''.format(args.command[0], e.__class__.__name__, e)
                     )
-            else:
-                sys.exit()
 
         # try calling as shellscript
         cmd = args.command[0]
