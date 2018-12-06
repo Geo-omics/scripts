@@ -1,14 +1,6 @@
 """
 This is the omics database module
 
-This is 'stand-alone' Django ORM and db backend.
+This is 'stand-alone' Django ORM and db backend for the geo-omics-scripts.
 """
-config = {
-    'INSTALLED_APPS': ['omics.db.apps.OmicsDBConfig'],
-    'DATABASES': {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': None,
-        },
-    },
-}
+from .manage import main
