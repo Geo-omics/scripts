@@ -88,8 +88,8 @@ def get_argp():
     return argp
 
 
-def main():
-    args = get_argp().parse_args()
+def main(argv=None):
+    args = get_argp().parse_args(argv)
     init(path=args.directory, name=args.name)
     db.setup()
 

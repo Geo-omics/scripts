@@ -215,7 +215,7 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
                 infile.close()
 
 
-def main():
+def main(argv=None):
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__
@@ -249,7 +249,7 @@ def main():
              'positional argument.  By default .fastq and .fastq.gz files '
              'are considered.',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(argv)
 
     verbosity = args.verbosity
 
