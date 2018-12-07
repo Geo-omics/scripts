@@ -7,6 +7,7 @@ convenience feature and not necessary to run any of the omics tools.
 from pathlib import Path
 from string import Template
 
+from omics import db
 from omics import OMICS_DIR, CONFIG_FILE, CONF_SECTION_PROJECT, get_argparser
 
 empty_conf_template = """\
@@ -90,6 +91,7 @@ def get_argp():
 def main():
     args = get_argp().parse_args()
     init(path=args.directory, name=args.name)
+    db.setup()
 
 
 if __name__ == '__main__':
