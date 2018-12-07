@@ -28,16 +28,28 @@ argp.add_argument(
 )
 
 
+def configure(db_file_name=DEFAULT_DB_FILE):
+    """
+    Do the Django configuration dance
+
+    This needs to be called once whenever we want to access the database
+    """
+    db_settings['DATABASES']['default']['NAME'] = db_file_name
+    settings.configure(**db_settings)
+    print('BORK: configured!')
+
+
 def main(argv=None):
+    """
+    Run the 'omics db' command
+    """
     args, rest_argv = argp.parse_known_args(argv)
     if not Path(args.db).is_file():
         print('No database present, file not found: {}\nRun "omics db migrate"'
               ' to set up a database in the current directory.'
               ''.format(args.db), file=sys.stderr)
 
-    db_settings['DATABASES']['default']['NAME'] = args.db
-
-    settings.configure(**db_settings)
+    configure(args.db)
     execute_from_command_line([PROG_NAME] + rest_argv)
 
 
