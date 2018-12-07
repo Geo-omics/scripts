@@ -1,4 +1,3 @@
-import argparse
 from io import StringIO
 from pathlib import Path
 import sys
@@ -6,6 +5,8 @@ import sys
 import django
 from django.conf import settings
 from django.core.management import call_command, execute_from_command_line
+
+from omics import OmicsArgParser, OMICS_DIR
 
 
 DEFAULT_DB_FILE = 'omics.db'
@@ -22,11 +23,14 @@ db_settings = {
 }
 
 
-argp = argparse.ArgumentParser(add_help=False, prog=PROG_NAME)
+argp = OmicsArgParser(prog=PROG_NAME, add_help=False)
 argp.add_argument(
     '--db',
-    default=DEFAULT_DB_FILE,
-    help='Path and name of database file',
+    default=None,
+    help='Path and name of database file. If this is not provided, then the '
+         'database is looked up in the {} project directory, if one exists, '
+         'and otherwise the default {} in the current directory is used.'
+         ''.format(OMICS_DIR, DEFAULT_DB_FILE),
 )
 
 
@@ -63,7 +67,7 @@ def configure(db_file_name=DEFAULT_DB_FILE):
 
     This needs to be called once whenever we want to access the database
     """
-    db_settings['DATABASES']['default']['NAME'] = db_file_name
+    db_settings['DATABASES']['default']['NAME'] = str(db_file_name)
     settings.configure(**db_settings)
 
 
@@ -72,12 +76,28 @@ def main(argv=None):
     Run the 'omics db' command
     """
     args, rest_argv = argp.parse_known_args(argv)
-    if not Path(args.db).is_file():
-        print('No database present, file not found: {}\nRun "omics db migrate"'
-              ' to set up a database in the current directory.'
+
+    if args.db is None:
+        if hasattr(args, 'project'):
+            if (args.project['project_home'] / OMICS_DIR).is_dir():
+                # omics init was called
+                db_path = \
+                    args.project['project_home'] / OMICS_DIR / DEFAULT_DB_FILE
+            else:
+                db_path = args.project['project_home'] / DEFAULT_DB_FILE
+        else:
+            # FIXME: when will this path be taken?
+            db_path = Path.cwd() / DEFAULT_DB_FILE
+    else:
+        db_path = Path(args.db)
+
+    if not Path(db_path).is_file():
+        print('No database present, file not found: {}\nTo properly initiate '
+              'a project run "omics init" or run "omics db migrate" '
+              'to just set up a database in the current directory.'
               ''.format(args.db), file=sys.stderr)
 
-    configure(args.db)
+    configure(db_path)
     execute_from_command_line([PROG_NAME] + rest_argv)
 
 
