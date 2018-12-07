@@ -61,7 +61,7 @@ def main():
                     # so we need to distinguish the cases:
                     if hasattr(cmd_module, 'main') and \
                       inspect.isfunction(cmd_module.main) and \
-                      len(inspect.signature(cmd_module.main).parameters) > 1:
+                      len(inspect.signature(cmd_module.main).parameters) >= 1:
                         # We assume that call to main() itself succeeded,
                         # so normal error while running the command
                         # to be caught in outer try block
