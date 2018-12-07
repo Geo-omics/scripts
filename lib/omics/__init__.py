@@ -25,7 +25,8 @@ class OmicsArgParser(argparse.ArgumentParser):
     Assumes the parser is populated by get_argparser(), relevant changes there
     may need to be reflected here.
     """
-    def __init__(self, *args, project_home=True, threads=True, **kwargs):
+    def __init__(self, *args, project_home=True, threads=True, add_help=True,
+                 **kwargs):
         """
         Provide the canonical omics argparse argument parser
 
@@ -36,17 +37,21 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Does not use the normal help option since out help option shall go into
         the common group.  --project-dir is made optional as it does not go
-        into the init script.
+        into the init script.  With add_help=False no --help option will be
+        parsed, this can be used with partial parsing, and passing --help to a
+        subsequent parser, e.g. for the db command which wraps the django
+        management commands that have their own arg parsers.
         """
         super().__init__(*args, add_help=False, **kwargs)
         common = self.add_argument_group('common omics options')
 
         # help option is inspired by argparse.py
-        common.add_argument(
-            '-h', '--help',
-            action='help', default=argparse.SUPPRESS,
-            help='show this help and exit',
-        )
+        if add_help:
+            common.add_argument(
+                '-h', '--help',
+                action='help', default=argparse.SUPPRESS,
+                help='show this help and exit',
+            )
         if project_home:
             common.add_argument(
                 '--project-home',
