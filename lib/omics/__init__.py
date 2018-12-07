@@ -86,7 +86,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
         return usage
 
-    def parse_args(self, *args, **kwargs):
+    def parse_known_args(self, *args, **kwargs):
         """
         Parse options and substitue missing options with configured values
 
@@ -95,7 +95,7 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Note: There is some redundancy between the arguments and the project.
         """
-        args = super().parse_args(*args, **kwargs)
+        args, argv = super().parse_known_args(*args, **kwargs)
 
         try:
             project = get_project(args.project_home)
@@ -129,7 +129,7 @@ class OmicsArgParser(argparse.ArgumentParser):
                     self.error('The number of threads given via --threads '
                                'must be >=1')
 
-        return args
+        return args, argv
 
 
 def get_num_cpus():
