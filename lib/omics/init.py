@@ -58,12 +58,12 @@ def init(path=Path.cwd(), name=None):
         name = None
 
     if omics_dir.is_dir():
-        print('Reinitialized existing omics project in {}'.format(omics_dir))
         # TODO: check config file
+        return omics_dir, True
     else:
         omics_dir.mkdir(parents=True)
         create_config_file(omics_dir, name=name)
-        print('Initialized omics project in {}'.format(omics_dir))
+        return omics_dir, False
 
 
 def get_argp():
@@ -90,8 +90,12 @@ def get_argp():
 
 def main(argv=None):
     args = get_argp().parse_args(argv)
-    init(path=args.directory, name=args.name)
+    path, exists = init(path=args.directory, name=args.name)
     db.setup()
+    if exists:
+        print('Reinitialized existing omics project in {}'.format(path))
+    else:
+        print('Initialized omics project in {}'.format(path))
 
 
 if __name__ == '__main__':
