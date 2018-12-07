@@ -30,7 +30,7 @@ argp.add_argument(
 )
 
 
-def setup():
+def setup(db_path):
     """
     Setup and configure django framework
 
@@ -40,7 +40,12 @@ def setup():
     per Django documentation should not be call explicitly in code using the
     framework, i.e. everything under omics.db.
     """
-    configure()
+    if db_path.is_dir():
+        db_file_name = str(db_path / DEFAULT_DB_FILE)
+    else:
+        db_file_name = str(db_path)
+
+    configure(db_file_name)
     django.setup()
     out = StringIO()
     try:

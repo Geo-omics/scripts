@@ -91,7 +91,7 @@ def get_argp():
 def main(argv=None):
     args = get_argp().parse_args(argv)
     path, exists = init(path=args.directory, name=args.name)
-    db.setup()
+    db.setup(db_path=path)
     if exists:
         print('Reinitialized existing omics project in {}'.format(path))
     else:
