@@ -1,0 +1,29 @@
+_foofoo_completion()
+{
+    COMPREPLY=( hello "hell no" )
+    return 0
+}
+complete -F _foofoo_completion foofoo
+
+_omics_completion()
+{
+    COMPREPLY=(
+        $(OMICS_AUTO_COMPLETE="$COMP_CWORD" "${COMP_WORDS[@]}")
+    )
+}
+complete -F _omics_completion omics
+
+_foo() 
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--help --verbose --version"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+complete -F _foo foo

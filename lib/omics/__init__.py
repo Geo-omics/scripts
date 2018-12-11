@@ -101,6 +101,10 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Note: There is some redundancy between the arguments and the project.
         """
+        if 'OMICS_AUTO_COMPLETE' in environ:
+            self.bash_complete()
+            sys.exit()
+
         args, argv = super().parse_known_args(*args, **kwargs)
 
         try:
@@ -136,6 +140,19 @@ class OmicsArgParser(argparse.ArgumentParser):
                                'must be >=1')
 
         return args, argv
+
+    def bash_complete(self):
+        # get cursor pos
+        cword = int(environ['OMICS_AUTO_COMPLETE'])
+
+        if cword == 1 and not sys.argv[1].startswith('-'):
+            compl_words = [
+                i for i in get_available_commands()
+                if i.startswith(sys.argv[1])
+            ]
+            if compl_words:
+                print(*compl_words, sep='\n')
+        sys.exit()
 
 
 def get_num_cpus():
