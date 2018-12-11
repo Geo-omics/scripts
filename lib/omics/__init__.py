@@ -350,3 +350,44 @@ class OmicsProject(dict):
                     self[key] = get_funs[type_](*args)
                 except KeyError:
                     pass
+
+
+def get_available_scripts():
+    """
+    Try to get the available omics commands
+
+    :return: List of paths for subcommand scripts.
+    :raises: In case of errors
+    """
+    p = subprocess.run(['which', 'omics'], stdout=subprocess.PIPE)
+    p.check_returncode()
+    path = Path(p.stdout.decode().strip()).parent
+    if path.is_dir():
+        # For development environment filter out vim backup files
+        return [
+            i for i in path.glob(SCRIPT_PREFIX + '*')
+            if not i.name.endswith('~')
+        ]
+    else:
+        raise RuntimeError('Failed to determine directory containing omics '
+                           'executable: {}'.format(path))
+
+
+def get_available_commands():
+    """
+    Get list of available sub-commands
+
+    :return list: List of str names of sub-commands.
+                  List is empty in case of errors.
+    """
+    ret = set()
+    try:
+        commands = get_available_scripts()
+    except:
+        pass
+    else:
+        for i in commands:
+            _, _, subcmd = i.name.partition('-')
+            if subcmd:
+                ret.add(subcmd)
+    return sorted(ret)
