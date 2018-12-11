@@ -5,6 +5,7 @@ import argparse
 import configparser
 from os import environ
 from pathlib import Path
+from pkgutil import iter_modules
 import re
 import subprocess
 import sys
@@ -373,6 +374,19 @@ def get_available_scripts():
                            'executable: {}'.format(path))
 
 
+def get_modules_with_main():
+    """
+    Return list of module with a main function, i.e. the subcommands
+    """
+    mods = []
+    for _, name, ispkg in iter_modules(path=__path__):
+        # print(name, ispkg, sep='\n')
+        if name == '__main__':
+            continue
+        mods.append(name)
+    return mods
+
+
 def get_available_commands():
     """
     Get list of available sub-commands
@@ -390,4 +404,6 @@ def get_available_commands():
             _, _, subcmd = i.name.partition('-')
             if subcmd:
                 ret.add(subcmd)
+    # do s/_/-/g on submodules since cmd line commands should be slugs
+    ret = ret.union([i.replace('_', '-') for i in get_modules_with_main()])
     return sorted(ret)
