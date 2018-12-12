@@ -1,3 +1,17 @@
+geo-omics-scripts (1.0.119-1) unstable; urgency=medium
+
+  * First set of database additions, calling django management via "omics db"
+    implemented
+  * [omics] Enable calling omics.* submodules via omics cmd line
+  * [omics] Tolerate unavailability of lscpu
+  * [omics] only call omics.* modules if they have a main(argv) defined
+  * [omics] Call init and prep directly as python modules
+  * [omics] Allow skipping generation of --help option
+  * [omics] Also report submodules with main() function as omics commands
+  * [omics] Add initial bash completion support
+
+ -- Robert <heinro@umich.edu>  Wed, 12 Dec 2018 09:58:10 -0500
+
 geo-omics-scripts (1.0.118-1) unstable; urgency=medium
 
   * [comics] pass verbosity to singlarity, use exec to run commands
