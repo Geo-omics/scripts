@@ -102,7 +102,11 @@ class OmicsArgParser(argparse.ArgumentParser):
         Note: There is some redundancy between the arguments and the project.
         """
         if 'OMICS_AUTO_COMPLETE' in environ:
-            self.bash_complete()
+            try:
+                self.bash_complete()
+            except:
+                if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+                    raise
             sys.exit()
 
         args, argv = super().parse_known_args(*args, **kwargs)
@@ -143,15 +147,90 @@ class OmicsArgParser(argparse.ArgumentParser):
 
     def bash_complete(self):
         # get cursor pos
-        cword = int(environ['OMICS_AUTO_COMPLETE'])
+        index = int(environ['OMICS_AUTO_COMPLETE'])
 
-        if cword == 1 and not sys.argv[1].startswith('-'):
-            compl_words = [
-                i for i in get_available_commands()
-                if i.startswith(sys.argv[1])
-            ]
-            if compl_words:
-                print(*compl_words, sep='\n')
+        word = sys.argv[index]
+
+        if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+            print(file=sys.stderr)
+            print('argv:', sys.argv, file=sys.stderr)
+            print('cur:', index, '"{}"'.format(word), file=sys.stderr)
+        # print('argv:', sys.argv, file=sys.stderr)
+        # print('cursor at:', cword, file=sys.stderr)
+
+        # iterate through args left of cursor to get current word type:
+
+        # states:
+        #  0 - common optional parameters (cop)
+        #  1 - sub command (sub)
+        #  2 - sub optional or positionals
+        # +nargs
+        state = 0
+        nargs = 0
+        action = None
+        for arg in sys.argv[1:index + 1]:
+            if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+                print(state, nargs, '->', arg, file=sys.stderr)
+
+            if not arg:
+                # if last word is empty, do not interpret, keep current state
+                continue
+
+            if nargs > 0:
+                nargs -= 1
+                continue
+            else:
+                # reset action
+                if action is not None:
+                    action = None
+
+            if state == 0:
+                if arg.startswith('-'):
+                    for i in self._actions:
+                        if arg in i.option_strings:
+                            action = i
+                            break
+                    if action is not None:
+                        nargs = action.nargs
+                else:
+                    # suggest sub-command unless user started a - option
+                    state = 1
+            elif state == 1:
+                # TODO: switch to subcommand parser and completion
+                state = 2
+            elif state == 2:
+                if arg.startswith('-'):
+                    for i in self._actions:
+                        if arg in i.option_strings:
+                            action = i
+                            break
+                    # assuming arg is valid option
+                    if action is not None:
+                        nargs = action.nargs
+
+            # fix None nargs, interpret None as 1 arg
+            # TODO: handle ? and *
+            if nargs is None:
+                nargs = 1
+
+        if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+            print('end state:', state, action, nargs, file=sys.stderr)
+
+        allowed = []
+        if nargs > 0:
+            # current word is an argument to option
+            # TODO: handle files
+            pass
+        elif state == 0:
+            # current word is option string
+            for i in self._actions:
+                allowed += i.option_strings
+        elif state == 1:
+            allowed = get_available_commands()
+
+        compl_words = [i for i in allowed if i.startswith(word)]
+        if compl_words:
+            print(*compl_words, sep='\n')
         sys.exit()
 
 
