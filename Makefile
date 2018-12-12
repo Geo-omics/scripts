@@ -194,7 +194,9 @@ install-docs:
 install: install-docs install-data
 	cd lib && $(MAKE) install
 	cd scripts && $(MAKE) install
-	$(INSTALL) -t /etc/bash_completion.d/ bash-completion/omics
+	$(info Installing bash completion ...)
+	mkdir -p -- $(DESTDIR)/etc/bash_completion.d
+	$(INSTALL) -t $(DESTDIR)/etc/bash_completion.d/ bash-completion/omics
 
 
 install-comics-local: prog = scripts/comics
