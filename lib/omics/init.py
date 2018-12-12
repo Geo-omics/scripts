@@ -7,6 +7,7 @@ convenience feature and not necessary to run any of the omics tools.
 from pathlib import Path
 from string import Template
 
+from omics import db
 from omics import OMICS_DIR, CONFIG_FILE, CONF_SECTION_PROJECT, get_argparser
 
 empty_conf_template = """\
@@ -57,12 +58,12 @@ def init(path=Path.cwd(), name=None):
         name = None
 
     if omics_dir.is_dir():
-        print('Reinitialized existing omics project in {}'.format(omics_dir))
         # TODO: check config file
+        return omics_dir, True
     else:
         omics_dir.mkdir(parents=True)
         create_config_file(omics_dir, name=name)
-        print('Initialized omics project in {}'.format(omics_dir))
+        return omics_dir, False
 
 
 def get_argp():
@@ -87,9 +88,14 @@ def get_argp():
     return argp
 
 
-def main():
-    args = get_argp().parse_args()
-    init(path=args.directory, name=args.name)
+def main(argv=None):
+    args = get_argp().parse_args(argv)
+    path, exists = init(path=args.directory, name=args.name)
+    db.setup(db_path=path)
+    if exists:
+        print('Reinitialized existing omics project in {}'.format(path))
+    else:
+        print('Initialized omics project in {}'.format(path))
 
 
 if __name__ == '__main__':

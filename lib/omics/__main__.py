@@ -1,12 +1,14 @@
 """
-Invoke omics scripts
+Invoke omics scripts and sub-commands
 """
 import argparse
+from importlib import import_module
+import inspect
 from pathlib import Path
 import subprocess
 import sys
 
-from . import SCRIPT_PREFIX, process_command_line, get_argparser
+from . import process_command_line, get_argparser, get_available_commands
 
 
 def main():
@@ -40,6 +42,47 @@ def main():
         argp.error('Not a directory: {}'.format(args.script_dir))
 
     if args.command:
+        # try locating command as submodule
+        import_err = None
+        try:
+            cmd_module = import_module('.' + args.command[0],
+                                       package=__package__)
+        except Exception as e:
+            import_err = e
+            if args.dry_run or args.verbosity > 1:
+                print('{}: {}'.format(e.__class__.__name__, e))
+        else:
+            try:
+                try:
+                    cmd_module.main(args.command[1:])
+                except (AttributeError, TypeError) as e:
+                    # May happen when there is no function main() or
+                    # main() does not take a positional arg
+                    # so we need to distinguish the cases:
+                    if hasattr(cmd_module, 'main') and \
+                      inspect.isfunction(cmd_module.main) and \
+                      len(inspect.signature(cmd_module.main).parameters) >= 1:
+                        # We assume that call to main() itself succeeded,
+                        # so normal error while running the command
+                        # to be caught in outer try block
+                        raise
+                    else:
+                        # like import error, try calling script later
+                        import_err = e
+                else:
+                    # successful run of command
+                    sys.exit()
+
+            except Exception as e:
+                if args.traceback:
+                    raise
+                else:
+                    argp.error(
+                        'Command {} failed: {}: {}'
+                        ''.format(args.command[0], e.__class__.__name__, e)
+                    )
+
+        # try calling as shellscript
         cmd = args.command[0]
         cmd_opts = args.command[1:]
         cmdline = process_command_line(
@@ -56,13 +99,17 @@ def main():
                 if args.traceback:
                     raise
                 else:
-                    argp.error('Not a valid omics command: {}\n({})'
-                               ''.format(cmd, e))
-            except Exception as e:
+                    msg1 = '\n  {}: {}'.format(import_err.__class__.__name__,
+                                               import_err)
+                    msg2 = '  {}: {}'.format(e.__class__.__name__, e)
+                    msg3 = '  ==> Not a valid omics command: {}'.format(cmd)
+                    argp.error('\n'.join([msg1, msg2, msg3]))
+            except Exception as e2:
                 if args.traceback:
                     raise
                 else:
-                    argp.error('{}: {}'.format(e.__class__.__name__, e))
+                    argp.error('Command "{}" failed: {}: {}'
+                               ''.format(cmdline, e2.__class__.__name__, e2))
             else:
                 argp.exit(status=p.returncode)
     else:
@@ -74,43 +121,6 @@ def main():
             print('Type `omics -h` or `omics <cmd> -h` to get help.')
         else:
             argp.print_help()
-
-
-def get_available_scripts():
-    """
-    Try to get the available omics commands
-
-    :return: List of paths for subcommand scripts.
-    :raises: In case of errors
-    """
-    p = subprocess.run(['which', 'omics'], stdout=subprocess.PIPE)
-    p.check_returncode()
-    path = Path(p.stdout.decode().strip()).parent
-    if path.is_dir():
-        return list(path.glob(SCRIPT_PREFIX + '*'))
-    else:
-        raise RuntimeError('Failed to determine directory containing omics '
-                           'executable: {}'.format(path))
-
-
-def get_available_commands():
-    """
-    Get list of available sub-commands
-
-    :return list: List of str names of sub-commands.
-                  List is empty in case of errors.
-    """
-    ret = []
-    try:
-        commands = get_available_scripts()
-    except:
-        pass
-    else:
-        for i in commands:
-            _, _, subcmd = i.name.partition('-')
-            if subcmd:
-                ret.append(subcmd)
-    return ret
 
 
 if __name__ == '__main__':

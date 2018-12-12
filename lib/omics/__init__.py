@@ -5,6 +5,7 @@ import argparse
 import configparser
 from os import environ
 from pathlib import Path
+from pkgutil import iter_modules
 import re
 import subprocess
 import sys
@@ -25,7 +26,8 @@ class OmicsArgParser(argparse.ArgumentParser):
     Assumes the parser is populated by get_argparser(), relevant changes there
     may need to be reflected here.
     """
-    def __init__(self, *args, project_home=True, threads=True, **kwargs):
+    def __init__(self, *args, project_home=True, threads=True, add_help=True,
+                 **kwargs):
         """
         Provide the canonical omics argparse argument parser
 
@@ -36,17 +38,21 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Does not use the normal help option since out help option shall go into
         the common group.  --project-dir is made optional as it does not go
-        into the init script.
+        into the init script.  With add_help=False no --help option will be
+        parsed, this can be used with partial parsing, and passing --help to a
+        subsequent parser, e.g. for the db command which wraps the django
+        management commands that have their own arg parsers.
         """
         super().__init__(*args, add_help=False, **kwargs)
         common = self.add_argument_group('common omics options')
 
         # help option is inspired by argparse.py
-        common.add_argument(
-            '-h', '--help',
-            action='help', default=argparse.SUPPRESS,
-            help='show this help and exit',
-        )
+        if add_help:
+            common.add_argument(
+                '-h', '--help',
+                action='help', default=argparse.SUPPRESS,
+                help='show this help and exit',
+            )
         if project_home:
             common.add_argument(
                 '--project-home',
@@ -86,7 +92,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
         return usage
 
-    def parse_args(self, *args, **kwargs):
+    def parse_known_args(self, *args, **kwargs):
         """
         Parse options and substitue missing options with configured values
 
@@ -95,7 +101,15 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Note: There is some redundancy between the arguments and the project.
         """
-        args = super().parse_args(*args, **kwargs)
+        if 'OMICS_AUTO_COMPLETE' in environ:
+            try:
+                self.bash_complete()
+            except:
+                if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+                    raise
+            sys.exit()
+
+        args, argv = super().parse_known_args(*args, **kwargs)
 
         try:
             project = get_project(args.project_home)
@@ -129,7 +143,95 @@ class OmicsArgParser(argparse.ArgumentParser):
                     self.error('The number of threads given via --threads '
                                'must be >=1')
 
-        return args
+        return args, argv
+
+    def bash_complete(self):
+        # get cursor pos
+        index = int(environ['OMICS_AUTO_COMPLETE'])
+
+        word = sys.argv[index]
+
+        if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+            print(file=sys.stderr)
+            print('argv:', sys.argv, file=sys.stderr)
+            print('cur:', index, '"{}"'.format(word), file=sys.stderr)
+        # print('argv:', sys.argv, file=sys.stderr)
+        # print('cursor at:', cword, file=sys.stderr)
+
+        # iterate through args left of cursor to get current word type:
+
+        # states:
+        #  0 - common optional parameters (cop)
+        #  1 - sub command (sub)
+        #  2 - sub optional or positionals
+        # +nargs
+        state = 0
+        nargs = 0
+        action = None
+        for arg in sys.argv[1:index + 1]:
+            if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+                print(state, nargs, '->', arg, file=sys.stderr)
+
+            if not arg:
+                # if last word is empty, do not interpret, keep current state
+                continue
+
+            if nargs > 0:
+                nargs -= 1
+                continue
+            else:
+                # reset action
+                if action is not None:
+                    action = None
+
+            if state == 0:
+                if arg.startswith('-'):
+                    for i in self._actions:
+                        if arg in i.option_strings:
+                            action = i
+                            break
+                    if action is not None:
+                        nargs = action.nargs
+                else:
+                    # suggest sub-command unless user started a - option
+                    state = 1
+            elif state == 1:
+                # TODO: switch to subcommand parser and completion
+                state = 2
+            elif state == 2:
+                if arg.startswith('-'):
+                    for i in self._actions:
+                        if arg in i.option_strings:
+                            action = i
+                            break
+                    # assuming arg is valid option
+                    if action is not None:
+                        nargs = action.nargs
+
+            # fix None nargs, interpret None as 1 arg
+            # TODO: handle ? and *
+            if nargs is None:
+                nargs = 1
+
+        if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+            print('end state:', state, action, nargs, file=sys.stderr)
+
+        allowed = []
+        if nargs > 0:
+            # current word is an argument to option
+            # TODO: handle files
+            pass
+        elif state == 0:
+            # current word is option string
+            for i in self._actions:
+                allowed += i.option_strings
+        elif state == 1:
+            allowed = get_available_commands()
+
+        compl_words = [i for i in allowed if i.startswith(word)]
+        if compl_words:
+            print(*compl_words, sep='\n')
+        sys.exit()
 
 
 def get_num_cpus():
@@ -153,8 +255,8 @@ def get_num_cpus():
         # `lscpu -p=cpu` prints list of cpu ids, starting with 0, so take last
         # line, divide by 2 (sharing the system) add 1 is the number of CPUs
         # used
-        p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
         try:
+            p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
             p.check_returncode()
             num_cpus = p.stdout.decode().splitlines()[-1].strip()
             num_cpus = int(int(num_cpus) / 2) + 1
@@ -345,3 +447,59 @@ class OmicsProject(dict):
                     self[key] = get_funs[type_](*args)
                 except KeyError:
                     pass
+
+
+def get_available_scripts():
+    """
+    Try to get the available omics commands
+
+    :return: List of paths for subcommand scripts.
+    :raises: In case of errors
+    """
+    p = subprocess.run(['which', 'omics'], stdout=subprocess.PIPE)
+    p.check_returncode()
+    path = Path(p.stdout.decode().strip()).parent
+    if path.is_dir():
+        # For development environment filter out vim backup files
+        return [
+            i for i in path.glob(SCRIPT_PREFIX + '*')
+            if not i.name.endswith('~')
+        ]
+    else:
+        raise RuntimeError('Failed to determine directory containing omics '
+                           'executable: {}'.format(path))
+
+
+def get_modules_with_main():
+    """
+    Return list of module with a main function, i.e. the subcommands
+    """
+    mods = []
+    for _, name, ispkg in iter_modules(path=__path__):
+        # print(name, ispkg, sep='\n')
+        if name == '__main__':
+            continue
+        mods.append(name)
+    return mods
+
+
+def get_available_commands():
+    """
+    Get list of available sub-commands
+
+    :return list: List of str names of sub-commands.
+                  List is empty in case of errors.
+    """
+    ret = set()
+    try:
+        commands = get_available_scripts()
+    except:
+        pass
+    else:
+        for i in commands:
+            _, _, subcmd = i.name.partition('-')
+            if subcmd:
+                ret.add(subcmd)
+    # do s/_/-/g on submodules since cmd line commands should be slugs
+    ret = ret.union([i.replace('_', '-') for i in get_modules_with_main()])
+    return sorted(ret)

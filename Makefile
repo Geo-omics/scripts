@@ -54,6 +54,7 @@ EXTRA_DIST = \
 	Makefile \
 	modulefiles \
 	README.md \
+	bash-completion \
 
 data_files = \
 	phylosiftrc \
@@ -193,6 +194,8 @@ install-docs:
 install: install-docs install-data
 	cd lib && $(MAKE) install
 	cd scripts && $(MAKE) install
+	$(INSTALL) -t /etc/bash_completion.d/ bash-completion/omics
+
 
 install-comics-local: prog = scripts/comics
 install-comics-local: insert_tmp := $(shell mktemp)
