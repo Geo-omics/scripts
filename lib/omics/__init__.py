@@ -181,74 +181,79 @@ class OmicsArgParser(argparse.ArgumentParser):
             print('cur:', index, '"{}"'.format(word), file=sys.stderr)
 
         # iterate through args left of cursor to get current word type:
-
-        # states:
-        #  0 - common optional parameters (cop)
-        #  1 - sub command (sub)
-        #  2 - sub optional or positionals
-        # +nargs
-        state = 0
-        nargs = 0
-        action = None
-        for arg in sys.argv[1:index + 1]:
+        cur_type = None
+        cur_option = None
+        found_subcmd = False
+        num_opt_args = 0  # number of options args remaining
+        pos_arg_count = 0  # keeps count of pos args for sub commands
+        for arg in args[:index + 1]:
             if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
-                print(state, nargs, '->', arg, file=sys.stderr)
+                print('arg: "{}", cur_option: {}, nargs={}, got subcmd={}'
+                      ''.format(arg, cur_option, num_opt_args, found_subcmd),
+                      file=sys.stderr)
 
-            if not arg:
-                # if last word is empty, do not interpret, keep current state
-                continue
-
-            if nargs > 0:
-                nargs -= 1
+            if num_opt_args > 0:
+                num_opt_args -= 1
+                cur_type = 'opt_arg'
                 continue
             else:
-                # reset action
-                if action is not None:
-                    action = None
+                # reset action if needed
+                if cur_option is not None:
+                    cur_option = None
 
-            if state == 0:
-                if arg.startswith('-'):
-                    for i in self._actions:
-                        if arg in i.option_strings:
-                            action = i
-                            break
-                    if action is not None:
-                        nargs = action.nargs
+            if arg.startswith('-'):
+                for i in self._actions:
+                    if arg in i.option_strings:
+                        cur_option = i
+                        break
+                if cur_option is not None:
+                    num_opt_args = cur_option.nargs
+                # fix None nargs, interpret None as 1 arg
+                # TODO: handle ? and *
+                if num_opt_args is None:
+                    num_opt_args = 1
+                cur_type = 'opt'
+            elif arg:
+                if self.is_main_omics_parser:
+                    # assumed non-empty args to be the subcommand
+                    found_subcmd = True
+                    cur_option = None
+                    cur_type = 'subcmd'
                 else:
-                    # suggest sub-command unless user started a - option
-                    state = 1
-            elif state == 1:
-                # TODO: switch to subcommand parser and completion
-                state = 2
-            elif state == 2:
-                if arg.startswith('-'):
-                    for i in self._actions:
-                        if arg in i.option_strings:
-                            action = i
-                            break
-                    # assuming arg is valid option
-                    if action is not None:
-                        nargs = action.nargs
-
-            # fix None nargs, interpret None as 1 arg
-            # TODO: handle ? and *
-            if nargs is None:
-                nargs = 1
+                    # running the subcommand parser, so this arg is a normal
+                    # positional arg
+                    pos_arg_count += 1
+                    print('\nPOS ARG', pos_arg_count, file=sys.stderr)
+            else:
+                cur_option = None
+                cur_type = None
 
         if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
-            print('end state:', state, action, nargs, file=sys.stderr)
+            print('end state:', cur_option, num_opt_args, found_subcmd,
+                  file=sys.stderr)
 
         allowed = []
-        if nargs > 0:
-            # current word is an argument to option
-            # TODO: handle files
-            pass
-        elif state == 0:
-            # current word is option string
+        if found_subcmd and cur_type != 'subcmd':
+            # cursor is after the subcmd
+            main_argp = get_main_arg_parser(auto_complete=False)
+            sub_args = main_argp.parse_args()
+            launch_cmd_as_sub_module(sub_args, main_argp)
+        elif cur_type in [None, 'subcmd']:
+            allowed = get_available_commands()
+        elif cur_type == 'opt':
             for i in self._actions:
                 allowed += i.option_strings
-        elif state == 1:
-            allowed = get_available_commands()
+        elif cur_type == 'opt_arg':
+            # current word is an argument to option
+            if cur_option.type in [None, str, argparse.FileType]:
+                # assume we want files here
+                print('FILE_COMPLETION')
+            else:
+                # TOD other argument types
+                pass
+        else:
+            if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+                print('else branch, unexpected', file=sys.stderr)
 
         compl_words = [i for i in allowed if i.startswith(word)]
         if compl_words:
