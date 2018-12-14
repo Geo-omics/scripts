@@ -108,15 +108,15 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Note: There is some redundancy between the arguments and the project.
         """
-        if 'OMICS_AUTO_COMPLETE' in environ:
+        if self.auto_complete:
             try:
-                self.bash_complete()
+                self.bash_complete(args)
             except:
                 if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
                     raise
             sys.exit()
 
-        args, argv = super().parse_known_args(*args, **kwargs)
+        args, argv = super().parse_known_args(args, namespace)
 
         try:
             project = get_project(args.project_home)
@@ -152,18 +152,33 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         return args, argv
 
-    def bash_complete(self):
-        # get cursor pos
-        index = int(environ['OMICS_AUTO_COMPLETE'])
+    def bash_complete(self, args=None):
+        """
+        Implements bash auto completion
 
-        word = sys.argv[index]
+        This method should be called just before argument parsing and call
+        sys.exit() when done.  Anything printed to stdout will be picked up by
+        the completion function.
+
+        Exception should be caught by the caller and be ignored when not in
+        debuggin mode.
+        """
+        if args is None:
+            # to use the same args that parse_known_args() will use/expect
+            args = sys.argv[1:]
+
+        # get cursor pos
+        # correcting for dropping the command name from argv (for main command)
+        # and for dropping the main command (when completing the sub command)
+        correct = len(sys.argv) - len(args)
+        index = int(environ['OMICS_AUTO_COMPLETE']) - correct
+
+        word = args[index]
 
         if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
             print(file=sys.stderr)
-            print('argv:', sys.argv, file=sys.stderr)
+            print('argv:', args, file=sys.stderr)
             print('cur:', index, '"{}"'.format(word), file=sys.stderr)
-        # print('argv:', sys.argv, file=sys.stderr)
-        # print('cursor at:', cword, file=sys.stderr)
 
         # iterate through args left of cursor to get current word type:
 
