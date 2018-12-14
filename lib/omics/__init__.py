@@ -3,6 +3,8 @@ Package to support geo-omics-scripts
 """
 import argparse
 import configparser
+from importlib import import_module
+import inspect
 from os import environ
 from pathlib import Path
 from pkgutil import iter_modules
@@ -21,17 +23,20 @@ DEFAULT_VERBOSITY = 1
 
 class OmicsArgParser(argparse.ArgumentParser):
     """
-    Implements minor modifications to parent
-
-    Assumes the parser is populated by get_argparser(), relevant changes there
-    may need to be reflected here.
+    Implements extension to the standard parser
     """
     def __init__(self, *args, project_home=True, threads=True, add_help=True,
-                 **kwargs):
+                 is_main_omics_parser=False,
+                 auto_complete=True, **kwargs):
         """
         Provide the canonical omics argparse argument parser
 
         :param bool project_home: Include a --project-home option.
+        :param bool is_main_omics_parser:  Should be set True for the parser of
+                                           the "omics" executable
+        :param bool auto_complete:  Weather to allow bash auto completion, this
+                                    is set to false by the auto completion code
+                                    to avoid infinite recursion
         :param: *args and **kwargs are handed over to argparse.ArgumentParser()
 
         :return: A new argparse.ArgumentParser object
@@ -44,6 +49,8 @@ class OmicsArgParser(argparse.ArgumentParser):
         management commands that have their own arg parsers.
         """
         super().__init__(*args, add_help=False, **kwargs)
+        self.auto_complete = 'OMICS_AUTO_COMPLETE' in environ and auto_complete
+        self.is_main_omics_parser = is_main_omics_parser
         common = self.add_argument_group('common omics options')
 
         # help option is inspired by argparse.py
@@ -92,7 +99,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
         return usage
 
-    def parse_known_args(self, *args, **kwargs):
+    def parse_known_args(self, args=None, namespace=None):
         """
         Parse options and substitue missing options with configured values
 
@@ -302,6 +309,88 @@ def get_project(path=None):
         # allow str input
         path = Path(path)
     return OmicsProject.from_directory(path)
+
+
+def get_main_arg_parser(*args, **kwargs):
+    """
+    Get the argument parser for the main omics command
+    """
+    argp = OmicsArgParser(
+        prog=__package__,
+        is_main_omics_parser=True,
+        *args,
+        **kwargs
+    )
+
+    argp.add_argument(
+        '-n', '--dry-run',
+        action='store_true',
+        help='Do not actually run command, just print the full command line '
+             'that would have been run.',
+    )
+    argp.add_argument(
+        '--script-dir',
+        metavar='PATH',
+        default=Path(sys.argv[0]).parent,
+        help='Path to directory containing the scripts that implement the '
+             'omics commands.  This can be used to override the default, '
+             'which is: {}'.format(Path(sys.argv[0]).parent),
+    )
+    argp.add_argument(
+        'command',
+        nargs=argparse.REMAINDER,
+        help='The command to run.',
+    )
+    return argp
+
+
+def launch_cmd_as_sub_module(args, argp=None):
+    """
+    Try running the command as a omics.* submodule
+
+    Will return an ImportError if no corresponding module exists.  In all other
+    cases this function should not return but handle all exceptions and
+    eventually call sys.exit().
+    """
+    import_err = None
+    try:
+        cmd_module = import_module('.' + args.command[0],
+                                   package=__package__)
+    except Exception as e:
+        import_err = e
+        if args.dry_run or args.verbosity > 1:
+            print('{}: {}'.format(e.__class__.__name__, e))
+    else:
+        try:
+            try:
+                cmd_module.main(args.command[1:])
+            except (AttributeError, TypeError) as e:
+                # May happen when there is no function main() or
+                # main() does not take a positional arg
+                # so we need to distinguish the cases:
+                if hasattr(cmd_module, 'main') and \
+                  inspect.isfunction(cmd_module.main) and \
+                  len(inspect.signature(cmd_module.main).parameters) >= 1:
+                    # We assume that call to main() itself succeeded,
+                    # so normal error while running the command
+                    # to be caught in outer try block
+                    raise
+                else:
+                    # like import error, try calling script later
+                    import_err = e
+            else:
+                # successful run of command
+                sys.exit()
+
+        except Exception as e:
+            if args.traceback:
+                raise
+            else:
+                argp.error(
+                    'Command {} failed: {}: {}'
+                    ''.format(args.command[0], e.__class__.__name__, e)
+                )
+    return import_err
 
 
 class OmicsProjectNotFound(FileNotFoundError):
