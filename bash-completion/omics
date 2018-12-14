@@ -1,10 +1,14 @@
 _omics_completion()
 {
-    COMPREPLY=(
+    local reply
+    reply=(
         $(OMICS_AUTO_COMPLETE="$COMP_CWORD" "${COMP_WORDS[@]}")
     )
+    # add file completion if requested, marker must be last
+    if [[ ${#reply[@]} -gt 0 ]] && [[ ${reply[-1]} == FILE_COMPLETION ]]; then
+        unset reply[-1]
+        reply+=( $(compgen -f "${COMP_WORDS[COMP_CWORD]}" ) )
+    fi
+    COMPREPLY=("${reply[@]}")
 }
 complete -F _omics_completion omics
-    fi
-}
-complete -F _foo foo
