@@ -27,16 +27,19 @@ class OmicsArgParser(argparse.ArgumentParser):
     """
     def __init__(self, *args, project_home=True, threads=True, add_help=True,
                  is_main_omics_parser=False,
-                 auto_complete=True, **kwargs):
+                 just_parse=False, **kwargs):
         """
         Provide the canonical omics argparse argument parser
 
         :param bool project_home: Include a --project-home option.
         :param bool is_main_omics_parser:  Should be set True for the parser of
                                            the "omics" executable
-        :param bool auto_complete:  Weather to allow bash auto completion, this
-                                    is set to false by the auto completion code
-                                    to avoid infinite recursion
+        :param bool just_parse: Try to parse_args() without side-effects like
+                                auto-completion and displaying help. This
+                                option is used by the auto-completion code to:
+                                (1) avoid infinite recursion and
+                                (2) skip displaying help when just trying to
+                                    get sub command args.
         :param: *args and **kwargs are handed over to argparse.ArgumentParser()
 
         :return: A new argparse.ArgumentParser object
@@ -49,7 +52,10 @@ class OmicsArgParser(argparse.ArgumentParser):
         management commands that have their own arg parsers.
         """
         super().__init__(*args, add_help=False, **kwargs)
-        self.auto_complete = 'OMICS_AUTO_COMPLETE' in environ and auto_complete
+        if just_parse:
+            self.auto_complete = False
+        else:
+            self.auto_complete = 'OMICS_AUTO_COMPLETE' in environ
         self.is_main_omics_parser = is_main_omics_parser
         common = self.add_argument_group('common omics options')
 
@@ -57,7 +63,8 @@ class OmicsArgParser(argparse.ArgumentParser):
         if add_help:
             common.add_argument(
                 '-h', '--help',
-                action='help', default=argparse.SUPPRESS,
+                action='store_true' if just_parse else 'help',
+                default=argparse.SUPPRESS,
                 help='show this help and exit',
             )
         if project_home:
@@ -235,7 +242,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         allowed = []
         if found_subcmd and cur_type != 'subcmd':
             # cursor is after the subcmd
-            main_argp = get_main_arg_parser(auto_complete=False)
+            main_argp = get_main_arg_parser(just_parse=True)
             sub_args = main_argp.parse_args()
             launch_cmd_as_sub_module(sub_args, main_argp)
         elif cur_type in [None, 'subcmd']:
