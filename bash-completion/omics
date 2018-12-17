@@ -1,5 +1,10 @@
 _omics_completion()
 {
+    # suppress stderr while running python unless we are debugging
+    local hide_stderr=true
+    [[ -v OMICS_AUTO_COMPLETE_DEBUG ]] && [[ -n "${OMICS_AUTO_COMPLETE_DEBUG}" ]] && hide_stderr=false
+    $hide_stderr && exec {stderr}>&2 2>/dev/null
+
     local reply
     reply=(
         $(OMICS_AUTO_COMPLETE="$COMP_CWORD" "${COMP_WORDS[@]}")
@@ -9,6 +14,10 @@ _omics_completion()
         unset reply[-1]
         reply+=( $(compgen -f "${COMP_WORDS[COMP_CWORD]}" ) )
     fi
+
+    # restore stderr as needed
+    $hide_stderr && exec 2>&$stderr-
+
     COMPREPLY=("${reply[@]}")
 }
 complete -F _omics_completion omics
