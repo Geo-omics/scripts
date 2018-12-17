@@ -5,18 +5,31 @@ _omics_completion()
     [[ -v OMICS_AUTO_COMPLETE_DEBUG ]] && [[ -n "${OMICS_AUTO_COMPLETE_DEBUG}" ]] && hide_stderr=false
     $hide_stderr && exec {stderr}>&2 2>/dev/null
 
-    local reply
-    reply=(
+    local -a reply
+    local do_file_completion
+    if reply=(
+        # call omics executable
         $(OMICS_AUTO_COMPLETE="$COMP_CWORD" "${COMP_WORDS[@]}")
-    )
-    # add file completion if requested, marker must be last
-    if [[ ${#reply[@]} -gt 0 ]] && [[ ${reply[-1]} == FILE_COMPLETION ]]; then
-        unset reply[-1]
-        reply+=( $(compgen -f "${COMP_WORDS[COMP_CWORD]}" ) )
+    ); then
+        # add file completion if requested, marker must be last
+        if [[ ${#reply[@]} -eq 0 ]]; then
+            do_file_completion=true
+        elif [[ ${reply[-1]} == FILE_COMPLETION ]]; then
+            unset reply[-1]
+            do_file_completion=true
+        else
+            # normal, non-empty reply
+            do_file_completion=false
+        fi
+    else
+        # fall back to file completion
+        do_file_completion=true
     fi
 
     # restore stderr as needed
     $hide_stderr && exec 2>&$stderr-
+
+    $do_file_completion && reply+=( $(compgen -f -- "${COMP_WORDS[COMP_CWORD]}" ) )
 
     COMPREPLY=("${reply[@]}")
 }
