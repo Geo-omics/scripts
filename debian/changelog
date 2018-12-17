@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.120-1) unstable; urgency=medium
+
+  * Fix installing bash completion
+  * Improved auto completion
+
+ -- Robert <heinro@umich.edu>  Mon, 17 Dec 2018 17:00:17 -0500
+
 geo-omics-scripts (1.0.119-1) unstable; urgency=medium
 
   * First set of database additions, calling django management via "omics db"
