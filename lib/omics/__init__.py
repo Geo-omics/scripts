@@ -3,6 +3,8 @@ Package to support geo-omics-scripts
 """
 import argparse
 import configparser
+from importlib import import_module
+import inspect
 from os import environ
 from pathlib import Path
 from pkgutil import iter_modules
@@ -21,17 +23,23 @@ DEFAULT_VERBOSITY = 1
 
 class OmicsArgParser(argparse.ArgumentParser):
     """
-    Implements minor modifications to parent
-
-    Assumes the parser is populated by get_argparser(), relevant changes there
-    may need to be reflected here.
+    Implements extension to the standard parser
     """
     def __init__(self, *args, project_home=True, threads=True, add_help=True,
-                 **kwargs):
+                 is_main_omics_parser=False,
+                 just_parse=False, **kwargs):
         """
         Provide the canonical omics argparse argument parser
 
         :param bool project_home: Include a --project-home option.
+        :param bool is_main_omics_parser:  Should be set True for the parser of
+                                           the "omics" executable
+        :param bool just_parse: Try to parse_args() without side-effects like
+                                auto-completion and displaying help. This
+                                option is used by the auto-completion code to:
+                                (1) avoid infinite recursion and
+                                (2) skip displaying help when just trying to
+                                    get sub command args.
         :param: *args and **kwargs are handed over to argparse.ArgumentParser()
 
         :return: A new argparse.ArgumentParser object
@@ -44,13 +52,19 @@ class OmicsArgParser(argparse.ArgumentParser):
         management commands that have their own arg parsers.
         """
         super().__init__(*args, add_help=False, **kwargs)
+        if just_parse:
+            self.auto_complete = False
+        else:
+            self.auto_complete = 'OMICS_AUTO_COMPLETE' in environ
+        self.is_main_omics_parser = is_main_omics_parser
         common = self.add_argument_group('common omics options')
 
         # help option is inspired by argparse.py
         if add_help:
             common.add_argument(
                 '-h', '--help',
-                action='help', default=argparse.SUPPRESS,
+                action='store_true' if just_parse else 'help',
+                default=argparse.SUPPRESS,
                 help='show this help and exit',
             )
         if project_home:
@@ -92,7 +106,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         usage = re.sub(r'\[-h\].*\[--traceback\]', '[OPTIONS...]', usage)
         return usage
 
-    def parse_known_args(self, *args, **kwargs):
+    def parse_known_args(self, args=None, namespace=None):
         """
         Parse options and substitue missing options with configured values
 
@@ -101,15 +115,15 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         Note: There is some redundancy between the arguments and the project.
         """
-        if 'OMICS_AUTO_COMPLETE' in environ:
+        if self.auto_complete:
             try:
-                self.bash_complete()
+                self.bash_complete(args)
             except:
                 if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
                     raise
             sys.exit()
 
-        args, argv = super().parse_known_args(*args, **kwargs)
+        args, argv = super().parse_known_args(args, namespace)
 
         try:
             project = get_project(args.project_home)
@@ -145,88 +159,108 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         return args, argv
 
-    def bash_complete(self):
-        # get cursor pos
-        index = int(environ['OMICS_AUTO_COMPLETE'])
+    def bash_complete(self, args=None):
+        """
+        Implements bash auto completion
 
-        word = sys.argv[index]
+        This method should be called just before argument parsing and call
+        sys.exit() when done.  Anything printed to stdout will be picked up by
+        the completion function.
+
+        Exception should be caught by the caller and be ignored when not in
+        debuggin mode.
+        """
+        if args is None:
+            # to use the same args that parse_known_args() will use/expect
+            args = sys.argv[1:]
+
+        # get cursor pos
+        # correcting for dropping the command name from argv (for main command)
+        # and for dropping the main command (when completing the sub command)
+        correct = len(sys.argv) - len(args)
+        index = int(environ['OMICS_AUTO_COMPLETE']) - correct
+
+        word = args[index]
 
         if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
             print(file=sys.stderr)
-            print('argv:', sys.argv, file=sys.stderr)
+            print('argv:', args, file=sys.stderr)
             print('cur:', index, '"{}"'.format(word), file=sys.stderr)
-        # print('argv:', sys.argv, file=sys.stderr)
-        # print('cursor at:', cword, file=sys.stderr)
 
         # iterate through args left of cursor to get current word type:
-
-        # states:
-        #  0 - common optional parameters (cop)
-        #  1 - sub command (sub)
-        #  2 - sub optional or positionals
-        # +nargs
-        state = 0
-        nargs = 0
-        action = None
-        for arg in sys.argv[1:index + 1]:
+        cur_type = None
+        cur_option = None
+        found_subcmd = False
+        num_opt_args = 0  # number of options args remaining
+        pos_arg_count = 0  # keeps count of pos args for sub commands
+        for arg in args[:index + 1]:
             if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
-                print(state, nargs, '->', arg, file=sys.stderr)
+                print('arg: "{}", cur_option: {}, nargs={}, got subcmd={}'
+                      ''.format(arg, cur_option, num_opt_args, found_subcmd),
+                      file=sys.stderr)
 
-            if not arg:
-                # if last word is empty, do not interpret, keep current state
-                continue
-
-            if nargs > 0:
-                nargs -= 1
+            if num_opt_args > 0:
+                num_opt_args -= 1
+                cur_type = 'opt_arg'
                 continue
             else:
-                # reset action
-                if action is not None:
-                    action = None
+                # reset action if needed
+                if cur_option is not None:
+                    cur_option = None
 
-            if state == 0:
-                if arg.startswith('-'):
-                    for i in self._actions:
-                        if arg in i.option_strings:
-                            action = i
-                            break
-                    if action is not None:
-                        nargs = action.nargs
+            if arg.startswith('-'):
+                for i in self._actions:
+                    if arg in i.option_strings:
+                        cur_option = i
+                        break
+                if cur_option is not None:
+                    num_opt_args = cur_option.nargs
+                # fix None nargs, interpret None as 1 arg
+                # TODO: handle ? and *
+                if num_opt_args is None:
+                    num_opt_args = 1
+                cur_type = 'opt'
+            elif arg:
+                if self.is_main_omics_parser:
+                    # assumed non-empty args to be the subcommand
+                    found_subcmd = True
+                    cur_option = None
+                    cur_type = 'subcmd'
                 else:
-                    # suggest sub-command unless user started a - option
-                    state = 1
-            elif state == 1:
-                # TODO: switch to subcommand parser and completion
-                state = 2
-            elif state == 2:
-                if arg.startswith('-'):
-                    for i in self._actions:
-                        if arg in i.option_strings:
-                            action = i
-                            break
-                    # assuming arg is valid option
-                    if action is not None:
-                        nargs = action.nargs
-
-            # fix None nargs, interpret None as 1 arg
-            # TODO: handle ? and *
-            if nargs is None:
-                nargs = 1
+                    # running the subcommand parser, so this arg is a normal
+                    # positional arg
+                    pos_arg_count += 1
+                    print('\nPOS ARG', pos_arg_count, file=sys.stderr)
+            else:
+                cur_option = None
+                cur_type = None
 
         if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
-            print('end state:', state, action, nargs, file=sys.stderr)
+            print('end state:', cur_option, num_opt_args, found_subcmd,
+                  file=sys.stderr)
 
         allowed = []
-        if nargs > 0:
-            # current word is an argument to option
-            # TODO: handle files
-            pass
-        elif state == 0:
-            # current word is option string
+        if found_subcmd and cur_type != 'subcmd':
+            # cursor is after the subcmd
+            main_argp = get_main_arg_parser(just_parse=True)
+            sub_args = main_argp.parse_args()
+            launch_cmd_as_sub_module(sub_args, main_argp)
+        elif cur_type in [None, 'subcmd']:
+            allowed = get_available_commands()
+        elif cur_type == 'opt':
             for i in self._actions:
                 allowed += i.option_strings
-        elif state == 1:
-            allowed = get_available_commands()
+        elif cur_type == 'opt_arg':
+            # current word is an argument to option
+            if cur_option.type in [None, str, argparse.FileType]:
+                # assume we want files here
+                print('FILE_COMPLETION')
+            else:
+                # TOD other argument types
+                pass
+        else:
+            if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
+                print('else branch, unexpected', file=sys.stderr)
 
         compl_words = [i for i in allowed if i.startswith(word)]
         if compl_words:
@@ -302,6 +336,88 @@ def get_project(path=None):
         # allow str input
         path = Path(path)
     return OmicsProject.from_directory(path)
+
+
+def get_main_arg_parser(*args, **kwargs):
+    """
+    Get the argument parser for the main omics command
+    """
+    argp = OmicsArgParser(
+        prog=__package__,
+        is_main_omics_parser=True,
+        *args,
+        **kwargs
+    )
+
+    argp.add_argument(
+        '-n', '--dry-run',
+        action='store_true',
+        help='Do not actually run command, just print the full command line '
+             'that would have been run.',
+    )
+    argp.add_argument(
+        '--script-dir',
+        metavar='PATH',
+        default=Path(sys.argv[0]).parent,
+        help='Path to directory containing the scripts that implement the '
+             'omics commands.  This can be used to override the default, '
+             'which is: {}'.format(Path(sys.argv[0]).parent),
+    )
+    argp.add_argument(
+        'command',
+        nargs=argparse.REMAINDER,
+        help='The command to run.',
+    )
+    return argp
+
+
+def launch_cmd_as_sub_module(args, argp=None):
+    """
+    Try running the command as a omics.* submodule
+
+    Will return an ImportError if no corresponding module exists.  In all other
+    cases this function should not return but handle all exceptions and
+    eventually call sys.exit().
+    """
+    import_err = None
+    try:
+        cmd_module = import_module('.' + args.command[0],
+                                   package=__package__)
+    except Exception as e:
+        import_err = e
+        if args.dry_run or args.verbosity > 1:
+            print('{}: {}'.format(e.__class__.__name__, e))
+    else:
+        try:
+            try:
+                cmd_module.main(args.command[1:])
+            except (AttributeError, TypeError) as e:
+                # May happen when there is no function main() or
+                # main() does not take a positional arg
+                # so we need to distinguish the cases:
+                if hasattr(cmd_module, 'main') and \
+                  inspect.isfunction(cmd_module.main) and \
+                  len(inspect.signature(cmd_module.main).parameters) >= 1:
+                    # We assume that call to main() itself succeeded,
+                    # so normal error while running the command
+                    # to be caught in outer try block
+                    raise
+                else:
+                    # like import error, try calling script later
+                    import_err = e
+            else:
+                # successful run of command
+                sys.exit()
+
+        except Exception as e:
+            if args.traceback:
+                raise
+            else:
+                argp.error(
+                    'Command {} failed: {}: {}'
+                    ''.format(args.command[0], e.__class__.__name__, e)
+                )
+    return import_err
 
 
 class OmicsProjectNotFound(FileNotFoundError):

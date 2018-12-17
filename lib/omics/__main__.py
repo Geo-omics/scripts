@@ -1,86 +1,22 @@
 """
 Invoke omics scripts and sub-commands
 """
-import argparse
-from importlib import import_module
-import inspect
 from pathlib import Path
 import subprocess
-import sys
 
-from . import process_command_line, get_argparser, get_available_commands
+from . import process_command_line, get_main_arg_parser, get_available_commands
+from . import launch_cmd_as_sub_module
 
 
 def main():
-    argp = get_argparser(
-        prog=__package__,
-        description=__doc__,
-    )
-
-    argp.add_argument(
-        '-n', '--dry-run',
-        action='store_true',
-        help='Do not actually run command, just print the full command line '
-             'that would have been run.',
-    )
-    argp.add_argument(
-        '--script-dir',
-        metavar='PATH',
-        default=Path(sys.argv[0]).parent,
-        help='Path to directory containing the scripts that implement the '
-             'omics commands.  This can be used to override the default, '
-             'which is: {}'.format(Path(sys.argv[0]).parent),
-    )
-    argp.add_argument(
-        'command',
-        nargs=argparse.REMAINDER,
-        help='The command to run.',
-    )
+    argp = get_main_arg_parser(description=__doc__)
     args = argp.parse_args()
     args.script_dir = Path(args.script_dir)
     if not args.script_dir.is_dir():
         argp.error('Not a directory: {}'.format(args.script_dir))
 
     if args.command:
-        # try locating command as submodule
-        import_err = None
-        try:
-            cmd_module = import_module('.' + args.command[0],
-                                       package=__package__)
-        except Exception as e:
-            import_err = e
-            if args.dry_run or args.verbosity > 1:
-                print('{}: {}'.format(e.__class__.__name__, e))
-        else:
-            try:
-                try:
-                    cmd_module.main(args.command[1:])
-                except (AttributeError, TypeError) as e:
-                    # May happen when there is no function main() or
-                    # main() does not take a positional arg
-                    # so we need to distinguish the cases:
-                    if hasattr(cmd_module, 'main') and \
-                      inspect.isfunction(cmd_module.main) and \
-                      len(inspect.signature(cmd_module.main).parameters) >= 1:
-                        # We assume that call to main() itself succeeded,
-                        # so normal error while running the command
-                        # to be caught in outer try block
-                        raise
-                    else:
-                        # like import error, try calling script later
-                        import_err = e
-                else:
-                    # successful run of command
-                    sys.exit()
-
-            except Exception as e:
-                if args.traceback:
-                    raise
-                else:
-                    argp.error(
-                        'Command {} failed: {}: {}'
-                        ''.format(args.command[0], e.__class__.__name__, e)
-                    )
+        import_err = launch_cmd_as_sub_module(args, argp)
 
         # try calling as shellscript
         cmd = args.command[0]
