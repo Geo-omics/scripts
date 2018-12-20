@@ -7,6 +7,8 @@ import csv
 from pathlib import Path
 import sys
 
+from . import OmicsArgParser
+
 
 SUMMARY = 'summary'
 TEST = 'test'
@@ -158,8 +160,9 @@ def make_summary(stats_a, stats_checkm, args):
     pprint_table_dict(data)
 
 
-def get_args():
-    argp = argparse.ArgumentParser(description=__doc__)
+def get_args(argv=None, namespace=None):
+    prog = __loader__.name.replace('.', ' ').replace('_', '-')
+    argp = OmicsArgParser(prog=prog, description=__doc__, threads=False)
     argp.add_argument(
         'command',
         choices=SUBCOMMANDS,
@@ -191,7 +194,7 @@ def get_args():
         default=sys.stdout,
         help='Name of output file.  By default output is printed to stdout.',
     )
-    return argp.parse_args()
+    return argp.parse_args(args=argv, namespace=namespace)
 
 
 def pprint_table_dict(data):
@@ -213,8 +216,8 @@ def pprint_table_dict(data):
             print(k, *_format(v.values()), sep='\t')
 
 
-def main():
-    args = get_args()
+def main(argv=None, namespace=None):
+    args = get_args(argv=argv, namespace=namespace)
     if args.command == TEST:
         print(args, file=sys.stderr)
 
@@ -240,6 +243,7 @@ def main():
         pprint_table_dict(checkm_tab)
     else:
         pass
+
 
 if __name__ == '__main__':
     main()

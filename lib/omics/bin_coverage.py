@@ -5,13 +5,15 @@ from operator import itemgetter
 from pathlib import Path
 import sys
 
+from . import OmicsArgParser
+
 
 # suffix of fasta files in bin directory
 BIN_FASTA_SUFFIX = 'fa'
 
 
-def main():
-    args, cov_files = get_args()
+def main(argv=None, namespace=None):
+    args, cov_files = get_args(argv, namespace)
     bins = get_bins(args.bins)
     for row in compile_mean_coverage(bins, *cov_files):
         print(*row, sep='\t', file=args.outfile)
@@ -150,8 +152,9 @@ def get_bins(path):
     return bins
 
 
-def get_args():
-    argp = argparse.ArgumentParser(description=__doc__)
+def get_args(argv=None, namespace=None):
+    prog = __loader__.name.replace('.', ' ').replace('_', '-')
+    argp = OmicsArgParser(prog=prog, description=__doc__, threads=False)
     argp.add_argument(
         'sample',
         nargs='+',
@@ -172,7 +175,7 @@ def get_args():
         default=sys.stdout,
         help='File to write table with per sample per bin coverage data',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(args=argv, namespace=namespace)
 
     # make pairs of sample id matching coverage file
     cov_files = [

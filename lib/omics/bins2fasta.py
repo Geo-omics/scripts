@@ -10,6 +10,8 @@ from itertools import combinations
 from pathlib import Path
 from warnings import warn
 
+from . import OmicsArgParser
+
 
 # modes of operation
 CONCOCT = 'CONCOCT'
@@ -17,7 +19,8 @@ METABAT = 'MetaBAT'
 
 
 def get_argp():
-    argp = argparse.ArgumentParser(description=__doc__)
+    prog = __loader__.name.replace('.', ' ')
+    argp = OmicsArgParser(prog=prog, description=__doc__, threads=False)
     argp.add_argument(
         'bintable',
         metavar='bin-table',
@@ -51,36 +54,33 @@ def get_argp():
         default='.',
         help='Output directory, default is the current directory.'
     )
-    argp.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='Print more info in case of errors'
-    )
     return argp
 
 
-def main():
-    args = get_argp().parse_args()
+def main(argv=None, namespace=None):
+    args = get_argp().parse_args(args=argv, namespace=namespace)
     outdir = Path(args.output_dir)
 
-    if args.verbose:
+    verbose = args.verbosity > 1
+
+    if verbose:
         print('Loading chunk info... ', end='', flush=True)
 
     cdata = load_contig_chunk_info(args.chopped_assembly or args.real_assembly)
 
-    if args.verbose:
+    if verbose:
         print('done')
         print('Reading contig-to-bin mapping... ', end='', flush=True)
 
     mode = load_bins(cdata, args.bintable)
 
-    if args.verbose:
+    if verbose:
         print('({} mode) done'.format(mode))
         print('Processing data... ', end='', flush=True)
 
     good_data, unbinned, ambiguous, cross = apply_policy(cdata)
 
-    if args.verbose:
+    if verbose:
         print('done')
         print('Summary:')
         print('  total  contigs:', len(cdata.keys()))
@@ -88,7 +88,7 @@ def main():
         print('  ambiguous binnings:', len(ambiguous.keys()))
         print('  cross binnings:', len(cross))
 
-    if args.verbose:
+    if verbose:
         print('Writing fasta files for bins... ', end='', flush=True)
 
     if args.real_assembly.closed:
@@ -100,10 +100,10 @@ def main():
         mapping=good_data,
         input_contigs=args.real_assembly,
         suffix=args.suffix,
-        verbose=args.verbose,
+        verbose=verbose,
     )
 
-    if args.verbose:
+    if verbose:
         print(files_written, 'files written')
 
 

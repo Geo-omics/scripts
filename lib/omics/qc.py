@@ -101,7 +101,7 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
         raise(RuntimeError('\n'.join(errors)))
 
 
-def main():
+def main(argv=None, namespace=None):
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
@@ -151,7 +151,7 @@ def main():
         action='store_true',
         help='Use scythe + sickle instead of (the default) Trimmomatic',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(args=argv, namespace=namespace)
     args.samples = [Path(i) for i in args.samples]
     for i in args.samples:
         if not i.is_dir():

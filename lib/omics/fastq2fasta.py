@@ -4,7 +4,7 @@ Convert fastq into fasta
 import argparse
 import sys
 
-from . import get_argparser
+from . import OmicsArgParser
 
 
 def convert(data, output, check=True):
@@ -37,8 +37,8 @@ def convert(data, output, check=True):
                            ''.format(line))
 
 
-def main():
-    argp = get_argparser(
+def main(argv=None, namespace=None):
+    argp = OmicsArgParser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
         project_home=False,
@@ -72,7 +72,7 @@ def main():
         help='Skip sanity check on input data.  By default it is checked that '
              'the input is indeed in fastq format.',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(args=argv, namespace=namespace)
     convert(args.inputfile, args.output, check=args.check)
 
 

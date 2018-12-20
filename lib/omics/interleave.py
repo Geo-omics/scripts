@@ -69,7 +69,7 @@ def interleave(fwd_in, rev_in, check=False):
                 yield line
 
 
-def main():
+def main(argv=None, namespace=None):
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
@@ -90,7 +90,7 @@ def main():
         help='Path to output file.  If not provided output is written to '
              'stdout.',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(args=argv, namespace=namespace)
 
     args.forward_reads.close()
     args.reverse_reads.close()
