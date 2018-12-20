@@ -6,6 +6,8 @@ from itertools import groupby
 from pathlib import Path
 import sys
 
+from . import OmicsArgParser
+
 
 # Data structures:
 #
@@ -14,6 +16,8 @@ import sys
 #
 # bin indext:
 # dict bin_info = bin_id --> (file, dict contig)
+
+
 def load_contig_ids(file, no_chunk=False):
     """
     Generate chop/chunk-aware contig ids from a fasta file
@@ -151,20 +155,9 @@ def print_split_contigs(contig_info, file=sys.stdout):
                 print(contig_id, bins, sep='\t', file=file)
 
 
-def main(asm, chopped_asm, bin_path):
-    print('Reading chop info... ', end='', flush=True)
-    contig_info = read_chopping(chopped_asm)
-    print('[done]')
-
-    print('Reading binning info... ', end='', flush=True)
-    bin_info = read_bins_metablast(bin_path, contig_info)
-    print('[done]')
-
-    return contig_info, bin_info
-
-
-if __name__ == '__main__':
-    argp = argparse.ArgumentParser(description=__doc__)
+def main(argv=None, namespace=None):
+    prog = __loader__.name.replace('.', ' ')
+    argp = OmicsArgParser(prog=prog, description=__doc__, threads=False)
     argp.add_argument(
         '-a', '--assembly',
         type=argparse.FileType(),
@@ -179,5 +172,17 @@ if __name__ == '__main__':
     args.assembly.close()
     args.assembly = Path(args.assembly.name)
 
-    c, _ = main(None, args.assembly, args.bin_path)
-    print_split_contigs(c)
+    print('Reading chop info... ', end='', flush=True)
+    contig_info = read_chopping(args.assembly)
+    print('[done]')
+
+    print('Reading binning info... ', end='', flush=True)
+    # TODO: what was the plan with this one?
+    bin_info = read_bins_metablast(args.bin_path, contig_info)
+    print('[done]')
+
+    print_split_contigs(contig_info)
+
+
+if __name__ == '__main__':
+    main()

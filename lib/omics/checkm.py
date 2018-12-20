@@ -5,6 +5,7 @@ import argparse
 from collections import OrderedDict
 import sys
 
+from . import OmicsArgParser
 
 ACTIONS = ['convert']
 DEFAULT_ACTION = ACTIONS[0]
@@ -53,8 +54,9 @@ def load_tsv(file):
     return data
 
 
-def main():
-    argp = argparse.ArgumentParser(description=__doc__)
+def main(argv=None, namespace=None):
+    prog = __loader__.name.replace('.', ' ')
+    argp = OmicsArgParser(prog=prog, description=__doc__, threads=False)
     argp.add_argument(
         '-c', '--convert',
         action='store_true',
@@ -67,7 +69,7 @@ def main():
         default=sys.stdin,
         help='Input file, usually a .tsv file written by CheckM',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(args=argv, namespace=namespace)
 
     if args.convert:
         data = load_tsv(args.inputfile)

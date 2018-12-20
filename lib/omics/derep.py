@@ -171,7 +171,7 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
             raise RuntimeError('Illegal internal state: {}'.format(state))
 
 
-def main():
+def main(argv=None, namespace=None):
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
@@ -203,7 +203,7 @@ def main():
         help='If provided, the list of replicated reads is written to the '
              'given file.',
     )
-    args = argp.parse_args()
+    args = argp.parse_args(args=argv, namespace=namespace)
 
     out_dir = Path(args.out_dir)
     if not out_dir.is_dir():
