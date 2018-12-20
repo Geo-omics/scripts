@@ -380,8 +380,9 @@ def launch_cmd_as_sub_module(args, argp=None):
     eventually call sys.exit().
     """
     import_err = None
+    module_name = args.command[0].replace('-', '_')
     try:
-        cmd_module = import_module('.' + args.command[0],
+        cmd_module = import_module('.' + module_name,
                                    package=__package__)
     except Exception as e:
         import_err = e
