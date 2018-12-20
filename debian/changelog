@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.121-1) unstable; urgency=medium
+
+  * Fixes various regressions caused by adding the auto-completion
+
+ -- Robert <heinro@umich.edu>  Thu, 20 Dec 2018 14:35:36 -0500
+
 geo-omics-scripts (1.0.120-1) unstable; urgency=medium
 
   * Fix installing bash completion
