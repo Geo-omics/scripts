@@ -591,12 +591,21 @@ def get_modules_with_main():
     """
     Return list of module with a main function, i.e. the subcommands
     """
+    # This function is part of auto-completion and should not print anything
+    # to stdout.
     mods = []
     for _, name, ispkg in iter_modules(path=__path__):
         # print(name, ispkg, sep='\n')
         if name == '__main__':
             continue
-        mods.append(name)
+
+        try:
+            cmd_module = import_module('.' + name, package=__package__)
+        except Exception:
+            continue
+
+        if hasattr(cmd_module, 'main') and inspect.isfunction(cmd_module.main):
+            mods.append(name)
     return mods
 
 
@@ -607,6 +616,8 @@ def get_available_commands():
     :return list: List of str names of sub-commands.
                   List is empty in case of errors.
     """
+    # This function is part of auto-completion and should not print anything
+    # to stdout.
     ret = set()
     try:
         commands = get_available_scripts()
