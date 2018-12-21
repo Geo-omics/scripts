@@ -288,7 +288,6 @@ if $RUN_QUAST && [[ -n $QUAST ]]; then
     info "done: Quast results at $quast_out"
 fi
 
-$RUN_BLAST && RUN_BLAST=false && info "Skipping analysis via BLAST [currently not supported]"
 if $RUN_BLAST; then
     info "Searching for scaffolds with 16S..."
     blast_out="$out/BLASTN"
