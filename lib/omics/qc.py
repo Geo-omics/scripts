@@ -6,32 +6,32 @@ from pathlib import Path
 import subprocess
 import sys
 
-from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
+from omics import get_argparser, DEFAULT_VERBOSITY
 
 
-def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
-              no_dereplicate=False, no_fasta_interleave=False,
-              verbosity=DEFAULT_VERBOSITY, scythe_sickle=False,
-              threads=DEFAULT_THREADS, project=None):
+def qc_sample(path, **kwargs):
     """
     Do QC for a single sample
 
     This is a wrapper for the omics-qc-sample script
     """
+    for k, v in get_args(argv=[]).items():
+        kwargs.setdefault(k, v)
+
     script = 'omics-qc-sample'
 
     args = []
-    not clean_only or args.append('--clean-only')
-    not keep_all or args.append('--keep-all')
-    if adapters:
-        args += ['--adapters', adapters]
-    not no_dereplicate or args.append('--no-dereplicate')
-    not no_fasta_interleave or args.append('--no-fasta-interleave')
-    not scythe_sickle or args.append('--scythe-sickle')
-    if threads is not None:
-        args += ['--threads', str(threads)]
-    if verbosity > DEFAULT_VERBOSITY:
-        args.append('--verbosity={}'.format(verbosity))
+    not kwargs['clean_only'] or args.append('--clean-only')
+    not kwargs['keep_all'] or args.append('--keep-all')
+    if kwargs['adapters']:
+        args += ['--adapters', kwargs['adapters']]
+    not kwargs['no_dereplicate'] or args.append('--no-dereplicate')
+    not kwargs['no_fasta_interleave'] or args.append('--no-fasta-interleave')
+    not kwargs['scythe_sickle'] or args.append('--scythe-sickle')
+    if kwargs['threads'] is not None:
+        args += ['--threads', str(kwargs['threads'])]
+    if kwargs['verbosity'] > DEFAULT_VERBOSITY:
+        args.append('--verbosity={}'.format(kwargs['verbosity']))
         print('[qc] Calling qc-sample with arguments: {}'.format(args))
 
     p = subprocess.run(
@@ -43,53 +43,42 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
                            '{}'.format(path, p.returncode))
 
 
-def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
-       no_dereplicate=False, no_fasta_interleave=False,
-       verbosity=DEFAULT_VERBOSITY, scythe_sickle=False,
-       threads=DEFAULT_THREADS, project=None):
+def qc(samples, **kwargs):
     """
     Do quality control on multiple samples
 
     :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
+    for k, v in get_args(argv=[]).items():
+        kwargs.setdefault(k, v)
+
     # number of workers: how many samples are processed in parallel
     # HOWTO distribute CPUs among workers:
     #   1. allow at most (hard-coded) 6 workers
     #   2. # of workers is the least of 6, # of CPUs, and # of samples
     #   3. # of CPUs/worker at least 1
     MAX_WORKERS = 6
-    num_workers = min(MAX_WORKERS, len(samples), threads)
-    threads_per_worker = max(1, int(threads / num_workers))
+    num_workers = min(MAX_WORKERS, len(samples), kwargs['threads'])
+    threads_per_worker = max(1, int(kwargs['threads'] / num_workers))
 
-    if verbosity > DEFAULT_VERBOSITY:
+    if kwargs['verbosity'] > DEFAULT_VERBOSITY:
         print('[qc] Processing {} samples in parallel, using {} threads each'
               ''.format(num_workers, threads_per_worker))
 
-    errors = []
+    kwargs['threads'] = threads_per_worker
 
+    errors = []
     with ThreadPoolExecutor(max_workers=num_workers) as e:
         futures = {}
         for path in samples:
-            futures[e.submit(
-                qc_sample,
-                path,
-                clean_only=clean_only,
-                adapters=adapters,
-                keep_all=keep_all,
-                no_dereplicate=no_dereplicate,
-                no_fasta_interleave=no_fasta_interleave,
-                scythe_sickle=scythe_sickle,
-                verbosity=verbosity,
-                project=project,
-                threads=threads_per_worker,
-            )] = path
+            futures[e.submit(qc_sample, path, **kwargs)] = path
 
         for fut in as_completed(futures.keys()):
             sample_path = futures[fut]
             e = fut.exception()
             if e is None:
-                if verbosity >= DEFAULT_VERBOSITY + 2:
+                if kwargs['verbosity'] >= DEFAULT_VERBOSITY + 2:
                     print('Done: {}'.format(sample_path.name))
             else:
                 errors.append(
@@ -101,7 +90,7 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
         raise(RuntimeError('\n'.join(errors)))
 
 
-def main(argv=None, namespace=None):
+def get_args(argv=None, namespace=None):
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
@@ -156,20 +145,13 @@ def main(argv=None, namespace=None):
     for i in args.samples:
         if not i.is_dir():
             argp.error('Directory not found: {}'.format(i))
+    return args
 
+
+def main(argv=None, namespace=None):
+    args = get_args(argv, namespace)
     try:
-        qc(
-            args.samples,
-            clean_only=args.clean_only,
-            adapters=args.adapters,
-            keep_all=args.keep_all,
-            no_dereplicate=args.no_dereplicate,
-            no_fasta_interleave=args.no_fasta_interleave,
-            scythe_sickle=args.scythe_sickle,
-            verbosity=args.verbosity,
-            threads=args.threads,
-            project=args.project,
-        )
+        qc(vars(args))
     except Exception as e:
         if args.traceback:
             raise
