@@ -8,6 +8,8 @@ import sys
 
 from omics import get_argparser, DEFAULT_VERBOSITY
 
+QC_BINARY_NAME = 'omics-qc-sample'
+
 
 def qc_sample(path, **kwargs):
     """
@@ -17,8 +19,6 @@ def qc_sample(path, **kwargs):
     """
     for k, v in vars(get_args(argv=[])).items():
         kwargs.setdefault(k, v)
-
-    script = 'omics-qc-sample'
 
     args = []
     not kwargs['clean_only'] or args.append('--clean-only')
@@ -35,7 +35,7 @@ def qc_sample(path, **kwargs):
         print('[qc] Calling qc-sample with arguments: {}'.format(args))
 
     p = subprocess.run(
-        [script] + args,
+        [QC_BINARY_NAME] + args,
         cwd=str(path),
     )
     if p.check_returncode():
