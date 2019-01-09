@@ -15,7 +15,7 @@ def qc_sample(path, **kwargs):
 
     This is a wrapper for the omics-qc-sample script
     """
-    for k, v in get_args(argv=[]).items():
+    for k, v in vars(get_args(argv=[])).items():
         kwargs.setdefault(k, v)
 
     script = 'omics-qc-sample'
@@ -50,7 +50,7 @@ def qc(samples, **kwargs):
     :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
-    for k, v in get_args(argv=[]).items():
+    for k, v in vars(get_args(argv=[])).items():
         kwargs.setdefault(k, v)
 
     # number of workers: how many samples are processed in parallel
