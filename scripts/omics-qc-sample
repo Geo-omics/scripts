@@ -267,9 +267,8 @@ if [[ $FILTER == trimmomatic ]]; then
         fwd_trim=$tmpd/$fwd$base.tmp.fastq
         rev_trim=$tmpd/$rev$base.tmp.fastq
     fi
-    post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
-    {
+
+    if $DEREPLICATION; then
         fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
         rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
         {
@@ -278,6 +277,15 @@ if [[ $FILTER == trimmomatic ]]; then
             cat "$rev_trim_in" > "$rev_trim_in_tmp" &
             wait
         }
+    else
+        fwd_trim_in_tmp=$fwd_trim_in
+        rev_trim_in_tmp=$rev_trim_in
+    fi
+
+    post_trim=$tmpd/int$base.fastq
+    mkfifo "$post_trim"
+
+    {
         TrimmomaticPE \
             -threads "$CPUS" \
             "$fwd_trim_in_tmp" "$rev_trim_in_tmp" \
