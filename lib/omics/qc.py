@@ -43,11 +43,10 @@ def qc_sample(path, **kwargs):
                            '{}'.format(path, p.returncode))
 
 
-def qc(samples, **kwargs):
+def qc(**kwargs):
     """
     Do quality control on multiple samples
 
-    :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
     for k, v in vars(get_args(argv=[])).items():
@@ -59,7 +58,7 @@ def qc(samples, **kwargs):
     #   2. # of workers is the least of 6, # of CPUs, and # of samples
     #   3. # of CPUs/worker at least 1
     MAX_WORKERS = 6
-    num_workers = min(MAX_WORKERS, len(samples), kwargs['threads'])
+    num_workers = min(MAX_WORKERS, len(kwargs['samples']), kwargs['threads'])
     threads_per_worker = max(1, int(kwargs['threads'] / num_workers))
 
     if kwargs['verbosity'] > DEFAULT_VERBOSITY:
@@ -71,7 +70,7 @@ def qc(samples, **kwargs):
     errors = []
     with ThreadPoolExecutor(max_workers=num_workers) as e:
         futures = {}
-        for path in samples:
+        for path in kwargs['samples']:
             futures[e.submit(qc_sample, path, **kwargs)] = path
 
         for fut in as_completed(futures.keys()):
@@ -151,7 +150,7 @@ def get_args(argv=None, namespace=None):
 def main(argv=None, namespace=None):
     args = get_args(argv, namespace)
     try:
-        qc(vars(args))
+        qc(**vars(args))
     except Exception as e:
         if args.traceback:
             raise
