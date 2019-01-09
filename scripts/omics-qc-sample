@@ -245,8 +245,8 @@ if $DEREPLICATION; then
     fi
     python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
 else
-    fwd_trim_in=$tmpd/$fwd$base.fastq
-    rev_trim_in=$tmpd/$rev$base.fastq
+    fwd_trim_in=$FWD_FASTQ
+    rev_trim_in=$REV_FASTQ
 fi
 
 oldbase=$base
