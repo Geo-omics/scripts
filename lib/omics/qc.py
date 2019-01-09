@@ -8,7 +8,9 @@ import sys
 
 from omics import get_argparser, DEFAULT_VERBOSITY
 
+FILTER_CHOICES = ['trimmomatic', 'scythe', 'bbtools']
 QC_BINARY_NAME = 'omics-qc-sample'
+DEFAULT_RQCFILTERDATA = '/reference-data/bbtools/RQCFilterData'
 
 
 def qc_sample(path, **kwargs):
@@ -27,7 +29,10 @@ def qc_sample(path, **kwargs):
         args += ['--adapters', kwargs['adapters']]
     not kwargs['no_dereplicate'] or args.append('--no-dereplicate')
     not kwargs['no_fasta_interleave'] or args.append('--no-fasta-interleave')
-    not kwargs['scythe_sickle'] or args.append('--scythe-sickle')
+    if kwargs['filter']:
+        args += ['--filter', kwargs['filter']]
+    if kwargs['rqcfilterdata'] is not None:
+        args += ['--rqcfilterdata', kwargs['rqcfilterdata']]
     if kwargs['threads'] is not None:
         args += ['--threads', str(kwargs['threads'])]
     if kwargs['verbosity'] > DEFAULT_VERBOSITY:
@@ -115,7 +120,8 @@ def get_args(argv=None, namespace=None):
         metavar='FILE',
         help='Specify the adapters file used in the adpater trimming step.  By'
              ' default the Illumina adapter file TruSeq3-PE-2.fa as '
-             'distributed by the Trimmomatic project will be used.',
+             'distributed by the Trimmomatic project will be used.  Ignored '
+             'when using the bbtools filter',
     )
     argp.add_argument(
         '--keep-all',
@@ -135,9 +141,19 @@ def get_args(argv=None, namespace=None):
              'files will still be build.',
     )
     argp.add_argument(
-        '-S', '--scythe-sickle',
-        action='store_true',
-        help='Use scythe + sickle instead of (the default) Trimmomatic',
+        '-F', '--filter',
+        choices=FILTER_CHOICES,
+        default=FILTER_CHOICES[0],
+        help='Which quality filter to use.  Trimmomatic is used by default. '
+             'Scythe/sickle based filtering the the "old" way.  The rqcfilter2'
+             ' pipeline from BBTools is an alternative',
+    )
+    argp.add_argument(
+        '--rqcfilterdata',
+        metavar='PATH',
+        help='Path to directory containing the reference data for BBTool\'s '
+             'rqcfilter2. The default is ' + DEFAULT_RQCFILTERDATA + ' and '
+             'is good for running omics qc inside the omics container.'
     )
     args = argp.parse_args(args=argv, namespace=namespace)
     args.samples = [Path(i) for i in args.samples]
