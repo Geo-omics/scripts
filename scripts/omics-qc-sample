@@ -178,7 +178,7 @@ rev=$(basename "$REV_FASTQ" .fastq)
 clean_all () {
     clean_intermediates
     # clean final results
-    $RM -rf -- FASTQC
+    $RM -rf -- FASTQC rqcfilter2_out
     $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
     $RM -f -- {"$fwd","$rev"}{.derep,}.matches.fastq
     $RM -f -- {int,"$fwd","$rev"}."$FINAL".fast{a,q}
@@ -256,7 +256,6 @@ if [[ $FILTER == trimmomatic ]]; then
     # need to post-process, however with --keep-all the trimmed files are saved
     # directly and then reused for post-processing, hopefully the page-cache
     # makes this efficient
-    info1 "Start adapter + quality trimming..."
     base="${base}.trim"
     fwd_trim_s=$tmpd/$fwd$base.s.fastq
     rev_trim_s=$tmpd/$rev$base.s.fastq
@@ -281,6 +280,8 @@ if [[ $FILTER == trimmomatic ]]; then
         fwd_trim_in_tmp=$fwd_trim_in
         rev_trim_in_tmp=$rev_trim_in
     fi
+
+    info1 "Start adapter + quality trimming..."
 
     post_trim=$tmpd/int$base.fastq
     mkfifo "$post_trim"
@@ -341,7 +342,48 @@ elif [[ $FILTER == scythe ]]; then
     sickle pe -t sanger -c "$sickle_in" -M "$post_trim" &
 
 elif [[ $FILTER == bbtools ]]; then
-    abort1 "BBTools / rqcfilter2 QC-trimming not implemented yet"
+    base=$base.rqcfilter
+
+    if $DEREPLICATION; then
+        fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
+        rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
+        {
+            # make input files real for rqcfilter2 consumption
+            cat "$fwd_trim_in" > "$fwd_trim_in_tmp" &
+            cat "$rev_trim_in" > "$rev_trim_in_tmp" &
+            wait
+        }
+    else
+        fwd_trim_in_tmp=$fwd_trim_in
+        rev_trim_in_tmp=$rev_trim_in
+    fi
+
+    info1 "Running BBTools' QC pipeline..."
+
+    rqcfilter2_out=rqcfilter2_out
+    mkdir -p -- "$rqcfilter2_out"
+    rqcfilter2_args=(
+        in="$fwd_trim_in_tmp"
+        in2="$rev_trim_in_tmp"
+        path="$rqcfilter2_out"
+        rqcfilterdata="$RQCFILTERDATA"
+        barcodefilter=f
+        qtrim=rl
+        trimq=15
+        minlength=20
+        threads="$CPUS"
+    )
+    if ! $DEREPLICATION; then
+        rqcfilter2_args+=(
+            clumpify=t
+            dedupe=t
+            opticaldupes=t
+        )
+    fi
+    rqcfilter2 "${rqcfilter2_args[@]}" 2> "$rqcfilter2_out"/log
+    filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
+    post_trim=$tmpd/int$base.fastq
+    gunzip -c "$(realpath "$filtered_fastq")" > "$post_trim"
 else
     abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
 fi
