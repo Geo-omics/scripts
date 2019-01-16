@@ -107,9 +107,9 @@ IMAGE=$DEFAULT_IMAGE_NAME
 KEEP_ENV=false
 KEEP_ENV_MODULES=false
 # useful mounts for flux and geomicro servers, will only be used if they exist
+# NOTE: assuming on flux /scratch and /nfs are mounted via /etc/../singularity.conf
+#       including it here may produce two warnings each time comics is called
 MOUNT_POINTS=(
-/scratch
-/nfs
 /dept
 "${geomicro_base}"/geomicro/data9/flux/reference-data:ro
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
