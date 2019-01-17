@@ -27,8 +27,14 @@ ARG_HELP="
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
                         interleaved fastq will still be build.
-  -S, --scythe-sickle   Use the former way of QC with scythe and sickle.  The default
-                        is to use Trimmomatic for adapter and quality trimming
+  -F, --filter <trimmomatic|scythe|bbtools>
+                        Choice of qc-filter.  The default is to use Trimmomatic.
+                        The 'old' way of using scythe and sickle is still supported.
+                        A newer alternative is to use the rqcfilter2 pipeline from
+                        BBTools.
+      --rqcfilterdata PATH
+                        Path to directory containing the reference data for BBTool's rqcfilter2
+                        The default is /reference-data/bbtools/RQCFilterData
   -t N, --threads N, --cpus N
                         Number of parallel threads to employ (for Trimmomatic)
 "
@@ -39,8 +45,8 @@ generated files.
 
 qc is part of the omics(1) tool chain.
 "
-SHORT_OPTIONS=a:,f:,r:,t:,S
-LONG_OPTIONS=clean-only,adapters:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,scythe-sickle,threads:,cpus:
+SHORT_OPTIONS=a:,f:,r:,t:,F:
+LONG_OPTIONS=clean-only,adapters:,filter:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,rqcfilterdata:,threads:,cpus:
 }
 
 handle_options () {
@@ -70,9 +76,12 @@ handle_options () {
 	    (--no-fasta-interleave)
 	        INTERLEAVE_FASTA=false
 	        return 1;;
-            (-S|--scythe-sickle)
-                TRIMMOMATIC=false
-                return 1;;
+            (-F|--filter)
+                FILTER=$2
+                return 2;;
+            (--rqcfilter-data)
+                RQCFILTERDATA=$2
+                return 2;;
             (-t|--threads|--cpus)
                 CPUS=$2
                 return 2;;
@@ -113,9 +122,10 @@ KEEPALL=false
 #
 DEREPLICATION=true
 INTERLEAVE_FASTA=true
-# Use Trimmomatic by default
-# if this is false, then scythe and sickle will be used, this is the old way
-TRIMMOMATIC=true
+# Use Trimmomatic filtering step by default, alternatives are scythe (and sickle) and bbtools
+FILTER=trimmomatic
+# Default rqcfilter2 data will work on omics container
+RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
 #
 CPUS=2
 
@@ -132,9 +142,9 @@ abort1 () { abort "[$(basename "$PWD")] $1" ; }
 [[ -v V ]] && if [[ -n "$V" ]]; then V=("$V"); else V=(); fi
 
 if [[ ! -v ADAPTERS ]]; then
-    if $TRIMMOMATIC; then
+    if [[ $FILTER == trimmomatic ]]; then
         ADAPTERS=$ADAPTERS_TRIMMOMATIC
-    else
+    elif [[ $FILTER == scythe ]]; then
         ADAPTERS=$ADAPTERS_SCYTHE
     fi
 fi
@@ -147,8 +157,12 @@ fi
 #########################
 # some input sanitation
 #########################
-[ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
-[ "$VERBOSITY" -lt 2 ] || info1 "Using adapters file: $ADAPTERS"
+if [[ $FILTER == bbtools ]]; then
+    [ -d "$RQCFILTERDATA" ] || abort1 "Reference data for rqcfilter2 not found: $RQCFILTERDATA"
+else
+    [ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
+    [ "$VERBOSITY" -lt 2 ] || info1 "Using adapters file: $ADAPTERS"
+fi
 [ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
 
@@ -164,7 +178,7 @@ rev=$(basename "$REV_FASTQ" .fastq)
 clean_all () {
     clean_intermediates
     # clean final results
-    $RM -rf -- FASTQC
+    $RM -rf -- FASTQC rqcfilter2_out
     $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
     $RM -f -- {"$fwd","$rev"}{.derep,}.matches.fastq
     $RM -f -- {int,"$fwd","$rev"}."$FINAL".fast{a,q}
@@ -231,18 +245,17 @@ if $DEREPLICATION; then
     fi
     python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
 else
-    fwd_trim_in=$tmpd/$fwd$base.fastq
-    rev_trim_in=$tmpd/$rev$base.fastq
+    fwd_trim_in=$FWD_FASTQ
+    rev_trim_in=$REV_FASTQ
 fi
 
 oldbase=$base
-if $TRIMMOMATIC; then
+if [[ $FILTER == trimmomatic ]]; then
     # Trimmomatic's makes the data streaming more complicated:  It's seems not
     # possible to use fifos as input and it produces four output files that we
     # need to post-process, however with --keep-all the trimmed files are saved
     # directly and then reused for post-processing, hopefully the page-cache
     # makes this efficient
-    info1 "Start adapter + quality trimming..."
     base="${base}.trim"
     fwd_trim_s=$tmpd/$fwd$base.s.fastq
     rev_trim_s=$tmpd/$rev$base.s.fastq
@@ -253,9 +266,8 @@ if $TRIMMOMATIC; then
         fwd_trim=$tmpd/$fwd$base.tmp.fastq
         rev_trim=$tmpd/$rev$base.tmp.fastq
     fi
-    post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
-    {
+
+    if $DEREPLICATION; then
         fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
         rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
         {
@@ -264,6 +276,17 @@ if $TRIMMOMATIC; then
             cat "$rev_trim_in" > "$rev_trim_in_tmp" &
             wait
         }
+    else
+        fwd_trim_in_tmp=$fwd_trim_in
+        rev_trim_in_tmp=$rev_trim_in
+    fi
+
+    info1 "Start adapter + quality trimming..."
+
+    post_trim=$tmpd/int$base.fastq
+    mkfifo "$post_trim"
+
+    {
         TrimmomaticPE \
             -threads "$CPUS" \
             "$fwd_trim_in_tmp" "$rev_trim_in_tmp" \
@@ -285,7 +308,7 @@ if $TRIMMOMATIC; then
         python3 -m omics.interleave "${V[@]}" "$fwd_trim" "$rev_trim" > "$post_trim"
     } &
 
-else
+elif [[ $FILTER == scythe ]]; then
     info1 "Start adapter trimming..."
     base="${base}.scythe"
     # scythe_out to be fed into interleaver
@@ -317,6 +340,52 @@ else
     post_trim=$tmpd/int$base.fastq
     mkfifo "$post_trim"
     sickle pe -t sanger -c "$sickle_in" -M "$post_trim" &
+
+elif [[ $FILTER == bbtools ]]; then
+    base=$base.rqcfilter
+
+    if $DEREPLICATION; then
+        fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
+        rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
+        {
+            # make input files real for rqcfilter2 consumption
+            cat "$fwd_trim_in" > "$fwd_trim_in_tmp" &
+            cat "$rev_trim_in" > "$rev_trim_in_tmp" &
+            wait
+        }
+    else
+        fwd_trim_in_tmp=$fwd_trim_in
+        rev_trim_in_tmp=$rev_trim_in
+    fi
+
+    info1 "Running BBTools' QC pipeline..."
+
+    rqcfilter2_out=rqcfilter2_out
+    mkdir -p -- "$rqcfilter2_out"
+    rqcfilter2_args=(
+        in="$fwd_trim_in_tmp"
+        in2="$rev_trim_in_tmp"
+        path="$rqcfilter2_out"
+        rqcfilterdata="$RQCFILTERDATA"
+        barcodefilter=f
+        qtrim=rl
+        trimq=15
+        minlength=20
+        threads="$CPUS"
+    )
+    if ! $DEREPLICATION; then
+        rqcfilter2_args+=(
+            clumpify=t
+            dedupe=t
+            opticaldupes=t
+        )
+    fi
+    rqcfilter2 "${rqcfilter2_args[@]}" 2> "$rqcfilter2_out"/log
+    filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
+    post_trim=$tmpd/int$base.fastq
+    gunzip -c "$(realpath "$filtered_fastq")" > "$post_trim"
+else
+    abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
 fi
 # $KEEPALL || rm -f -- "int$oldbase.fastq"
 

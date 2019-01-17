@@ -6,36 +6,41 @@ from pathlib import Path
 import subprocess
 import sys
 
-from omics import get_argparser, DEFAULT_THREADS, DEFAULT_VERBOSITY
+from omics import get_argparser, DEFAULT_VERBOSITY
+
+FILTER_CHOICES = ['trimmomatic', 'scythe', 'bbtools']
+QC_BINARY_NAME = 'omics-qc-sample'
+DEFAULT_RQCFILTERDATA = '/reference-data/bbtools/RQCFilterData'
 
 
-def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
-              no_dereplicate=False, no_fasta_interleave=False,
-              verbosity=DEFAULT_VERBOSITY, scythe_sickle=False,
-              threads=DEFAULT_THREADS, project=None):
+def qc_sample(path, **kwargs):
     """
     Do QC for a single sample
 
     This is a wrapper for the omics-qc-sample script
     """
-    script = 'omics-qc-sample'
+    for k, v in vars(get_args(argv=[])).items():
+        kwargs.setdefault(k, v)
 
     args = []
-    not clean_only or args.append('--clean-only')
-    not keep_all or args.append('--keep-all')
-    if adapters:
-        args += ['--adapters', adapters]
-    not no_dereplicate or args.append('--no-dereplicate')
-    not no_fasta_interleave or args.append('--no-fasta-interleave')
-    not scythe_sickle or args.append('--scythe-sickle')
-    if threads is not None:
-        args += ['--threads', str(threads)]
-    if verbosity > DEFAULT_VERBOSITY:
-        args.append('--verbosity={}'.format(verbosity))
+    not kwargs['clean_only'] or args.append('--clean-only')
+    not kwargs['keep_all'] or args.append('--keep-all')
+    if kwargs['adapters']:
+        args += ['--adapters', kwargs['adapters']]
+    not kwargs['no_dereplicate'] or args.append('--no-dereplicate')
+    not kwargs['no_fasta_interleave'] or args.append('--no-fasta-interleave')
+    if kwargs['filter']:
+        args += ['--filter', kwargs['filter']]
+    if kwargs['rqcfilterdata'] is not None:
+        args += ['--rqcfilterdata', kwargs['rqcfilterdata']]
+    if kwargs['threads'] is not None:
+        args += ['--threads', str(kwargs['threads'])]
+    if kwargs['verbosity'] > DEFAULT_VERBOSITY:
+        args.append('--verbosity={}'.format(kwargs['verbosity']))
         print('[qc] Calling qc-sample with arguments: {}'.format(args))
 
     p = subprocess.run(
-        [script] + args,
+        [QC_BINARY_NAME] + args,
         cwd=str(path),
     )
     if p.check_returncode():
@@ -43,53 +48,41 @@ def qc_sample(path, *, clean_only=False, adapters=None, keep_all=False,
                            '{}'.format(path, p.returncode))
 
 
-def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
-       no_dereplicate=False, no_fasta_interleave=False,
-       verbosity=DEFAULT_VERBOSITY, scythe_sickle=False,
-       threads=DEFAULT_THREADS, project=None):
+def qc(**kwargs):
     """
     Do quality control on multiple samples
 
-    :param samples: List of pathlib.Path containing read data, one per sample
     :param kwargs: Options, see omics.qc.main for argsparse options.
     """
+    for k, v in vars(get_args(argv=[])).items():
+        kwargs.setdefault(k, v)
+
     # number of workers: how many samples are processed in parallel
     # HOWTO distribute CPUs among workers:
     #   1. allow at most (hard-coded) 6 workers
     #   2. # of workers is the least of 6, # of CPUs, and # of samples
     #   3. # of CPUs/worker at least 1
-    MAX_WORKERS = 6
-    num_workers = min(MAX_WORKERS, len(samples), threads)
-    threads_per_worker = max(1, int(threads / num_workers))
+    MAX_WORKERS = 1
+    num_workers = min(MAX_WORKERS, len(kwargs['samples']), kwargs['threads'])
+    threads_per_worker = max(1, int(kwargs['threads'] / num_workers))
 
-    if verbosity > DEFAULT_VERBOSITY:
+    if kwargs['verbosity'] > DEFAULT_VERBOSITY:
         print('[qc] Processing {} samples in parallel, using {} threads each'
               ''.format(num_workers, threads_per_worker))
 
-    errors = []
+    kwargs['threads'] = threads_per_worker
 
+    errors = []
     with ThreadPoolExecutor(max_workers=num_workers) as e:
         futures = {}
-        for path in samples:
-            futures[e.submit(
-                qc_sample,
-                path,
-                clean_only=clean_only,
-                adapters=adapters,
-                keep_all=keep_all,
-                no_dereplicate=no_dereplicate,
-                no_fasta_interleave=no_fasta_interleave,
-                scythe_sickle=scythe_sickle,
-                verbosity=verbosity,
-                project=project,
-                threads=threads_per_worker,
-            )] = path
+        for path in kwargs['samples']:
+            futures[e.submit(qc_sample, path, **kwargs)] = path
 
         for fut in as_completed(futures.keys()):
             sample_path = futures[fut]
             e = fut.exception()
             if e is None:
-                if verbosity >= DEFAULT_VERBOSITY + 2:
+                if kwargs['verbosity'] >= DEFAULT_VERBOSITY + 2:
                     print('Done: {}'.format(sample_path.name))
             else:
                 errors.append(
@@ -101,7 +94,7 @@ def qc(samples, *, clean_only=False, adapters=None, keep_all=False,
         raise(RuntimeError('\n'.join(errors)))
 
 
-def main(argv=None, namespace=None):
+def get_args(argv=None, namespace=None):
     argp = get_argparser(
         prog=__loader__.name.replace('.', ' '),
         description=__doc__,
@@ -127,7 +120,8 @@ def main(argv=None, namespace=None):
         metavar='FILE',
         help='Specify the adapters file used in the adpater trimming step.  By'
              ' default the Illumina adapter file TruSeq3-PE-2.fa as '
-             'distributed by the Trimmomatic project will be used.',
+             'distributed by the Trimmomatic project will be used.  Ignored '
+             'when using the bbtools filter',
     )
     argp.add_argument(
         '--keep-all',
@@ -147,29 +141,32 @@ def main(argv=None, namespace=None):
              'files will still be build.',
     )
     argp.add_argument(
-        '-S', '--scythe-sickle',
-        action='store_true',
-        help='Use scythe + sickle instead of (the default) Trimmomatic',
+        '-F', '--filter',
+        choices=FILTER_CHOICES,
+        default=FILTER_CHOICES[0],
+        help='Which quality filter to use.  Trimmomatic is used by default. '
+             'Scythe/sickle based filtering the the "old" way.  The rqcfilter2'
+             ' pipeline from BBTools is an alternative',
+    )
+    argp.add_argument(
+        '--rqcfilterdata',
+        metavar='PATH',
+        help='Path to directory containing the reference data for BBTool\'s '
+             'rqcfilter2. The default is ' + DEFAULT_RQCFILTERDATA + ' and '
+             'is good for running omics qc inside the omics container.'
     )
     args = argp.parse_args(args=argv, namespace=namespace)
     args.samples = [Path(i) for i in args.samples]
     for i in args.samples:
         if not i.is_dir():
             argp.error('Directory not found: {}'.format(i))
+    return args
 
+
+def main(argv=None, namespace=None):
+    args = get_args(argv, namespace)
     try:
-        qc(
-            args.samples,
-            clean_only=args.clean_only,
-            adapters=args.adapters,
-            keep_all=args.keep_all,
-            no_dereplicate=args.no_dereplicate,
-            no_fasta_interleave=args.no_fasta_interleave,
-            scythe_sickle=args.scythe_sickle,
-            verbosity=args.verbosity,
-            threads=args.threads,
-            project=args.project,
-        )
+        qc(**vars(args))
     except Exception as e:
         if args.traceback:
             raise
