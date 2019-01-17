@@ -1,3 +1,16 @@
+geo-omics-scripts (1.0.124-1) unstable; urgency=medium
+
+  * [asm] Enable 16S blast search by default
+  * [qc] various fixes
+  * [qc] Add --filter option to set Trimmomatic vs Scythe vs BBtools modes
+  * [qc] Fix passing the original fastq files when using --no-dereplicate
+  * [qc] Fix --no-dereplicate with Trimmomatic, passing correct files around
+  * [qc] Implement optional BBTools/rqcfilter2 QC pipeline
+  * [comics] Rely on flux host configuration to bind /scratch and /nfs
+  * [qc] Only process one sample at a time
+
+ -- Robert <heinro@umich.edu>  Thu, 17 Jan 2019 11:06:50 -0500
+
 geo-omics-scripts (1.0.121-1) unstable; urgency=medium
 
   * Fixes various regressions caused by adding the auto-completion
