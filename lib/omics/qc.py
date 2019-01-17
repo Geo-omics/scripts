@@ -62,7 +62,7 @@ def qc(**kwargs):
     #   1. allow at most (hard-coded) 6 workers
     #   2. # of workers is the least of 6, # of CPUs, and # of samples
     #   3. # of CPUs/worker at least 1
-    MAX_WORKERS = 6
+    MAX_WORKERS = 1
     num_workers = min(MAX_WORKERS, len(kwargs['samples']), kwargs['threads'])
     threads_per_worker = max(1, int(kwargs['threads'] / num_workers))
 
