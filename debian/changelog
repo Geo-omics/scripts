@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.125-1) unstable; urgency=medium
+
+  * [docs]  Smallish update to pipline manual
+  * Set CPUS from available cores on PBS jobs is needed and available
+  * Harmonize -t, --threads, --cpus options across pipeline scripts
+
+ -- Robert <heinro@umich.edu>  Thu, 24 Jan 2019 15:47:40 -0500
+
 geo-omics-scripts (1.0.124-1) unstable; urgency=medium
 
   * [asm] Enable 16S blast search by default
