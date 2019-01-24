@@ -151,7 +151,10 @@ class OmicsArgParser(argparse.ArgumentParser):
                 try:
                     args.threads = project['threads']
                 except (TypeError, AttributeError, KeyError):
-                    args.threads = DEFAULT_THREADS
+                    if 'PBS_ENVIRONMENT' in environ:
+                        args.threads = get_num_cpus()
+                    else:
+                        args.threads = DEFAULT_THREADS
             else:
                 if args.threads <= 0:
                     self.error('The number of threads given via --threads '

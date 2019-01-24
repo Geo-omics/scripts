@@ -96,7 +96,7 @@ CHOPPED_ASSEMBLY=
 # default will be derived from assembly name (see below)
 BAM_PATH=
 #
-CPUS=4
+DEFAULT_CPUS=4
 # Number of vbgmm iterations for CONCOCT, default is to use CONCOCTs default (500)
 ITERATIONS=
 # Empty be default, -c won't be set
@@ -121,6 +121,9 @@ if [ "$#" -gt 0 ]; then
 else
     abort "Sample data directories must be listed as positional parameters." usage
 fi
+
+# set CPUS from pbs job available cores if needed and possible
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
     [[ $MAX_CLUSTERS -gt 0 ]] || abort "max-cluster parameter must be number greater than 0"

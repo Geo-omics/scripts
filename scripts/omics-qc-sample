@@ -127,7 +127,7 @@ FILTER=trimmomatic
 # Default rqcfilter2 data will work on omics container
 RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
 #
-CPUS=2
+DEFAULT_CPUS=2
 
 # shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
@@ -148,6 +148,9 @@ if [[ ! -v ADAPTERS ]]; then
         ADAPTERS=$ADAPTERS_SCYTHE
     fi
 fi
+
+# use available cores on pbs job as needed
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then

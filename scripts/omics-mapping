@@ -63,7 +63,7 @@ CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 CHOP_ASSEMBLY=false
 CHUNK_SIZE=$DEFAULT_CHUNK_SIZE
 #
-CPUS=4
+DEFAULT_CPUS=4
 #
 FORCE=false
 # no defaults needed
@@ -154,6 +154,8 @@ eval "_$(declare -f abort)"
 info () { if [[ -n ${sample_dir:-} ]]; then _info "[${sample_dir:-}] $1"; else _info "$1"; fi; }
 abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else _abort "$1"; fi; }
 
+# set CPUS from available cores on pbs job if needed
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 #########################
 # some input sanitation

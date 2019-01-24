@@ -113,7 +113,7 @@ ASSEMBLY_ONLY=false
 # Name of the (link to the) finished assembly
 ASSEMBLY_NAME=assembly
 # Number of CPUs to use in parallel
-CPUS=4
+DEFAULT_CPUS=4
 # Overwrite existing files if `true`
 FORCE=false
 # Use megahit by default, if false, then use idba_ud
@@ -141,6 +141,9 @@ fi
 
 # default output path is the working directory, which is only defined after sourcing liba.sh
 [ ! -z "$OUTDIR" ] || OUTDIR="ASSEMBLY"
+
+# use available cores on pbs job as needed
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
