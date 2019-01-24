@@ -35,13 +35,13 @@ ARG_HELP="
 
  General options:
 
-  --cpus                    Number of CPUs/threads
+  -t, --cpus, --threads N   Number of CPUs/threads to use
   --force                   Overwrite existing output
   -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
-SHORT_OPTIONS=a:c:i:o:u:
-LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,iterations:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
+SHORT_OPTIONS=a:c:i:o:u:t:
+LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,iterations:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:,threads:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -81,7 +81,7 @@ handle_options () {
 	(-o|--out-dir)
 	    OUTDIR="$2"
 	    return 2;;
-        (--cpus)
+        (-t|--cpus|--threads)
             CPUS="$2"
             return 2;;
         esac
@@ -96,7 +96,7 @@ CHOPPED_ASSEMBLY=
 # default will be derived from assembly name (see below)
 BAM_PATH=
 #
-CPUS=4
+DEFAULT_CPUS=4
 # Number of vbgmm iterations for CONCOCT, default is to use CONCOCTs default (500)
 ITERATIONS=
 # Empty be default, -c won't be set
@@ -121,6 +121,9 @@ if [ "$#" -gt 0 ]; then
 else
     abort "Sample data directories must be listed as positional parameters." usage
 fi
+
+# set CPUS from pbs job available cores if needed and possible
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
     [[ $MAX_CLUSTERS -gt 0 ]] || abort "max-cluster parameter must be number greater than 0"

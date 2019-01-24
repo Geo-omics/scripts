@@ -18,7 +18,8 @@ ARG_HELP="
       --name NAME         User-defined identifier for assembly.  Used as the
                           final assemblies file name in the working directory.
                           The default is 'assembly'.
-      --cpus N	          How many CPUs/threads to use
+  -t, --threads, --cpus N
+                          How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
       --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
       --maxk N            min k parameter, must be odd with --megahit
@@ -39,7 +40,8 @@ MORE_HELP="
 The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for MEGAHIT.
 "
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+SHORT_OPTIONS=t:
+LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast,threads:
 }
 
 handle_options () {
@@ -54,7 +56,7 @@ handle_options () {
 	(--name)
 	    ASSEMBLY_NAME="$2"
 	    return 2;;
-	(--cpus)
+	(--cpus|-t|--threads)
 	    CPUS="$2"
 	    return 2;;
 	(--force)
@@ -113,7 +115,7 @@ ASSEMBLY_ONLY=false
 # Name of the (link to the) finished assembly
 ASSEMBLY_NAME=assembly
 # Number of CPUs to use in parallel
-CPUS=4
+DEFAULT_CPUS=4
 # Overwrite existing files if `true`
 FORCE=false
 # Use megahit by default, if false, then use idba_ud
@@ -141,6 +143,9 @@ fi
 
 # default output path is the working directory, which is only defined after sourcing liba.sh
 [ ! -z "$OUTDIR" ] || OUTDIR="ASSEMBLY"
+
+# use available cores on pbs job as needed
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then

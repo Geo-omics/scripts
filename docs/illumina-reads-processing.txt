@@ -58,31 +58,45 @@ To provide a more consistent, reproducible, setup for data analysis a
 `Singularity container`_ is provided.  This provides a standard linux
 environment (Debian stable) tailored for the pipeline but isolated from FLUX.
 Inside the container none of the software provided by FLUX or any modules is
-available, instead software installed in the container is used.  The container
-image is located at :file:`/dept/geology/geomicro/data9/flux/omics.img` and
-is executable, e.g. running::
+available, instead software installed in the container is used.  The special
+command :command:`comics`, provided by the ``geomicro/omics`` module can be
+used to run a shell inside the container::
+
+    $ comics
+    
+or to run another command inside the container::
+
+    $ comics -- <some command>
+    
+Alternatively, in case :command:`comics` is unavailable or more flexibility is
+needed, the :command:`singularity` can be used together with the container
+image file located on FLUX at
+:file:`/dept/geology/geomicro/data9/flux/omics.img`. This image file is also
+executable, e.g.  running::
 
     $ /dept/geology/geomicro/data9/flux/omics.img
 
-on the flux command line will show a help screen documenting how the container
-can be used directly on FLUX without the need for the ``geomicro/omics``
-module.  For convenience, the ``geomicro/omics`` module provides the command
-:command:`comics` to access the container.  The specifics are documented
-separately for interactive use and non-interactive job-submission in
-sub-sections following this one.
-
-Copying the container image, a 3+ GB file to your own computer gives you the
-same environment.  Installing ``singularity`` and runnning something like::
+on the flux command line will show a help screen.  This documents how the
+container can be used on FLUX without the need for the ``geomicro/omics``
+module or how it can be used after copying the image file to a different
+system.  :command:`comics` to access the container.  To use the container,
+another system needs to have ``singularity`` installed.  Then running something
+like::
 
     $ singularity shell omics.img
 
-will give you access.  If you have super-user rights you can make
-modifications, e.g. update or install software.  You can then copy your
-modified image back to flux and use it there.
+will enter a shell inside the container and::
+
+    $ singularity exec <some command>
+    
+will run a command in the container environment.  If you have super-user rights
+you can also a writable copy of the container image and make modifications,
+e.g. update or install new software.  You can then copy your modified image
+back to flux and use it there.
 
 
-Interactive
-"""""""""""
+Interactive commands
+""""""""""""""""""""
 
 The pipeline's scripts can be run interactively on login nodes (for limited
 testing) or during an interactive FLUX session.  Commands can be run the FLUX
@@ -137,12 +151,12 @@ lines.
 Working on the Geomicrobiology servers
 --------------------------------------
 
-On ``cayman`` and ``vondamm`` the ``omics`` container is located at
-:file:`/geomicro/data9/flux/omics.img`.  The command :command:`comics` is
-available to conveniently enter the container.  The servers each have 64 CPUs
-and 754 GB RAM available.  These resources are shared cooperatively between
-users so some judgment is needed when deciding how many threads or CPUs to use
-for a command.
+On ``cayman``, ``vondamm``, and ``alpena`` the ``omics`` container is located
+at :file:`/geomicro/data9/flux/omics.img`.  The command :command:`comics` is
+available to conveniently interact with the container.  The servers each have
+64 CPUs and 754 GB RAM available, (96/188 for ``alpena``).  These resources are
+shared cooperatively between users so some judgment is needed when deciding how
+many threads or CPUs to use for a command.
 
 
 Illumina Data
@@ -289,17 +303,17 @@ You can easily process multiple samples in parallel by doing something like::
     cd <working directory>
     omics qc --threads 8 *
 
-For the ``--threads`` parameter a low multiple of two is recommended as per the
-following reasoning:  Between the individual QC steps intermediate data is
-saved in your working directory.  This means your fastq data (5 - 10 GB per
-sample) will be read and written 6 or 7 times (per sample again.)  Usually,
-your storage is network-attached, e.g. ``/scratch`` on FLUX is not hosted by
-your computing node but accessed via the network, storage on the geomicro
-servers is organized likewise.  As such, temporarily storing intermediate
-results may easily saturate the network and become the bottleneck for this
-pipeline step.  The severity depends on the workload of other users sharing
-FLUX or the geomicro servers.  Since the script will always process the two
-read directions in parallel it makes sense to allocate a multiple of two
+[this sections needs revision] For the ``--threads`` parameter a low multiple
+of two is recommended as per the following reasoning:  Between the individual
+QC steps intermediate data is saved in your working directory.  This means your
+fastq data (5 - 10 GB per sample) will be read and written 6 or 7 times (per
+sample again.)  Usually, your storage is network-attached, e.g. ``/scratch`` on
+FLUX is not hosted by your computing node but accessed via the network, storage
+on the geomicro servers is organized likewise.  As such, temporarily storing
+intermediate results may easily saturate the network and become the bottleneck
+for this pipeline step.  The severity depends on the workload of other users
+sharing FLUX or the geomicro servers.  Since the script will always process the
+two read directions in parallel it makes sense to allocate a multiple of two
 threads for QC.
 
 Assembly Module -- :program:`assemble`
@@ -405,9 +419,17 @@ mapping` is as follows::
 Binning
 -------
 
-Do this::
+Two binners are supported by the pipeline.  MetaBAT and CONCOCT (the default).
+Do do binning with CONCOCT on the chopped contigs run::
 
-    omics binning --assembly assembly.chop.fa Sample_*
+    omics binning --assembly asm.fa --chopped-assembly asm.chop.fa Sample_*
+
+and to run MetaBAT instead::
+
+    omics binning --metabat --assembly asm.fa Sample_*
+
+After binning the CheckM tool will run and give indication towards bin
+completeness and contamination.
 
 
 .. _google doc: https://docs.google.com/a/umich.edu/document/d/1z0C27ECGM2CCrk6pHwQs5VFwchatrStmiyjCzTqtUM0/edit?usp=sharing

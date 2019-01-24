@@ -32,7 +32,8 @@ Optional parameters:
                         a joint assembly from several samples.  In this work-
                         flow run --index-only once and then re-use the index
                         for mapping reads from each sample.
-      --cpus N          Number of CPUs to use for parallel processing
+  -t, --cpus, --threads N
+                        Number of CPUs/threads to use for parallel processing
       --force           Overwrite any previous results
 
 Optional parameters for which arguments are relative to each sample directory:
@@ -50,8 +51,8 @@ Optional parameters for which arguments are relative to each sample directory:
 Use either -f/-r, or -i, -or the -u option to specify read files but don't mix them.
 If no read files are specified, then the default forward and reverse files are used.
 "
-SHORT_OPTIONS=a:cf:i:o:r:u:x:
-LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,unpaired
+SHORT_OPTIONS=a:cf:i:o:r:t:u:x:
+LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,threads:,unpaired
 CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 }
 
@@ -63,7 +64,7 @@ CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
 CHOP_ASSEMBLY=false
 CHUNK_SIZE=$DEFAULT_CHUNK_SIZE
 #
-CPUS=4
+DEFAULT_CPUS=4
 #
 FORCE=false
 # no defaults needed
@@ -103,7 +104,7 @@ handle_options () {
                 CHOP_ASSEMBLY=true
                 CHUNK_SIZE=$2
                 return 2;;
-            (--cpus)
+            (-t|--cpus|--threads)
 	        CPUS="$2"
 	        return 2;;
 	    (-f|--fwd-reads)
@@ -154,6 +155,8 @@ eval "_$(declare -f abort)"
 info () { if [[ -n ${sample_dir:-} ]]; then _info "[${sample_dir:-}] $1"; else _info "$1"; fi; }
 abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else _abort "$1"; fi; }
 
+# set CPUS from available cores on pbs job if needed
+[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
 
 #########################
 # some input sanitation
