@@ -35,13 +35,13 @@ ARG_HELP="
 
  General options:
 
-  --cpus                    Number of CPUs/threads
+  -t, --cpus, --threads N   Number of CPUs/threads to use
   --force                   Overwrite existing output
   -o PATH, --out-dir PATH   Output directory, default is BINNING
 
 "
-SHORT_OPTIONS=a:c:i:o:u:
-LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,iterations:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:
+SHORT_OPTIONS=a:c:i:o:u:t:
+LONG_OPTIONS=assembly:,chopped-assembly:,bam-path:,concoct,cpus:,iterations:,max-clusters:,coverage-file:,coverage-path:,force,metabat,out-dir:,threads:
 }
 handle_options () {
     if [ "$#" -gt 0 ]; then
@@ -81,7 +81,7 @@ handle_options () {
 	(-o|--out-dir)
 	    OUTDIR="$2"
 	    return 2;;
-        (--cpus)
+        (-t|--cpus|--threads)
             CPUS="$2"
             return 2;;
         esac

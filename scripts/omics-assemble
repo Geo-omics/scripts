@@ -18,7 +18,8 @@ ARG_HELP="
       --name NAME         User-defined identifier for assembly.  Used as the
                           final assemblies file name in the working directory.
                           The default is 'assembly'.
-      --cpus N	          How many CPUs/threads to use
+  -t, --threads, --cpus N
+                          How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
       --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
       --maxk N            min k parameter, must be odd with --megahit
@@ -39,7 +40,8 @@ MORE_HELP="
 The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for MEGAHIT.
 "
 # shellcheck disable=SC2100
-LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast
+SHORT_OPTIONS=t:
+LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast,threads:
 }
 
 handle_options () {
@@ -54,7 +56,7 @@ handle_options () {
 	(--name)
 	    ASSEMBLY_NAME="$2"
 	    return 2;;
-	(--cpus)
+	(--cpus|-t|--threads)
 	    CPUS="$2"
 	    return 2;;
 	(--force)
