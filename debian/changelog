@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.126-1) unstable; urgency=medium
+
+  * [comics] Preserve PBS_ variables on FLUX
+
+ -- Robert <heinro@umich.edu>  Fri, 25 Jan 2019 16:11:38 -0500
+
 geo-omics-scripts (1.0.125-1) unstable; urgency=medium
 
   * [docs]  Smallish update to pipline manual
