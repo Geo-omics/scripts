@@ -199,6 +199,13 @@ else
     SINGULARITY_ARGS+=(--cleanenv)
 fi
 
+# In any case, keep PBS variables
+pbs_vars=()
+mapfile -t pbs_vars < <(env | grep ^PBS)
+for i in "${pbs_vars[@]}"; do
+    export "SINGULARITYENV_$i"
+done
+
 s_cmd=()
 if $WRITE; then
     SINGULARITY_ARGS+=(--writable)
