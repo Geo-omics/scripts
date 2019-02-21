@@ -230,6 +230,24 @@ install-comics-local: standalone-comics
 	rm -f -- $(comics_temp)
 	$(info done)
 
+install-omics-module: src = modulefiles/flux.omics
+install-omics-module: dest_base = /geomicro/data9/flux
+install-omics-module: comics_base = $(dest_base)/apps
+install-omics-module: module_base = $(dest_base)/modulefiles/geomicro
+install-omics-module: standalone-comics
+	$(info Installing omics module to $(dest_base) ...)
+	[ -d $(comics_base) ] || { echo "missing $(comics_base)"; false; }
+	[ -d $(module_base) ] || { echo "missing $(module_base)"; false; }
+	mkdir -p -- $(comics_base)/comics
+	mkdir -p -- $(comics_base)/comics/bin
+	mkdir -p -- $(comics_base)/comics/man
+	mkdir -p -- $(module_base)/omics
+	$(INSTALL_DATA) -t $(module_base)/omics/ $(src)/1 $(src)/2
+	ln -s -f $(module_base)/omics/2 $(module_base)/omics/default
+	$(INSTALL_PROGRAM) -T $(comics_temp) $(comics_base)/comics/bin/comics
+	rm -f -- $(comics_temp)
+	$(info done)
+
 uninstall:
 	$(info Removing documentation...)
 	$(RM) -r -- $(DESTDIR)/$(docdir)/$(package_name)
