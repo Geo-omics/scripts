@@ -35,6 +35,8 @@ version := $(strip $(if $(version0),\
 ))
 endif
 
+comics_temp=./comics_temp
+
 export
 .SILENT:
 
@@ -199,26 +201,33 @@ install: install-docs install-data
 	$(INSTALL) -t $(DESTDIR)/etc/bash_completion.d/ bash-completion/omics
 
 
-install-comics-local: prog = scripts/comics
-install-comics-local: insert_tmp := $(shell mktemp)
-install-comics-local: dest = /usr/local/bin/comics
-install-comics-local: destdir = $(shell dirname $(dest))
-install-comics-local:
+standalone-comics: prog = scripts/comics
+standalone-comics: insert_tmp := $(shell mktemp)
+standalone-comics:
 	# local installation of the comics script:
 	# 1. get liba.sh, from trap command to end
 	# 2. replace the "source liba.sh" call, including shellcheck comments with a mark (BORK42)
 	# 3. write insert after mark
 	# 4. remove mark
-	$(info Installing $(prog) to $(dest) ...)
+	$(info Building standalone $(prog) ...)
 	sed -n '/^trap/,/not accessible/p' lib/liba.sh > $(insert_tmp)
-	mkdir -p -- $(destdir)
 	cat $(prog) \
 	    | sed "/liba.sh/,/liba.sh/c BORK42" \
 	    | sed "/BORK42/r $(insert_tmp)" \
 	    | sed "/BORK42/d" \
-	    > $(dest)
-	chmod +x -- $(dest)
+	    > $(comics_temp)
+	chmod +x -- $(comics_temp)
 	rm -f -- $(insert_tmp)
+	$(info done)
+
+install-comics-local: dest = /usr/local/bin/comics
+install-comics-local: destdir = $(shell dirname $(dest))
+install-comics-local: standalone-comics
+	$(info Installing $(comics_temp) to $(dest) ...)
+	mkdir -p -- $(destdir)
+	$(INSTALL_PROGRAM) $(comics_temp) $(dest)
+	chmod +x -- $(dest)
+	rm -f -- $(comics_temp)
 	$(info done)
 
 uninstall:
