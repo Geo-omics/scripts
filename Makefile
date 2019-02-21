@@ -35,7 +35,7 @@ version := $(strip $(if $(version0),\
 ))
 endif
 
-comics_temp=./comics_temp
+comics_temp=/tmp/comics_temp
 
 export
 .SILENT:
