@@ -208,6 +208,9 @@ if [[ ${#pbs_vars[@]} -gt 0 ]]; then
     done
 fi
 
+# set DISPLAY if needed
+[[ -v DISPLAY ]] && export SINGULARITYENV_DISPLAY=$DISPLAY
+
 s_cmd=()
 if $WRITE; then
     SINGULARITY_ARGS+=(--writable)
