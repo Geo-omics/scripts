@@ -31,7 +31,8 @@ ARG_HELP="
       --megahit           Use MEGAHIT assembler, this is the default
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
-      --reads FILE        Interleaved reads file, by default this is 'int.good.fasta'
+      --reads FILE        Name of interleaved reads file, relative to each sample directory,
+                          by default this is 'int.good.fasta'
       --skip-blast        Skip classification steps, by default run blast
       --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
       --skip-quast        Skip QUAST analysis, by default QUAST is run
@@ -41,7 +42,7 @@ The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for 
 "
 # shellcheck disable=SC2100
 SHORT_OPTIONS=t:
-LONG_OPTIONS=assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast,threads:
+LONG_OPTIONS="assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-phylosift,skip-quast,threads:"
 }
 
 handle_options () {
@@ -54,7 +55,7 @@ handle_options () {
 	    ASSEMBLY="$2"
 	    return 2;;
 	(--name)
-	    ASSEMBLY_NAME="$2"
+	    USER_ASSEMBLY_NAME="$2"
 	    return 2;;
 	(--cpus|-t|--threads)
 	    CPUS="$2"
@@ -113,7 +114,8 @@ ASSEMBLY_LEVEL=contig
 # Stop after finishing assembly when set to `true`
 ASSEMBLY_ONLY=false
 # Name of the (link to the) finished assembly
-ASSEMBLY_NAME=assembly
+DEFAULT_ASSEMBLY_NAME=assembly
+USER_ASSEMBLY_NAME=
 # Number of CPUs to use in parallel
 DEFAULT_CPUS=4
 # Overwrite existing files if `true`
@@ -137,7 +139,7 @@ if which quast.py &> /dev/null; then
     # this works on vondamm/cayman and flux
     QUAST="$(which python2) $(which quast.py)"
 fi
-# shellcheck source=../lib/liba.sh
+## shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
 
@@ -199,7 +201,12 @@ else
 fi
 
 spec=k${MINK}_${MAXK}_s${STEP}
-out="$OUTDIR/$spec"
+if [[ -n "$USER_ASSEMBLY_NAME" ]]; then
+    name_suffix=_$USER_ASSEMBLY_NAME
+fi
+out="$OUTDIR/$spec${name_suffix:-}"
+
+assembly_name=${USER_ASSEMBLY_NAME:-$DEFAULT_ASSEMBLY_NAME}
 
 $MEGAHIT || [ "$ASSEMBLY_LEVEL" == contig ] || [ "$ASSEMBLY_LEVEL" == scaffold ] \
     || abort "Bad value given for --level: $ASSEMBLY_LEVEL"
@@ -268,8 +275,8 @@ if $run_assembly; then
         rm -rf -- "$reads_arg"  # remove named pipe
     fi
     # make convenience (hard) link
-    $LN -f "$assembly" "$ASSEMBLY_NAME".fa
-    info "done: Final assembly at $ASSEMBLY_NAME, intermediate steps under $assembly"
+    $LN -f "$assembly" "$assembly_name".fa
+    info "done: Final assembly at $assembly_name, intermediate steps under $assembly"
 fi
 
 ! $ASSEMBLY_ONLY || exit 0

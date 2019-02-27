@@ -465,7 +465,14 @@ class OmicsProject(dict):
             raise OmicsProjectNotFound from e
 
         omics_dir = None
+        user = path.owner()
         for i in [path] + list(path.parents):
+            dir_owner = i.owner()
+            if dir_owner == 'root' or dir_owner != user:
+                # avoid is_dir() on dirs on which automount+nfs may occur
+                # which may have slow response trying to mount non-existing
+                # OMICS_DIR
+                break
             if (i / OMICS_DIR).is_dir():
                 omics_dir = i / OMICS_DIR
                 break

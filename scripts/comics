@@ -202,9 +202,14 @@ fi
 # In any case, keep PBS variables
 pbs_vars=()
 mapfile -t pbs_vars < <(env | { grep ^PBS || [[ $? = 1 ]]; })
-for i in "${pbs_vars[@]}"; do
-    export "SINGULARITYENV_$i"
-done
+if [[ ${#pbs_vars[@]} -gt 0 ]]; then
+    for i in "${pbs_vars[@]}"; do
+        export "SINGULARITYENV_$i"
+    done
+fi
+
+# set DISPLAY if needed
+[[ -v DISPLAY ]] && export SINGULARITYENV_DISPLAY=$DISPLAY
 
 s_cmd=()
 if $WRITE; then
