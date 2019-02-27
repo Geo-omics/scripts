@@ -1,3 +1,16 @@
+geo-omics-scripts (1.0.128-1) unstable; urgency=medium
+
+  * [comics] Fix unbound variable error
+  * [comics] Pass DISPLAY variable to container
+  * [comics] Split-up Makefile install rules
+  * [comics]  Add rule to directly install comics to flux
+  * [comics] Fix broken local installation for sudoer
+  * [omics] Avoid triggering nfs+automount when searching for .omics directory
+  * [asm] Make help text more precise
+  * [asm] Add given job name to per-spec output directory name
+
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Wed, 27 Feb 2019 14:40:28 -0500
+
 geo-omics-scripts (1.0.126-1) unstable; urgency=medium
 
   * [comics] Preserve PBS_ variables on FLUX
