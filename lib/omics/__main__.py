@@ -2,7 +2,7 @@
 Invoke omics scripts and sub-commands
 """
 from pathlib import Path
-import subprocess
+import os
 
 from . import process_command_line, get_main_arg_parser, get_available_commands
 from . import launch_cmd_as_sub_module
@@ -30,7 +30,7 @@ def main():
             print(*cmdline)
         else:
             try:
-                p = subprocess.run(cmdline)
+                p = os.execv(cmdline[0], cmdline)
             except FileNotFoundError as e:
                 if args.traceback:
                     raise
