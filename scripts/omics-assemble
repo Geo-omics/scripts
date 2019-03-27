@@ -377,7 +377,6 @@ if $RUN_QUAST; then
     quast_out="$out/QUAST_RESULTS"
     metaquast.py \
         --rna-finding \
-        --conserved-genes-finding \
         --gene-finding \
         --threads "$CPUS" \
         "${quast_opts[@]}" \
