@@ -248,10 +248,6 @@ else
         [[ -r "$i" ]] || abort "interleaved reads file not found: $i"
     done
 
-    # Use comma-separated list of read files for bbnorm and possibly megahit input
-    # This assumes no spaces in file or dir names
-    reads_listed="$(echo "${reads[@]}" | sed -r 's/[ ]+/,/g')"
-
     if [[ -n "$NORM_READS" ]]; then
         [[ -e "$NORM_READS" ]] || abort "Normalized reads file not found: $NORM_READS"
         reads_arg=$NORM_READS
@@ -280,8 +276,9 @@ else
         fi
 
         bbnorm_log=$OUTDIR/bbnorm.log
+        # bbnorm gets comma-separated input files as in= arg
         bbnorm_args=(
-            in=$reads_listed
+            in="$(IFS=,; echo "${reads[*]}")"
             out=$norm_reads
             threads=$CPUS
             target=30
@@ -290,9 +287,24 @@ else
         reads_arg=$norm_reads
     else
 
-        # assemble un-normalized reads
+        # assemble not normalized reads
         if $MEGAHIT; then
-            reads_arg=$reads_listed
+            # make comma-separated list
+            reads_arg=
+            for i in "${reads[@]}"; do
+                [[ -n "$reads_arg" ]] && reads_arg+=,
+                suffix=${i##*.}
+                if [[ "$suffix" == gz ]]; then
+                    reads_arg+="<(gunzip -c $i)"
+                elif [[ "$suffix" == zst ]]; then
+                    reads_arg+="<(unzstd -c $i)"
+                elif [[ "$suffix" == zip ]]; then
+                    reads_arg+="<(unzip -p $i)"
+                else
+                    # assume plain
+                    reads_arg+="$i"
+                fi
+            done
         else
             # idba requires a single read file
             info "Setting up piping of reads into IDBA_UD..."
@@ -328,7 +340,8 @@ if $run_assembly; then
     info "Assembling..."
     if $MEGAHIT; then
         $MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
-        megahit -o "$out" --12 "$reads_arg" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
+        # eval needed for proc'subst'ing input reads
+        eval megahit -o "$out" --12 "$reads_arg" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
     else
         $MKDIR -p "$out"
         echo idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
