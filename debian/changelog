@@ -1,3 +1,21 @@
+geo-omics-scripts (1.0.129-1) unstable; urgency=medium
+
+  * [geomicro env module] Track module file version 2
+  * [asm] Add normalization step with BBNorm
+  * [omics] replace omics launcher process by external script
+  * [liba.sh] Rewrite error handling to always allow help with -h
+  * [asm] Use interleaved fastq as default input data
+  * [asm] Update call conventions for (meta)quast
+  * [asm] Fix using the cwd for input data
+  * [asm] Fix checking existence of input files
+  * [asm] Warn when submitting compressed files to BBNorm
+  * [asm]  Enable compressed input files for megahit
+  * [asm] Enable compressed input for idba_ud
+  * [asm]  Print error if creating symlink to assembly fails
+  * [asm] Disable conserved gene finding option for quast
+
+ -- Robert <heinro@umich.edu>  Wed, 27 Mar 2019 16:57:26 -0400
+
 geo-omics-scripts (1.0.128-1) unstable; urgency=medium
 
   * [comics] Fix unbound variable error
