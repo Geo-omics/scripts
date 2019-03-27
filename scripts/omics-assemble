@@ -361,7 +361,7 @@ if $run_assembly; then
         rm -rf -- "$reads_arg"  # remove tmp input
     fi
     # make convenience (hard) link
-    $LN -f "$assembly" "$assembly_name".fa
+    $LN -f "$assembly" "$assembly_name".fa || error "Failed to create hard link to assembly"
     info "done: Final assembly at $assembly_name, intermediate steps under $assembly"
 fi
 
