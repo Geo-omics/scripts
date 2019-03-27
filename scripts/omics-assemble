@@ -244,8 +244,8 @@ else
     # check if reads exists before doing anything
     reads=("${SAMPLE_DIRS[@]/%//$READS}")
     for i in "${reads[@]}"; do
-        [ -d "$(dirname "$i")" ] || error "is not a directory: $(dirname "$i")"
-        [ -r "$i/$READS" ] || abort "interleaved reads file not found: $i/$READS"
+        [[ -d "$(dirname "$i")" ]] || error "is not a directory: $(dirname "$i")"
+        [[ -r "$i" ]] || abort "interleaved reads file not found: $i"
     done
 
     # Use comma-separated list of read files for bbnorm and possibly megahit input
