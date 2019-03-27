@@ -1,0 +1,16 @@
+#%Module1.0
+# 
+# to be installed as /dept/geology/geomicro/data9/flux/modulefiles/geomicro/omics/2
+#
+# this module's maintainer's email: heinro@umich.edu
+# 
+proc ModulesHelp { } {
+    puts stderr "Module to enable the 'comics' command to enter the 'omics container"
+}
+
+module-whatis "Allows access to the 'omics container"
+
+set COMICS_ROOT /dept/geology/geomicro/data9/flux/apps/comics
+
+prepend-path PATH $COMICS_ROOT/bin
+prepend-path MANPATH $COMICS_ROOT/share/man

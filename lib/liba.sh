@@ -149,6 +149,7 @@ USE_COLOR=true
 ###################################3
 # command line parameter handling
 ###################################
+usage_err=false
 GETOPT_SHORT=hv${SHORT_OPTIONS:-}
 GETOPT_LONG=${LONG_OPTIONS:-},help,no-color,working-dir:,verbosity:
 if which getopt >/dev/null 2>&1; then
@@ -164,18 +165,16 @@ if which getopt >/dev/null 2>&1; then
 
     getopt_opts+=(-- $@)
     if parsed_opts=$(getopt "${getopt_opts[@]}"); then
-        # reset $n parameters
-        eval set -- "$parsed_opts"
+        :
     else
-        if [ "$?" == 1 ]; then
-            usage
-            # indicate to exception not to catch this error but exit with 2
-            # indicating usage error
-            exit 102
-        else
-            exit $?
-        fi
+        getopt_status=$?
+        [[ "$getopt_status" == 1 ]] || exit $getopt_status
+        # getopt returns 1 for usage error, other codes indicate bugs
+        usage_err=false
     fi
+
+    # reset $n parameters
+    eval set -- "$parsed_opts"
 fi
 
 # handle options arguments / should work with/without getopt
@@ -201,11 +200,18 @@ while [ "$#" -gt 0 ]; do
 	    shift
 	    ;;
 	(--) shift; break;;
-	(-|-*) abort "invalid command line option: $1" usage;;
+	(-|-*) usage_err=true; echo >&2 "unrecoqnized option: $1";;
 	(*) break;; # getopt failure? assume this and following are non-option args
     esac
     shift
 done
+
+if $usage_err; then
+    usage
+    # indicate to exception not to catch this error but exit with 2
+    # indicating usage error
+    exit 102
+fi
 
 ##########################################################
 # color output
