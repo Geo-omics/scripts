@@ -34,8 +34,8 @@ ARG_HELP="
       --megahit           Use MEGAHIT assembler, this is the default
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
-      --reads FILE        Name of interleaved reads file, relative to each sample directory,
-                          by default this is 'int.good.fasta'
+      --reads FILE        Name of interleaved reads files used for input, relative to each sample directory,
+                          by default this is 'int.good.fastq'
       --skip-blast        Skip classification steps, by default run blast
       --skip-normalization
                           Do not run BBNorm to normalize read depth before assembly
@@ -149,7 +149,7 @@ NORM_READS=
 # PhyloSift run control file
 PHYLOSIFTRC="$(dirname "$0")/../share/geo-omics-scripts/phylosiftrc"
 # interleaved reads as made by qc script
-READS=int.good.fasta
+READS=int.good.fastq
 #
 RUN_BBNORM=true
 RUN_BLAST=true
