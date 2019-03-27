@@ -172,6 +172,8 @@ SAMPLE_DIRS=()
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
+else
+    SAMPLE_DIRS=( . )
 fi
 
 # find valid ref data path
