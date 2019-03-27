@@ -306,11 +306,23 @@ else
                 fi
             done
         else
-            # idba requires a single read file
-            info "Setting up piping of reads into IDBA_UD..."
-            reads_arg=$(mktemp -u)
-            mkfifo --mode=600 "$reads_arg"
-            cat "${reads[@]}" > "$reads_arg" &
+            # idba requires a single read file, but reads it at least twice?
+            # so no piping
+            reads_arg=$(mktemp)
+            info "Creating single input data file ($reads_arg) for idba..."
+            for i in "${reads[@]}"; do
+                suffix=${i##*.}
+                if [[ "$suffix" == gz ]]; then
+                    gunzip -c "$i"
+                elif [[ "$suffix" == zst ]]; then
+                    unzstd -c "$i"
+                elif [[ "$suffix" == zip ]]; then
+                    unzip -p "$i"
+                else
+                    # assume plain
+                    cat "$i"
+                fi
+            done > "$reads_arg"
         fi
     fi
 
@@ -346,7 +358,7 @@ if $run_assembly; then
         $MKDIR -p "$out"
         echo idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
         idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-        rm -rf -- "$reads_arg"  # remove named pipe
+        rm -rf -- "$reads_arg"  # remove tmp input
     fi
     # make convenience (hard) link
     $LN -f "$assembly" "$assembly_name".fa
