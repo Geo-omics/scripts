@@ -159,11 +159,6 @@ RUN_QUAST=true
 # empty by default
 SAMPLE_DIRS=()
 
-# other scripts
-if which quast.py &> /dev/null; then
-    # this works on vondamm/cayman and flux
-    QUAST="$(which python2) $(which quast.py)"
-fi
 ## shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo "Failed to source script library"; exit 1)
@@ -178,8 +173,6 @@ fi
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
 fi
-
-$RUN_QUAST && [[ -z $QUAST ]] && warning "QUAST is unavailable"
 
 # find valid ref data path
 if [[ -v OMICS_REFERENCE_DATA ]]; then
@@ -343,22 +336,21 @@ fi
 
 ! $ASSEMBLY_ONLY || exit 0
 
-if $RUN_QUAST && [[ -n $QUAST ]]; then
+if $RUN_QUAST; then
     info "Making assembly stats..."
     if $run_assembly && ! $MEGAHIT; then
         quast_opts=(-l "Scaffolds, Contigs" "$out/scaffold.fa" "$out/contig.fa")
     else
         quast_opts=(-l "Assembly" "$assembly")
     fi
-    if $QUAST --version 2>&1 | grep -q '^QUAST v4'; then
-        # Quast version >= 4 available
-        QUAST_T_OPT=-t
-    else
-        # assume Quast version 2 or so available (on vondamm only?)
-        QUAST_T_OPT=-T
-    fi
     quast_out="$out/QUAST_RESULTS"
-    $QUAST -f --mgm $QUAST_T_OPT "$CPUS" "${quast_opts[@]}" --output-dir "$quast_out"
+    metaquast.py \
+        --rna-finding \
+        --conserved-genes-finding \
+        --gene-finding \
+        --threads "$CPUS" \
+        "${quast_opts[@]}" \
+        --output-dir "$quast_out"
     info "done: Quast results at $quast_out"
 fi
 
