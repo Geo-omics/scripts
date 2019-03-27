@@ -258,6 +258,10 @@ else
 
     elif $RUN_BBNORM; then
         reads_suffix=${READS##*.}
+        if [[ "$reads_suffix" != fastq ]] && [[ "$reads_suffix" != fasta ]] && [[ "$reads_suffix" != "fa" ]]; then
+            warning "Unexpected suffix of reads file is $reads_suffix, BBNorm will not work with compressed data"
+        fi
+
         norm_reads=$OUTDIR/${READS/%.${reads_suffix}/.norm.${reads_suffix}}
         if [[ -e "$norm_reads" ]]; then
             if $FORCE; then
