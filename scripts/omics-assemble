@@ -275,6 +275,7 @@ else
             export TMPDIR=$TMPFAST
         fi
 
+        $MKDIR -p "$OUTDIR"
         bbnorm_log=$OUTDIR/bbnorm.log
         # bbnorm gets comma-separated input files as in= arg
         bbnorm_args=(
