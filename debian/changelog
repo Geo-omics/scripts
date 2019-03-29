@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.130-1) unstable; urgency=medium
+
+  * [asm] Fix bbnorm log file writing
+
+ -- Robert <heinro@umich.edu>  Fri, 29 Mar 2019 15:28:18 -0400
+
 geo-omics-scripts (1.0.129-1) unstable; urgency=medium
 
   * [geomicro env module] Track module file version 2
