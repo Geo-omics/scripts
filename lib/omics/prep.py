@@ -19,8 +19,15 @@ raw_reads_file_pat = re.compile(
     r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
 )
 
+# Multi-run file names, based on example from Matt
+# no index here
+multi_run_file_pat = re.compile(
+    r'(?P<runid>[^_]+)_(?P<sampleid>[^_]+)_S(?P<snum>\d+)'
+    r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
+)
 
-def group(files, keep_lanes=False):
+
+def group(files, keep_lanes=False, multi_run=False):
     """
     Generate groups of raw reads files per sample
 
@@ -28,6 +35,8 @@ def group(files, keep_lanes=False):
     :param bool keep_lanes: If true, then data from one sample that was spread
                             across several lanes are not concatenated and kept
                             separate.
+    :param bool multi_run:  Use multi-run file patters, and consider runid in
+                            sorting.
 
     :return: Iterator over tuples containing the sort key and the group.  The
              key comes as a tuple of sub-keys, i.e. the sample id and if
@@ -43,24 +52,40 @@ def group(files, keep_lanes=False):
     but graceful degradation is attempted in case the files do not correspond
     to this scheme.
     """
+    if multi_run:
+        pattern = multi_run_file_pat
+    else:
+        pattern = raw_reads_file_pat
+
     def id_lane_dir(x):
         """
         key function for initial sorting
 
-        Primary key is sample name
-        If keep_lanes then lanes are second, other wise third after direction
+        Primary key is sample name.
+        If keep_lanes then lanes come before direction, otherwise they're last.
+        In multi_run mode the run id is treated as (the primary) part of the
+        lane.
 
-        Degrade to identity if filename can't be parsed
+        Degrade to identity if filename can't be parsed.
         """
-        m = re.match(raw_reads_file_pat, x.name)
+        m = re.match(pattern, x.name)
         if m is None:
             return (x.name, 0, '')
         else:
             m = m.groupdict()
-            if keep_lanes:
-                return (m['sampleid'], int(m['lane']), m['dir'])
+            key = (m['sampleid'],)
+
+            if multi_run:
+                runid = m['runid']
             else:
-                return (m['sampleid'], m['dir'], int(m['lane']))
+                runid = None
+
+            if keep_lanes:
+                key += (runid, int(m['lane']), m['dir'])
+            else:
+                key += (m['dir'], runid, int(m['lane']))
+
+            return key
 
     files = sorted(files, key=id_lane_dir)
 
@@ -70,7 +95,7 @@ def group(files, keep_lanes=False):
 
         Key is sample name and if we keep lanes also the lane
         """
-        m = re.match(raw_reads_file_pat, x.name)
+        m = re.match(pattern, x.name)
         try:
             m = m.groupdict()
         except AttributeError:
@@ -78,10 +103,13 @@ def group(files, keep_lanes=False):
                 'Failed to parse filename: {}'.format(x)
             )
 
+        key = (m['sampleid'],)
         if keep_lanes:
-            return (m['sampleid'], m['lane'])
-        else:
-            return (m['sampleid'], )
+            if multi_run:
+                # need runid to identify lanes since runs may use same lane
+                key += (m['runid'],)
+            key += (m['lane'],)
+        return key
 
     for key, group in groupby(files, key=id_lane):
         yield (key, group)
@@ -241,6 +269,14 @@ def main(argv=None):
              'sequencing was done using several lanes.',
     )
     argp.add_argument(
+        '--multi-run',
+        action='store_true',
+        help='Assume data is from multiple sequencing runs.  File name pattern'
+             ' must be run_sample_S#_L###_R#_001.fastq without an index and '
+             'obviously the different runs must use the same sample ids for '
+             'this to work.'
+    )
+    argp.add_argument(
         '--suffix',
         metavar='LIST',
         default='fastq,fastq.gz',
@@ -283,7 +319,9 @@ def main(argv=None):
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as e:
             futures = {}
-            for samp_key, samp_grp in group(files, keep_lanes=args.keep_lanes):
+            file_groupings = group(files, keep_lanes=args.keep_lanes,
+                                   multi_run=args.multi_run)
+            for samp_key, samp_grp in file_groupings:
                 samp_count += 1
 
                 samp_key = list(samp_key)
