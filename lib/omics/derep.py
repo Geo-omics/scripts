@@ -3,6 +3,7 @@ Find and remove replicated reads from fastq files.
 """
 import argparse
 from binascii import hexlify
+from itertools import zip_longest
 from pathlib import Path
 
 from . import get_argparser, DEFAULT_VERBOSITY
@@ -27,6 +28,24 @@ def hash_read_pair(fwd_head, fwd_seq, rev_head='', rev_seq=''):
     ).__hash__()
 
 
+def read_groups(fwd, rev):
+    """
+    Iterate over reads
+
+    :param fwd: File handle to forward reads
+    :param rev: File handle to reverse reads
+
+    This implements the grouper recipe on a zipped input.  The output
+    iterates over 4-tuples of 2-tuples, i.e. the forward, reverse pairs
+    of the four lines of a read:
+
+      (@fwd_head, @rev_head), (fwd_seq, rev_seq), (+, +), (fwd_qual, rev_qual)
+    """
+    paired = zip_longest(fwd, rev)
+    args = [iter(paired)] * 4
+    return zip_longest(*args)
+
+
 def find_duplicates(fwd_in, rev_in=None, *, check=False):
     """
     Find duplicate reads in given fastq files
@@ -40,66 +59,53 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
     if rev_in is None:
         raise NotImplemented('Single reads processing not implemented')
 
-    state = ST_HEAD
     data = {}
     fwd_read_pos = 0
-    paired_hash = None
-    fwd_head = None
-    rev_head = None
     total_count = 0
-    for fwd_line, rev_line in zip(fwd_in, rev_in):
-        if state is ST_HEAD:
-            if check:
-                if ord('>') in [fwd_line[0], rev_line[0]]:
-                    raise NotImplementedError('Fasta support not implemented')
-                if fwd_line[0] != ord('@'):
-                    raise RuntimeError('Expected fastq header in {}: {}'
-                                       ''.format(fwd_in.name, fwd_line))
-                if rev_line[0] != ord('@'):
-                    raise RuntimeError('Expected fastq header in {}: {}'
-                                       ''.format(rev_in.name, rev_line))
-            fwd_head = fwd_line
-            rev_head = rev_line
-            state = ST_SEQ
-        elif state is ST_SEQ:
-            paired_hash = hash_read_pair(fwd_head, fwd_line,
-                                         rev_head, rev_line)
-            state = ST_PLUS
-        elif state is ST_PLUS:
-            if check and not fwd_line == rev_line == b'+\n':
-                raise RuntimeError('Expected "+":\n{}\n'
-                                   ''.format(fwd_line, rev_line))
-            state = ST_SCORE
-        elif state is ST_SCORE:
-            # get mean score of concatenated quality with newlines
-            cur_mean = mean_quality_score(fwd_line + rev_line)
-            if paired_hash in data:
-                best_mean, pos_list = data[paired_hash]
-                if cur_mean > best_mean:
-                    # new best read goes first
-                    data[paired_hash] = (
-                        cur_mean,
-                        [fwd_read_pos] + pos_list
-                    )
-                else:
-                    # read to be deleted, goes at end
-                        data[paired_hash] = (
-                            best_mean,
-                            pos_list + [fwd_read_pos]
-                        )
-            else:
+
+    for (fh, rh), (fs, rs), (fp, rp), (fq, rq) in read_groups(fwd_in, rev_in):
+        if check:
+            if ord('>') in [fh[0], rh[0]]:
+                raise NotImplementedError('Fasta support not implemented')
+            if fh[0] != ord('@'):
+                raise RuntimeError('Expected fastq header in {}: {}'
+                                   ''.format(fwd_in.name, fh))
+            if rh[0] != ord('@'):
+                raise RuntimeError('Expected fastq header in {}: {}'
+                                   ''.format(rev_in.name, rh))
+            # TODO: check if headers match
+            if not fp == rp == b'+\n':
+                raise RuntimeError('Expected two + lines:\n{}\n{}'
+                                   ''.format(fp, rp))
+
+        paired_hash = hash_read_pair(fh, fs, rh, rs)
+
+        # get mean score of concatenated quality with newlines
+        cur_mean = mean_quality_score(fq + rq)
+
+        if paired_hash in data:
+            best_mean, pos_list = data[paired_hash]
+            if cur_mean > best_mean:
+                # new best read goes first
                 data[paired_hash] = (
                     cur_mean,
-                    [fwd_read_pos]
+                    [fwd_read_pos] + pos_list
                 )
-
-            state = ST_HEAD
-            # set positions for next read
-            fwd_read_pos = fwd_in.tell()
-            total_count += 1
-
+            else:
+                # read to be deleted, goes at end
+                    data[paired_hash] = (
+                        best_mean,
+                        pos_list + [fwd_read_pos]
+                    )
         else:
-            raise RuntimeError('Illegal state reached: {}'.format(state))
+            data[paired_hash] = (
+                cur_mean,
+                [fwd_read_pos]
+            )
+
+        # set positions for next read
+        fwd_read_pos = fwd_in.tell()
+        total_count += 1
 
     return data, total_count
 
@@ -133,42 +139,28 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
     if rev_in is None or rev_out is None:
         raise NotImplemented('Single reads processing not implemented')
 
-    state = ST_HEAD
     pos = fwd_in.tell()
-    if dupe_file is not None:
-        fwd_head = rev_head = None
-    for fwd_line, rev_line in zip(fwd_in, rev_in):
+    for (fh, rh), (fs, rs), (fp, rp), (fq, rq) in read_groups(fwd_in, rev_in):
         if pos in refuse:
-            if state is ST_HEAD and dupe_file is not None:
-                fwd_head = fwd_line
-                rev_head = rev_line
-                dupe_file.write(fwd_head.rstrip() + b'\t')
-            if state is ST_SEQ and dupe_file is not None:
-                hash_ = hash_read_pair(fwd_head, fwd_line, rev_head, rev_line)
+            if dupe_file is not None:
+                hash_ = hash_read_pair(fh, fs, rh, rs)
                 hash_ = hash_.to_bytes(length=8, byteorder='big', signed=True)
                 hash_ = hexlify(hash_)
-                dupe_file.write(hash_ + b'\n')
+                dupe_file.write(fh.rstrip() + b'\t' + hash_ + b'\n')
         else:
-            fwd_out.write(fwd_line)
-            rev_out.write(rev_line)
+            fwd_out.write(fh + fs + fp + fq)
+            rev_out.write(rh + rs + rp + rq)
 
-        if state is ST_HEAD:
-            if check and not fwd_line[0] == rev_line[0] == ord('@'):
+        if check:
+            if not fh[0] == rh[0] == ord('@'):
                 raise RuntimeError('Fastq header expected but found:\n{}\n{}'
-                                   ''.format(fwd_line, rev_line))
-            state = ST_SEQ
-        elif state is ST_SEQ:
-            state = ST_PLUS
-        elif state is ST_PLUS:
-            if check and not fwd_line == rev_line == b'+\n':
+                                   ''.format(fh, rh))
+
+            if not fp == rp == b'+\n':
                 raise RuntimeError('Plus separator expected but found:\n{}\n{}'
-                                   ''.format(fwd_line, rev_line))
-            state = ST_SCORE
-        elif state is ST_SCORE:
-            state = ST_HEAD
-            pos = fwd_in.tell()
-        else:
-            raise RuntimeError('Illegal internal state: {}'.format(state))
+                                   ''.format(fp, rp))
+
+        pos = fwd_in.tell()
 
 
 def main(argv=None, namespace=None):
