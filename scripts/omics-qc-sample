@@ -129,7 +129,7 @@ RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
 #
 DEFAULT_CPUS=2
 
-# shellcheck source=../lib/liba.sh
+## shellcheck source=../lib/liba.sh
 # shellcheck disable=SC1091
 . "$RESOURCE_DIR/liba.sh" || (echo "Failed to source script library"; exit 1)
 
@@ -183,14 +183,14 @@ clean_all () {
     # clean final results
     $RM -rf -- FASTQC rqcfilter2_out
     $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
-    $RM -f -- {"$fwd","$rev"}{.derep,}.matches.fastq
-    $RM -f -- {int,"$fwd","$rev"}."$FINAL".fast{a,q}
+    $RM -f -- {$fwd,$rev}{.derep,}.matches.fastq
+    $RM -f -- {int,$fwd,$rev}."$FINAL".fast{a,q}
 }
 
 clean_intermediates () {
     # clean up intermediate results
-    $RM -f -- {"$fwd","$rev"}.derep.fastq
-    $RM -f -- {int,"$fwd","$rev"}{.derep,}.scythe{.sickle,}.fastq
+    $RM -f -- {$fwd,$rev}.derep.fastq
+    $RM -f -- {int,$fwd,$rev}{.derep,}.scythe{.sickle,}.fastq
 }
 
 
@@ -228,7 +228,7 @@ base=""
 
 # trim_in is what derep puts out, input for trimming
 
-if $DEREPLICATION; then
+if $DEREPLICATION && [[ $FILTER != bbtools ]]; then
     info1 "Starting derep..."
     base=".derep"
     fwd_derep_out=$tmpd/$fwd$base.fastq
@@ -347,27 +347,13 @@ elif [[ $FILTER == scythe ]]; then
 elif [[ $FILTER == bbtools ]]; then
     base=$base.rqcfilter
 
-    if $DEREPLICATION; then
-        fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
-        rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
-        {
-            # make input files real for rqcfilter2 consumption
-            cat "$fwd_trim_in" > "$fwd_trim_in_tmp" &
-            cat "$rev_trim_in" > "$rev_trim_in_tmp" &
-            wait
-        }
-    else
-        fwd_trim_in_tmp=$fwd_trim_in
-        rev_trim_in_tmp=$rev_trim_in
-    fi
-
     info1 "Running BBTools' QC pipeline..."
 
     rqcfilter2_out=rqcfilter2_out
     mkdir -p -- "$rqcfilter2_out"
     rqcfilter2_args=(
-        in="$fwd_trim_in_tmp"
-        in2="$rev_trim_in_tmp"
+        in="$fwd_trim_in"
+        in2="$rev_trim_in"
         path="$rqcfilter2_out"
         rqcfilterdata="$RQCFILTERDATA"
         barcodefilter=f
@@ -376,7 +362,7 @@ elif [[ $FILTER == bbtools ]]; then
         minlength=20
         threads="$CPUS"
     )
-    if ! $DEREPLICATION; then
+    if $DEREPLICATION; then
         rqcfilter2_args+=(
             clumpify=t
             dedupe=t
