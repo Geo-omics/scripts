@@ -228,7 +228,7 @@ base=""
 
 # trim_in is what derep puts out, input for trimming
 
-if $DEREPLICATION; then
+if $DEREPLICATION && [[ $FILTER != bbtools ]]; then
     info1 "Starting derep..."
     base=".derep"
     fwd_derep_out=$tmpd/$fwd$base.fastq
@@ -347,27 +347,13 @@ elif [[ $FILTER == scythe ]]; then
 elif [[ $FILTER == bbtools ]]; then
     base=$base.rqcfilter
 
-    if $DEREPLICATION; then
-        fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
-        rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
-        {
-            # make input files real for rqcfilter2 consumption
-            cat "$fwd_trim_in" > "$fwd_trim_in_tmp" &
-            cat "$rev_trim_in" > "$rev_trim_in_tmp" &
-            wait
-        }
-    else
-        fwd_trim_in_tmp=$fwd_trim_in
-        rev_trim_in_tmp=$rev_trim_in
-    fi
-
     info1 "Running BBTools' QC pipeline..."
 
     rqcfilter2_out=rqcfilter2_out
     mkdir -p -- "$rqcfilter2_out"
     rqcfilter2_args=(
-        in="$fwd_trim_in_tmp"
-        in2="$rev_trim_in_tmp"
+        in="$fwd_trim_in"
+        in2="$rev_trim_in"
         path="$rqcfilter2_out"
         rqcfilterdata="$RQCFILTERDATA"
         barcodefilter=f
@@ -376,7 +362,7 @@ elif [[ $FILTER == bbtools ]]; then
         minlength=20
         threads="$CPUS"
     )
-    if ! $DEREPLICATION; then
+    if $DEREPLICATION; then
         rqcfilter2_args+=(
             clumpify=t
             dedupe=t
