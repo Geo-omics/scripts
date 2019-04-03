@@ -164,7 +164,7 @@ fi
 #########################
 # some input sanitation
 #########################
-if [[ $FILTER == bbtools ]]; then
+if [[ $FILTER == bbtools ]] || [[ $FILTER == derek-bbduk ]]; then
     [ -d "$RQCFILTERDATA" ] || abort1 "Reference data for rqcfilter2 not found: $RQCFILTERDATA"
 else
     [ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
@@ -232,7 +232,7 @@ base=""
 
 # trim_in is what derep puts out, input for trimming
 
-if $DEREPLICATION && [[ $FILTER != bbtools ]]; then
+if $DEREPLICATION && [[ $FILTER != bbtools ]] && [[ $FILTER != derek-bbduk ]]; then
     info1 "Starting derep..."
     base=".derep"
     fwd_derep_out=$tmpd/$fwd$base.fastq
@@ -377,6 +377,37 @@ elif [[ $FILTER == bbtools ]]; then
     filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
     post_trim=$tmpd/int$base.fastq
     gunzip -c "$(realpath "$filtered_fastq")" > "$post_trim"
+elif [[ $FILTER == derek-bbduk ]]; then
+    base=$base.derek-bbduk
+    post_trim=$tmpd/int$base.fastq
+    mkfifo "$post_trim"
+
+    # adapted from Derek's bbmap_qc.sh
+    bbduk in1="$fwd_trim_in" in2="$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
+
+    # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
+    info1 "Removing 5' adapters"
+    bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
+
+    # Screen for kmers of length 31 that match PhiX (a standard Illumina spike-in) and remove them from reads:
+    info1 "Remove PhiX spike-in reads"
+    gunzip -c "$RQCFILTERDATA"/phix174_ill.ref.fa.gz > "$tmpd"/phix174_ill.ref.fa
+    bbduk in1="$tmpd"/adtrim_fwd.fastq in2="$tmpd"/adtrim_rev.fastq out1="$tmpd"/adtrim_clean_fwd.fastq out2="$tmpd"/adtrim_clean_rev.fastq outm=PhiX_matched.fastq ref="$RQCFILTERDATA"/phix174_ill.ref.fa.gz k=31 hdist=1 stats=phix_clean_stats.txt threads="$CPUS"
+
+    # Trim bases with Phred quality score below 15. After trimming remove reads with length <70 bp:
+    info1 "Quality trim bases with Q score below 15"
+    bbduk in1="$tmpd"/adtrim_clean_fwd.fastq in2="$tmpd"/adtrim_clean_rev.fastq out1="$tmpd"/adtrim_clean_qtrim_fwd.fastq out2="$tmpd"/adtrim_clean_qtrim_rev.fastq qtrim=rl trimq=15 minlen=75 threads="$CPUS"
+
+    # Dereplicate read pairs that are 100% identical:
+    info1 "Deduplicating"
+    omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
+
+    # interleave and re-establish piping
+    {
+        info1 "Interleaving trimmed read pairs..."
+        omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$post_trim"
+    } &
+
 else
     abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
 fi
