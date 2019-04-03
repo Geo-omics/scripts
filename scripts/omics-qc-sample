@@ -14,8 +14,12 @@ RESOURCE_DIR=$(dirname "$0")/../share/geo-omics-scripts
 USAGE="[OPTIONS]..."
 HELP="quality control for a sample's fastq files"
 ARG_HELP="
-  -f, --fwd             Fastq file with forward reads, default is fwd.fastq
-  -r, --rev             Fastq file with reverse reads default is rev.fastq
+  -f, --fwd             Fastq file name with forward reads, default is fwd.fastq.
+                        A file with this name needs to be present in each sample
+                        directory.
+  -r, --rev             Fastq file name with reverse reads default is rev.fastq.
+                        A file with this name needs to be present in each sample
+                        directory.
       --final INFIX     Infix used for final output files.  Default is 'good'
       --clean-only      Delete previously created files and stop.
   -a, --adapters=FILE   Specifies the adapters file to be used.  By default a

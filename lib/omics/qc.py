@@ -23,6 +23,10 @@ def qc_sample(path, **kwargs):
         kwargs.setdefault(k, v)
 
     args = []
+    if kwargs['fwd']:
+        args += ['--fwd', kwargs['fwd']]
+    if kwargs['rev']:
+        args += ['--rev', kwargs['rev']]
     not kwargs['clean_only'] or args.append('--clean-only')
     not kwargs['keep_all'] or args.append('--keep-all')
     if kwargs['adapters']:
@@ -109,6 +113,18 @@ def get_args(argv=None, namespace=None):
              'fwd.fastq and rev.fastq, currently this can not be set manually.'
              ' Use the omics-qc-sample script directly to specify filenames, '
              'omics-qc is just a wrapper after all.'
+    )
+    argp.add_argument(
+        '-f', '--fwd',
+        help='Fastq file name with forward reads, default is fwd.fastq.  A '
+             'file with this name needs to be present in each sample '
+             'directory.',
+    )
+    argp.add_argument(
+        '-r', '--rev',
+        help='Fastq file name with reverse reads, default is rev.fastq.  A '
+             'file with this name needs to be present in each sample '
+             'directory.',
     )
     argp.add_argument(
         '--clean-only',
