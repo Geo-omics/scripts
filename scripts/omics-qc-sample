@@ -183,14 +183,14 @@ clean_all () {
     # clean final results
     $RM -rf -- FASTQC rqcfilter2_out
     $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
-    $RM -f -- {"$fwd","$rev"}{.derep,}.matches.fastq
-    $RM -f -- {int,"$fwd","$rev"}."$FINAL".fast{a,q}
+    $RM -f -- {$fwd,$rev}{.derep,}.matches.fastq
+    $RM -f -- {int,$fwd,$rev}."$FINAL".fast{a,q}
 }
 
 clean_intermediates () {
     # clean up intermediate results
-    $RM -f -- {"$fwd","$rev"}.derep.fastq
-    $RM -f -- {int,"$fwd","$rev"}{.derep,}.scythe{.sickle,}.fastq
+    $RM -f -- {$fwd,$rev}.derep.fastq
+    $RM -f -- {int,$fwd,$rev}{.derep,}.scythe{.sickle,}.fastq
 }
 
 
