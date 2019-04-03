@@ -127,7 +127,7 @@ class OmicsArgParser(argparse.ArgumentParser):
 
         try:
             project = get_project(args.project_home)
-        except AttributeError:
+        except (AttributeError, OmicsProjectNotFound):
             # if project_home is missing, i.e. omics init
             project = None
         else:
@@ -467,7 +467,12 @@ class OmicsProject(dict):
         omics_dir = None
         user = path.owner()
         for i in [path] + list(path.parents):
-            dir_owner = i.owner()
+            try:
+                dir_owner = i.owner()
+            except Exception as e:
+                # guard against odd things: e.g. uid not found on FLUX
+                raise OmicsProjectNotFound from e
+
             if dir_owner == 'root' or dir_owner != user:
                 # avoid is_dir() on dirs on which automount+nfs may occur
                 # which may have slow response trying to mount non-existing
