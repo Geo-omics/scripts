@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.132-1) unstable; urgency=medium
+
+  * [qc] Fix dereplication with bbtools filter
+
+ -- Robert <heinro@umich.edu>  Wed, 03 Apr 2019 10:56:52 -0400
+
 geo-omics-scripts (1.0.131-1) unstable; urgency=medium
 
   * [prep] Add multi-run mode
