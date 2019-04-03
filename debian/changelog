@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.133-1) unstable; urgency=medium
+
+  * [qc] Add missing --fwd, --rev options to qc wrapper script
+
+ -- Robert <heinro@umich.edu>  Wed, 03 Apr 2019 11:26:18 -0400
+
 geo-omics-scripts (1.0.132-1) unstable; urgency=medium
 
   * [qc] Fix dereplication with bbtools filter
