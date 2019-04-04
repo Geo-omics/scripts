@@ -150,7 +150,7 @@ USE_COLOR=true
 # command line parameter handling
 ###################################
 usage_err=false
-GETOPT_SHORT=hv${SHORT_OPTIONS:-}
+GETOPT_SHORT=${SHORT_OPTIONS:-}hv
 GETOPT_LONG=${LONG_OPTIONS:-},help,no-color,working-dir:,verbosity:
 if which getopt >/dev/null 2>&1; then
     getopt_opts=(-o $GETOPT_SHORT --name $SCRIPT_NAME)
