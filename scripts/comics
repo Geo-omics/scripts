@@ -230,9 +230,10 @@ if $WRITE; then
     SINGULARITY_ARGS+=(--writable)
     cmd+=(exec sudo)
 fi
-cmd+=(singularity exec)
+cmd+=(singularity)
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
-[[ $VERBOSITY == 3 ]] && cmd+=(--verbose)
+for i in $(seq 3 "$VERBOSITY"); do cmd+=(--verbose); done
+cmd+=(exec)
 cmd+=("${SINGULARITY_ARGS[@]}" "$image")
 if [ "$#" -gt 0 ]; then
     cmd+=("$@")
