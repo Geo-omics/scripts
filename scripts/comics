@@ -244,4 +244,4 @@ else
 fi
 
 [[ $VERBOSITY -lt 2 ]] || info >&2 "Singularity command: ${cmd[*]}"
-"${cmd[@]}" || exit
+exec "${cmd[@]}"
