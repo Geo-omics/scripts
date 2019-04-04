@@ -211,19 +211,20 @@ fi
 # set DISPLAY if needed
 [[ -v DISPLAY ]] && export SINGULARITYENV_DISPLAY=$DISPLAY
 
-s_cmd=()
+cmd=()
 if $WRITE; then
     SINGULARITY_ARGS+=(--writable)
-    s_cmd+=(exec sudo)
+    cmd+=(exec sudo)
 fi
-s_cmd+=(singularity)
-[[ $VERBOSITY == 0 ]] && s_cmd+=(--quiet)
-[[ $VERBOSITY == 3 ]] && S_cmd+=(--verbose)
+cmd+=(singularity exec)
+[[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
+[[ $VERBOSITY == 3 ]] && cmd+=(--verbose)
+cmd+=("${SINGULARITY_ARGS[@]}" "$image")
 if [ "$#" -gt 0 ]; then
-    s_cmd+=(exec)
+    cmd+=("$@")
 else
-    s_cmd+=(shell)
+    cmd+=(/bin/bash)
 fi
 
-[[ $VERBOSITY -lt 2 ]] || info >&2 "Singularity command: ${s_cmd[*]} ${SINGULARITY_ARGS[*]} $image $*"
-"${s_cmd[@]}" "${SINGULARITY_ARGS[@]}" "$image" "$@" || exit
+[[ $VERBOSITY -lt 2 ]] || info >&2 "Singularity command: ${cmd[*]}"
+"${cmd[@]}" || exit
