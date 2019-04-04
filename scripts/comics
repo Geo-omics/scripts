@@ -233,8 +233,7 @@ fi
 cmd+=(singularity)
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
 for i in $(seq 3 "$VERBOSITY"); do cmd+=(--verbose); done
-cmd+=(exec)
-cmd+=("${SINGULARITY_ARGS[@]}" "$image")
+cmd+=(exec "${SINGULARITY_ARGS[@]}" "$image")
 if [ "$#" -gt 0 ]; then
     cmd+=("$@")
 else
