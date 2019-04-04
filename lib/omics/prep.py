@@ -27,6 +27,10 @@ multi_run_file_pat = re.compile(
 )
 
 
+class FileNameDoesNotMatch(Exception):
+    pass
+
+
 def group(files, keep_lanes=False, multi_run=False):
     """
     Generate groups of raw reads files per sample
@@ -99,9 +103,7 @@ def group(files, keep_lanes=False, multi_run=False):
         try:
             m = m.groupdict()
         except AttributeError:
-            raise RuntimeError(
-                'Failed to parse filename: {}'.format(x)
-            )
+            raise FileNameDoesNotMatch(x)
 
         key = (m['sampleid'],)
         if keep_lanes:
@@ -354,6 +356,15 @@ def main(argv=None):
                     print('Failed to write: {}: {}: {}'
                           ''.format(*futures[fut], fut.result()),
                           file=sys.stderr)
+
+    except FileNameDoesNotMatch as e:
+        print('The name of file {} does not follow the supported pattern:\n'
+              '  <sample>_<index>_S<n>_L<nnn>_R(1|2)_<nnn>.fastq[.gz]\n'
+              'or with --multi-run\n'
+              '  <run>_<sample>_<index>_S<n>_L<nnn>_R(1|2)_<nnn>.fastq[.gz]\n'
+              'You may need to manually set up your sample '
+              'directories.'.format(e), file=sys.stderr)
+        sys.exit(1)
 
     except Exception as e:
         if args.traceback:
