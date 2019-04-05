@@ -32,7 +32,7 @@ class FileNameDoesNotMatch(Exception):
     pass
 
 
-def group(files, keep_lanes=False, multi_run=False):
+def group(files, keep_lanes=False, multi_run=False, verbosity=1):
     """
     Generate groups of raw reads files per sample
 
@@ -75,7 +75,7 @@ def group(files, keep_lanes=False, multi_run=False):
         """
         m = re.match(pattern, x.name)
         if m is None:
-            return (x.name, 0, '')
+            key = (x.name, 0, '')
         else:
             m = m.groupdict()
             key = (m['sampleid'],)
@@ -90,7 +90,10 @@ def group(files, keep_lanes=False, multi_run=False):
             else:
                 key += (m['dir'], runid, int(m['lane']))
 
-            return key
+        if verbosity >= DEFAULT_VERBOSITY + 2:
+            print('parsed: {} -> {}'.format(x, key))
+
+        return key
 
     files = sorted(files, key=id_lane_dir)
 
@@ -324,7 +327,8 @@ def main(argv=None):
         with ThreadPoolExecutor(max_workers=args.threads) as e:
             futures = {}
             file_groupings = group(files, keep_lanes=args.keep_lanes,
-                                   multi_run=args.multi_run)
+                                   multi_run=args.multi_run,
+                                   verbosity=verbosity)
             for samp_key, samp_grp in file_groupings:
                 samp_count += 1
 
