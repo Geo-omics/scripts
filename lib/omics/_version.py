@@ -1,6 +1,7 @@
 import os.path
 import subprocess
 
+# Set to real version when distribute outside of git vcs
 VERSION = None
 
 

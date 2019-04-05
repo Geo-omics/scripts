@@ -73,12 +73,14 @@ html_dirs = \
 	html/_static/css \
 	html/_static/js
 
+version_module = lib/omics/_version.py
+
 
 INSTALL = /usr/bin/install
 INSTALL_PROGRAM := $(INSTALL)
 INSTALL_DATA := $(INSTALL) -m 644
 
-all: sphinx-docs scripts-man
+all: sphinx-docs scripts-man hard-code-version
 
 sphinx-docs: custom_style = _static/css/custom.css
 sphinx-docs: stylesheet = _build/html/_static/css/theme.css
@@ -95,6 +97,10 @@ sphinx-docs:
 
 scripts-man:
 	cd scripts && $(MAKE) man
+
+hard-code-version:
+	echo "hard-coding version $(version) ..."
+	sed -i -r "s/^VERSION.*/VERSION = \'$(version)\'/" $(version_module)
 
 ifneq ($(MAKECMDGOALS),install-comics-local)
 # version arithmetic:
@@ -161,7 +167,7 @@ inc-version-tag:
 # 1. increment the version and set as git tag
 # 2. build stuff as needed for a release, i.e. sphinx docs
 # 3. build the tarball
-release: allcommitted inc-version-tag sphinx-docs dist
+release: allcommitted inc-version-tag sphinx-docs hard-code-version dist
 
 install-data: installdir = $(DESTDIR)$(datadir)/$(package_name)
 install-data:
