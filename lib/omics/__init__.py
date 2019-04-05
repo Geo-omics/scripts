@@ -12,6 +12,11 @@ import re
 import subprocess
 import sys
 
+from ._version import get_version
+
+
+__version__ = get_version()
+
 
 OMICS_DIR = '.omics'
 CONFIG_FILE = 'config'
