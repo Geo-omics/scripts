@@ -1,3 +1,17 @@
+geo-omics-scripts (1.0.135-1) unstable; urgency=medium
+
+  * [comics] Use exec to invoke shell not the singularity shell command
+  * [comics] Add --norc and --rcfile options with defaults
+  * [comics] Stop requiring -- before command to ensure correct option parsing
+  * [comics] Fix passing --verbose/--quiet to singularity and support multiple -v
+  * [comics] Replace comics process when invoking container
+  * [prep] Improve message to user about bad filenames
+  * [omics] Add general --version option
+  * [prep] Tolerate missing S number parts in filenames
+  * [Makefile] Hard-code version when building
+
+ -- Robert <heinro@umich.edu>  Fri, 05 Apr 2019 12:09:14 -0400
+
 geo-omics-scripts (1.0.134-1) unstable; urgency=medium
 
   * [omics] Be more tolerant of OS errors trying to find the project file
