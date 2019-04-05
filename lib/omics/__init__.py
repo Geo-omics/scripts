@@ -96,6 +96,11 @@ class OmicsArgParser(argparse.ArgumentParser):
             help='Show increased diagnostic output.',
         )
         common.add_argument(
+            '-V', '--version',
+            action='store_true',
+            help='Show script version information',
+        )
+        common.add_argument(
             '--traceback',
             action='store_true',
             help='Show python stack trace in case of some internal errors for '
@@ -113,7 +118,7 @@ class OmicsArgParser(argparse.ArgumentParser):
 
     def parse_known_args(self, args=None, namespace=None):
         """
-        Parse options and substitue missing options with configured values
+        Parse options and substitute missing options with configured values
 
          * Missing values for --verbose and --threads are substituted.
          * Remove project_home and add project as object.
@@ -129,6 +134,9 @@ class OmicsArgParser(argparse.ArgumentParser):
             sys.exit()
 
         args, argv = super().parse_known_args(args, namespace)
+
+        if args.version:
+            self.exit(message='{}\n'.format(__version__))
 
         try:
             project = get_project(args.project_home)
