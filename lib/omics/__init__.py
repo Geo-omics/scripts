@@ -136,7 +136,8 @@ class OmicsArgParser(argparse.ArgumentParser):
         args, argv = super().parse_known_args(args, namespace)
 
         if args.version:
-            self.exit(message='{}\n'.format(__version__))
+            print(__version__)
+            self.exit()
 
         try:
             project = get_project(args.project_home)
