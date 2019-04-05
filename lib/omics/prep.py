@@ -15,14 +15,15 @@ FORWARD_READS_FILE = 'fwd.fastq'
 REVERSE_READS_FILE = 'rev.fastq'
 
 raw_reads_file_pat = re.compile(
-    r'(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?_S(?P<snum>\d+)'
+    r'(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?(_S(?P<snum>\d+))?'
     r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
 )
 
 # Multi-run file names, based on example from Matt
 # no index here
 multi_run_file_pat = re.compile(
-    r'(?P<runid>[^_]+)_(?P<sampleid>[^_]+)_S(?P<snum>\d+)'
+    r'(?P<runid>[^_]+)_(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?'
+    r'(_S(?P<snum>\d+))?'
     r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
 )
 
@@ -49,7 +50,7 @@ def group(files, keep_lanes=False, multi_run=False):
 
     Filenames are assumed to adhere to the usual scheme:
 
-        <identifier>[_<index>]_S<nnn>_L<nnn>_R<1|2>_<nnn>.fastq[.gz]
+        <identifier>[_<index>][_S<nnn>]_L<nnn>_R<1|2>_<nnn>.fastq[.gz]
 
         e.g. 66145_CATTGAC_S1_L007_R1_001.fastq.gz
 
@@ -273,9 +274,10 @@ def main(argv=None):
     argp.add_argument(
         '--multi-run',
         action='store_true',
-        help='Assume data is from multiple sequencing runs.  File name pattern'
-             ' must be run_sample_S#_L###_R#_001.fastq without an index and '
-             'obviously the different runs must use the same sample ids for '
+        help='Assume data is from multiple sequencing runs.  File name are '
+             'interpreted such that the first two underscore-separated parts '
+             'are run and sample identifiers.  '
+             'Obviously the different runs must use the same sample ids for '
              'this to work.'
     )
     argp.add_argument(
