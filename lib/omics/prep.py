@@ -15,19 +15,24 @@ FORWARD_READS_FILE = 'fwd.fastq'
 REVERSE_READS_FILE = 'rev.fastq'
 
 raw_reads_file_pat = re.compile(
-    r'(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?_S(?P<snum>\d+)'
+    r'(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?(_S(?P<snum>\d+))?'
     r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
 )
 
 # Multi-run file names, based on example from Matt
 # no index here
 multi_run_file_pat = re.compile(
-    r'(?P<runid>[^_]+)_(?P<sampleid>[^_]+)_S(?P<snum>\d+)'
+    r'(?P<runid>[^_]+)_(?P<sampleid>[^_]+)(_(?P<index>[-a-zA-Z]+))?'
+    r'(_S(?P<snum>\d+))?'
     r'_L(?P<lane>\d+)_R(?P<dir>[12])_(?P<fnum>\d+)\.(?P<suffix>.*)'
 )
 
 
-def group(files, keep_lanes=False, multi_run=False):
+class FileNameDoesNotMatch(Exception):
+    pass
+
+
+def group(files, keep_lanes=False, multi_run=False, verbosity=1):
     """
     Generate groups of raw reads files per sample
 
@@ -45,7 +50,7 @@ def group(files, keep_lanes=False, multi_run=False):
 
     Filenames are assumed to adhere to the usual scheme:
 
-        <identifier>[_<index>]_S<nnn>_L<nnn>_R<1|2>_<nnn>.fastq[.gz]
+        <identifier>[_<index>][_S<nnn>]_L<nnn>_R<1|2>_<nnn>.fastq[.gz]
 
         e.g. 66145_CATTGAC_S1_L007_R1_001.fastq.gz
 
@@ -70,7 +75,7 @@ def group(files, keep_lanes=False, multi_run=False):
         """
         m = re.match(pattern, x.name)
         if m is None:
-            return (x.name, 0, '')
+            key = (x.name, 0, '')
         else:
             m = m.groupdict()
             key = (m['sampleid'],)
@@ -85,7 +90,10 @@ def group(files, keep_lanes=False, multi_run=False):
             else:
                 key += (m['dir'], runid, int(m['lane']))
 
-            return key
+        if verbosity >= DEFAULT_VERBOSITY + 2:
+            print('parsed: {} -> {}'.format(x, key))
+
+        return key
 
     files = sorted(files, key=id_lane_dir)
 
@@ -99,9 +107,7 @@ def group(files, keep_lanes=False, multi_run=False):
         try:
             m = m.groupdict()
         except AttributeError:
-            raise RuntimeError(
-                'Failed to parse filename: {}'.format(x)
-            )
+            raise FileNameDoesNotMatch(x)
 
         key = (m['sampleid'],)
         if keep_lanes:
@@ -271,9 +277,10 @@ def main(argv=None):
     argp.add_argument(
         '--multi-run',
         action='store_true',
-        help='Assume data is from multiple sequencing runs.  File name pattern'
-             ' must be run_sample_S#_L###_R#_001.fastq without an index and '
-             'obviously the different runs must use the same sample ids for '
+        help='Assume data is from multiple sequencing runs.  File name are '
+             'interpreted such that the first two underscore-separated parts '
+             'are run and sample identifiers.  '
+             'Obviously the different runs must use the same sample ids for '
              'this to work.'
     )
     argp.add_argument(
@@ -320,7 +327,8 @@ def main(argv=None):
         with ThreadPoolExecutor(max_workers=args.threads) as e:
             futures = {}
             file_groupings = group(files, keep_lanes=args.keep_lanes,
-                                   multi_run=args.multi_run)
+                                   multi_run=args.multi_run,
+                                   verbosity=verbosity)
             for samp_key, samp_grp in file_groupings:
                 samp_count += 1
 
@@ -354,6 +362,15 @@ def main(argv=None):
                     print('Failed to write: {}: {}: {}'
                           ''.format(*futures[fut], fut.result()),
                           file=sys.stderr)
+
+    except FileNameDoesNotMatch as e:
+        print('The name of file {} does not follow the supported pattern:\n'
+              '  <sample>_<index>_S<n>_L<nnn>_R(1|2)_<nnn>.fastq[.gz]\n'
+              'or with --multi-run\n'
+              '  <run>_<sample>_<index>_S<n>_L<nnn>_R(1|2)_<nnn>.fastq[.gz]\n'
+              'You may need to manually set up your sample '
+              'directories.'.format(e), file=sys.stderr)
+        sys.exit(1)
 
     except Exception as e:
         if args.traceback:
