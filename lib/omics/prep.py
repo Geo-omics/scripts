@@ -262,8 +262,14 @@ def main(argv=None):
         'rawreads',
         nargs='*',
         default=['.'],
-        help='List of fastq.gz files or path to directory containing them. '
-             'By default this is the current directory.',
+        help='Your raw fastq or fastq.gz files or path to directory containing'
+             ' them. By default this is the current directory.  If this is a '
+             'directory the script will respect the --suffix option and try '
+             'to copy all the files with the given suffices.  If any of those '
+             'files\'s name does not follow the support Illumina pattern '
+             'then the script will abort. In this case you need to list the '
+             'validly named file explicitly on the command line.',
+    )
     )
     argp.add_argument(
         '--force', '-f',
