@@ -270,6 +270,11 @@ def main(argv=None):
              'then the script will abort. In this case you need to list the '
              'validly named file explicitly on the command line.',
     )
+    argp.add_argument(
+        '-d', '--dest',
+        metavar='PATH',
+        default='.',
+        help='Destination directory, by default the current working directory',
     )
     argp.add_argument(
         '--force', '-f',
@@ -303,6 +308,10 @@ def main(argv=None):
              'are considered.',
     )
     args = argp.parse_args(argv)
+
+    dest = Path(args.dest)
+    if not dest.is_dir():
+        argp.exit('Not a directory: {}'.format(args.dest))
 
     verbosity = args.verbosity
 
@@ -354,7 +363,7 @@ def main(argv=None):
                     prep(
                         '_'.join(samp_key),
                         list(samp_grp),
-                        dest=pathlib.cwd(),
+                        dest=dest,
                         force=args.force,
                         verbosity=verbosity,
                         executor=e,
