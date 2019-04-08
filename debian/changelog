@@ -1,3 +1,13 @@
+geo-omics-scripts (1.0.136-1) unstable; urgency=medium
+
+  * [omics] Tweak order of options, demote --cpus as --threads is more standard
+  * [omics] Print version to stdout instead of stderr
+  * [qc] Also allow --final option in wrapper
+  * [prep] Handle failure to create a default project in the omics launcher
+  * [prep] Add --dest option
+
+ -- Robert <heinro@umich.edu>  Mon, 08 Apr 2019 14:59:02 -0400
+
 geo-omics-scripts (1.0.135-1) unstable; urgency=medium
 
   * [comics] Use exec to invoke shell not the singularity shell command
