@@ -354,7 +354,7 @@ def main(argv=None):
                     prep(
                         '_'.join(samp_key),
                         list(samp_grp),
-                        dest=args.project['project_home'],
+                        dest=pathlib.cwd(),
                         force=args.force,
                         verbosity=verbosity,
                         executor=e,
