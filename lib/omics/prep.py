@@ -240,8 +240,12 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
                 action = 'copy'
 
             if verbosity > DEFAULT_VERBOSITY:
+                try:
+                    dest = outfile.resolve().relative_to(Path.cwd())
+                except:
+                    dest = outfile
                 print('{}: {} {} >> {}'.format(sample, action, i,
-                      outfile.relative_to(Path.cwd())))
+                      dest))
 
             try:
                 shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
@@ -258,8 +262,19 @@ def main(argv=None):
         'rawreads',
         nargs='*',
         default=['.'],
-        help='List of fastq.gz files or path to directory containing them. '
-             'By default this is the current directory.',
+        help='Your raw fastq or fastq.gz files or path to directory containing'
+             ' them. By default this is the current directory.  If this is a '
+             'directory the script will respect the --suffix option and try '
+             'to copy all the files with the given suffices.  If any of those '
+             'files\'s name does not follow the support Illumina pattern '
+             'then the script will abort. In this case you need to list the '
+             'validly named file explicitly on the command line.',
+    )
+    argp.add_argument(
+        '-d', '--dest',
+        metavar='PATH',
+        default='.',
+        help='Destination directory, by default the current working directory',
     )
     argp.add_argument(
         '--force', '-f',
@@ -293,6 +308,10 @@ def main(argv=None):
              'are considered.',
     )
     args = argp.parse_args(argv)
+
+    dest = Path(args.dest)
+    if not dest.is_dir():
+        argp.exit('Not a directory: {}'.format(args.dest))
 
     verbosity = args.verbosity
 
@@ -344,7 +363,7 @@ def main(argv=None):
                     prep(
                         '_'.join(samp_key),
                         list(samp_grp),
-                        dest=args.project['project_home'],
+                        dest=dest,
                         force=args.force,
                         verbosity=verbosity,
                         executor=e,

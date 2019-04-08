@@ -35,6 +35,8 @@ def qc_sample(path, **kwargs):
     not kwargs['no_fasta_interleave'] or args.append('--no-fasta-interleave')
     if kwargs['filter']:
         args += ['--filter', kwargs['filter']]
+    if kwargs['final']:
+        args += ['--final', kwargs['final']]
     if kwargs['rqcfilterdata'] is not None:
         args += ['--rqcfilterdata', kwargs['rqcfilterdata']]
     if kwargs['threads'] is not None:
@@ -163,6 +165,12 @@ def get_args(argv=None, namespace=None):
         help='Which quality filter to use.  Trimmomatic is used by default. '
              'Scythe/sickle based filtering the the "old" way.  The rqcfilter2'
              ' pipeline from BBTools is an alternative',
+    )
+    argp.add_argument(
+        '--final',
+        metavar='infix',
+        help='Infix to be added to final post-qc file names.  Default is '
+             '\'good\'',
     )
     argp.add_argument(
         '--rqcfilterdata',

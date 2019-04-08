@@ -79,15 +79,6 @@ class OmicsArgParser(argparse.ArgumentParser):
                 help='Omics project directory, by default, this is the '
                      'current directory.',
             )
-        if threads:
-            common.add_argument(
-                '--cpus', '--threads', '-t',
-                type=int,
-                metavar='N',
-                dest='threads',
-                default=None,  # None signifies option not given on cmd line
-                help='Number of threads / CPUs to employ',
-            )
         common.add_argument(
             '-v', '--verbose',
             action='count',
@@ -106,6 +97,15 @@ class OmicsArgParser(argparse.ArgumentParser):
             help='Show python stack trace in case of some internal errors for '
                  'debugging.',
         )
+        if threads:
+            common.add_argument(
+                '--threads', '-t', '--cpus',
+                type=int,
+                metavar='N',
+                dest='threads',
+                default=None,  # None signifies option not given on cmd line
+                help='Number of threads / CPUs to employ',
+            )
 
     def format_help(self):
         """
@@ -136,7 +136,8 @@ class OmicsArgParser(argparse.ArgumentParser):
         args, argv = super().parse_known_args(args, namespace)
 
         if args.version:
-            self.exit(message='{}\n'.format(__version__))
+            print(__version__)
+            self.exit()
 
         try:
             project = get_project(args.project_home)
