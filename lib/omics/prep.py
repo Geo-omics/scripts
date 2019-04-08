@@ -240,8 +240,12 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
                 action = 'copy'
 
             if verbosity > DEFAULT_VERBOSITY:
+                try:
+                    dest = outfile.resolve().relative_to(Path.cwd())
+                except:
+                    dest = outfile
                 print('{}: {} {} >> {}'.format(sample, action, i,
-                      outfile.relative_to(Path.cwd())))
+                      dest))
 
             try:
                 shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
