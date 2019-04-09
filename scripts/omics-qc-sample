@@ -237,20 +237,16 @@ if $DEREPLICATION && [[ $FILTER != bbtools ]] && [[ $FILTER != derek-bbduk ]]; t
     base=".derep"
     fwd_derep_out=$tmpd/$fwd$base.fastq
     rev_derep_out=$tmpd/$rev$base.fastq
-    mkfifo "$fwd_derep_out" "$rev_derep_out"
+
+    fwd_trim_in=$fwd_derep_out
+    rev_trim_in=$rev_derep_out
+
+    python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd"
+
     if $KEEPALL; then
-        fwd_trim_in=$fwd_derep_out.copy
-        rev_trim_in=$rev_derep_out.copy
-        mkfifo "$fwd_trim_in" "$rev_trim_in"
-        # shellcheck disable=SC2094
-        tee "./$(basename "$fwd_derep_out")" < "$fwd_derep_out" > "$fwd_trim_in" &
-        # shellcheck disable=SC2094
-        tee "./$(basename "$rev_derep_out")" < "$rev_derep_out" > "$rev_trim_in" &
-    else
-        fwd_trim_in=$fwd_derep_out
-        rev_trim_in=$rev_derep_out
+        cp -p "${V[@]}" -- "$fwd_derep_out" "$fwd$base.fastq"
+        cp -p "${V[@]}" -- "$rev_derep_out" "$rev$base.fastq"
     fi
-    python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
 else
     fwd_trim_in=$FWD_FASTQ
     rev_trim_in=$REV_FASTQ
@@ -266,54 +262,37 @@ if [[ $FILTER == trimmomatic ]]; then
     base="${base}.trim"
     fwd_trim_s=$tmpd/$fwd$base.s.fastq
     rev_trim_s=$tmpd/$rev$base.s.fastq
-    if $KEEPALL; then
-        fwd_trim=$fwd$base.fastq
-        rev_trim=$rev$base.fastq
-    else
-        fwd_trim=$tmpd/$fwd$base.tmp.fastq
-        rev_trim=$tmpd/$rev$base.tmp.fastq
-    fi
-
-    if $DEREPLICATION; then
-        fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
-        rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
-        {
-            # make input files real for Trimmomatic consumption
-            cat "$fwd_trim_in" > "$fwd_trim_in_tmp" &
-            cat "$rev_trim_in" > "$rev_trim_in_tmp" &
-            wait
-        }
-    else
-        fwd_trim_in_tmp=$fwd_trim_in
-        rev_trim_in_tmp=$rev_trim_in
-    fi
+    fwd_trim=$tmpd/$fwd$base.tmp.fastq
+    rev_trim=$tmpd/$rev$base.tmp.fastq
 
     info1 "Start adapter + quality trimming..."
 
     post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
 
-    {
-        TrimmomaticPE \
-            -threads "$CPUS" \
-            "$fwd_trim_in_tmp" "$rev_trim_in_tmp" \
-            "$fwd_trim" "$fwd_trim_s" "$rev_trim" "$rev_trim_s" \
-            ILLUMINACLIP:"$ADAPTERS":2:30:10:1:true \
-            LEADING:3 TRAILING:3 \
-            SLIDINGWINDOW:4:20 \
-            MINLEN:20
+    TrimmomaticPE \
+        -threads "$CPUS" \
+        "$fwd_trim_in" "$rev_trim_in" \
+        "$fwd_trim" "$fwd_trim_s" "$rev_trim" "$rev_trim_s" \
+        ILLUMINACLIP:"$ADAPTERS":2:30:10:1:true \
+        LEADING:3 TRAILING:3 \
+        SLIDINGWINDOW:4:20 \
+        MINLEN:20
 
-        # re-pair singles
-        info1 "Re-pairing Trimmomatic output..."
-        cat "$fwd_trim_s" >> "$fwd_trim"
-        grep '^@' "$fwd_trim_s" | sed -r 's/ 1/ 2/; s/$/\nN\n+\n!/' >> "$rev_trim"
-        cat "$rev_trim_s" >> "$rev_trim"
-        grep '^@' "$rev_trim_s" | sed -r 's/ 2/ 1/; s/$/\nN\n+\n!/' >> "$fwd_trim"
+    # re-pair singles
+    info1 "Re-pairing Trimmomatic output..."
+    cat "$fwd_trim_s" >> "$fwd_trim"
+    grep '^@' "$fwd_trim_s" | sed -r 's/ 1/ 2/; s/$/\nN\n+\n!/' >> "$rev_trim"
+    cat "$rev_trim_s" >> "$rev_trim"
+    grep '^@' "$rev_trim_s" | sed -r 's/ 2/ 1/; s/$/\nN\n+\n!/' >> "$fwd_trim"
 
-        # interleave and re-establish piping
-        info1 "Interleaving trimmed read pairs..."
-        python3 -m omics.interleave "${V[@]}" "$fwd_trim" "$rev_trim" > "$post_trim"
-    } &
+    if $KEEPALL; then
+        cp -p "${V[@]}" -- "$fwd_trim" "$fwd$base.fastq"
+        cp -p "${V[@]}" -- "$rev_trim" "$rev$base.fastq"
+    fi
+
+    # interleave and re-establish piping
+    info1 "Interleaving trimmed read pairs..."
+    python3 -m omics.interleave "${V[@]}" "$fwd_trim" "$rev_trim" > "$post_trim"
 
 elif [[ $FILTER == scythe ]]; then
     info1 "Start adapter trimming..."
@@ -345,8 +324,7 @@ elif [[ $FILTER == scythe ]]; then
     oldbase=$base
     base="${base}.sickle"
     post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
-    sickle pe -t sanger -c "$sickle_in" -M "$post_trim" &
+    sickle pe -t sanger -c "$sickle_in" -M "$post_trim"
 
 elif [[ $FILTER == bbtools ]]; then
     base=$base.rqcfilter
@@ -380,7 +358,6 @@ elif [[ $FILTER == bbtools ]]; then
 elif [[ $FILTER == derek-bbduk ]]; then
     base=$base.derek-bbduk
     post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
 
     # adapted from Derek's bbmap_qc.sh
     bbduk in1="$fwd_trim_in" in2="$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
@@ -403,52 +380,34 @@ elif [[ $FILTER == derek-bbduk ]]; then
     omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
 
     # interleave and re-establish piping
-    {
-        info1 "Interleaving trimmed read pairs..."
-        omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$post_trim"
-    } &
+    info1 "Interleaving trimmed read pairs..."
+    omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$post_trim"
 
 else
     abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
 fi
-# $KEEPALL || rm -f -- "int$oldbase.fastq"
 
+cp -p -- "$post_trim" "int$base.fastq"
 oldbase=$base
 base=".$FINAL"
+fwd_final=$fwd$base.fastq
+rev_final=$rev$base.fastq
 
 if $INTERLEAVE_FASTA; then
     info1 "Start converting to fasta..."
-    # copy post_trim
-    post_trim_orig=$post_trim
-    post_trim=$post_trim.copy
-    q2a_in=$tmpd/q2a_in
-    mkfifo "$post_trim" "$q2a_in"
-    tee "$q2a_in" < "$post_trim_orig" > "$post_trim" &
-    python3 -m omics.fastq2fasta "${V[@]}" < "$q2a_in" > "int$base.fasta" &
+    python3 -m omics.fastq2fasta "${V[@]}" < "$post_trim" > "int$base.fasta" &
 fi
 
 info1 "Separating read directions again..."
-fwd_sep_out=$tmpd/$fwd$oldbase.fastq
-rev_sep_out=$tmpd/$rev$oldbase.fastq
-sep_in=$tmpd/sep_in
-int_final=int$base.fastq
-mkfifo "$fwd_sep_out" "$rev_sep_out" "$sep_in"
-tee "$sep_in" < "$post_trim" > "$int_final" &
-separate-interleaved "${V[@]}" -f "$fwd_sep_out" -r "$rev_sep_out" "$sep_in" &
+separate-interleaved "${V[@]}" -f "$tmpd/$fwd_final" -r "$tmpd/$rev_final" "$post_trim"
 
-# copy separate output 
-fwd_final=$fwd$base.fastq
-rev_final=$rev$base.fastq
-fwd_fastqc_2_in=$tmpd/fqc/$fwd$base.fastq
-rev_fastqc_2_in=$tmpd/fqc/$rev$base.fastq
-mkfifo "$fwd_fastqc_2_in" "$rev_fastqc_2_in"
-tee "$fwd_fastqc_2_in" < "$fwd_sep_out" > "$fwd_final" &
-tee "$rev_fastqc_2_in" < "$rev_sep_out" > "$rev_final" &
+{
+    cp -p -- "$tmpd/$fwd_final" "$fwd_final"
+    cp -p -- "$tmpd/$rev_final" "$rev_final"
+} &
+
 info1 "Starting post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 "$fwd_fastqc_2_in" "$rev_fastqc_2_in" &>> FASTQC/fastqc.log &
-#wait %fastqc
-#$INTERLEAVE_FASTA && wait %python3
-#$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
+fastqc -o FASTQC -f fastq -t 2 "$fwd_final" "$rev_final" &>> FASTQC/fastqc.log &
 $KEEPALL || clean_intermediates
 
 # map cmd-line sub-strings to job description
