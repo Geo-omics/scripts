@@ -6,7 +6,7 @@
 # Author: Robert <heinro@med.umich.edu>
 #
 
-set -e
+set -ueEo pipefail
 RESOURCE_DIR=$(dirname "$0")/../share/geo-omics-scripts
 
 # shellcheck disable=SC2034
