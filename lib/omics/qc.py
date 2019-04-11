@@ -8,7 +8,6 @@ import sys
 
 from omics import get_argparser, DEFAULT_VERBOSITY
 
-FILTER_CHOICES = ['trimmomatic', 'scythe', 'bbtools']
 QC_BINARY_NAME = 'omics-qc-sample'
 DEFAULT_RQCFILTERDATA = '/reference-data/bbtools/RQCFilterData'
 
@@ -160,11 +159,8 @@ def get_args(argv=None, namespace=None):
     )
     argp.add_argument(
         '-F', '--filter',
-        choices=FILTER_CHOICES,
-        default=FILTER_CHOICES[0],
-        help='Which quality filter to use.  Trimmomatic is used by default. '
-             'Scythe/sickle based filtering the the "old" way.  The rqcfilter2'
-             ' pipeline from BBTools is an alternative',
+        help='Which quality filter to use.  Currently the default is '
+             'trimmomatic.  Alternatives are: scythe, bbtools, derek-bbduk',
     )
     argp.add_argument(
         '--final',
