@@ -223,7 +223,6 @@ clean_up () {
 trap clean_up EXIT
 tmpd=$(mktemp -d)
 debug "Using temp dir: $tmpd"
-mkdir "$tmpd"/fqc
 
 $MKDIR -p FASTQC
 info1 "Starting pre-QC fastqc..."
