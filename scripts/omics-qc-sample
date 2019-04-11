@@ -250,8 +250,9 @@ tmp_avail=$(df --output=avail "$tmpd" | grep '[0-9]')
 tmp_avail=$((tmp_avail*1024))
 # fwd input data size in bytes x20 to anticipate ten-fold increase
 # compare to available which df delivers in kbytes
-if [[ $expected > $tmp_avail ]]; then
-    warning1 "There may not be sufficient space for your temporary files"
+if [[ $expected -gt $tmp_avail ]]; then
+    warning1 "There may not be sufficient space for your temporary files:"
+    warning1 "Available at $tmpd: $tmp_avail bytes, expected need: $expected"
 fi
 debug "Using temp dir: $tmpd"
 
