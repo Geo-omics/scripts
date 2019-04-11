@@ -378,7 +378,7 @@ elif [[ $FILTER == bbtools ]]; then
             opticaldupes=t
         )
     fi
-    rqcfilter2 "${rqcfilter2_args[@]}" 2> "$rqcfilter2_out"/log
+    rqcfilter2 "${rqcfilter2_args[@]}" |& tee "$rqcfilter2_out"/log
     filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
     gunzip -c "$(realpath "$filtered_fastq")" > "$tmp_int_final"
 elif [[ $FILTER == derek-bbduk ]]; then
