@@ -166,9 +166,11 @@ fi
 #########################
 if [[ $FILTER == bbtools ]] || [[ $FILTER == derek-bbduk ]]; then
     [ -d "$RQCFILTERDATA" ] || abort1 "Reference data for rqcfilter2 not found: $RQCFILTERDATA"
-else
+elif [[ $FILTER == scythe || $FILTER == trimmomatic ]]; then
     [ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
     [ "$VERBOSITY" -lt 2 ] || info1 "Using adapters file: $ADAPTERS"
+else
+    abort1 "unsupported filter option: \"$FILTER\", allowed are: scythe, trimmomatic, bbtools"
 fi
 [ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
