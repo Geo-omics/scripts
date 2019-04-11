@@ -170,7 +170,7 @@ if which getopt >/dev/null 2>&1; then
         getopt_status=$?
         [[ "$getopt_status" == 1 ]] || exit $getopt_status
         # getopt returns 1 for usage error, other codes indicate bugs
-        usage_err=false
+        usage_err=true
     fi
 
     # reset $n parameters
