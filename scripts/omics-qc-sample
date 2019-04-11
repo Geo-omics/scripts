@@ -134,7 +134,7 @@ RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
 DEFAULT_CPUS=2
 
 ## shellcheck source=../lib/liba.sh
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 . "$RESOURCE_DIR/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 info1 () { info "[$(basename "$PWD")] $1" ; }
