@@ -408,8 +408,9 @@ separate-interleaved "${V[@]}" -f "$tmpd/$fwd_final" -r "$tmpd/$rev_final" "$pos
 } &
 
 info1 "Starting post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 "$fwd_final" "$rev_final" &>> FASTQC/fastqc.log &
-$KEEPALL || clean_intermediates
+fastqc -o FASTQC -f fastq -t 2 "$tmpd/$fwd_final" "$tmpd/$rev_final" &>> FASTQC/fastqc.log
+
+# TODO: job waiting code needs re-work after getting rid of most piping
 
 # map cmd-line sub-strings to job description
 declare -A wait_list
@@ -444,6 +445,10 @@ for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
    fi
 done
 
+if ! $KEEPALL; then
+    info1 "Erasing some intermediate results (keep them with --keep-all)..."
+    clean_intermediates
+fi
 info1 "All done!"
 
 
