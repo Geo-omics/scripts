@@ -31,11 +31,11 @@ ARG_HELP="
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
                         interleaved fastq will still be build.
-  -F, --filter <trimmomatic|scythe|bbtools>
+  -F, --filter <trimmomatic|scythe|bbtools|derek-bbduk>
                         Choice of qc-filter.  The default is to use Trimmomatic.
                         The 'old' way of using scythe and sickle is still supported.
                         A newer alternative is to use the rqcfilter2 pipeline from
-                        BBTools.
+                        BBTools (bbtools) or Derek's bbduk workflow.
       --rqcfilterdata PATH
                         Path to directory containing the reference data for BBTool's rqcfilter2
                         The default is /reference-data/bbtools/RQCFilterData
