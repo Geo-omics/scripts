@@ -1,3 +1,21 @@
+geo-omics-scripts (1.0.137-1) unstable; urgency=medium
+
+  * [comics] Speed up building new images from sandbox
+  * [qc] Simplify data flow, remove piping
+  * [qc] Improve bash script safety setting -uE and pipefail
+  * [qc] Raise error on invalid --filter argument
+  * [qc] Fix adding empty read pair halves
+  * [qc] Fix post-qc fastqc not terminating
+  * [qc] Refactor final file generation
+  * [liba.sh] Fix bad option handling, actually raise the error
+  * [qc] Refactoring of clean up and --keep-all work
+  * [qc] Check available space for temporary data
+  * [qc] Fix bbduk workflow, ensure correct filename/directories
+  * [qc] skip checking filter arguments in wrapper, qc-sample script will handle this
+  * [qc] Advertise derek-bbduk filter option
+
+ -- Robert <heinro@umich.edu>  Thu, 11 Apr 2019 16:39:10 -0400
+
 geo-omics-scripts (1.0.136-1) unstable; urgency=medium
 
   * [omics] Tweak order of options, demote --cpus as --threads is more standard
