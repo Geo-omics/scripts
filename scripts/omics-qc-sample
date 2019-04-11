@@ -382,26 +382,28 @@ elif [[ $FILTER == bbtools ]]; then
     gunzip -c "$(realpath "$filtered_fastq")" > "$tmp_int_final"
 elif [[ $FILTER == derek-bbduk ]]; then
     base=$base.derek-bbduk
+    (
+        cd "$tmpd"
+        # adapted from Derek's bbmap_qc.sh
+        bbduk in1="$WORK_DIR/$fwd_trim_in" in2="$WORK_DIR/$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
 
-    # adapted from Derek's bbmap_qc.sh
-    bbduk in1="$fwd_trim_in" in2="$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
+        # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
+        info1 "Removing 5' adapters"
+        bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
 
-    # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
-    info1 "Removing 5' adapters"
-    bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
+        # Screen for kmers of length 31 that match PhiX (a standard Illumina spike-in) and remove them from reads:
+        info1 "Remove PhiX spike-in reads"
+        gunzip -c "$RQCFILTERDATA"/phix174_ill.ref.fa.gz > "$tmpd"/phix174_ill.ref.fa
+        bbduk in1="$tmpd"/adtrim_fwd.fastq in2="$tmpd"/adtrim_rev.fastq out1="$tmpd"/adtrim_clean_fwd.fastq out2="$tmpd"/adtrim_clean_rev.fastq outm=PhiX_matched.fastq ref="$RQCFILTERDATA"/phix174_ill.ref.fa.gz k=31 hdist=1 stats=phix_clean_stats.txt threads="$CPUS"
 
-    # Screen for kmers of length 31 that match PhiX (a standard Illumina spike-in) and remove them from reads:
-    info1 "Remove PhiX spike-in reads"
-    gunzip -c "$RQCFILTERDATA"/phix174_ill.ref.fa.gz > "$tmpd"/phix174_ill.ref.fa
-    bbduk in1="$tmpd"/adtrim_fwd.fastq in2="$tmpd"/adtrim_rev.fastq out1="$tmpd"/adtrim_clean_fwd.fastq out2="$tmpd"/adtrim_clean_rev.fastq outm=PhiX_matched.fastq ref="$RQCFILTERDATA"/phix174_ill.ref.fa.gz k=31 hdist=1 stats=phix_clean_stats.txt threads="$CPUS"
+        # Trim bases with Phred quality score below 15. After trimming remove reads with length <70 bp:
+        info1 "Quality trim bases with Q score below 15"
+        bbduk in1="$tmpd"/adtrim_clean_fwd.fastq in2="$tmpd"/adtrim_clean_rev.fastq out1="$tmpd"/adtrim_clean_qtrim_fwd.fastq out2="$tmpd"/adtrim_clean_qtrim_rev.fastq qtrim=rl trimq=15 minlen=75 threads="$CPUS"
 
-    # Trim bases with Phred quality score below 15. After trimming remove reads with length <70 bp:
-    info1 "Quality trim bases with Q score below 15"
-    bbduk in1="$tmpd"/adtrim_clean_fwd.fastq in2="$tmpd"/adtrim_clean_rev.fastq out1="$tmpd"/adtrim_clean_qtrim_fwd.fastq out2="$tmpd"/adtrim_clean_qtrim_rev.fastq qtrim=rl trimq=15 minlen=75 threads="$CPUS"
-
-    # Dereplicate read pairs that are 100% identical:
-    info1 "Deduplicating"
-    omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
+        # Dereplicate read pairs that are 100% identical:
+        info1 "Deduplicating"
+        omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
+    )
 
     # interleave and re-establish piping
     info1 "Interleaving trimmed read pairs..."
