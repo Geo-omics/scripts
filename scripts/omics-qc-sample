@@ -209,6 +209,9 @@ clean_some () {
         $RM -f -- {$fwd,$rev}{.derep,}.trim.s.fastq
         $RM -f -- {$fwd,$rev}.derep.fastq
     fi
+    if [[ $FILTER == bbtools || $all ]]; then
+        $RM -rf -- rqcfilter2_out
+    fi
 }
 
 
