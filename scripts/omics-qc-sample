@@ -240,7 +240,19 @@ clean_up () {
     debug "Cleanup done"
 }
 trap clean_up EXIT
+
+# set up temp dir
+declare -i size_reads tmp_avail expected
+size_reads=$(stat --print=%s "$FWD_FASTQ")
 tmpd=$(mktemp -d)
+expected=$((size_reads*20))
+tmp_avail=$(df --output=avail "$tmpd" | grep '[0-9]')
+tmp_avail=$((tmp_avail*1024))
+# fwd input data size in bytes x20 to anticipate ten-fold increase
+# compare to available which df delivers in kbytes
+if [[ $expected > $tmp_avail ]]; then
+    warning1 "There may not be sufficient space for your temporary files"
+fi
 debug "Using temp dir: $tmpd"
 
 # clean up first
