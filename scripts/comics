@@ -177,14 +177,19 @@ else
 fi
 
 if $UPDATE; then
-    sandbox=/var/local/containers/"$(basename -s .img "$image")".sandbox
+    image_name=$(basename -s .img "$image")
+    sandbox=/var/local/containers/$image_name.sandbox
     [[ -d "$sandbox" ]] || abort "Sandbox does not exists: $sandbox"
-    new_image=${image}.new
+    local_temp_image=/tmp/${image_name}.new
+    [[ -e "$local_temp_image" ]] && rm -- "$local_temp_image"
     info "Checking sandbox..."
     singularity check "$sandbox"
-    info "Building image at $new_image ..."
-    fakeroot singularity build "$new_image" "$sandbox"
+    info "Building local temp image at $local_temp_image ..."
+    fakeroot singularity build "$local_temp_image" "$sandbox"
     info "Build done, moving to destination..."
+    new_image=${image}.new
+    mv -v -- "$local_temp_image" "$new_image"
+    info "Renaming new image, keeping backup..."
     mv -v --backup=numbered "$new_image" "$image"
     info "New image at $image"
     info "Saved backup images:"

@@ -6,7 +6,7 @@
 # Author: Robert <heinro@med.umich.edu>
 #
 
-set -e
+set -ueEo pipefail
 RESOURCE_DIR=$(dirname "$0")/../share/geo-omics-scripts
 
 # shellcheck disable=SC2034
@@ -31,11 +31,11 @@ ARG_HELP="
       --no-fasta-interleave
                         Skip building the interleaved fasta file,
                         interleaved fastq will still be build.
-  -F, --filter <trimmomatic|scythe|bbtools>
+  -F, --filter <trimmomatic|scythe|bbtools|derek-bbduk>
                         Choice of qc-filter.  The default is to use Trimmomatic.
                         The 'old' way of using scythe and sickle is still supported.
                         A newer alternative is to use the rqcfilter2 pipeline from
-                        BBTools.
+                        BBTools (bbtools) or Derek's bbduk workflow.
       --rqcfilterdata PATH
                         Path to directory containing the reference data for BBTool's rqcfilter2
                         The default is /reference-data/bbtools/RQCFilterData
@@ -134,7 +134,7 @@ RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
 DEFAULT_CPUS=2
 
 ## shellcheck source=../lib/liba.sh
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 . "$RESOURCE_DIR/liba.sh" || (echo "Failed to source script library"; exit 1)
 
 info1 () { info "[$(basename "$PWD")] $1" ; }
@@ -166,9 +166,11 @@ fi
 #########################
 if [[ $FILTER == bbtools ]] || [[ $FILTER == derek-bbduk ]]; then
     [ -d "$RQCFILTERDATA" ] || abort1 "Reference data for rqcfilter2 not found: $RQCFILTERDATA"
-else
+elif [[ $FILTER == scythe || $FILTER == trimmomatic ]]; then
     [ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
     [ "$VERBOSITY" -lt 2 ] || info1 "Using adapters file: $ADAPTERS"
+else
+    abort1 "unsupported filter option: \"$FILTER\", allowed are: scythe, trimmomatic, bbtools"
 fi
 [ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
@@ -183,23 +185,40 @@ rev=$(basename "$REV_FASTQ" .fastq)
 [ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames are equal?"
 
 clean_all () {
-    clean_intermediates
-    # clean final results
+    clean_some all
+    # clean all final results
     $RM -rf -- FASTQC rqcfilter2_out
-    $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
-    $RM -f -- {$fwd,$rev}{.derep,}.matches.fastq
-    $RM -f -- {int,$fwd,$rev}."$FINAL".fast{a,q}
 }
 
-clean_intermediates () {
-    # clean up intermediate results
-    $RM -f -- {$fwd,$rev}.derep.fastq
-    $RM -f -- {int,$fwd,$rev}{.derep,}.scythe{.sickle,}.fastq
+clean_some () {
+    # only clean files that are about to be re-created in a regular run
+    # TODO: add intermediate files?
+    local all=false
+    [[ $# -gt 0 && $1 == all ]] && all=true
+    $all || info1 "Removing previously generated results..."
+    $RM -rf -- FASTQC/"${fwd}"_* FASTQC/"${rev}"_*
+    $RM -rf -- FASTQC/"${fwd}.${FINAL}"_* "FASTQC/${rev}.${FINAL}"_*
+    $RM -f -- {int,$fwd,$rev}."$FINAL".fastq
+    $INTERLEAVE_FASTA && $RM -f -- int."$FINAL".fasta
+    if [[ $FILTER == scythe || $all ]]; then
+       $RM -f -- {$fwd,$rev}{.derep,}.{matches,scythe}.fastq
+       $RM -f -- {$fwd,$rev}.derep.fastq
+
+    fi
+    if [[ $FILTER == trimmomatic || $all ]]; then
+        $RM -f -- {$fwd,$rev}{.derep,}.trim.s.fastq
+        $RM -f -- {$fwd,$rev}.derep.fastq
+    fi
+    if [[ $FILTER == bbtools || $all ]]; then
+        $RM -rf -- rqcfilter2_out
+    fi
 }
 
 
-clean_all
-! $CLEAN_ONLY || exit 0
+if $CLEAN_ONLY; then
+    clean_all 
+    exit
+fi
 
 clean_up () {
     # kill background
@@ -214,14 +233,31 @@ clean_up () {
     done
     # clean temp data
     [[ -v tmpd ]] || exit 0
+    $KEEPALL || info1 "Erasing intermediate results (keep them with --keep-all)..."
     debug "$(ls -Rlrth "$tmpd")"
+    $RM -rf -- "$tmpd"
     rm -rf -- "$tmpd"
     debug "Cleanup done"
 }
 trap clean_up EXIT
+
+# set up temp dir
+declare -i size_reads tmp_avail expected
+size_reads=$(stat --print=%s "$FWD_FASTQ")
 tmpd=$(mktemp -d)
+expected=$((size_reads*20))
+tmp_avail=$(df --output=avail "$tmpd" | grep '[0-9]')
+tmp_avail=$((tmp_avail*1024))
+# fwd input data size in bytes x20 to anticipate ten-fold increase
+# compare to available which df delivers in kbytes
+if [[ $expected -gt $tmp_avail ]]; then
+    warning1 "There may not be sufficient space for your temporary files:"
+    warning1 "Available at $tmpd: $tmp_avail bytes, expected need: $expected"
+fi
 debug "Using temp dir: $tmpd"
-mkdir "$tmpd"/fqc
+
+# clean up first
+clean_some
 
 $MKDIR -p FASTQC
 info1 "Starting pre-QC fastqc..."
@@ -237,26 +273,26 @@ if $DEREPLICATION && [[ $FILTER != bbtools ]] && [[ $FILTER != derek-bbduk ]]; t
     base=".derep"
     fwd_derep_out=$tmpd/$fwd$base.fastq
     rev_derep_out=$tmpd/$rev$base.fastq
-    mkfifo "$fwd_derep_out" "$rev_derep_out"
+
+    fwd_trim_in=$fwd_derep_out
+    rev_trim_in=$rev_derep_out
+
+    python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd"
+
     if $KEEPALL; then
-        fwd_trim_in=$fwd_derep_out.copy
-        rev_trim_in=$rev_derep_out.copy
-        mkfifo "$fwd_trim_in" "$rev_trim_in"
-        # shellcheck disable=SC2094
-        tee "./$(basename "$fwd_derep_out")" < "$fwd_derep_out" > "$fwd_trim_in" &
-        # shellcheck disable=SC2094
-        tee "./$(basename "$rev_derep_out")" < "$rev_derep_out" > "$rev_trim_in" &
-    else
-        fwd_trim_in=$fwd_derep_out
-        rev_trim_in=$rev_derep_out
+        cp -p "${V[@]}" -- "$fwd_derep_out" "$fwd$base.fastq"
+        cp -p "${V[@]}" -- "$rev_derep_out" "$rev$base.fastq"
     fi
-    python3 -m omics.derep "${V[@]}" --check "$FWD_FASTQ" "$REV_FASTQ" --out-dir "$tmpd" &
 else
     fwd_trim_in=$FWD_FASTQ
     rev_trim_in=$REV_FASTQ
 fi
 
 oldbase=$base
+tmp_fwd_final=$tmpd/$fwd.$FINAL.fastq
+tmp_rev_final=$tmpd/$rev.$FINAL.fastq
+tmp_int_final=$tmpd/int.$FINAL.fastq
+
 if [[ $FILTER == trimmomatic ]]; then
     # Trimmomatic's makes the data streaming more complicated:  It's seems not
     # possible to use fifos as input and it produces four output files that we
@@ -266,54 +302,25 @@ if [[ $FILTER == trimmomatic ]]; then
     base="${base}.trim"
     fwd_trim_s=$tmpd/$fwd$base.s.fastq
     rev_trim_s=$tmpd/$rev$base.s.fastq
-    if $KEEPALL; then
-        fwd_trim=$fwd$base.fastq
-        rev_trim=$rev$base.fastq
-    else
-        fwd_trim=$tmpd/$fwd$base.tmp.fastq
-        rev_trim=$tmpd/$rev$base.tmp.fastq
-    fi
-
-    if $DEREPLICATION; then
-        fwd_trim_in_tmp="$tmpd/$fwd$base.in_tmp.fastq"
-        rev_trim_in_tmp="$tmpd/$rev$base.in_tmp.fastq"
-        {
-            # make input files real for Trimmomatic consumption
-            cat "$fwd_trim_in" > "$fwd_trim_in_tmp" &
-            cat "$rev_trim_in" > "$rev_trim_in_tmp" &
-            wait
-        }
-    else
-        fwd_trim_in_tmp=$fwd_trim_in
-        rev_trim_in_tmp=$rev_trim_in
-    fi
 
     info1 "Start adapter + quality trimming..."
 
-    post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
 
-    {
-        TrimmomaticPE \
-            -threads "$CPUS" \
-            "$fwd_trim_in_tmp" "$rev_trim_in_tmp" \
-            "$fwd_trim" "$fwd_trim_s" "$rev_trim" "$rev_trim_s" \
-            ILLUMINACLIP:"$ADAPTERS":2:30:10:1:true \
-            LEADING:3 TRAILING:3 \
-            SLIDINGWINDOW:4:20 \
-            MINLEN:20
+    TrimmomaticPE \
+        -threads "$CPUS" \
+        "$fwd_trim_in" "$rev_trim_in" \
+        "$tmp_fwd_final" "$fwd_trim_s" "$tmp_rev_final" "$rev_trim_s" \
+        ILLUMINACLIP:"$ADAPTERS":2:30:10:1:true \
+        LEADING:3 TRAILING:3 \
+        SLIDINGWINDOW:4:20 \
+        MINLEN:20
 
-        # re-pair singles
-        info1 "Re-pairing Trimmomatic output..."
-        cat "$fwd_trim_s" >> "$fwd_trim"
-        grep '^@' "$fwd_trim_s" | sed -r 's/ 1/ 2/; s/$/\nN\n+\n!/' >> "$rev_trim"
-        cat "$rev_trim_s" >> "$rev_trim"
-        grep '^@' "$rev_trim_s" | sed -r 's/ 2/ 1/; s/$/\nN\n+\n!/' >> "$fwd_trim"
-
-        # interleave and re-establish piping
-        info1 "Interleaving trimmed read pairs..."
-        python3 -m omics.interleave "${V[@]}" "$fwd_trim" "$rev_trim" > "$post_trim"
-    } &
+    # re-pair singles
+    info1 "Pairing up singles and adding to Trimmomatic output..."
+    cat "$fwd_trim_s" >> "$tmp_fwd_final"
+    grep -E '^@[^ ]+:[0-9]+:[0-9]+ 1' "$fwd_trim_s" | sed -r 's/ 1/ 2/; s/$/\nN\n+\n!/' >> "$tmp_rev_final"
+    cat "$rev_trim_s" >> "$tmp_rev_final"
+    grep -E '^@[^ ]+:[0-9]+:[0-9]+ 2' "$rev_trim_s" | sed -r 's/ 2/ 1/; s/$/\nN\n+\n!/' >> "$tmp_fwd_final"
 
 elif [[ $FILTER == scythe ]]; then
     info1 "Start adapter trimming..."
@@ -344,9 +351,7 @@ elif [[ $FILTER == scythe ]]; then
     info1 "Start quality score trimming..."
     oldbase=$base
     base="${base}.sickle"
-    post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
-    sickle pe -t sanger -c "$sickle_in" -M "$post_trim" &
+    sickle pe -t sanger -c "$sickle_in" -M "$tmp_int_final"
 
 elif [[ $FILTER == bbtools ]]; then
     base=$base.rqcfilter
@@ -373,83 +378,76 @@ elif [[ $FILTER == bbtools ]]; then
             opticaldupes=t
         )
     fi
-    rqcfilter2 "${rqcfilter2_args[@]}" 2> "$rqcfilter2_out"/log
+    rqcfilter2 "${rqcfilter2_args[@]}" |& tee "$rqcfilter2_out"/log
     filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
-    post_trim=$tmpd/int$base.fastq
-    gunzip -c "$(realpath "$filtered_fastq")" > "$post_trim"
+    gunzip -c "$(realpath "$filtered_fastq")" > "$tmp_int_final"
 elif [[ $FILTER == derek-bbduk ]]; then
     base=$base.derek-bbduk
-    post_trim=$tmpd/int$base.fastq
-    mkfifo "$post_trim"
+    (
+        cd "$tmpd"
+        # adapted from Derek's bbmap_qc.sh
+        bbduk in1="$WORK_DIR/$fwd_trim_in" in2="$WORK_DIR/$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
 
-    # adapted from Derek's bbmap_qc.sh
-    bbduk in1="$fwd_trim_in" in2="$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
+        # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
+        info1 "Removing 5' adapters"
+        bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
 
-    # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
-    info1 "Removing 5' adapters"
-    bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
+        # Screen for kmers of length 31 that match PhiX (a standard Illumina spike-in) and remove them from reads:
+        info1 "Remove PhiX spike-in reads"
+        gunzip -c "$RQCFILTERDATA"/phix174_ill.ref.fa.gz > "$tmpd"/phix174_ill.ref.fa
+        bbduk in1="$tmpd"/adtrim_fwd.fastq in2="$tmpd"/adtrim_rev.fastq out1="$tmpd"/adtrim_clean_fwd.fastq out2="$tmpd"/adtrim_clean_rev.fastq outm=PhiX_matched.fastq ref="$RQCFILTERDATA"/phix174_ill.ref.fa.gz k=31 hdist=1 stats=phix_clean_stats.txt threads="$CPUS"
 
-    # Screen for kmers of length 31 that match PhiX (a standard Illumina spike-in) and remove them from reads:
-    info1 "Remove PhiX spike-in reads"
-    gunzip -c "$RQCFILTERDATA"/phix174_ill.ref.fa.gz > "$tmpd"/phix174_ill.ref.fa
-    bbduk in1="$tmpd"/adtrim_fwd.fastq in2="$tmpd"/adtrim_rev.fastq out1="$tmpd"/adtrim_clean_fwd.fastq out2="$tmpd"/adtrim_clean_rev.fastq outm=PhiX_matched.fastq ref="$RQCFILTERDATA"/phix174_ill.ref.fa.gz k=31 hdist=1 stats=phix_clean_stats.txt threads="$CPUS"
+        # Trim bases with Phred quality score below 15. After trimming remove reads with length <70 bp:
+        info1 "Quality trim bases with Q score below 15"
+        bbduk in1="$tmpd"/adtrim_clean_fwd.fastq in2="$tmpd"/adtrim_clean_rev.fastq out1="$tmpd"/adtrim_clean_qtrim_fwd.fastq out2="$tmpd"/adtrim_clean_qtrim_rev.fastq qtrim=rl trimq=15 minlen=75 threads="$CPUS"
 
-    # Trim bases with Phred quality score below 15. After trimming remove reads with length <70 bp:
-    info1 "Quality trim bases with Q score below 15"
-    bbduk in1="$tmpd"/adtrim_clean_fwd.fastq in2="$tmpd"/adtrim_clean_rev.fastq out1="$tmpd"/adtrim_clean_qtrim_fwd.fastq out2="$tmpd"/adtrim_clean_qtrim_rev.fastq qtrim=rl trimq=15 minlen=75 threads="$CPUS"
-
-    # Dereplicate read pairs that are 100% identical:
-    info1 "Deduplicating"
-    omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
+        # Dereplicate read pairs that are 100% identical:
+        info1 "Deduplicating"
+        omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
+    )
 
     # interleave and re-establish piping
-    {
-        info1 "Interleaving trimmed read pairs..."
-        omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$post_trim"
-    } &
+    info1 "Interleaving trimmed read pairs..."
+    omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$tmp_int_final"
 
 else
     abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
 fi
-# $KEEPALL || rm -f -- "int$oldbase.fastq"
 
 oldbase=$base
 base=".$FINAL"
+fwd_final=$(basename "$tmp_fwd_final")
+rev_final=$(basename "$tmp_rev_final")
+int_final=$(basename "$tmp_int_final")
+
+if [[ ! -e $tmp_int_final ]]; then
+    # if needed for some filters
+    info1 "Interleaving trimmed read pairs..."
+    python3 -m omics.interleave --check "${V[@]}" "$tmp_fwd_final" "$tmp_rev_final" > "$tmp_int_final"
+fi
+
+cp -p -- "$tmp_int_final" "$int_final" &
 
 if $INTERLEAVE_FASTA; then
     info1 "Start converting to fasta..."
-    # copy post_trim
-    post_trim_orig=$post_trim
-    post_trim=$post_trim.copy
-    q2a_in=$tmpd/q2a_in
-    mkfifo "$post_trim" "$q2a_in"
-    tee "$q2a_in" < "$post_trim_orig" > "$post_trim" &
-    python3 -m omics.fastq2fasta "${V[@]}" < "$q2a_in" > "int$base.fasta" &
+    python3 -m omics.fastq2fasta "${V[@]}" < "$tmp_int_final" > "int.$FINAL.fasta" &
 fi
 
-info1 "Separating read directions again..."
-fwd_sep_out=$tmpd/$fwd$oldbase.fastq
-rev_sep_out=$tmpd/$rev$oldbase.fastq
-sep_in=$tmpd/sep_in
-int_final=int$base.fastq
-mkfifo "$fwd_sep_out" "$rev_sep_out" "$sep_in"
-tee "$sep_in" < "$post_trim" > "$int_final" &
-separate-interleaved "${V[@]}" -f "$fwd_sep_out" -r "$rev_sep_out" "$sep_in" &
+if [[ ! -e "$tmp_fwd_final" || ! -e "$tmp_rev_final" ]]; then
+    # as needed for some filter modes
+    info1 "Separating read directions..."
+    separate-interleaved "${V[@]}" -f "$tmp_fwd_final" -r "$tmp_rev_final" "$tmp_int_final"
+fi
 
-# copy separate output 
-fwd_final=$fwd$base.fastq
-rev_final=$rev$base.fastq
-fwd_fastqc_2_in=$tmpd/fqc/$fwd$base.fastq
-rev_fastqc_2_in=$tmpd/fqc/$rev$base.fastq
-mkfifo "$fwd_fastqc_2_in" "$rev_fastqc_2_in"
-tee "$fwd_fastqc_2_in" < "$fwd_sep_out" > "$fwd_final" &
-tee "$rev_fastqc_2_in" < "$rev_sep_out" > "$rev_final" &
+{
+    cp -p -- "$tmp_fwd_final" "$fwd_final"
+    cp -p -- "$tmp_rev_final" "$rev_final"
+} &
+
 info1 "Starting post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 "$fwd_fastqc_2_in" "$rev_fastqc_2_in" &>> FASTQC/fastqc.log &
-#wait %fastqc
-#$INTERLEAVE_FASTA && wait %python3
-#$KEEPALL || rm -f -- "$fwd$oldbase.fastq" "$rev$oldbase.fastq"
-$KEEPALL || clean_intermediates
+fastqc -o FASTQC -f fastq -t 2 "$tmp_fwd_final" "$tmp_rev_final" &>> FASTQC/fastqc.log
+
+# TODO: job waiting code needs re-work after getting rid of most piping
 
 # map cmd-line sub-strings to job description
 declare -A wait_list
@@ -484,6 +482,10 @@ for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
    fi
 done
 
+if $KEEPALL; then
+    info1 "Copying intermediate files..."
+    find "$tmpd" -type f -print0 | xargs -0 cp "${V[@]}" -n -t ./ --
+fi
 info1 "All done!"
 
 
