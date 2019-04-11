@@ -185,23 +185,37 @@ rev=$(basename "$REV_FASTQ" .fastq)
 [ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames are equal?"
 
 clean_all () {
-    clean_intermediates
-    # clean final results
+    clean_some all
+    # clean all final results
     $RM -rf -- FASTQC rqcfilter2_out
-    $RM -f -- {sfwd,srev}{.derep,}.scythe.fastq
-    $RM -f -- {$fwd,$rev}{.derep,}.matches.fastq
-    $RM -f -- {int,$fwd,$rev}."$FINAL".fast{a,q}
 }
 
-clean_intermediates () {
-    # clean up intermediate results
-    $RM -f -- {$fwd,$rev}.derep.fastq
-    $RM -f -- {int,$fwd,$rev}{.derep,}.scythe{.sickle,}.fastq
+clean_some () {
+    # only clean files that are about to be re-created in a regular run
+    # TODO: add intermediate files?
+    local all=false
+    [[ $# -gt 0 && $1 == all ]] && all=true
+    $all || info1 "Removing previously generated results..."
+    $RM -rf -- FASTQC/"${fwd}"_* FASTQC/"${rev}"_*
+    $RM -rf -- FASTQC/"${fwd}.${FINAL}"_* "FASTQC/${rev}.${FINAL}"_*
+    $RM -f -- {int,$fwd,$rev}."$FINAL".fastq
+    $INTERLEAVE_FASTA && $RM -f -- int."$FINAL".fasta
+    if [[ $FILTER == scythe || $all ]]; then
+       $RM -f -- {$fwd,$rev}{.derep,}.{matches,scythe}.fastq
+       $RM -f -- {$fwd,$rev}.derep.fastq
+
+    fi
+    if [[ $FILTER == trimmomatic || $all ]]; then
+        $RM -f -- {$fwd,$rev}{.derep,}.trim.s.fastq
+        $RM -f -- {$fwd,$rev}.derep.fastq
+    fi
 }
 
 
-clean_all
-! $CLEAN_ONLY || exit 0
+if $CLEAN_ONLY; then
+    clean_all 
+    exit
+fi
 
 clean_up () {
     # kill background
@@ -216,13 +230,18 @@ clean_up () {
     done
     # clean temp data
     [[ -v tmpd ]] || exit 0
+    $KEEPALL || info1 "Erasing intermediate results (keep them with --keep-all)..."
     debug "$(ls -Rlrth "$tmpd")"
+    $RM -rf -- "$tmpd"
     rm -rf -- "$tmpd"
     debug "Cleanup done"
 }
 trap clean_up EXIT
 tmpd=$(mktemp -d)
 debug "Using temp dir: $tmpd"
+
+# clean up first
+clean_some
 
 $MKDIR -p FASTQC
 info1 "Starting pre-QC fastqc..."
@@ -445,9 +464,9 @@ for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
    fi
 done
 
-if ! $KEEPALL; then
-    info1 "Erasing some intermediate results (keep them with --keep-all)..."
-    clean_intermediates
+if $KEEPALL; then
+    info1 "Copying intermediate files..."
+    find "$tmpd" -type f -print0 | xargs -0 cp "${V[@]}" -n -t ./ --
 fi
 info1 "All done!"
 
