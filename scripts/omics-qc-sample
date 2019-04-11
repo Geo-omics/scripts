@@ -254,6 +254,10 @@ else
 fi
 
 oldbase=$base
+tmp_fwd_final=$tmpd/$fwd.$FINAL.fastq
+tmp_rev_final=$tmpd/$rev.$FINAL.fastq
+tmp_int_final=$tmpd/int.$FINAL.fastq
+
 if [[ $FILTER == trimmomatic ]]; then
     # Trimmomatic's makes the data streaming more complicated:  It's seems not
     # possible to use fifos as input and it produces four output files that we
@@ -263,37 +267,25 @@ if [[ $FILTER == trimmomatic ]]; then
     base="${base}.trim"
     fwd_trim_s=$tmpd/$fwd$base.s.fastq
     rev_trim_s=$tmpd/$rev$base.s.fastq
-    fwd_trim=$tmpd/$fwd$base.tmp.fastq
-    rev_trim=$tmpd/$rev$base.tmp.fastq
 
     info1 "Start adapter + quality trimming..."
 
-    post_trim=$tmpd/int$base.fastq
 
     TrimmomaticPE \
         -threads "$CPUS" \
         "$fwd_trim_in" "$rev_trim_in" \
-        "$fwd_trim" "$fwd_trim_s" "$rev_trim" "$rev_trim_s" \
+        "$tmp_fwd_final" "$fwd_trim_s" "$tmp_rev_final" "$rev_trim_s" \
         ILLUMINACLIP:"$ADAPTERS":2:30:10:1:true \
         LEADING:3 TRAILING:3 \
         SLIDINGWINDOW:4:20 \
         MINLEN:20
 
     # re-pair singles
-    info1 "Re-pairing Trimmomatic output..."
-    cat "$fwd_trim_s" >> "$fwd_trim"
-    grep -E '^@[^ ]+:[0-9]+:[0-9]+ 1' "$fwd_trim_s" | sed -r 's/ 1/ 2/; s/$/\nN\n+\n!/' >> "$rev_trim"
-    cat "$rev_trim_s" >> "$rev_trim"
-    grep -E '^@[^ ]+:[0-9]+:[0-9]+ 2' "$rev_trim_s" | sed -r 's/ 2/ 1/; s/$/\nN\n+\n!/' >> "$fwd_trim"
-
-    if $KEEPALL; then
-        cp -p "${V[@]}" -- "$fwd_trim" "$fwd$base.fastq"
-        cp -p "${V[@]}" -- "$rev_trim" "$rev$base.fastq"
-    fi
-
-    # interleave and re-establish piping
-    info1 "Interleaving trimmed read pairs..."
-    python3 -m omics.interleave "${V[@]}" "$fwd_trim" "$rev_trim" > "$post_trim"
+    info1 "Pairing up singles and adding to Trimmomatic output..."
+    cat "$fwd_trim_s" >> "$tmp_fwd_final"
+    grep -E '^@[^ ]+:[0-9]+:[0-9]+ 1' "$fwd_trim_s" | sed -r 's/ 1/ 2/; s/$/\nN\n+\n!/' >> "$tmp_rev_final"
+    cat "$rev_trim_s" >> "$tmp_rev_final"
+    grep -E '^@[^ ]+:[0-9]+:[0-9]+ 2' "$rev_trim_s" | sed -r 's/ 2/ 1/; s/$/\nN\n+\n!/' >> "$tmp_fwd_final"
 
 elif [[ $FILTER == scythe ]]; then
     info1 "Start adapter trimming..."
@@ -324,8 +316,7 @@ elif [[ $FILTER == scythe ]]; then
     info1 "Start quality score trimming..."
     oldbase=$base
     base="${base}.sickle"
-    post_trim=$tmpd/int$base.fastq
-    sickle pe -t sanger -c "$sickle_in" -M "$post_trim"
+    sickle pe -t sanger -c "$sickle_in" -M "$tmp_int_final"
 
 elif [[ $FILTER == bbtools ]]; then
     base=$base.rqcfilter
@@ -354,11 +345,9 @@ elif [[ $FILTER == bbtools ]]; then
     fi
     rqcfilter2 "${rqcfilter2_args[@]}" 2> "$rqcfilter2_out"/log
     filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
-    post_trim=$tmpd/int$base.fastq
-    gunzip -c "$(realpath "$filtered_fastq")" > "$post_trim"
+    gunzip -c "$(realpath "$filtered_fastq")" > "$tmp_int_final"
 elif [[ $FILTER == derek-bbduk ]]; then
     base=$base.derek-bbduk
-    post_trim=$tmpd/int$base.fastq
 
     # adapted from Derek's bbmap_qc.sh
     bbduk in1="$fwd_trim_in" in2="$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
@@ -382,33 +371,44 @@ elif [[ $FILTER == derek-bbduk ]]; then
 
     # interleave and re-establish piping
     info1 "Interleaving trimmed read pairs..."
-    omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$post_trim"
+    omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$tmp_int_final"
 
 else
     abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
 fi
 
-cp -p -- "$post_trim" "int$base.fastq"
 oldbase=$base
 base=".$FINAL"
-fwd_final=$fwd$base.fastq
-rev_final=$rev$base.fastq
+fwd_final=$(basename "$tmp_fwd_final")
+rev_final=$(basename "$tmp_rev_final")
+int_final=$(basename "$tmp_int_final")
+
+if [[ ! -e $tmp_int_final ]]; then
+    # if needed for some filters
+    info1 "Interleaving trimmed read pairs..."
+    python3 -m omics.interleave --check "${V[@]}" "$tmp_fwd_final" "$tmp_rev_final" > "$tmp_int_final"
+fi
+
+cp -p -- "$tmp_int_final" "$int_final" &
 
 if $INTERLEAVE_FASTA; then
     info1 "Start converting to fasta..."
-    python3 -m omics.fastq2fasta "${V[@]}" < "$post_trim" > "int$base.fasta" &
+    python3 -m omics.fastq2fasta "${V[@]}" < "$tmp_int_final" > "int.$FINAL.fasta" &
 fi
 
-info1 "Separating read directions again..."
-separate-interleaved "${V[@]}" -f "$tmpd/$fwd_final" -r "$tmpd/$rev_final" "$post_trim"
+if [[ ! -e "$tmp_fwd_final" || ! -e "$tmp_rev_final" ]]; then
+    # as needed for some filter modes
+    info1 "Separating read directions..."
+    separate-interleaved "${V[@]}" -f "$tmp_fwd_final" -r "$tmp_rev_final" "$tmp_int_final"
+fi
 
 {
-    cp -p -- "$tmpd/$fwd_final" "$fwd_final"
-    cp -p -- "$tmpd/$rev_final" "$rev_final"
+    cp -p -- "$tmp_fwd_final" "$fwd_final"
+    cp -p -- "$tmp_rev_final" "$rev_final"
 } &
 
 info1 "Starting post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 "$tmpd/$fwd_final" "$tmpd/$rev_final" &>> FASTQC/fastqc.log
+fastqc -o FASTQC -f fastq -t 2 "$tmp_fwd_final" "$tmp_rev_final" &>> FASTQC/fastqc.log
 
 # TODO: job waiting code needs re-work after getting rid of most piping
 
