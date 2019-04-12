@@ -139,6 +139,9 @@ class OmicsArgParser(argparse.ArgumentParser):
             print(__version__)
             self.exit()
 
+        if 'OMICS_DEBUG' in environ:
+            args.traceback = True
+
         try:
             project = get_project(args.project_home)
         except (AttributeError, OmicsProjectNotFound):
