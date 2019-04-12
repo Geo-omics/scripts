@@ -212,6 +212,21 @@ clean_some () {
     if [[ $FILTER == bbtools || $all ]]; then
         $RM -rf -- rqcfilter2_out
     fi
+    if [[ $FILTER == derek-bbduk || $all ]]; then
+        $RM -f -- rtrim_fwd.fastq
+        $RM -f -- adtrim_clean_fwd.fastq
+        $RM -f -- adtrim_clean_rev.fastq
+        $RM -f -- adtrim_clean_qtrim_rev.fastq
+        $RM -f -- adtrim_clean_qtrim_rev.derep.fastq
+        $RM -f -- adtrim_rev.fastq
+        $RM -f -- rtrim_rev.fastq
+        $RM -f -- phix_clean_stats.txt
+        $RM -f -- phix174_ill.ref.fa
+        $RM -f -- PhiX_matched.fastq
+        $RM -f -- adtrim_fwd.fastq
+        $RM -f -- adtrim_clean_qtrim_fwd.fastq
+        $RM -f -- adtrim_clean_qtrim_fwd.derep.fastq
+    fi
 }
 
 
