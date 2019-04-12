@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.138-1) unstable; urgency=medium
+
+  * [omics] Set traceback mode via OMICS_DEBUG env variable
+  * [qc] Also clean derek-bbduk related intermediate files
+
+ -- Robert <heinro@umich.edu>  Fri, 12 Apr 2019 10:22:39 -0400
+
 geo-omics-scripts (1.0.137-1) unstable; urgency=medium
 
   * [comics] Speed up building new images from sandbox
