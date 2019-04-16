@@ -216,7 +216,7 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
                     sample,
                     outfile,
                     series,
-                    verbosity
+                    verbosity,
                 )
             ] = (sample, direction)
 
@@ -340,7 +340,9 @@ def main(argv=None):
         argp.exit('Not a directory: {}'.format(args.dest))
 
     verbosity = args.verbosity
-    verbose = verbosity >= DEFAULT_VERBOSITY + 2
+    quiet = verbosity < DEFAULT_VERBOSITY
+    verbose = verbosity > DEFAULT_VERBOSITY
+    very_verbose = verbosity > DEFAULT_VERBOSITY + 1
 
     suffices = args.suffix.split(',')
     files = []
@@ -355,15 +357,15 @@ def main(argv=None):
             argp.error('File or directory not found: {}'.format(i))
 
     if files:
-        if verbosity >= DEFAULT_VERBOSITY:
+        if not quiet:
             print('Found {} read files.'.format(len(files)))
-        if verbosity >= DEFAULT_VERBOSITY + 2:
+        if very_verbose:
             for i in files:
                 print('  ->', i)
     else:
         argp.error('No files found.')
 
-    if verbosity >= DEFAULT_VERBOSITY + 2:
+    if very_verbose:
         print('Using {} threads.'.format(args.threads))
 
     files = list(set(files))
@@ -408,7 +410,7 @@ def main(argv=None):
                     else:
                         # was an extract/copy job
                         outfile = Path(fut.result())
-                        if verbosity >= DEFAULT_VERBOSITY + 2:
+                        if very_verbose:
                             print(
                                 'Done: {} {}'.format(
                                     sample,
@@ -444,7 +446,7 @@ def main(argv=None):
             print('{}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
             sys.exit(1)
 
-    if verbosity >= 1:
+    if not quiet:
         print('Processed {} samples'.format(samp_count))
 
 
