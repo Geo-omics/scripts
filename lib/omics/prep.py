@@ -3,7 +3,7 @@ Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
-from itertools import groupby
+from itertools import groupby, zip_longest
 from pathlib import Path
 import re
 import shutil
@@ -229,6 +229,8 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
 
     :param Path outfile: Output file
     :param series: List of input files
+
+    Returns name of output file
     """
     with outfile.open('ab') as outf:
         for i in series:
@@ -249,8 +251,27 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
 
             try:
                 shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
+
             finally:
                 infile.close()
+
+    return outf.name
+
+
+def count_fastq_reads(path, verbose=False):
+    """
+    Count number of reads in fastq file
+    """
+    count = 0
+    args = [iter(path.open('rb'))] * 4
+    if verbose:
+        print('Start counting reads for {}...'.format(path))
+    for read in zip_longest(*args):
+        if read[-1] is None:
+            raise RuntimeError('Line count is not a multiple of 4: {}, read '
+                               'count at {}'.format(path, count))
+        count += 1
+    return count
 
 
 def main(argv=None):
@@ -275,6 +296,11 @@ def main(argv=None):
         metavar='PATH',
         default='.',
         help='Destination directory, by default the current working directory',
+    )
+    argp.add_argument(
+        '--count-reads',
+        action='store_true',
+        help='Make simple read-count statistics',
     )
     argp.add_argument(
         '--force', '-f',
@@ -314,6 +340,7 @@ def main(argv=None):
         argp.exit('Not a directory: {}'.format(args.dest))
 
     verbosity = args.verbosity
+    verbose = verbosity >= DEFAULT_VERBOSITY + 2
 
     suffices = args.suffix.split(',')
     files = []
@@ -370,17 +397,36 @@ def main(argv=None):
                     )
                 )
 
-            for fut in as_completed(futures.keys()):
-                if verbosity >= DEFAULT_VERBOSITY + 2:
-                    sample, direction = futures[fut]
-                    print('Done: {} {}'.format(
-                        sample,
-                        'fwd' if direction == 1 else 'rev'
-                    ))
-                if fut.exception() is not None:
-                    print('Failed to write: {}: {}: {}'
-                          ''.format(*futures[fut], fut.result()),
-                          file=sys.stderr)
+            while futures:
+                for fut in as_completed(futures.keys()):
+                    try:
+                        sample, direction = futures[fut]
+                    except TypeError:
+                        # counting job
+                        print('{}: {} reads'
+                              ''.format(futures[fut], fut.result()))
+                    else:
+                        # was an extract/copy job
+                        outfile = Path(fut.result())
+                        if verbosity >= DEFAULT_VERBOSITY + 2:
+                            print(
+                                'Done: {} {}'.format(
+                                    sample,
+                                    'fwd' if direction == 1 else 'rev'
+                                ),
+                                end=''
+                            )
+                        if args.count_reads and direction == 1:
+                            futures[e.submit(
+                                count_fastq_reads,
+                                outfile,
+                                verbose=verbose,
+                            )] = outfile
+                        if fut.exception() is not None:
+                            print('Failed to write: {}: {}: {}'
+                                  ''.format(sample, direction, outfile),
+                                  file=sys.stderr)
+                    del futures[fut]
 
     except FileNameDoesNotMatch as e:
         print('The name of file {} does not follow the supported pattern:\n'
