@@ -209,17 +209,12 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
                              ''.format(direction))
         series = list(series)
 
+        args = (sample, outfile, series, verbosity)
         if executor is None:
-            _do_extract_and_copy(outfile, series)
+            _do_extract_and_copy(*args)
         else:
             futures[
-                executor.submit(
-                    _do_extract_and_copy,
-                    sample,
-                    outfile,
-                    series,
-                    verbosity,
-                )
+                executor.submit(_do_extract_and_copy, *args)
             ] = (sample, direction)
 
     return futures
