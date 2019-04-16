@@ -268,8 +268,11 @@ def count_fastq_reads(path, verbose=False):
         print('Start counting reads for {}...'.format(path))
     for read in zip_longest(*args):
         if read[-1] is None:
-            raise RuntimeError('Line count is not a multiple of 4: {}, read '
-                               'count at {}'.format(path, count))
+            raise RuntimeError(
+                'Line count is not a multiple of 4: {}, read count at {}\n'
+                'Last lines are:\n{}'
+                ''.format(path, count, '\n'.join([str(i) for i in read]))
+            )
         count += 1
     return count
 
