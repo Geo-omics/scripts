@@ -373,6 +373,7 @@ def main(argv=None):
 
     files = list(set(files))
     samp_count = 0
+    read_counts = {}
 
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as e:
@@ -404,13 +405,23 @@ def main(argv=None):
 
             while futures:
                 for fut in as_completed(futures.keys()):
-                    try:
+                    job_meta = futures[fut]
+                    if len(job_meta) == 1:
+                        # read counting job
+                        sample = futures[fut]
+                        count = fut.result()
+                        if sample in read_counts:
+                            raise RuntimeError(
+                                'Already counted reads for {} (internal error)'
+                                ''.format(sample)
+                            )
+                        else:
+                            read_counts[sample] = count
+                            if verbose:
+                                print('{}: {} reads'.format(sample, count))
+                        # extr/copy job returns tuple, count job single value
                         sample, direction = futures[fut]
-                    except TypeError:
-                        # counting job
-                        print('{}: {} reads'
-                              ''.format(futures[fut], fut.result()))
-                    else:
+                    elif len(job_meta) == 2:
                         # was an extract/copy job
                         outfile = Path(fut.result())
                         if very_verbose:
@@ -426,11 +437,17 @@ def main(argv=None):
                                 count_fastq_reads,
                                 outfile,
                                 verbose=verbose,
-                            )] = outfile
+                            )] = (sample, )
                         if fut.exception() is not None:
                             print('Failed to write: {}: {}: {}'
                                   ''.format(sample, direction, outfile),
                                   file=sys.stderr)
+                    else:
+                        raise RuntimeError(
+                            '(internal error) invalid futures structure: '
+                            '{}: {}: {}'
+                            ''.format(e.__class__.__name__, e, job_meta)
+                        )
                     del futures[fut]
 
     except FileNameDoesNotMatch as e:
