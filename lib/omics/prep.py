@@ -11,6 +11,8 @@ import sys
 
 from . import get_argparser, DEFAULT_VERBOSITY
 
+READ_COUNT_FILE_NAME = 'read_count.tsv'
+
 FORWARD_READS_FILE = 'fwd.fastq'
 REVERSE_READS_FILE = 'rev.fastq'
 
@@ -408,7 +410,7 @@ def main(argv=None):
                     job_meta = futures[fut]
                     if len(job_meta) == 1:
                         # read counting job
-                        sample = futures[fut]
+                        sample = futures[fut][0]
                         count = fut.result()
                         if sample in read_counts:
                             raise RuntimeError(
@@ -465,6 +467,16 @@ def main(argv=None):
         else:
             print('{}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
             sys.exit(1)
+
+    with open(READ_COUNT_FILE_NAME, 'w') as f:
+        for sample, count in sorted(read_counts.items()):
+            out = '{}\t{}\n'.format(sample, count)
+            f.write(out)
+            if verbose:
+                print(out, end='')
+
+    if verbose:
+        print('read counts written to', READ_COUNT_FILE_NAME)
 
     if not quiet:
         print('Processed {} samples'.format(samp_count))
