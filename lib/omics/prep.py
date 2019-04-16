@@ -404,7 +404,7 @@ def main(argv=None):
                 for fut in as_completed(futures.keys()):
                     job_meta = futures[fut]
                     if len(job_meta) == 1:
-                        # read counting job
+                        # read counting job, job_meta is 1-tuple
                         sample = futures[fut][0]
                         count = fut.result()
                         if sample in read_counts:
@@ -416,10 +416,9 @@ def main(argv=None):
                             read_counts[sample] = count
                             if verbose:
                                 print('{}: {} reads'.format(sample, count))
-                        # extr/copy job returns tuple, count job single value
-                        sample, direction = futures[fut]
                     elif len(job_meta) == 2:
-                        # was an extract/copy job
+                        # was an extract/copy job, job_meta is 2-tuple
+                        sample, direction = futures[fut]
                         outfile = Path(fut.result())
                         if very_verbose:
                             print(
