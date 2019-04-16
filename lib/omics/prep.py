@@ -194,8 +194,13 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
     fwd_outfile = destdir / FORWARD_READS_FILE
     rev_outfile = destdir / REVERSE_READS_FILE
     for i in [fwd_outfile, rev_outfile]:
-        if i.is_file() and not force:
-            raise FileExistsError(i)
+        if i.is_file():
+            if force:
+                with i.open('wb'):
+                    # truncating
+                    pass
+            else:
+                raise FileExistsError(i)
 
     for direction, series in groupby(files, key=sample_direction):
         # a 'series' is a bunch of files that got split up, and that we need
