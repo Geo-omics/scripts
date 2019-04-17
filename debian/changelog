@@ -1,3 +1,15 @@
+geo-omics-scripts (1.0.139-1) unstable; urgency=medium
+
+  * [qc] rm ref data file after use
+  * [prep]  Add option to count reads after processing
+  * [prep]  Improve error message when line count is inconsistent
+  * [prep] Write read-count file
+  * [prep] Fix --force option, actually trucate and overwrite existing file
+  * [prep] Plot read counts per sample and save as PDF
+  * [qc] Allow passing custom adapter files to derek-bbduk filter via -a option
+
+ -- Robert <heinro@umich.edu>  Wed, 17 Apr 2019 12:42:58 -0400
+
 geo-omics-scripts (1.0.138-1) unstable; urgency=medium
 
   * [omics] Set traceback mode via OMICS_DEBUG env variable
