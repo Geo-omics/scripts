@@ -113,6 +113,9 @@ set_default_scythe_adapters () {
 set_default_scythe_adapters $ADAPTERS_DEBIAN $ADAPTERS_FLUX $ADAPTERS_VONDAMM
 
 ADAPTERS_TRIMMOMATIC=$RESOURCE_DIR/TruSeq3-PE-2+omics.fa
+# Default rqcfilter2 data will work on omics container
+RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
+ADAPTERS_BBDUK="$RQCFILTERDATA"/adapters2.fa.gz
 
 # default input files as produced by prep script
 FWD_FASTQ=fwd.fastq
@@ -128,8 +131,6 @@ DEREPLICATION=true
 INTERLEAVE_FASTA=true
 # Use Trimmomatic filtering step by default, alternatives are scythe (and sickle) and bbtools
 FILTER=trimmomatic
-# Default rqcfilter2 data will work on omics container
-RQCFILTERDATA=/reference-data/bbtools/RQCFilterData
 #
 DEFAULT_CPUS=2
 
@@ -150,6 +151,8 @@ if [[ ! -v ADAPTERS ]]; then
         ADAPTERS=$ADAPTERS_TRIMMOMATIC
     elif [[ $FILTER == scythe ]]; then
         ADAPTERS=$ADAPTERS_SCYTHE
+    elif [[ $FILTER == derek-bbduk ]]; then
+        ADAPTERS=$ADAPTERS_BBDUK
     fi
 fi
 
@@ -164,13 +167,15 @@ fi
 #########################
 # some input sanitation
 #########################
+if ! [[ $FILTER =~ (bbtools|derek-bbduk|scythe|trimmomatic) ]]; then
+    abort1 "unsupported filter option: \"$FILTER\", allowed are: scythe, trimmomatic, bbtools, derek-bbduk"
+fi
 if [[ $FILTER == bbtools ]] || [[ $FILTER == derek-bbduk ]]; then
     [ -d "$RQCFILTERDATA" ] || abort1 "Reference data for rqcfilter2 not found: $RQCFILTERDATA"
-elif [[ $FILTER == scythe || $FILTER == trimmomatic ]]; then
+fi
+if [[ $FILTER == scythe || $FILTER == trimmomatic || $FILTER == derek-bbduk ]]; then
     [ -r "$ADAPTERS" ] || abort1 "Adapters file not found: $ADAPTERS"
     [ "$VERBOSITY" -lt 2 ] || info1 "Using adapters file: $ADAPTERS"
-else
-    abort1 "unsupported filter option: \"$FILTER\", allowed are: scythe, trimmomatic, bbtools"
 fi
 [ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
@@ -402,11 +407,11 @@ elif [[ $FILTER == derek-bbduk ]]; then
         cd "$tmpd"
         # adapted from Derek's bbmap_qc.sh
         info1 "Removing 3' adapters"
-        bbduk in1="$WORK_DIR/$fwd_trim_in" in2="$WORK_DIR/$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
+        bbduk in1="$WORK_DIR/$fwd_trim_in" in2="$WORK_DIR/$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$ADAPTERS" ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
 
         # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
         info1 "Removing 5' adapters"
-        bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$RQCFILTERDATA"/adapters2.fa.gz ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
+        bbduk in1="$tmpd"/rtrim_fwd.fastq in2="$tmpd"/rtrim_rev.fastq out1="$tmpd"/adtrim_fwd.fastq out2="$tmpd"/adtrim_rev.fastq ref="$ADAPTERS" ktrim=l k=21 mink=8 hdist=2 tpe threads="$CPUS"
 
         # Screen for kmers of length 31 that match PhiX (a standard Illumina spike-in) and remove them from reads:
         info1 "Remove PhiX spike-in reads"
