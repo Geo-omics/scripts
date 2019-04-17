@@ -3,13 +3,17 @@ Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
-from itertools import groupby
+from itertools import groupby, zip_longest
+import matplotlib
+from operator import itemgetter
 from pathlib import Path
 import re
 import shutil
 import sys
 
 from . import get_argparser, DEFAULT_VERBOSITY
+
+READ_COUNT_FILE_NAME = 'read_count.tsv'
 
 FORWARD_READS_FILE = 'fwd.fastq'
 REVERSE_READS_FILE = 'rev.fastq'
@@ -192,8 +196,13 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
     fwd_outfile = destdir / FORWARD_READS_FILE
     rev_outfile = destdir / REVERSE_READS_FILE
     for i in [fwd_outfile, rev_outfile]:
-        if i.is_file() and not force:
-            raise FileExistsError(i)
+        if i.is_file():
+            if force:
+                with i.open('wb'):
+                    # truncating
+                    pass
+            else:
+                raise FileExistsError(i)
 
     for direction, series in groupby(files, key=sample_direction):
         # a 'series' is a bunch of files that got split up, and that we need
@@ -207,17 +216,12 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
                              ''.format(direction))
         series = list(series)
 
+        args = (sample, outfile, series, verbosity)
         if executor is None:
-            _do_extract_and_copy(outfile, series)
+            _do_extract_and_copy(*args)
         else:
             futures[
-                executor.submit(
-                    _do_extract_and_copy,
-                    sample,
-                    outfile,
-                    series,
-                    verbosity
-                )
+                executor.submit(_do_extract_and_copy, *args)
             ] = (sample, direction)
 
     return futures
@@ -229,6 +233,8 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
 
     :param Path outfile: Output file
     :param series: List of input files
+
+    Returns name of output file
     """
     with outfile.open('ab') as outf:
         for i in series:
@@ -249,8 +255,30 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
 
             try:
                 shutil.copyfileobj(infile, outf, 4 * 1024 * 1024)
+
             finally:
                 infile.close()
+
+    return outf.name
+
+
+def count_fastq_reads(path, verbose=False):
+    """
+    Count number of reads in fastq file
+    """
+    count = 0
+    args = [iter(path.open('rb'))] * 4
+    if verbose:
+        print('Start counting reads for {}...'.format(path))
+    for read in zip_longest(*args):
+        if read[-1] is None:
+            raise RuntimeError(
+                'Line count is not a multiple of 4: {}, read count at {}\n'
+                'Last lines are:\n{}'
+                ''.format(path, count, '\n'.join([str(i) for i in read]))
+            )
+        count += 1
+    return count
 
 
 def main(argv=None):
@@ -275,6 +303,11 @@ def main(argv=None):
         metavar='PATH',
         default='.',
         help='Destination directory, by default the current working directory',
+    )
+    argp.add_argument(
+        '--count-reads',
+        action='store_true',
+        help='Make simple read-count statistics',
     )
     argp.add_argument(
         '--force', '-f',
@@ -314,6 +347,9 @@ def main(argv=None):
         argp.exit('Not a directory: {}'.format(args.dest))
 
     verbosity = args.verbosity
+    quiet = verbosity < DEFAULT_VERBOSITY
+    verbose = verbosity > DEFAULT_VERBOSITY
+    very_verbose = verbosity > DEFAULT_VERBOSITY + 1
 
     suffices = args.suffix.split(',')
     files = []
@@ -328,19 +364,20 @@ def main(argv=None):
             argp.error('File or directory not found: {}'.format(i))
 
     if files:
-        if verbosity >= DEFAULT_VERBOSITY:
+        if not quiet:
             print('Found {} read files.'.format(len(files)))
-        if verbosity >= DEFAULT_VERBOSITY + 2:
+        if very_verbose:
             for i in files:
                 print('  ->', i)
     else:
         argp.error('No files found.')
 
-    if verbosity >= DEFAULT_VERBOSITY + 2:
+    if very_verbose:
         print('Using {} threads.'.format(args.threads))
 
     files = list(set(files))
     samp_count = 0
+    read_counts = {}
 
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as e:
@@ -370,17 +407,51 @@ def main(argv=None):
                     )
                 )
 
-            for fut in as_completed(futures.keys()):
-                if verbosity >= DEFAULT_VERBOSITY + 2:
-                    sample, direction = futures[fut]
-                    print('Done: {} {}'.format(
-                        sample,
-                        'fwd' if direction == 1 else 'rev'
-                    ))
-                if fut.exception() is not None:
-                    print('Failed to write: {}: {}: {}'
-                          ''.format(*futures[fut], fut.result()),
-                          file=sys.stderr)
+            while futures:
+                for fut in as_completed(futures.keys()):
+                    job_meta = futures[fut]
+                    if len(job_meta) == 1:
+                        # read counting job, job_meta is 1-tuple
+                        sample = futures[fut][0]
+                        count = fut.result()
+                        if sample in read_counts:
+                            raise RuntimeError(
+                                'Already counted reads for {} (internal error)'
+                                ''.format(sample)
+                            )
+                        else:
+                            read_counts[sample] = count
+                            if verbose:
+                                print('{}: {} reads'.format(sample, count))
+                    elif len(job_meta) == 2:
+                        # was an extract/copy job, job_meta is 2-tuple
+                        sample, direction = futures[fut]
+                        outfile = Path(fut.result())
+                        if very_verbose:
+                            print(
+                                'Done: {} {}'.format(
+                                    sample,
+                                    'fwd' if direction == 1 else 'rev'
+                                ),
+                                end=''
+                            )
+                        if args.count_reads and direction == 1:
+                            futures[e.submit(
+                                count_fastq_reads,
+                                outfile,
+                                verbose=verbose,
+                            )] = (sample, )
+                        if fut.exception() is not None:
+                            print('Failed to write: {}: {}: {}'
+                                  ''.format(sample, direction, outfile),
+                                  file=sys.stderr)
+                    else:
+                        raise RuntimeError(
+                            '(internal error) invalid futures structure: '
+                            '{}: {}: {}'
+                            ''.format(e.__class__.__name__, e, job_meta)
+                        )
+                    del futures[fut]
 
     except FileNameDoesNotMatch as e:
         print('The name of file {} does not follow the supported pattern:\n'
@@ -398,7 +469,35 @@ def main(argv=None):
             print('{}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
             sys.exit(1)
 
-    if verbosity >= 1:
+    if args.count_reads:
+
+        matplotlib.use('pdf')
+        from matplotlib import pyplot
+
+        fig = pyplot.figure()
+        ax = fig.add_subplot(111)
+        data = sorted(read_counts.items(), key=itemgetter(1), reverse=True)
+        samples = [i[0] for i in data]
+        counts = [i[1] for i in data]
+        idx = range(len(data))
+        ax.bar(idx, counts)
+        pyplot.title('Paired-read count per sample')
+        pyplot.ylabel('read count')
+        pyplot.xticks(idx, samples)
+        fig.savefig('read_counts.pdf')
+        pyplot.close()
+
+        with open(READ_COUNT_FILE_NAME, 'w') as f:
+            for sample, count in sorted(read_counts.items()):
+                out = '{}\t{}\n'.format(sample, count)
+                f.write(out)
+                if verbose:
+                    print(out, end='')
+
+        if verbose:
+            print('read counts written to', READ_COUNT_FILE_NAME)
+
+    if not quiet:
         print('Processed {} samples'.format(samp_count))
 
 
