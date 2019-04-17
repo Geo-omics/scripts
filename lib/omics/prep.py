@@ -4,6 +4,8 @@ Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 from itertools import groupby, zip_longest
+import matplotlib
+from operator import itemgetter
 from pathlib import Path
 import re
 import shutil
@@ -467,15 +469,33 @@ def main(argv=None):
             print('{}: {}'.format(e.__class__.__name__, e), file=sys.stderr)
             sys.exit(1)
 
-    with open(READ_COUNT_FILE_NAME, 'w') as f:
-        for sample, count in sorted(read_counts.items()):
-            out = '{}\t{}\n'.format(sample, count)
-            f.write(out)
-            if verbose:
-                print(out, end='')
+    if args.count_reads:
 
-    if verbose:
-        print('read counts written to', READ_COUNT_FILE_NAME)
+        matplotlib.use('pdf')
+        from matplotlib import pyplot
+
+        fig = pyplot.figure()
+        ax = fig.add_subplot(111)
+        data = sorted(read_counts.items(), key=itemgetter(1), reverse=True)
+        samples = [i[0] for i in data]
+        counts = [i[1] for i in data]
+        idx = range(len(data))
+        ax.bar(idx, counts)
+        pyplot.title('Paired-read count per sample')
+        pyplot.ylabel('read count')
+        pyplot.xticks(idx, samples)
+        fig.savefig('read_counts.pdf')
+        pyplot.close()
+
+        with open(READ_COUNT_FILE_NAME, 'w') as f:
+            for sample, count in sorted(read_counts.items()):
+                out = '{}\t{}\n'.format(sample, count)
+                f.write(out)
+                if verbose:
+                    print(out, end='')
+
+        if verbose:
+            print('read counts written to', READ_COUNT_FILE_NAME)
 
     if not quiet:
         print('Processed {} samples'.format(samp_count))
