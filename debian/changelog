@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.140-1) unstable; urgency=medium
+
+  * [mapping] Allow passing extra args to bowtie2 by setting OMICS_BOWTIE2_ARGS
+
+ -- Robert <heinro@umich.edu>  Thu, 18 Apr 2019 14:38:08 -0400
+
 geo-omics-scripts (1.0.139-1) unstable; urgency=medium
 
   * [qc] rm ref data file after use
