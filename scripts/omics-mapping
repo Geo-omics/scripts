@@ -289,6 +289,11 @@ else
     bt2_args+=(-1 "$fwd_reads" -2 "$rev_reads")
 fi
 
+if [[ -v OMICS_BOWTIE2_ARGS ]]; then
+    read -r -a user_bt2_args <<< "$OMICS_BOWTIE2_ARGS"
+    bt2_args+=("${user_bt2_args[@]}")
+fi
+
 sort_args=(
  -@ "$CPUS"
  -O bam
