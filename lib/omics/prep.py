@@ -4,14 +4,13 @@ Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 from itertools import groupby, zip_longest
-import matplotlib
-from operator import itemgetter
 from pathlib import Path
 import re
 import shutil
 import sys
 
 from . import get_argparser, DEFAULT_VERBOSITY
+from omics.read_counts import make_output as write_read_counts
 
 READ_COUNT_FILE_NAME = 'read_count.tsv'
 
@@ -168,7 +167,7 @@ def sample_direction(filename):
 
 
 def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
-         executor=None):
+         skip_existing=False, executor=None):
     """
     Decompress and copy files into sample directory
 
@@ -178,7 +177,8 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
                        differing by 'filenumber' are grouped together.
     :param Path dest: Project directory, destination / output directory
     :param bool force: If true, skip any safety check and overwrite existing
-                       files.
+                       files.  Has no effect if skip_existing is True..
+    :param bool skip_existing: Do nothing if a destination file exists.
     :param executor: A concurrent.futures.Executor object.  If executor is None
                      then all will be done single-threaded.
 
@@ -197,6 +197,12 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
     rev_outfile = destdir / REVERSE_READS_FILE
     for i in [fwd_outfile, rev_outfile]:
         if i.is_file():
+            if skip_existing:
+                if verbosity > 0:
+                    print('Skip sample {}: File exists: {}'.format(sample, i),
+                          file=sys.stderr)
+                return {}
+
             if force:
                 with i.open('wb'):
                     # truncating
@@ -312,7 +318,13 @@ def main(argv=None):
     argp.add_argument(
         '--force', '-f',
         action='store_true',
-        help='Overwrite existing files',
+        help='Overwrite existing files.  This has no effect is used together '
+             'with --skip-existing',
+    )
+    argp.add_argument(
+        '--skip-existing',
+        action='store_true',
+        help='Skip sample when a destination file exists',
     )
     argp.add_argument(
         '--keep-lanes-separate',
@@ -403,6 +415,7 @@ def main(argv=None):
                         dest=dest,
                         force=args.force,
                         verbosity=verbosity,
+                        skip_existing=args.skip_existing,
                         executor=e,
                     )
                 )
@@ -470,29 +483,8 @@ def main(argv=None):
             sys.exit(1)
 
     if args.count_reads:
-
-        matplotlib.use('pdf')
-        from matplotlib import pyplot
-
-        fig = pyplot.figure()
-        ax = fig.add_subplot(111)
-        data = sorted(read_counts.items(), key=itemgetter(1), reverse=True)
-        samples = [i[0] for i in data]
-        counts = [i[1] for i in data]
-        idx = range(len(data))
-        ax.bar(idx, counts)
-        pyplot.title('Paired-read count per sample')
-        pyplot.ylabel('read count')
-        pyplot.xticks(idx, samples)
-        fig.savefig('read_counts.pdf')
-        pyplot.close()
-
         with open(READ_COUNT_FILE_NAME, 'w') as f:
-            for sample, count in sorted(read_counts.items()):
-                out = '{}\t{}\n'.format(sample, count)
-                f.write(out)
-                if verbose:
-                    print(out, end='')
+            write_read_counts(read_counts, f, 'read_counts.pdf')
 
         if verbose:
             print('read counts written to', READ_COUNT_FILE_NAME)
