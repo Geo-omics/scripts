@@ -168,7 +168,7 @@ def sample_direction(filename):
 
 
 def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
-         executor=None):
+         skip_existing=False, executor=None):
     """
     Decompress and copy files into sample directory
 
@@ -178,7 +178,8 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
                        differing by 'filenumber' are grouped together.
     :param Path dest: Project directory, destination / output directory
     :param bool force: If true, skip any safety check and overwrite existing
-                       files.
+                       files.  Has no effect if skip_existing is True..
+    :param bool skip_existing: Do nothing if a destination file exists.
     :param executor: A concurrent.futures.Executor object.  If executor is None
                      then all will be done single-threaded.
 
@@ -197,6 +198,12 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
     rev_outfile = destdir / REVERSE_READS_FILE
     for i in [fwd_outfile, rev_outfile]:
         if i.is_file():
+            if skip_existing:
+                if verbosity > 0:
+                    print('Skip sample {}: File exists: {}'.format(sample, i),
+                          file=sys.stderr)
+                return {}
+
             if force:
                 with i.open('wb'):
                     # truncating
@@ -312,7 +319,13 @@ def main(argv=None):
     argp.add_argument(
         '--force', '-f',
         action='store_true',
-        help='Overwrite existing files',
+        help='Overwrite existing files.  This has no effect is used together '
+             'with --skip-existing',
+    )
+    argp.add_argument(
+        '--skip-existing',
+        action='store_true',
+        help='Skip sample when a destination file exists',
     )
     argp.add_argument(
         '--keep-lanes-separate',
@@ -403,6 +416,7 @@ def main(argv=None):
                         dest=dest,
                         force=args.force,
                         verbosity=verbosity,
+                        skip_existing=args.skip_existing,
                         executor=e,
                     )
                 )
