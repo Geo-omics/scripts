@@ -37,7 +37,7 @@ def main(argv=None):
     argp.add_argument(
         '--pdf',
         metavar='PATH',
-        type=argparse.FileType('w'),
+        type=argparse.FileType('wb'),
         help='Save a read-count plot to a PDF file of given name',
     )
     args = argp.parse_args(argv)
@@ -70,6 +70,8 @@ def main(argv=None):
                   'read count', file=sys.stderr)
         else:
             read_counts[sample] = count_fastaq_reads(path)
+
+    make_output(read_counts, args.out_txt, args.pdf)
 
 
 def count_fastaq_reads(path):
@@ -141,7 +143,7 @@ def plot(read_counts, outfile):
     pyplot.title('Paired-read count per sample')
     pyplot.ylabel('read count')
     pyplot.xticks(idx, samples)
-    fig.savefig('read_counts.pdf')
+    fig.savefig(outfile)
     pyplot.close()
 
 
