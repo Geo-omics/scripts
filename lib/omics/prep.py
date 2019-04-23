@@ -4,14 +4,13 @@ Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 from itertools import groupby, zip_longest
-import matplotlib
-from operator import itemgetter
 from pathlib import Path
 import re
 import shutil
 import sys
 
 from . import get_argparser, DEFAULT_VERBOSITY
+from omics.read_counts import make_output as write_read_counts
 
 READ_COUNT_FILE_NAME = 'read_count.tsv'
 
@@ -484,29 +483,8 @@ def main(argv=None):
             sys.exit(1)
 
     if args.count_reads:
-
-        matplotlib.use('pdf')
-        from matplotlib import pyplot
-
-        fig = pyplot.figure()
-        ax = fig.add_subplot(111)
-        data = sorted(read_counts.items(), key=itemgetter(1), reverse=True)
-        samples = [i[0] for i in data]
-        counts = [i[1] for i in data]
-        idx = range(len(data))
-        ax.bar(idx, counts)
-        pyplot.title('Paired-read count per sample')
-        pyplot.ylabel('read count')
-        pyplot.xticks(idx, samples)
-        fig.savefig('read_counts.pdf')
-        pyplot.close()
-
         with open(READ_COUNT_FILE_NAME, 'w') as f:
-            for sample, count in sorted(read_counts.items()):
-                out = '{}\t{}\n'.format(sample, count)
-                f.write(out)
-                if verbose:
-                    print(out, end='')
+            write_read_counts(read_counts, f, 'read_counts.pdf')
 
         if verbose:
             print('read counts written to', READ_COUNT_FILE_NAME)
