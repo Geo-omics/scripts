@@ -3,7 +3,7 @@ geo-omics-scripts (1.0.141-1) unstable; urgency=medium
   * [prep] Add --skip-existing option
   * [prep] Move read count code into its own subcommand
 
- -- Robert <heinro@umich.edu>  Tue, 23 Apr 2019 16:39:16 -0400
+ -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Tue, 23 Apr 2019 17:16:59 -0400
 
 geo-omics-scripts (1.0.140-1) unstable; urgency=medium
 
