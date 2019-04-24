@@ -253,6 +253,7 @@ clean_up () {
     done
     # clean temp data
     [[ -v tmpd ]] || exit 0
+    info1 "Used $(du -hs "$tmpd") temporary data"
     $KEEPALL || info1 "Erasing intermediate results (keep them with --keep-all)..."
     debug "$(ls -Rlrth "$tmpd")"
     $RM -rf -- "$tmpd"
