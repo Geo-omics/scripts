@@ -125,8 +125,6 @@ MOUNT_POINTS=(
 /dept
 "${geomicro_base}"/geomicro/data9/flux/reference-data:ro
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
-/omics
-/geomicro
 )
 NORC=false
 RCFILE=/.singularity.d/specs/bashrc
