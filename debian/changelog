@@ -1,3 +1,9 @@
+geo-omics-scripts (1.0.143-1) unstable; urgency=medium
+
+  * [qc] Print how much temp storage was used
+
+ -- Robert <heinro@umich.edu>  Wed, 24 Apr 2019 11:16:39 -0400
+
 geo-omics-scripts (1.0.142-1) unstable; urgency=medium
 
   * [read_counts] Fix writing output files when called as subcommand
