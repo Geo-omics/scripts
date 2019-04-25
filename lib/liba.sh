@@ -163,7 +163,7 @@ if which getopt >/dev/null 2>&1; then
         getopt_opts+=(--long $GETOPT_LONG)
     fi
 
-    getopt_opts+=(-- $@)
+    getopt_opts+=(-- "$@")
     if parsed_opts=$(getopt "${getopt_opts[@]}"); then
         :
     else
