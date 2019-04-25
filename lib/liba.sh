@@ -152,15 +152,15 @@ USE_COLOR=true
 usage_err=false
 GETOPT_SHORT=${SHORT_OPTIONS:-}hv
 GETOPT_LONG=${LONG_OPTIONS:-},help,no-color,working-dir:,verbosity:
-if which getopt >/dev/null 2>&1; then
-    getopt_opts=(-o $GETOPT_SHORT --name $SCRIPT_NAME)
+if command -v getopt >/dev/null 2>&1; then
+    getopt_opts=(-o "$GETOPT_SHORT" --name "$SCRIPT_NAME")
 
     if getopt -T || [ "$?" == 4 ]; then
         # GNU getopt available 
 	# for non-GNU getopt (on MacOSX?)
 	# try best effort without handling long options
 	# TODO: the else path needs testing
-        getopt_opts+=(--long $GETOPT_LONG)
+        getopt_opts+=(--long "$GETOPT_LONG")
     fi
 
     getopt_opts+=(-- "$@")
@@ -222,7 +222,7 @@ RED=
 ORANGE=
 ENDCOLOR=
 if [ "$USE_COLOR" == true ]; then
-    if which tput >/dev/null 2>&1 && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
+    if command -v tput >/dev/null 2>&1 && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
 	RED=$(tput setaf 1)
 	ORANGE=$(tput bold)$(tput setaf 1)
 	ENDCOLOR=$(tput sgr0)
@@ -243,7 +243,7 @@ V=$VERBOSE_FLAG
 # check presence of necessary tools
 ####################################
 for i in ${CHECK_PROGS:-}; do
-    which "$i" > /dev/null 2>&1 || abort "$i command is not available."
+    command -v "$i" > /dev/null 2>&1 || abort "$i command is not available."
 done
 
 ##########################
@@ -259,12 +259,12 @@ if [ "$VERBOSITY" -ge 2 ]; then
 else
     # shellcheck disable=SC2034
     {
-	RM=rm
-	MKDIR=mkdir
-	CP=cp
-	MV=mv
-	GUNZIP=gunzip
-	LN=ln
+	RM="rm"
+	MKDIR="mkdir"
+	CP="cp"
+	MV="mv"
+	GUNZIP="gunzip"
+	LN="ln"
     }
 fi
 
