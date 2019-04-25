@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.144-1) unstable; urgency=medium
+
+  * [comics] Do not add binds for geomicrobio servers
+  * [liba.sh] Fix option parsing, quoted strings should be protected now
+
+ -- Robert <heinro@umich.edu>  Thu, 25 Apr 2019 13:31:34 -0400
+
 geo-omics-scripts (1.0.143-1) unstable; urgency=medium
 
   * [qc] Print how much temp storage was used
