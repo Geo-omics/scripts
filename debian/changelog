@@ -1,3 +1,10 @@
+geo-omics-scripts (1.0.145-1) unstable; urgency=medium
+
+  * [liba.sh] Improve consistency in messages
+  * [liba.sh] Enable colors only when both stdout and stderr are on a terminal
+
+ -- Robert <heinro@umich.edu>  Thu, 25 Apr 2019 14:10:21 -0400
+
 geo-omics-scripts (1.0.144-1) unstable; urgency=medium
 
   * [comics] Do not add binds for geomicrobio servers
