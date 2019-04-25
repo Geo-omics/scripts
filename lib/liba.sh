@@ -124,7 +124,7 @@ error() {
 
 abort() {
     # write an error message and exit.  If the last positional parameter is 'usage' then also print the usage text.
-    >&2 echo -e "[$SCRIPT_NAME] [${RED}ABORT${ENDCOLOR}] $1"
+    >&2 echo -e "[$SCRIPT_NAME] [${RED}ERROR${ENDCOLOR}] $1 (${RED}aborting${ENDCOLOR})"
     if [ "$VERBOSITY" -ge 0 ]; then
 	if [[ $# -eq 2 ]]; then
 	    [[ "$2" == "usage" ]] && usage
@@ -221,7 +221,8 @@ fi
 RED=
 ORANGE=
 ENDCOLOR=
-if [ "$USE_COLOR" == true ]; then
+if [[ "$USE_COLOR" == true && -t 1 && -t 2 ]]; then
+    # TODO: enable color separately for stdout and stderr?
     if command -v tput >/dev/null 2>&1 && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
 	RED=$(tput setaf 1)
 	ORANGE=$(tput bold)$(tput setaf 1)
