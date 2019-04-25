@@ -474,46 +474,18 @@ fi
 info1 "Starting post-QC fastqc run..."
 fastqc -o FASTQC -f fastq -t 2 "$tmp_fwd_final" "$tmp_rev_final" &>> FASTQC/fastqc.log
 
-# TODO: job waiting code needs re-work after getting rid of most piping
-
-# map cmd-line sub-strings to job description
-declare -A wait_list
-wait_list=(
-[ fastqc ]="FASTQC"
-[omics.derep]="dereplication"
-[ scythe ]="adapter trimming"
-[omics.interleave]="interleaving"
-[ sickle ]="quality trimming"
-[omics.fastq2fasta]="converting to fasta format"
-[separate-interleave]="separating read directions again"
-)
-
-# map PIDs to job wait list
-declare -A pids
-while read -r line; do
-    pid=$(echo "$line" | sed -r 's/[ ]+/ /g' | cut -d' ' -f2)
-    for i in "${!wait_list[@]}"; do
-        if echo "$line" | grep -q "$i"; then
-            pids["$pid"]="$i"
-            break
-        fi
-    done
-done < <(jobs -l)
-
-# wait for jobs to finish
-for p in $(echo "${!pids[@]}" | sed -r 's/ /\n/g' | sort -n); do
-    if wait "$p"; then
-       info1 "Done: ${wait_list[${pids[$p]}]}"
-   else
-       error1 "${wait_list[${pids[$p]}]}: exit status $?, PID: $pid"
-   fi
-done
-
 if $KEEPALL; then
     info1 "Copying intermediate files..."
     find "$tmpd" -type f -print0 | xargs -0 cp "${V[@]}" -n -t ./ --
 fi
-info1 "All done!"
+jobs_running=$(jobs | grep Running || true)
+if [[ -n "$jobs_running" ]]; then
+    info1 "Still waiting for copy jobs to finish:"
+    info1 "$jobs_running"
+fi
+wait
+jobs
+info1 "QC done, cleaning up..."
 
 
 # gmb: input: fwd.fastq
