@@ -1,3 +1,11 @@
+geo-omics-scripts (1.0.146-1) unstable; urgency=medium
+
+  * [comics] Fix regression, had exec twice with --writable
+  * [qc] Improve robustness of clean up code
+  * [qc] Replace old waiting for bg job code with simpler more robust code
+
+ -- Robert <heinro@umich.edu>  Thu, 25 Apr 2019 16:55:01 -0400
+
 geo-omics-scripts (1.0.145-1) unstable; urgency=medium
 
   * [liba.sh] Improve consistency in messages
