@@ -231,7 +231,7 @@ fi
 cmd=()
 if $WRITE; then
     SINGULARITY_ARGS+=(--writable)
-    cmd+=(exec sudo)
+    cmd+=(sudo)
 fi
 cmd+=(singularity)
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
