@@ -221,7 +221,8 @@ fi
 RED=
 ORANGE=
 ENDCOLOR=
-if [ "$USE_COLOR" == true ]; then
+if [[ "$USE_COLOR" == true && -t 1 && -t 2 ]]; then
+    # TODO: enable color separately for stdout and stderr?
     if command -v tput >/dev/null 2>&1 && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
 	RED=$(tput setaf 1)
 	ORANGE=$(tput bold)$(tput setaf 1)
