@@ -203,6 +203,7 @@ clean_some () {
     $all || info1 "Removing previously generated results..."
     $RM -rf -- FASTQC/"${fwd}"_* FASTQC/"${rev}"_*
     $RM -rf -- FASTQC/"${fwd}.${FINAL}"_* "FASTQC/${rev}.${FINAL}"_*
+    [[ -d FASTQC ]] && rmdir --ignore-fail-on-non-empty FASTQC
     $RM -f -- {int,$fwd,$rev}."$FINAL".fastq
     $INTERLEAVE_FASTA && $RM -f -- int."$FINAL".fasta
     if [[ $FILTER == scythe || $all ]]; then
