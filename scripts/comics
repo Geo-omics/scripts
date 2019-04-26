@@ -225,6 +225,18 @@ if [[ ${#pbs_vars[@]} -gt 0 ]]; then
     done
 fi
 
+# on Flux, try to get requested memory
+if [[ -v PBS_JOBID ]]; then
+    pbs_req_mem=$(qstat -f "${PBS_JOBID}" | grep "req_information.memory.0" | sed 's/.* = //')
+    if [[ $pbs_req_mem =~ ^[0-9]+kb$ ]]; then
+        info "Detected requested memory for PBS job: $pbs_req_mem"
+        export SINGULARITYENV_pbs_req_mem=$pbs_req_mem
+    else
+        warning "Failed to detect requested memory for pbs job"
+        debug "parsed from qstat output: \"$pbs_req_mem\""
+    fi
+fi
+
 # set DISPLAY if needed
 [[ -v DISPLAY ]] && export SINGULARITYENV_DISPLAY=$DISPLAY
 
