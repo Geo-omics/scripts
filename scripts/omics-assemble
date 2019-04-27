@@ -283,6 +283,7 @@ else
             out=$norm_reads
             threads=$CPUS
             target=30
+            prefilter=t
         )
         /usr/bin/time -v bbnorm "${bbnorm_args[@]}" |& tee "$bbnorm_log"
         reads_arg=$norm_reads
