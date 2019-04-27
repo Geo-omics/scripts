@@ -404,13 +404,10 @@ elif [[ $FILTER == bbtools ]]; then
             opticaldupes=t
         )
     fi
-    if [[ -v PBS_JOBID ]]; then
-        # automatic memory detection on Flux
-        {
-            req_mem=$(qstat -f "${PBS_JOBID}" | grep "req_information.memory.0" | sed 's/.* = //')
-            [[ $req_mem =~ [0-9]+kb ]]
-            rqcfilter2_args+=("-Xmx$req_mem" -eoom)
-        } || { warning1 "Failed to detect available memory on FLux"; }
+    if [[ -v OMICS_PBS_REQ_MEM ]]; then
+        # use available memory for PBS jobs if provided, should be in nnnnnnkb format
+        # TODO: use 90% only?
+        rqcfilter2_args+=("-Xmx$OMICS_PBS_REQ_MEM" -eoom)
     fi
     rqcfilter2 "${rqcfilter2_args[@]}" |& tee "$rqcfilter2_out"/log
     filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
