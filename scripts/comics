@@ -226,11 +226,14 @@ if [[ ${#pbs_vars[@]} -gt 0 ]]; then
 fi
 
 # on Flux, try to get requested memory
+# take ~90%, kb units, intended to be used for java -XmxNNNk
 if [[ -v PBS_JOBID ]]; then
     pbs_req_mem=$(qstat -f "${PBS_JOBID}" | grep "req_information.memory.0" | sed 's/.* = //')
     if [[ $pbs_req_mem =~ ^[0-9]+kb$ ]]; then
         info "Detected requested memory for PBS job: $pbs_req_mem"
-        export SINGULARITYENV_pbs_req_mem=$pbs_req_mem
+        pbs_req_mem=${pbs_req_mem%kb}
+        pbs_req_mem=$(echo "scale=0; $pbs_req_mem / 1.1" | bc)
+        export SINGULARITYENV_pbs_req_mem=${pbs_req_mem}k
     else
         warning "Failed to detect requested memory for pbs job"
         debug "parsed from qstat output: \"$pbs_req_mem\""
