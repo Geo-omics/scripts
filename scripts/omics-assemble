@@ -285,6 +285,9 @@ else
             target=30
             prefilter=t
         )
+        if [[ -v OMICS_PBS_REQ_MEM ]]; then
+            bbnorm_args+=("-Xmx$OMICS_PBS_REQ_MEM")
+        fi
         /usr/bin/time -v bbnorm "${bbnorm_args[@]}" |& tee "$bbnorm_log"
         reads_arg=$norm_reads
     else
