@@ -1,3 +1,15 @@
+geo-omics-scripts (1.0.147-1) unstable; urgency=medium
+
+  * [qc] Clean up empty FASTQC directories
+  * [qc] Add memory detection for Flux/PBS jobs when using -F bbtools
+  * [comics] For PBS jobs, pass the amount of requested memory to container environment
+  * [qc] Pass memory amount option to rqcfilter2 in PBS environment
+  * [asm] Reduce memory usage for bbnorm (trade for a bit of speed)
+  * [asm] Make bbnorm pick up memory allotment from (PBS) environment if possible
+  * [comics] Fix: make requested memory compatible for java -Xmx option
+
+ -- Robert <heinro@umich.edu>  Mon, 29 Apr 2019 11:54:32 -0400
+
 geo-omics-scripts (1.0.146-1) unstable; urgency=medium
 
   * [comics] Fix regression, had exec twice with --writable
