@@ -31,7 +31,6 @@ def qc_sample(path, **kwargs):
     if kwargs['adapters']:
         args += ['--adapters', kwargs['adapters']]
     not kwargs['no_dereplicate'] or args.append('--no-dereplicate')
-    not kwargs['no_fasta_interleave'] or args.append('--no-fasta-interleave')
     if kwargs['filter']:
         args += ['--filter', kwargs['filter']]
     if kwargs['final']:
@@ -150,12 +149,6 @@ def get_args(argv=None, namespace=None):
         '--no-dereplicate',
         action='store_true',
         help='Option to skip the de-replication step',
-    )
-    argp.add_argument(
-        '--no-fasta-interleave',
-        action='store_true',
-        help='Skip building the interleaved fasta file, interleaved fastq '
-             'files will still be build.',
     )
     argp.add_argument(
         '-F', '--filter',

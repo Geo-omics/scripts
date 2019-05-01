@@ -28,9 +28,6 @@ ARG_HELP="
       --keep-all	Keep all intermediate files, by default some not-so-important
 			intermediate results will be deleted to save disk space
       --no-dereplicate  Skip the de-replication step
-      --no-fasta-interleave
-                        Skip building the interleaved fasta file,
-                        interleaved fastq will still be build.
   -F, --filter <trimmomatic|scythe|bbtools|derek-bbduk>
                         Choice of qc-filter.  The default is to use Trimmomatic.
                         The 'old' way of using scythe and sickle is still supported.
@@ -52,7 +49,7 @@ generated files.
 qc is part of the omics(1) tool chain.
 "
 SHORT_OPTIONS=a:,f:,r:,t:,F:
-LONG_OPTIONS=clean-only,adapters:,filter:,fwd:,rev:,final:,keep-all,no-dereplicate,no-fasta-interleave,rqcfilterdata:,threads:,cpus:
+LONG_OPTIONS=clean-only,adapters:,filter:,fwd:,rev:,final:,keep-all,no-dereplicate,rqcfilterdata:,threads:,cpus:
 }
 
 handle_options () {
@@ -78,9 +75,6 @@ handle_options () {
 	        return 1;;
 	    (--no-dereplicate)
 	        DEREPLICATION=false
-	        return 1;;
-	    (--no-fasta-interleave)
-	        INTERLEAVE_FASTA=false
 	        return 1;;
             (-F|--filter)
                 FILTER=$2
@@ -130,7 +124,6 @@ FINAL=good
 KEEPALL=false
 #
 DEREPLICATION=true
-INTERLEAVE_FASTA=true
 # Use Trimmomatic filtering step by default, alternatives are scythe (and sickle) and bbtools
 FILTER=trimmomatic
 #
@@ -207,7 +200,6 @@ clean_some () {
     $RM -rf -- FASTQC/"${fwd}.${FINAL}"_* "FASTQC/${rev}.${FINAL}"_*
     [[ -d FASTQC ]] && rmdir --ignore-fail-on-non-empty FASTQC
     $RM -f -- {int,$fwd,$rev}."$FINAL".fastq
-    $INTERLEAVE_FASTA && $RM -f -- int."$FINAL".fasta
     if [[ $FILTER == scythe || $all ]]; then
        $RM -f -- {$fwd,$rev}{.derep,}.{matches,scythe}.fastq
        $RM -f -- {$fwd,$rev}.derep.fastq
@@ -383,6 +375,8 @@ elif [[ $FILTER == bbtools ]]; then
     rqcfilter2_args=(
         in1="$fwd_trim_in"
         in2="$rev_trim_in"
+        out="$(basename "$tmp_int_final")"
+        pigz=f
         path="$rqcfilter2_out"
         rqcfilterdata="$RQCFILTERDATA"
         barcodefilter=f
@@ -404,8 +398,11 @@ elif [[ $FILTER == bbtools ]]; then
         rqcfilter2_args+=("-Xmx$OMICS_PBS_REQ_MEM" -eoom)
     fi
     rqcfilter2 "${rqcfilter2_args[@]}" |& tee "$rqcfilter2_out"/log
-    filtered_fastq=$rqcfilter2_out/$(grep ^filtered_fastq= "$rqcfilter2_out/file-list.txt" | sed 's/filtered_fastq=//')
-    gunzip -c "$(realpath "$filtered_fastq")" > "$tmp_int_final"
+
+    info1 "Separating read directions..."
+    separate-interleaved "${V[@]}" -f "$tmp_fwd_final" -r "$tmp_rev_final" "rqcfilter2_out/$(basename "$tmp_int_final")"
+    rm "${V[@]}" -- "rqcfilter2_out/$(basename "$tmp_int_final")"
+
 elif [[ $FILTER == derek-bbduk ]]; then
     base=$base.derek-bbduk
     (
@@ -430,41 +427,21 @@ elif [[ $FILTER == derek-bbduk ]]; then
 
         # Dereplicate read pairs that are 100% identical:
         info1 "Deduplicating"
-        omics derep $"$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
+        omics derep "$tmpd"/adtrim_clean_qtrim_fwd.fastq "$tmpd"/adtrim_clean_qtrim_rev.fastq -o ./ -v
     )
 
-    # interleave and re-establish piping
-    info1 "Interleaving trimmed read pairs..."
-    omics interleave "${V[@]}" "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq > "$tmp_int_final"
+    # rename to expected file names
+    mv -- "$tmpd"/adtrim_clean_qtrim_fwd.derep.fastq "$tmp_fwd_final"
+    mv -- "$tmpd"/adtrim_clean_qtrim_rev.derep.fastq "$tmp_rev_final"
 
 else
-    abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools"
+    abort1 "Bad argument for --filter option, available alternatives are: trimmomatic scythe bbtools derek-bbduk"
 fi
 
 oldbase=$base
 base=".$FINAL"
 fwd_final=$(basename "$tmp_fwd_final")
 rev_final=$(basename "$tmp_rev_final")
-int_final=$(basename "$tmp_int_final")
-
-if [[ ! -e $tmp_int_final ]]; then
-    # if needed for some filters
-    info1 "Interleaving trimmed read pairs..."
-    python3 -m omics.interleave --check "${V[@]}" "$tmp_fwd_final" "$tmp_rev_final" > "$tmp_int_final"
-fi
-
-cp -p -- "$tmp_int_final" "$int_final" &
-
-if $INTERLEAVE_FASTA; then
-    info1 "Start converting to fasta..."
-    python3 -m omics.fastq2fasta "${V[@]}" < "$tmp_int_final" > "int.$FINAL.fasta" &
-fi
-
-if [[ ! -e "$tmp_fwd_final" || ! -e "$tmp_rev_final" ]]; then
-    # as needed for some filter modes
-    info1 "Separating read directions..."
-    separate-interleaved "${V[@]}" -f "$tmp_fwd_final" -r "$tmp_rev_final" "$tmp_int_final"
-fi
 
 {
     cp -p -- "$tmp_fwd_final" "$fwd_final"
