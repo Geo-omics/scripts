@@ -387,7 +387,7 @@ elif [[ $FILTER == bbtools ]]; then
     rqcfilter2_out=rqcfilter2_out
     mkdir -p -- "$rqcfilter2_out"
     rqcfilter2_args=(
-        in="$fwd_trim_in"
+        in1="$fwd_trim_in"
         in2="$rev_trim_in"
         path="$rqcfilter2_out"
         rqcfilterdata="$RQCFILTERDATA"
