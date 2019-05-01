@@ -322,11 +322,6 @@ tmp_rev_final=$tmpd/$rev.$FINAL.fastq
 tmp_int_final=$tmpd/int.$FINAL.fastq
 
 if [[ $FILTER == trimmomatic ]]; then
-    # Trimmomatic's makes the data streaming more complicated:  It's seems not
-    # possible to use fifos as input and it produces four output files that we
-    # need to post-process, however with --keep-all the trimmed files are saved
-    # directly and then reused for post-processing, hopefully the page-cache
-    # makes this efficient
     base="${base}.trim"
     fwd_trim_s=$tmpd/$fwd$base.s.fastq
     rev_trim_s=$tmpd/$rev$base.s.fastq
