@@ -281,7 +281,8 @@ clean_some
 
 $MKDIR -p FASTQC
 info1 "Starting pre-QC fastqc..."
-fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> FASTQC/fastqc.log &
+fastqc_log=FASTQC/fastqc.log
+fastqc -o FASTQC -f fastq -t 2 "$FWD_FASTQ" "$REV_FASTQ" &> $fastqc_log &
 
 # basename for files
 base=""
@@ -443,17 +444,30 @@ base=".$FINAL"
 fwd_final=$(basename "$tmp_fwd_final")
 rev_final=$(basename "$tmp_rev_final")
 
+info1 "Starting post-QC fastqc run..."
+fastqc -o FASTQC -f fastq -t 2 "$tmp_fwd_final" "$tmp_rev_final" &>> $fastqc_log &
+
+# wait for fastqc to start, at most one minute, then start moving files:
+sleep 2
+SECONDS=0
+while true; do
+    grep -q "$fwd_final" $fastqc_log && break
+    grep -q "$rev_final" $fastqc_log && break
+    if [[ $SECONDS -gt 60 ]]; then
+        warning1 "Waited 60s for fastqc to start, will proceed moving final good data"
+        break
+    fi
+    sleep 10
+done
 {
-    cp -p -- "$tmp_fwd_final" "$fwd_final"
-    cp -p -- "$tmp_rev_final" "$rev_final"
+    mv "${V[@]}" -- "$tmp_fwd_final" "$fwd_final"
+    mv "${V[@]}" -- "$tmp_rev_final" "$rev_final"
 } &
 
-info1 "Starting post-QC fastqc run..."
-fastqc -o FASTQC -f fastq -t 2 "$tmp_fwd_final" "$tmp_rev_final" &>> FASTQC/fastqc.log
-
 if $KEEPALL; then
-    info1 "Copying intermediate files..."
-    find "$tmpd" -type f -print0 | xargs -0 cp "${V[@]}" -n -t ./ --
+    info1 "Saving intermediate files..."
+    # ignore final files, no-op when empty otherwise
+    find "$tmpd" -type f -not -name "$fwd_final" -not -name "$rev_final" -print0 | xargs -r -0 mv "${V[@]}" -n -t ./ --
 fi
 jobs_running=$(jobs | grep Running || true)
 if [[ -n "$jobs_running" ]]; then
