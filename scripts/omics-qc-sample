@@ -361,25 +361,22 @@ elif [[ $FILTER == scythe ]]; then
     scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev_scythe_out" "$rev_trim_in" &
     info1 "Start interleaving reads..."
     if $KEEPALL; then
-        fwd_int_in=$tmpd/fwd.int_in.fastq
-        rev_int_in=$tmpd/rev.int_in.fastq
-        mkfifo "$fwd_int_in" "$rev_int_in"
+        fwd_sickle_in=$tmpd/fwd.int_in.fastq
+        rev_sickle_in=$tmpd/rev.int_in.fastq
+        mkfifo "$fwd_sickle_in" "$rev_sickle_in"
         # shellcheck disable=SC2094
-        tee "./$(basename "$fwd_scythe_out")" < "$fwd_scythe_out" > "$fwd_int_in" &
-    base="${base}.sickle"
+        tee "./$(basename "$fwd_scythe_out")" < "$fwd_scythe_out" > "$fwd_sickle_in" &
         # shellcheck disable=SC2094
-        tee "./$(basename "$rev_scythe_out")" < "$rev_scythe_out" > "$rev_int_in" &
+        tee "./$(basename "$rev_scythe_out")" < "$rev_scythe_out" > "$rev_sickle_in" &
     else
-        fwd_int_in=$fwd_scythe_out
-        rev_int_in=$rev_scythe_out
+        fwd_sickle_in=$fwd_scythe_out
+        rev_sickle_in=$rev_scythe_out
     fi
-    sickle_in=$tmpd/int$base.fastq
-    mkfifo "$sickle_in"
-    python3 -m omics.interleave "${V[@]}" "$fwd_int_in" "$rev_int_in" > "$sickle_in" &
     info1 "Start quality score trimming..."
     oldbase=$base
     base="${base}.sickle"
-    sickle pe -t sanger -c "$sickle_in" -M "$tmp_int_final"
+    # TODO: do not throw away singles
+    sickle pe -t sanger -f "$fwd_sickle_in" -r "$rev_sickle_in" -o "$tmp_fwd_final" -p "$tmp_rev_final" -s "$tmpd/singles${base}.fastq"
 
 elif [[ $FILTER == bbtools ]]; then
     base=$base.rqcfilter
