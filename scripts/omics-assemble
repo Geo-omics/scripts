@@ -259,6 +259,17 @@ if [[ -n "$USER_ASSEMBLY_NAME" ]]; then
 fi
 out="$OUTDIR/$spec${name_suffix:-}"
 
+if [ -d "$out" ]; then
+    # partial output from previous run?
+    if $FORCE; then
+        info "Erasing $out per --force option..."
+        $RM -rf -- "$out"
+    else
+        abort "Output directory $out exists, use --force to override this check or --out to specify a different output directory."
+    fi
+fi
+
+
 assembly_name=${USER_ASSEMBLY_NAME:-$DEFAULT_ASSEMBLY_NAME}
 
 $MEGAHIT || [ "$ASSEMBLY_LEVEL" == contig ] || [ "$ASSEMBLY_LEVEL" == scaffold ] \
