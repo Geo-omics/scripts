@@ -569,7 +569,6 @@ if $RUN_BLAST; then
     info "done: classification results at $blast_out"
 fi
 
-$RUN_PHYLOSIFT && RUN_PHYLOSIFT=false && info "Skipping analysis with Phylosift [currently not supported]"
 if $RUN_PHYLOSIFT; then
     if [ -f "$PHYLOSIFTRC" ]; then
         info "Will use $PHYLOSIFTRC as config file for PhyloSift"
@@ -582,7 +581,9 @@ if $RUN_PHYLOSIFT; then
         $RM -r -- "$psout"
     fi
     info "Running PhyloSift..."
-    phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
+    warning "not implemented due to unresolved issues, the proposed command line to run Phylosift is printed below:"
+    # TODO: fix phylosift issues
+    echo phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
     info "done: PhyloSift results at $psout"
 fi
 
