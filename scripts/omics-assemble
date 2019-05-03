@@ -12,42 +12,58 @@ set -eE
 USAGE="[OPTIONS]... [SAMPLE_DIRS]..."
 HELP="Assemble a metagenome, and analyse assembly"
 ARG_HELP="
-      --assembly-only     Stop after finishing the assembly
-      --assembly FILE     Skip assembly step but continue down-stream analysis
-			  with the provided contigs / scaffolds.
-      --name NAME         User-defined identifier for assembly.  Used as the
-                          final assemblies file name in the working directory.
-                          The default is 'assembly'.
-  -t, --threads, --cpus N
-                          How many CPUs/threads to use
-      --force             Overwrite existing files, default is to abort when output files exist already
-      --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
+  Positional parameters:
+
+  SAMPLE_DIR...           A list of per-sample directories containing fastq reads to be co-assembled.
+
+  Input options:
+
+  -f  --fwd-reads FILE
+  -r  --rev-reads FILE
+      --int-reads FILE
+                          If sample directories are given as positional parameters, the several
+                          --[dir]-reads options specify the input files inside each sample directory.
+                          You may either specify separate forward and reverse fastq files or interleaved
+                          files.  The default is to use forward and reverse files named 'fwd.good.fastq'
+                          and 'rev.good.fastq' as they are made by default by the 'omics qc' script.
+
       --normalized-fwd-reads FILE
       --normalized-rev-reads FILE
       --normalized-int-reads FILE
                           Specify existing normalized input file(s) to be used for the assembly.
                           This will skip the normalization step and ignore any other input.
                           Either give an interleaved file or one per read direction.
+
+      --assembly FILE     Skip assembly step but continue down-stream analysis
+			  with the provided contigs / scaffolds.
+
+  Workflow options:
+
+      --megahit           Use MEGAHIT assembler, this is the default
+      --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
+      --assembly-only     Stop after finishing the assembly
+      --skip-blast        Skip classification steps, by default run blast
+      --skip-normalization
+                          Do not run BBNorm to normalize read depth before assembly
+      --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
+      --skip-quast        Skip QUAST analysis, by default QUAST is run
+
+  Other options:
+
+      --name NAME         User-defined identifier for assembly.  Used as the
+                          final assemblies file name in the working directory.
+                          The default is 'assembly'.
+  -t, --threads, --cpus N
+                          How many CPUs/threads to use
+      --force             Overwrite existing files, default is to abort when output files exist already
       --maxk N            min k parameter, must be odd with --megahit
       --mink N            max k parameter, must be odd with --megahit
       --step N            k steps parameter, must be even with --megahit
       --level LEVEL       Specifies the assembly level to use for downstream analysis.
                           Can be either contig (the default) or scaffold.  This is
 			  ignored when using --megahit
-      --megahit           Use MEGAHIT assembler, this is the default
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
-  -f  --fwd-reads FILE    Name of forward reads files used for input, relative to each sample directory,
-                          by default this is 'fwd.good.fastq'
-  -r  --rev-reads FILE    Name of reverse reads files used for input, relative to each sample directory,
-                          by default this is 'rev.good.fastq'
-      --int-reads FILE    Like -f and -r but instead use interleaved reads files for input
-                          by default this is 'rev.good.fastq'
-      --skip-blast        Skip classification steps, by default run blast
-      --skip-normalization
-                          Do not run BBNorm to normalize read depth before assembly
-      --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
-      --skip-quast        Skip QUAST analysis, by default QUAST is run
 "
 MORE_HELP="
 The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for
@@ -57,7 +73,7 @@ time than the previous step.  With 64 CPUs this should only take about a day or
 two for moderately large datasets.
 
 Note on normalization:  We use BBNorm to normalize maximum read-depth.  The
-target depth is about 35ish.  To reduce computation time we recommend fast
+target depth is about 25ish.  To reduce computation time we recommend fast
 access to where the reads are stored and many CPUs and a few hundred GB RAM.
 Set environment variable TMPDIR to a fast local storage with a few 100GB of
 empty space. Expect normalization of 1TB of fastq data to take about a day.
