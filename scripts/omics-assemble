@@ -26,6 +26,11 @@ ARG_HELP="
                           You may either specify separate forward and reverse fastq files or interleaved
                           files.  The default is to use forward and reverse files named 'fwd.good.fastq'
                           and 'rev.good.fastq' as they are made by default by the 'omics qc' script.
+                          If no sample directories are given, then the --[dir]-reads options are inter-
+                          preted as comma-separated list of relative path names to the input files.  If
+                          lists of forward and reverse files are given, then their respective order must
+                          be consistent such that for each forward file the corresponding reverse file
+                          is at the same position in the list.
 
       --normalized-fwd-reads FILE
       --normalized-rev-reads FILE
@@ -221,8 +226,6 @@ SAMPLE_DIRS=()
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
-else
-    SAMPLE_DIRS=( . )
 fi
 
 # find valid ref data path
@@ -307,13 +310,23 @@ else
         [[ -e "$NORM_FWD_READS" ]] || abort "normalized fwd reads file not found: $NORM_FWD_READS"
         [[ -e "$NORM_REV_READS" ]] || abort "normalized rev reads file not found: $NORM_REV_READS"
     else
-        # no norm files specified, so we need all samples' reads, put in array
+        # no norm'd files specified, so we need all samples' reads, put in array
         # check if reads exists before doing anything with them
-        if $INTERLEAVED; then
-            int_reads=("${SAMPLE_DIRS[@]/%//$INT_READS}")
+        if [[ ${#SAMPLE_DIRS} -gt 0 ]]; then
+            if $INTERLEAVED; then
+                int_reads=("${SAMPLE_DIRS[@]/%//$INT_READS}")
+            else
+                fwd_reads=("${SAMPLE_DIRS[@]/%//$FWD_READS}")
+                rev_reads=("${SAMPLE_DIRS[@]/%//$REV_READS}")
+            fi
         else
-            fwd_reads=("${SAMPLE_DIRS[@]/%//$FWD_READS}")
-            rev_reads=("${SAMPLE_DIRS[@]/%//$REV_READS}")
+            # interpret comma-separated lists
+            if $INTERLEAVED; then
+                IFS=, read -a int_reads < <(echo "$INT_READS")
+            else
+                IFS=, read -a fwd_reads < <(echo "$FWD_READS")
+                IFS=, read -a rev_reads < <(echo "$REV_READS")
+            fi
         fi
         if $INTERLEAVED; then
             files_to_check=("${int_reads[@]}")
@@ -350,6 +363,7 @@ else
             warning "Unexpected suffix of reads file ${INT_READS:-$FWD_READS}?"
         fi
 
+        # declare bbnorm output files
         if $INTERLEAVED; then
             int_norm_reads=$OUTDIR/${INT_READS/%${reads_suffix}/.norm${reads_suffix}}
         else
