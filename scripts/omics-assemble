@@ -473,8 +473,8 @@ else
             # idba: requires a single interleaved read file, fasta!, but reads it at least twice?
             # so no piping
             if $INTERLEAVED; then
-                tmp_int_reads_arg=$(mktemp)
-                info "Creating single input fasta file ($tmp_int_reads_arg) for idba_ud ..."
+                int_reads_arg=$(mktemp)
+                info "Creating single input fasta file ($int_reads_arg) for idba_ud ..."
                 for i in "${int_reads[@]}"; do
                     filetype="fastq"  # default type in case of errors
                     if [[ "$i" =~ .*(.f(ast|)([aq]))(\.gz|\.zst|\.zip|)$ ]]; then
@@ -500,7 +500,7 @@ else
                     else
                         cat
                     fi
-                done > "$tmp_int_reads_arg"
+                done > "$int_reads_arg"
             else
                 abort "passing separate non-interleaved read args straight to idba_ud not implemented"
             fi
@@ -536,8 +536,8 @@ if $run_assembly; then
     else
         $MKDIR -p "$out"
 
-        idba_ud -o "$out" -r "$tmp_int_reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-        rm "${V[@]}" -f -- "$tmp_int_reads_arg"  # remove tmp input
+        idba_ud -o "$out" -r "$int_reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+        rm "${V[@]}" -f -- "$int_reads_arg"  # remove tmp input
     fi
     # make convenience (hard) link
     $LN -f "$assembly" "$assembly_name".fa || error "Failed to create hard link to assembly"
