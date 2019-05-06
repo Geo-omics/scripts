@@ -422,7 +422,7 @@ else
             fwd_reads_arg=$fwd_norm_reads
             rev_reads_arg=$rev_norm_reads
         fi
-        info "Normalized reads saved as:\n${int_norm_reads:-${fwd_norm_reads}\n${rev_norm_reads}}"
+        info "Normalized reads saved as:\n${int_norm_reads:-${fwd_norm_reads:-}\n${rev_norm_reads:-}}"
 
     else
         # do not normalize, use reads as-is
