@@ -216,11 +216,11 @@ else
     SINGULARITY_ARGS+=(--cleanenv)
 fi
 
-# In any case, keep PBS variables
-pbs_vars=()
-mapfile -t pbs_vars < <(env | { grep ^PBS || [[ $? = 1 ]]; })
-if [[ ${#pbs_vars[@]} -gt 0 ]]; then
-    for i in "${pbs_vars[@]}"; do
+# In any case, keep PBS and OMICS variables
+keep_vars=()
+mapfile -t keep_vars < <(env | { grep -P '(^PBS_|^OMICS_)' || [[ $? = 1 ]]; })
+if [[ ${#keep_vars[@]} -gt 0 ]]; then
+    for i in "${keep_vars[@]}"; do
         export "SINGULARITYENV_$i"
     done
 fi
