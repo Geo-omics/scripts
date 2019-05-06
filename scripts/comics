@@ -233,7 +233,7 @@ if [[ -v PBS_JOBID ]]; then
         info "Detected requested memory for PBS job: $pbs_req_mem"
         pbs_req_mem=${pbs_req_mem%kb}
         pbs_req_mem=$(echo "scale=0; $pbs_req_mem / 1.1" | bc)
-        export SINGULARITYENV_pbs_req_mem=${pbs_req_mem}k
+        export SINGULARITYENV_OMICS_PBS_REQ_MEM=${pbs_req_mem}k
     else
         warning "Failed to detect requested memory for pbs job"
         debug "parsed from qstat output: \"$pbs_req_mem\""
