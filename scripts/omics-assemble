@@ -412,6 +412,10 @@ else
         if [[ -v OMICS_PBS_REQ_MEM ]]; then
             bbnorm_args+=("-Xmx$OMICS_PBS_REQ_MEM")
         fi
+        if [[ -v OMICS_BBNORM_EXTRA ]]; then
+            bbnorm_args+=($OMICS_BBNORM_EXTRA)
+        fi
+        for i in "${bbnorm_args[@]}"; do echo "$i"; done
         /usr/bin/time -v bbnorm "${bbnorm_args[@]}" |& tee "$bbnorm_log"
         if [[ -n "$int_norm_reads" ]]; then
             int_reads_arg=$int_norm_reads
@@ -543,6 +547,9 @@ if $run_assembly; then
             megahit_args+=(--12 "$int_reads_arg")
         else
             megahit_args+=(-1 "$fwd_reads_arg" -2 "$rev_reads_arg")
+        fi
+        if [[ -v OMICS_MEGAHIT_EXTRA ]]; then
+            megahit_args+=($OMICS_MEGAHIT_EXTRA)
         fi
         # eval needed for proc'subst'ing input reads
         info "megahit command line: megahit ${megahit_args[*]}"
