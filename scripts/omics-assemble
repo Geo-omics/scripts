@@ -394,7 +394,7 @@ else
         bbnorm_args=(
             out=$norm_reads
             threads=$CPUS
-            target=30
+            target=25
             prefilter=t
             -eoom
         )
