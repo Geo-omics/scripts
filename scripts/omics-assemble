@@ -12,35 +12,63 @@ set -eE
 USAGE="[OPTIONS]... [SAMPLE_DIRS]..."
 HELP="Assemble a metagenome, and analyse assembly"
 ARG_HELP="
-      --assembly-only     Stop after finishing the assembly
+  Positional parameters:
+
+  SAMPLE_DIR...           A list of per-sample directories containing fastq reads to be co-assembled.
+
+  Input options:
+
+  -f  --fwd-reads FILE
+  -r  --rev-reads FILE
+      --int-reads FILE
+                          If sample directories are given as positional parameters, the several
+                          --[dir]-reads options specify the input files inside each sample directory.
+                          You may either specify separate forward and reverse fastq files or interleaved
+                          files.  The default is to use forward and reverse files named 'fwd.good.fastq'
+                          and 'rev.good.fastq' as they are made by default by the 'omics qc' script.
+                          If no sample directories are given, then the --[dir]-reads options are inter-
+                          preted as comma-separated list of relative path names to the input files.  If
+                          lists of forward and reverse files are given, then their respective order must
+                          be consistent such that for each forward file the corresponding reverse file
+                          is at the same position in the list.
+
+      --normalized-fwd-reads FILE
+      --normalized-rev-reads FILE
+      --normalized-int-reads FILE
+                          Specify existing normalized input file(s) to be used for the assembly.
+                          This will skip the normalization step and ignore any other input.
+                          Either give an interleaved file or one per read direction.
+
       --assembly FILE     Skip assembly step but continue down-stream analysis
 			  with the provided contigs / scaffolds.
+
+  Workflow options:
+
+      --megahit           Use MEGAHIT assembler, this is the default
+      --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
+      --assembly-only     Stop after finishing the assembly
+      --skip-blast        Skip classification steps, by default run blast
+      --skip-normalization
+                          Do not run BBNorm to normalize read depth before assembly
+      --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
+      --skip-quast        Skip QUAST analysis, by default QUAST is run
+
+  Other options:
+
       --name NAME         User-defined identifier for assembly.  Used as the
                           final assemblies file name in the working directory.
                           The default is 'assembly'.
   -t, --threads, --cpus N
                           How many CPUs/threads to use
       --force             Overwrite existing files, default is to abort when output files exist already
-      --idba-ud           Use the IDBA_UD assembler instead of the default MEGAHIT
-      --normalized-reads FILE
-                          Specify an existing normalized input file to be used for the assembly.
-                          This will skip the normalization step and ignore any other input.
       --maxk N            min k parameter, must be odd with --megahit
       --mink N            max k parameter, must be odd with --megahit
       --step N            k steps parameter, must be even with --megahit
       --level LEVEL       Specifies the assembly level to use for downstream analysis.
                           Can be either contig (the default) or scaffold.  This is
 			  ignored when using --megahit
-      --megahit           Use MEGAHIT assembler, this is the default
       --out PATH          Directory to which output is saved, default is the working directory
       --phylosiftrc FILE  Specify a custom PhyloSift configuration file
-      --reads FILE        Name of interleaved reads files used for input, relative to each sample directory,
-                          by default this is 'int.good.fastq'
-      --skip-blast        Skip classification steps, by default run blast
-      --skip-normalization
-                          Do not run BBNorm to normalize read depth before assembly
-      --skip-phylosift    Skip PhyloSift run, by default PhyloSift is run
-      --skip-quast        Skip QUAST analysis, by default QUAST is run
 "
 MORE_HELP="
 The default k-min/max/step parameters are 52/92/8 for IDBA_UD and 21/141/12 for
@@ -50,14 +78,14 @@ time than the previous step.  With 64 CPUs this should only take about a day or
 two for moderately large datasets.
 
 Note on normalization:  We use BBNorm to normalize maximum read-depth.  The
-target depth is about 35ish.  To reduce computation time we recommend fast
+target depth is about 25ish.  To reduce computation time we recommend fast
 access to where the reads are stored and many CPUs and a few hundred GB RAM.
 Set environment variable TMPDIR to a fast local storage with a few 100GB of
 empty space. Expect normalization of 1TB of fastq data to take about a day.
 "
 # shellcheck disable=SC2100
-SHORT_OPTIONS=t:
-LONG_OPTIONS="assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,normalized-reads:,level:,out:,phylosiftrc:,reads:,step:,skip-blast,skip-normalization,skip-phylosift,skip-quast,threads:"
+SHORT_OPTIONS=f:r:t:
+LONG_OPTIONS="assembly-only,assembly:,name:,cpus:,force,idba-ud,maxk:,megahit,mink:,normalized-fwd-reads:,normalized-rev-reads:,normalized-int-reads:,level:,out:,phylosiftrc:,fwd-reads:,rev-reads,int-reads:,step:,skip-blast,skip-normalization,skip-phylosift,skip-quast,threads:"
 }
 
 handle_options () {
@@ -90,8 +118,16 @@ handle_options () {
 	(--mink)
 	    MINK="$2"
 	    return 2;;
-        (--normalized-reads)
-            NORM_READS="$2"
+        (--normalized-fwd-reads)
+            NORM_FWD_READS="$2"
+	    RUN_BBNORM=false
+            return 2;;
+        (--normalized-rev-reads)
+            NORM_REV_READS="$2"
+	    RUN_BBNORM=false
+            return 2;;
+        (--normalized-int-reads)
+            NORM_INT_READS="$2"
 	    RUN_BBNORM=false
             return 2;;
 	(--level)
@@ -103,8 +139,21 @@ handle_options () {
 	(--phylosiftrc)
 	    PHYLOSIFTRC="$2"
 	    return 2;;
-	(--reads)
-	    READS="$2"
+	(-f|--fwd-reads)
+	    FWD_READS="$2"
+            INT_READS=
+            INTERLEAVED=false
+	    return 2;;
+	(-r|--rev-reads)
+	    REV_READS="$2"
+            INT_READS=
+            INTERLEAVED=false
+	    return 2;;
+	(--int-reads)
+	    INT_READS="$2"
+            FWD_READS=
+            REV_READS=
+            INTERLEAVED=true
 	    return 2;;
 	(--step)
 	    STEP="$2"
@@ -144,12 +193,17 @@ DEFAULT_CPUS=4
 FORCE=false
 # Use megahit by default, if false, then use idba_ud
 MEGAHIT=true
-#
-NORM_READS=
+# normalized file names are derived from other input by default
+NORM_FWD_READS=
+NORM_REV_READS=
+NORM_INT_READS=
 # PhyloSift run control file
 PHYLOSIFTRC="$(dirname "$0")/../share/geo-omics-scripts/phylosiftrc"
-# interleaved reads as made by qc script
-READS=int.good.fastq
+# reads as made by qc script, separate fwd and rev by default
+FWD_READS=fwd.good.fastq
+REV_READS=rev.good.fastq
+INT_READS=
+INTERLEAVED=false
 #
 RUN_BBNORM=true
 RUN_BLAST=true
@@ -172,8 +226,6 @@ SAMPLE_DIRS=()
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
     SAMPLE_DIRS=("$@")
-else
-    SAMPLE_DIRS=( . )
 fi
 
 # find valid ref data path
@@ -226,6 +278,17 @@ if [[ -n "$USER_ASSEMBLY_NAME" ]]; then
 fi
 out="$OUTDIR/$spec${name_suffix:-}"
 
+if [ -d "$out" ]; then
+    # partial output from previous run?
+    if $FORCE; then
+        info "Erasing $out per --force option..."
+        $RM -rf -- "$out"
+    else
+        abort "Output directory $out exists, use --force to override this check or --out to specify a different output directory."
+    fi
+fi
+
+
 assembly_name=${USER_ASSEMBLY_NAME:-$DEFAULT_ASSEMBLY_NAME}
 
 $MEGAHIT || [ "$ASSEMBLY_LEVEL" == contig ] || [ "$ASSEMBLY_LEVEL" == scaffold ] \
@@ -241,109 +304,225 @@ if [ -n "$ASSEMBLY" ]; then
         abort "Existing assembly not found: $ASSEMBLY"
     fi
 else
-    # check if reads exists before doing anything
-    reads=("${SAMPLE_DIRS[@]/%//$READS}")
-    for i in "${reads[@]}"; do
-        [[ -d "$(dirname "$i")" ]] || error "is not a directory: $(dirname "$i")"
-        [[ -r "$i" ]] || abort "interleaved reads file not found: $i"
-    done
-
-    if [[ -n "$NORM_READS" ]]; then
-        [[ -e "$NORM_READS" ]] || abort "Normalized reads file not found: $NORM_READS"
-        reads_arg=$NORM_READS
-
-    elif $RUN_BBNORM; then
-        reads_suffix=${READS##*.}
-        if [[ "$reads_suffix" != fastq ]] && [[ "$reads_suffix" != fasta ]] && [[ "$reads_suffix" != "fa" ]]; then
-            warning "Unexpected suffix of reads file is $reads_suffix, BBNorm will not work with compressed data"
-        fi
-
-        norm_reads=$OUTDIR/${READS/%.${reads_suffix}/.norm.${reads_suffix}}
-        if [[ -e "$norm_reads" ]]; then
-            if $FORCE; then
-                info "Removing existing $norm_reads per --force option"
-                rm -- "$norm_reads"
+    if [[ -n "$NORM_INT_READS" ]]; then
+        [[ -e "$NORM_INT_READS" ]] || abort "normalized reads file not found: $NORM_INT_READS"
+    elif [[ -n "$NORM_FWD_READS" || -n "$NORM_REV_READS" ]]; then
+        [[ -e "$NORM_FWD_READS" ]] || abort "normalized fwd reads file not found: $NORM_FWD_READS"
+        [[ -e "$NORM_REV_READS" ]] || abort "normalized rev reads file not found: $NORM_REV_READS"
+    else
+        # no norm'd files specified, so we need all samples' reads, put in array
+        # check if reads exists before doing anything with them
+        if [[ ${#SAMPLE_DIRS} -gt 0 ]]; then
+            if $INTERLEAVED; then
+                int_reads=("${SAMPLE_DIRS[@]/%//$INT_READS}")
             else
-                abort "Normalized reads file exists.  Use \"--normalized-reads $norm_reads\" to use this file for assembly or --force to overwrite"
+                fwd_reads=("${SAMPLE_DIRS[@]/%//$FWD_READS}")
+                rev_reads=("${SAMPLE_DIRS[@]/%//$REV_READS}")
+            fi
+        else
+            # interpret comma-separated lists
+            if $INTERLEAVED; then
+                IFS=, read -a int_reads < <(echo "$INT_READS")
+            else
+                IFS=, read -a fwd_reads < <(echo "$FWD_READS")
+                IFS=, read -a rev_reads < <(echo "$REV_READS")
             fi
         fi
+        if $INTERLEAVED; then
+            files_to_check=("${int_reads[@]}")
+        else
+            files_to_check=("${fwd_reads[@]}")
+            files_to_check+=("${rev_reads[@]}")
+        fi
+        for i in "${files_to_check[@]}"; do
+            [[ -d "$(dirname "$i")" ]] || error "is not a directory: $(dirname "$i")"
+            [[ -r "$i" ]] || abort "reads file not found: $i"
+        done
+    fi
 
-        # set up temp dir use for vondamm and cayman
+    # generate arg with read files as needed:
+    if [[ -n "$NORM_INT_READS" ]]; then
+        int_reads_arg=$NORM_READS
+
+    elif [[ -n "$NORM_FWD_READS" && -n "$NORM_REV_READS" ]]; then
+        if $MEGAHIT; then
+            fwd_reads_arg=$NORM_FWD_READS
+            rev_reads_arg=$NORM_REV_READS
+        else
+            # IDBA_UD needs interleaved fasta
+            abort "idba_ud input conversion to interleaved fasta not implemented"
+        fi
+
+    elif $RUN_BBNORM; then
+        # normalize
+        reads_suffix=${READS##*.}
+        if [[ "${INT_READS:-$FWD_READS}" =~ .*(\.f(ast|)[qa](.gz|))$ ]]; then
+            reads_suffix=${BASH_REMATCH[1]}
+        else
+            # bbnorm can handle gz compression only
+            warning "Unexpected suffix of reads file ${INT_READS:-$FWD_READS}?"
+        fi
+
+        # declare bbnorm output files
+        if $INTERLEAVED; then
+            int_norm_reads=$OUTDIR/${INT_READS/%${reads_suffix}/.norm${reads_suffix}}
+        else
+            fwd_norm_reads=$OUTDIR/${FWD_READS/%${reads_suffix}/.norm${reads_suffix}}
+            rev_norm_reads=$OUTDIR/${REV_READS/%${reads_suffix}/.norm${reads_suffix}}
+        fi
+
+        for i in "$int_norm_reads" "$fwd_norm_reads" "$rev_norm_reads"; do
+            if [[ -e "$i" ]]; then
+                if $FORCE; then
+                    info "Removing existing file $i per --force option"
+                    rm -- "$i"
+                else
+                    abort "Normalized reads file exists.  Use \"--normalized-[...]-reads $i\" to use this file for assembly or --force to overwrite"
+                fi
+            fi
+        done
+
+        # set up temp dir use for vondamm and cayman if possible
         TMPFAST=/tmp/fast
-        if [[ -z "$TMPDIR" ]] && [[ -f $TMPFAST ]]; then
+        if [[ -z "${TMPDIR:-}" && -d $TMPFAST && -w $TMPFAST ]]; then
             info "Attempting to use $TMPFAST to store BBNorm temporary data"
             export TMPDIR=$TMPFAST
         fi
 
         $MKDIR -p "$OUTDIR"
         bbnorm_log=$OUTDIR/bbnorm.log
-        # bbnorm gets comma-separated input files as in= arg
         bbnorm_args=(
-            in="$(IFS=,; echo "${reads[*]}")"
             out=$norm_reads
             threads=$CPUS
-            target=30
+            target=25
             prefilter=t
+            -eoom
         )
+        # bbnorm gets comma-separated input files as in= arg
+        if [[ -n "$int_norm_reads" ]]; then
+            bbnorm_args+=(in="$(IFS=,; echo "${int_reads[*]}")")
+            bbnorm_args+=(out="$int_norm_reads")
+        else
+            bbnorm_args+=(in1="$(IFS=,; echo "${fwd_reads[*]}")")
+            bbnorm_args+=(in2="$(IFS=,; echo "${rev_reads[*]}")")
+            bbnorm_args+=(out1="$fwd_norm_reads")
+            bbnorm_args+=(out2="$rev_norm_reads")
+        fi
+
         if [[ -v OMICS_PBS_REQ_MEM ]]; then
             bbnorm_args+=("-Xmx$OMICS_PBS_REQ_MEM")
         fi
+        if [[ -v OMICS_BBNORM_EXTRA ]]; then
+            bbnorm_args+=($OMICS_BBNORM_EXTRA)
+        fi
+        for i in "${bbnorm_args[@]}"; do echo "$i"; done
         /usr/bin/time -v bbnorm "${bbnorm_args[@]}" |& tee "$bbnorm_log"
-        reads_arg=$norm_reads
-    else
+        if [[ -n "$int_norm_reads" ]]; then
+            int_reads_arg=$int_norm_reads
+        else
+            fwd_reads_arg=$fwd_norm_reads
+            rev_reads_arg=$rev_norm_reads
+        fi
+        info "Normalized reads saved as:\n${int_norm_reads:-${fwd_norm_reads}\n${rev_norm_reads}}"
 
-        # assemble not normalized reads
+    else
+        # do not normalize, use reads as-is
+        # megahit: assemble not normalized reads
         if $MEGAHIT; then
             # make comma-separated list
-            reads_arg=
-            for i in "${reads[@]}"; do
-                [[ -n "$reads_arg" ]] && reads_arg+=,
-                suffix=${i##*.}
-                if [[ "$suffix" == gz ]]; then
-                    reads_arg+="<(gunzip -c $i)"
-                elif [[ "$suffix" == zst ]]; then
-                    reads_arg+="<(unzstd -c $i)"
-                elif [[ "$suffix" == zip ]]; then
-                    reads_arg+="<(unzip -p $i)"
-                else
-                    # assume plain
-                    reads_arg+="$i"
-                fi
-            done
+            if $INTERLEAVED; then
+                int_reads_arg=
+                for i in "${int_reads[@]}"; do
+                    [[ -n "$int_reads_arg" ]] && int_reads_arg+=,
+                    suffix=${i##*.}
+                    if [[ "$suffix" == gz ]]; then
+                        # external
+                        # int_reads_arg+="<(unpigz -c $i)"
+                        # internal megahit .gz support
+                        int_reads_arg+="$i"
+                    elif [[ "$suffix" == zst ]]; then
+                        int_reads_arg+="<(unzstd -c $i)"
+                    elif [[ "$suffix" == zip ]]; then
+                        int_reads_arg+="<(unzip -p $i)"
+                    else
+                        # assume plain
+                        int_reads_arg+="$i"
+                    fi
+                done
+            else
+                fwd_reads_arg=
+                for i in "${fwd_reads[@]}"; do
+                    [[ -n "$fwd_reads_arg" ]] && fwd_reads_arg+=,
+                    suffix=${i##*.}
+                    if [[ "$suffix" == gz ]]; then
+                        # external
+                        # fwd_reads_arg+="<(unpigz -c $i)"
+                        # fwdernal megahit .gz support
+                        fwd_reads_arg+="$i"
+                    elif [[ "$suffix" == zst ]]; then
+                        fwd_reads_arg+="<(unzstd -c $i)"
+                    elif [[ "$suffix" == zip ]]; then
+                        fwd_reads_arg+="<(unzip -p $i)"
+                    else
+                        # assume plain
+                        fwd_reads_arg+="$i"
+                    fi
+                done
+                rev_reads_arg=
+                for i in "${rev_reads[@]}"; do
+                    [[ -n "$rev_reads_arg" ]] && rev_reads_arg+=,
+                    suffix=${i##*.}
+                    if [[ "$suffix" == gz ]]; then
+                        # external
+                        # rev_reads_arg+="<(unpigz -c $i)"
+                        # revernal megahit .gz support
+                        rev_reads_arg+="$i"
+                    elif [[ "$suffix" == zst ]]; then
+                        rev_reads_arg+="<(unzstd -c $i)"
+                    elif [[ "$suffix" == zip ]]; then
+                        rev_reads_arg+="<(unzip -p $i)"
+                    else
+                        # assume plain
+                        rev_reads_arg+="$i"
+                    fi
+                done
+            fi
         else
-            # idba requires a single read file, but reads it at least twice?
+            # idba: requires a single interleaved read file, fasta!, but reads it at least twice?
             # so no piping
-            reads_arg=$(mktemp)
-            info "Creating single input data file ($reads_arg) for idba..."
-            for i in "${reads[@]}"; do
-                suffix=${i##*.}
-                if [[ "$suffix" == gz ]]; then
-                    gunzip -c "$i"
-                elif [[ "$suffix" == zst ]]; then
-                    unzstd -c "$i"
-                elif [[ "$suffix" == zip ]]; then
-                    unzip -p "$i"
-                else
-                    # assume plain
-                    cat "$i"
-                fi
-            done > "$reads_arg"
+            if $INTERLEAVED; then
+                int_reads_arg=$(mktemp)
+                info "Creating single input fasta file ($int_reads_arg) for idba_ud ..."
+                for i in "${int_reads[@]}"; do
+                    filetype="fastq"  # default type in case of errors
+                    if [[ "$i" =~ .*(.f(ast|)([aq]))(\.gz|\.zst|\.zip|)$ ]]; then
+                        if [[ "${BASH_REMATCH[2]}" == "ast" ]]; then aq_idx=3; else aq_idx=2; fi
+                        if [[ "${BASH_REMATCH[$aq_idx]}" == "a" ]]; then
+                            filetype="fasta"
+                        fi
+                    else
+                        warning "Failed to determine if file $i is fasta or fastq, continue while assuming it is astq"
+                    fi
+                    suffix=${i##*.}
+                    if [[ "$suffix" == gz ]]; then
+                        unpigz -c "$i"
+                    elif [[ "$suffix" == zst ]]; then
+                        unzstd -c "$i"
+                    elif [[ "$suffix" == zip ]]; then
+                        unzip -p "$i"
+                    else
+                        # assume plain
+                        cat "$i"
+                    fi | if [[ "$filetype" == "fastq" ]]; then
+                        python3 -m omics.fastq2fasta
+                    else
+                        cat
+                    fi
+                done > "$int_reads_arg"
+            else
+                abort "passing separate non-interleaved read args straight to idba_ud not implemented"
+            fi
         fi
-    fi
-
-    if [[ ${#reads[@]} -eq 1 ]]; then
-        # descend into single sample directory or working directory, output goes here, too
-        cd -- "$(dirname "${reads[0]}")"
-    fi
-
-    if [ -d "$out" ]; then
-	# partial output from previous run?
-	if $FORCE; then
-	    info "Erasing $out per --force option..."
-	    $RM -rf -- "$out"
-	else
-	    abort "Output directory $out exists, use --force to override this check or --out to specify a different output directory."
-	fi
     fi
 
     if $MEGAHIT; then
@@ -357,13 +536,29 @@ if $run_assembly; then
     info "Assembling..."
     if $MEGAHIT; then
         $MKDIR -p "$(dirname "$out")"  # megahit mkdirS the last path component itself
+        megahit_args=(
+            -o "$out"
+            -t "$CPUS"
+            --k-min "$MINK"
+            --k-max "$MAXK"
+            --k-step "$STEP"
+        )
+        if $INTERLEAVED; then
+            megahit_args+=(--12 "$int_reads_arg")
+        else
+            megahit_args+=(-1 "$fwd_reads_arg" -2 "$rev_reads_arg")
+        fi
+        if [[ -v OMICS_MEGAHIT_EXTRA ]]; then
+            megahit_args+=($OMICS_MEGAHIT_EXTRA)
+        fi
         # eval needed for proc'subst'ing input reads
-        eval megahit -o "$out" --12 "$reads_arg" -t "$CPUS" --k-min "$MINK" --k-max "$MAXK" --k-step "$STEP"
+        info "megahit command line: megahit ${megahit_args[*]}"
+        eval megahit "${megahit_args[@]}"
     else
         $MKDIR -p "$out"
-        echo idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-        idba_ud -o "$out" -r "$reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
-        rm -rf -- "$reads_arg"  # remove tmp input
+
+        idba_ud -o "$out" -r "$int_reads_arg" --num_threads "$CPUS" --mink "$MINK" --maxk "$MAXK" --step "$STEP"
+        rm "${V[@]}" -f -- "$int_reads_arg"  # remove tmp input
     fi
     # make convenience (hard) link
     $LN -f "$assembly" "$assembly_name".fa || error "Failed to create hard link to assembly"
@@ -411,7 +606,6 @@ if $RUN_BLAST; then
     info "done: classification results at $blast_out"
 fi
 
-$RUN_PHYLOSIFT && RUN_PHYLOSIFT=false && info "Skipping analysis with Phylosift [currently not supported]"
 if $RUN_PHYLOSIFT; then
     if [ -f "$PHYLOSIFTRC" ]; then
         info "Will use $PHYLOSIFTRC as config file for PhyloSift"
@@ -424,7 +618,9 @@ if $RUN_PHYLOSIFT; then
         $RM -r -- "$psout"
     fi
     info "Running PhyloSift..."
-    phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
+    warning "not implemented due to unresolved issues, the proposed command line to run Phylosift is printed below:"
+    # TODO: fix phylosift issues
+    echo phylosift all --disable_updates --output="$psout" --threads="$CPUS" --config="$PHYLOSIFTRC" "$assembly"
     info "done: PhyloSift results at $psout"
 fi
 
