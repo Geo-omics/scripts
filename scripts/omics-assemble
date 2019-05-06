@@ -392,7 +392,6 @@ else
         $MKDIR -p "$OUTDIR"
         bbnorm_log=$OUTDIR/bbnorm.log
         bbnorm_args=(
-            out=$norm_reads
             threads=$CPUS
             target=25
             prefilter=t
