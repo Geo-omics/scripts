@@ -1,3 +1,22 @@
+geo-omics-scripts (1.0.148-1) unstable; urgency=medium
+
+  * [qc] Use more explicit option name for input to rqcfilter2
+  * [qc] Improve options help
+  * [qc] Use split-files processing for sickle
+  * [qc] Remove obsolete commend
+  * [qc] Do not produce interleaved files
+  * [qc] Parallelize post-QC fastqc and data saving
+  * [asm] Re-design of input handling code
+  * [asm] Do not enter sample directory if input is only a single sample
+  * [asm] Print phylosift command line with some explanation
+  * [asm] Improve layout of help text, group options by their categories
+  * [asm] Fix passing normalized data to idba
+  * [asm] Allow passing file lists to --[dir]-reads options
+  * [asm] Change default bbnorm target to 25
+  * [asm] Append extra arguments to bbnorm and megahit calls via environment variables
+
+ -- Robert <heinro@umich.edu>  Mon, 06 May 2019 13:21:52 -0400
+
 geo-omics-scripts (1.0.147-1) unstable; urgency=medium
 
   * [qc] Clean up empty FASTQC directories
