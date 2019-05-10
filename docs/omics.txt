@@ -257,6 +257,22 @@ Omics DB Tools
   nodes in the Neo4j database (Not a real script; Place holder)
 
 
+PPTTools
+========
+
+* :program:`ppt_getGI`: Get GI numbers for a search term
+
+* :program:`ppt_getXML`: Get TinySeq XML for the GI numbers
+
+* :program:`parseTinySeqXML.xslt`: Reformat TinySeq XML to tabular data
+
+* :program:`derep+alias`: Remove duplicates and assign unique ids to
+  sequences; print output in fasta format along with other metadata. (legacy)
+
+* :program:`createPhgDB`: Bash wrapper that uses these scripts to create
+  the NCBI portion of the PhgDB.
+
+
 Ribopicker Tools
 ================
 
@@ -334,6 +350,12 @@ Velvet Tools
 * :program:`getMyContigs`:
 
 
+Web Tools
+=========
+
+* :program:`twitterscript.xml`: Add twitter feed to the lab website
+
+
 .. only:: man
 
     See also
@@ -342,4 +364,3 @@ Velvet Tools
     :manpage:`illumina-reads-processing(7)`, :manpage:`omics-prep(1)`,
     :manpage:`omics-qc(1)`, :manpage:`omics-assemble(1)`,
     :manpage:`omics-mapping(1)`
-
