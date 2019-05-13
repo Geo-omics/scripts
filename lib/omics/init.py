@@ -1,9 +1,27 @@
+# Copyright 2019 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Creates a new omics project in the given directory by setting up a
 configuration file in a hidden sub-directory ``.omics`` to primarily store
 options common to various command in the omics tool chain.  This is purely a
 convenience feature and not necessary to run any of the omics tools.
 """
+
 from pathlib import Path
 from string import Template
 
