@@ -76,16 +76,6 @@ Sunit Jain, (Tue May 13 16:07:06 EDT 2014)
 sunitj [AT] umich [DOT] edu
 
 
-=head1 LICENSE
-
-This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-
-
-=head1 DISCLAIMER
-
-This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-
 =head1 SEE ALSO
 
 L<omics(1)>, L<illumina-reads-processing(7)>
