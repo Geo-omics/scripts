@@ -1,3 +1,23 @@
+geo-omics-scripts (1.149-1) unstable; urgency=medium
+
+  * [asm] Fix bbnorm argument list
+  * [doc] Update omics tools page with text from the 'overdue update' commit READMEs
+  * Add GPL3 license text, rm/mv secondary license notices
+  * Add uniform copyright/license notices to almost all files
+  * Remove LICENSE and DISCLAIMER sections from manpages
+  * Add years of previous release to many scripts' copyright notice
+  * Remove obsolete maintenance script
+  * Remove obsolete file.
+  * README updated
+  * README: lab url updated, emails removed, formatting changes
+  * Use major.minor versioning, drop patch level
+  * Update list of files to install
+  * Leave version file unchanged at end of doing release
+  * [doc] Add short description for qc-check
+  * debian/*: Remove trivial readme file
+
+ -- Robert <heinro@umich.edu>  Tue, 14 May 2019 11:00:24 -0400
+
 geo-omics-scripts (1.0.148-1) unstable; urgency=medium
 
   * [qc] Use more explicit option name for input to rqcfilter2
@@ -68,7 +88,7 @@ geo-omics-scripts (1.0.141-1) unstable; urgency=medium
   * [prep] Add --skip-existing option
   * [prep] Move read count code into its own subcommand
 
- -- Robert <heinro@vondamm.earth.lsa.umich.edu>  Tue, 23 Apr 2019 17:16:59 -0400
+ -- Robert <heinro@umich.edu>  Tue, 23 Apr 2019 17:16:59 -0400
 
 geo-omics-scripts (1.0.140-1) unstable; urgency=medium
 
