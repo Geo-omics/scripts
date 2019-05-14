@@ -187,6 +187,8 @@ inc-version-tag:
 # 2. build stuff as needed for a release, i.e. sphinx docs
 # 3. build the tarball
 release: allcommitted inc-version-tag sphinx-docs hard-code-version dist
+	# reset hard-coded version file
+	git checkout -- lib/omics/_version.py
 
 install-data: installdir = $(DESTDIR)$(datadir)/$(package_name)
 install-data:
