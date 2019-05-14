@@ -164,6 +164,10 @@ OTHER_EXECUTABLES = \
     setup_metapathways \
     silva-db \
     unchop-contigs \
+    ESOM_binning_results_parser \
+    Metabat_to_anvio_parser \
+    VizBin_parser \
+
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\

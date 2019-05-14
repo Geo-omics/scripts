@@ -1,3 +1,4 @@
+#!/bin/bash
 cat *.conf > esom_scaffolds2bin.tsv
 sed '/^#/ d' esom_scaffolds2bin.tsv > esom_scaffolds2bin.cleaned.tsv
 awk 'BEGIN{OFS="\t"}{print $2,$1}' esom_scaffolds2bin.cleaned.tsv > esom_scaffolds2bin.tsv

@@ -1,3 +1,4 @@
+#!/bin/bash
 #DJS 5 September 2018
 
 #Run this shell script in a directory containing bin fasta files to get a summary tab-delimited file to import the bins as a collection in ANVIO.

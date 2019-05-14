@@ -1,3 +1,4 @@
+#!/bin/bash
 #Parse metabat output into format that can be import as a collection into the anvio profile:
 
 #This command will add the Bin ID in a column after the split name
