@@ -1,10 +1,22 @@
 #!/bin/bash
-#
-# Copyright (c) 2017 Regents of The University of Michigan.
-# All Rights Reserved.
-#
-# Author: Robert <heinro@med.umich.edu>
-#
+
+# Copyright 2014, 2015, 2019 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
 set -eE
 
 # shellcheck disable=SC2034
@@ -392,7 +404,6 @@ else
         $MKDIR -p "$OUTDIR"
         bbnorm_log=$OUTDIR/bbnorm.log
         bbnorm_args=(
-            out=$norm_reads
             threads=$CPUS
             target=25
             prefilter=t
@@ -423,7 +434,7 @@ else
             fwd_reads_arg=$fwd_norm_reads
             rev_reads_arg=$rev_norm_reads
         fi
-        info "Normalized reads saved as:\n${int_norm_reads:-${fwd_norm_reads}\n${rev_norm_reads}}"
+        info "Normalized reads saved as:\n${int_norm_reads:-${fwd_norm_reads:-}\n${rev_norm_reads:-}}"
 
     else
         # do not normalize, use reads as-is

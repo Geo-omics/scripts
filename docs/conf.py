@@ -80,7 +80,7 @@ else:
     version = res.stdout.decode()
 version = version.strip()
 
-if not re.match(r'\d+\.\d+\.\d+(-g-.*)?', version):
+if not re.match(r'\d+\.\d+(-g-.*)?', version):
     print('[WARNING] [making sphinx docs] Possibly bad version string: {}'
           ''.format(version))
     # use first 20 characters, just to get something reasonable, if above

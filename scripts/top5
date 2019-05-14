@@ -1,5 +1,23 @@
 #!/usr/bin/perl
 
+# Copyright 2013, 2014, 2015, 2019 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+
 =head1 NAME
 
 top5 - This program gets the top 5 hits for each query in a blast tabular output file.
@@ -55,16 +73,6 @@ B<top5> B<-b> sample.blastn B<-o> sample_topHits.blastn B<-t> 1
 
 Sunit Jain, (Tue May 13 16:07:06 EDT 2011)
 sunitj [AT] umich [DOT] edu
-
-
-=head1 LICENSE
-
-This script is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-
-
-=head1 DISCLAIMER
-
-This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 =head1 SEE ALSO

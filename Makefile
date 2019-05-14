@@ -1,3 +1,20 @@
+# Copyright 2019 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
 package_name = geo-omics-scripts
 
 # shell fragment to give status 0 if all changes are commited
@@ -12,7 +29,7 @@ date_version_appendix := $(shell $(all_committed) || echo -n -$(date))
 # Get version, try in order of priority (highest to lowest)
 # 0. VERSION environment variablke
 # 1. content of VERSION file
-# 2. output of `git describe` (plus possibly dat)
+# 2. output of `git describe` (plus possibly date)
 # 3. version in parent directory
 version0 := $(VERSION)
 version1 := $(shell cat VERSION 2>/dev/null)
@@ -52,17 +69,20 @@ man5dir := $(mandir)/man5
 man7dir := $(mandir)/man7
 
 EXTRA_DIST = \
-	COPYRIGHT \
+	COPYING \
 	Makefile \
-	modulefiles \
 	README.md \
+	localenv \
 	bash-completion \
 
 data_files = \
 	phylosiftrc \
 	TruSeq3-PE-2+omics.fa \
 
-doc_files = COPYRIGHT README.md
+doc_files = \
+	COPYING \
+	README.md \
+	scripts/COPYRIGHT.tetramer_freqs_esom \
 
 dist_dir = ../$(package_name)-$(version)
 html_dirs = \
@@ -105,19 +125,18 @@ hard-code-version:
 ifneq ($(MAKECMDGOALS),install-comics-local)
 # version arithmetic:
 # 0. check $version is compatible with `git describe` output
-#    with 1.2.3 sematic versioning tags
+#    with major.minor semantic versioning tags
 #    or appended date-time
-git_tag_pat = "^\d+\.\d+\.\d+(-\d+-g[a-f0-9]+)?(-[0-9]{8}-[0-9]{4})?$$"
+git_tag_pat = "^\d+\.\d+(-\d+-g[a-f0-9]+)?(-[0-9]{8}-[0-9]{4})?$$"
 version_pat = "^\d+\.\d+\.\d+$$"
 _good_version := $(if $(shell echo $(version) | grep -P $(git_tag_pat)), $(version), $(error Failed to parse version i.e. output of git describe or content of file VERSION: "$(version)"))
 # 1. extract semantic version numbers
 _sem_versions := $(subst ., ,$(subst -, ,$(_good_version)))
 major_version := $(word 1,$(_sem_versions))
 minor_version := $(word 2,$(_sem_versions))
-patch_version := $(word 3,$(_sem_versions))
-# 2. increment patch level
-inc_patch_version := $(shell echo $(patch_version)+1 | bc)
-inc_version := $(major_version).$(minor_version).$(inc_patch_version)
+# 2. increment minor version
+inc_minor_version := $(shell echo $(minor_version)+1 | bc)
+inc_version := $(major_version).$(inc_minor_version)
 endif
 
 distmkdir:
@@ -168,6 +187,8 @@ inc-version-tag:
 # 2. build stuff as needed for a release, i.e. sphinx docs
 # 3. build the tarball
 release: allcommitted inc-version-tag sphinx-docs hard-code-version dist
+	# reset hard-coded version file
+	git checkout -- lib/omics/_version.py
 
 install-data: installdir = $(DESTDIR)$(datadir)/$(package_name)
 install-data:
@@ -280,8 +301,7 @@ debug:
 	$(info Version 3: $(version3))
 	$(info Version: $(version))
 	$(info major version: $(major_version))
-	$(info minor version: $(minor_version))
-	$(info patch versions: $(patch_version) --> $(inc_patch_version))
+	$(info minor versions: $(minor_version) --> $(inc_minor_version))
 	$(info incremented version: $(inc_version))
 	$(info dist_dir: $(dist_dir))
 	if $(all_committed); then echo "git: all changed committed"; else echo "git: there are uncommitted changes"; fi

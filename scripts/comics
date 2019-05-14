@@ -1,10 +1,27 @@
 #!/bin/bash
-#
-# Copyright (c) 2018 Regents of The University of Michigan.
-# All Rights Reserved.
-#
-# Author: Robert <heinro@med.umich.edu>
-#
+
+# Copyright 2019 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+
+# comics is a convenience wrapper to execute commands inside certain
+# singularity containers in the Geomicrobiology group's and Flux computing
+# environments at the University of Michigan as well as to manage said
+# singularity containers.  It may be of little use outside these environments.
 
 set -eEu
 
@@ -216,11 +233,11 @@ else
     SINGULARITY_ARGS+=(--cleanenv)
 fi
 
-# In any case, keep PBS variables
-pbs_vars=()
-mapfile -t pbs_vars < <(env | { grep ^PBS || [[ $? = 1 ]]; })
-if [[ ${#pbs_vars[@]} -gt 0 ]]; then
-    for i in "${pbs_vars[@]}"; do
+# In any case, keep PBS and OMICS variables
+keep_vars=()
+mapfile -t keep_vars < <(env | { grep -P '(^PBS_|^OMICS_)' || [[ $? = 1 ]]; })
+if [[ ${#keep_vars[@]} -gt 0 ]]; then
+    for i in "${keep_vars[@]}"; do
         export "SINGULARITYENV_$i"
     done
 fi
@@ -233,7 +250,7 @@ if [[ -v PBS_JOBID ]]; then
         info "Detected requested memory for PBS job: $pbs_req_mem"
         pbs_req_mem=${pbs_req_mem%kb}
         pbs_req_mem=$(echo "scale=0; $pbs_req_mem / 1.1" | bc)
-        export SINGULARITYENV_pbs_req_mem=${pbs_req_mem}k
+        export SINGULARITYENV_OMICS_PBS_REQ_MEM=${pbs_req_mem}k
     else
         warning "Failed to detect requested memory for pbs job"
         debug "parsed from qstat output: \"$pbs_req_mem\""
