@@ -69,17 +69,20 @@ man5dir := $(mandir)/man5
 man7dir := $(mandir)/man7
 
 EXTRA_DIST = \
-	COPYRIGHT \
+	COPYING \
 	Makefile \
-	modulefiles \
 	README.md \
+	localenv \
 	bash-completion \
 
 data_files = \
 	phylosiftrc \
 	TruSeq3-PE-2+omics.fa \
 
-doc_files = COPYRIGHT README.md
+doc_files = \
+	COPYING \
+	README.md \
+	scripts/COPYRIGHT.tetramer_freqs_esom \
 
 dist_dir = ../$(package_name)-$(version)
 html_dirs = \

@@ -173,7 +173,8 @@ NON_EXECUTABLES = \
     tinySeq2table.xslt
 
 EXTRA_DIST = \
-    Makefile
+    Makefile \
+    COPYRIGHT.tetramer_freqs_esom \
 
 # perl scripts for which pod2man fails
 BAD_PODS = \
