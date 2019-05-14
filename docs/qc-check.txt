@@ -1,8 +1,8 @@
 .. program:: omics qc-check
 
-==================
-qc-check - bork me
-==================
+===================================================
+qc-check - Quickly check results of quality control
+===================================================
 
 .. argparse::
     :module: omics.qc_check
