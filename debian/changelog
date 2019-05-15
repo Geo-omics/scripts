@@ -1,3 +1,11 @@
+geo-omics-scripts (1.150-2) unstable; urgency=medium
+
+  * d/copyright: updated and improved
+  * d/rules: do not install extra license (lintian complaint)
+  * Use the bash-completion helper for correct install location (FIXME!)
+
+ -- Robert <heinro@umich.edu>  Wed, 15 May 2019 16:19:14 -0400
+
 geo-omics-scripts (1.150-1) unstable; urgency=medium
 
   * Adding Derek's binning-to-anvio parser scripts
