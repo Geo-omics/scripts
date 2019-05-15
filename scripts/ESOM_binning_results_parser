@@ -1,5 +1,25 @@
 #!/bin/bash
-cat *.conf > esom_scaffolds2bin.tsv
+
+# Copyright 2019 Derek Smith
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+set -e
+
+cat ./*.conf > esom_scaffolds2bin.tsv
 sed '/^#/ d' esom_scaffolds2bin.tsv > esom_scaffolds2bin.cleaned.tsv
 awk 'BEGIN{OFS="\t"}{print $2,$1}' esom_scaffolds2bin.cleaned.tsv > esom_scaffolds2bin.tsv
 awk 'BEGIN{OFS="\t"}{$2="Bin_"$2; print}' esom_scaffolds2bin.tsv > ESOM_binning_results.txt
