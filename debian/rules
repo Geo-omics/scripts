@@ -6,6 +6,11 @@
 override_dh_auto_install:
 	dh_auto_install -- prefix=/usr
 	find ./debian -type f -name COPYING -delete
+	# FIXME: keep bash completion (for now) from make install as it seems
+	# dh_bash-completion has no effect
+	# rm ./debian/geo-omics-scripts/etc/bash_completion.d/omics
+	# rmdir --ignore-fail-on-non-empty ./debian/geo-omics-scripts/etc/bash_completion.d
+	# rmdir --ignore-fail-on-non-empty ./debian/geo-omics-scripts/etc
 
 override_dh_compress:
 	dh_compress -X.pdf
