@@ -367,13 +367,12 @@ if [[ $FILTER == trimmomatic ]]; then
 elif [[ $FILTER == scythe ]]; then
     info1 "Start adapter trimming..."
     base="${base}.scythe"
-    # scythe_out to be fed into interleaver
+    # FIXME: simplify the piping since we don't ointerleave here anymore
     fwd_scythe_out=$tmpd/$fwd$base.fastq
     rev_scythe_out=$tmpd/$rev$base.fastq
     mkfifo "$fwd_scythe_out" "$rev_scythe_out"
     scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd_scythe_out" "$fwd_trim_in" &
     scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev_scythe_out" "$rev_trim_in" &
-    info1 "Start interleaving reads..."
     if $KEEPALL; then
         fwd_sickle_in=$tmpd/fwd.int_in.fastq
         rev_sickle_in=$tmpd/rev.int_in.fastq
