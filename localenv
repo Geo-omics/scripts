@@ -9,4 +9,5 @@ export PATH="$base/scripts:$PATH"
 export PYTHONPATH="$base/lib:$PYTHONPATH"
 mkdir -p -- "$base/share/geo-omics-scripts"
 ln -f -s -t "$base/share/geo-omics-scripts/" ../../lib/liba.sh
+ln -f -s -t "$base/share/geo-omics-scripts/" ../../TruSeq3-PE-2+omics.fa
 source "$base/bash-completion/omics"
