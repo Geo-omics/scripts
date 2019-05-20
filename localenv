@@ -10,4 +10,5 @@ export PYTHONPATH="$base/lib:$PYTHONPATH"
 mkdir -p -- "$base/share/geo-omics-scripts"
 ln -f -s -t "$base/share/geo-omics-scripts/" ../../lib/liba.sh
 ln -f -s -t "$base/share/geo-omics-scripts/" ../../TruSeq3-PE-2+omics.fa
+ln -f -s -t "$base/share/geo-omics-scripts/" ../../phylosiftrc
 source "$base/bash-completion/omics"
