@@ -188,14 +188,20 @@ fi
 [ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
 
+input_basename () {
+    # helper function to be like a multi-suffix basename
+    # allows fq/fastq with optional gz or zst compression
+    basename "$1" | sed -r "s/($(echo .{fq,fastq}{,.gz} | sed 's/ /|/g'))$//"
+}
+
 #################################
 # do stuff
 ################################
 
 # get root of input file names
-fwd=$(basename -s .fastq -s .fastq.gz "$FWD_FASTQ")
-rev=$(basename -s .fastq -s .fastq.gz "$REV_FASTQ")
-[ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames are equal?"
+fwd=$(input_basename "$FWD_FASTQ")
+rev=$(input_basename "$REV_FASTQ")
+[ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames have same basename: $fwd"
 
 clean_all () {
     clean_some all
