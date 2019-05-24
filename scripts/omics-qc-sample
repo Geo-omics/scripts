@@ -191,7 +191,7 @@ fi
 input_basename () {
     # helper function to be like a multi-suffix basename
     # allows fq/fastq with optional gz or zst compression
-    basename "$1" | sed -r "s/($(echo .{fq,fastq}{,.gz} | sed 's/ /|/g'))$//"
+    basename "$1" | sed -r "s/($(echo .{fq,fastq}{,.gz,.zst} | sed 's/ /|/g'))$//"
 }
 
 #################################
@@ -288,9 +288,15 @@ debug "Using temp dir: $tmpd"
 if [[ "$FWD_FASTQ" =~ .gz$ ]]; then
     unpigz -c -p "$CPUS" "$FWD_FASTQ" > "$tmpd/$fwd.fastq"
     FWD_FASTQ="$tmpd/$fwd.fastq"
+elif [[ "$FWD_FASTQ" =~ .zst$ ]]; then
+    unzstd -c "$FWD_FASTQ" > "$tmpd/$fwd.fastq"
+    FWD_FASTQ="$tmpd/$fwd.fastq"
 fi
 if [[ "$REV_FASTQ" =~ .gz$ ]]; then
     unpigz -c -p "$CPUS" "$REV_FASTQ" > "$tmpd/$rev.fastq"
+    REV_FASTQ="$tmpd/$rev.fastq"
+elif [[ "$REV_FASTQ" =~ .zst$ ]]; then
+    unzstd -c "$REV_FASTQ" > "$tmpd/$rev.fastq"
     REV_FASTQ="$tmpd/$rev.fastq"
 fi
 
