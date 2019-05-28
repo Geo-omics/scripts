@@ -175,10 +175,8 @@ abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else
 #########################
 [ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
 
-assembly=$(realpath "$ASSEMBLY")
-
 # get a "name" from name of assembly file without suffix
-name=$(basename "$assembly")
+name=$(basename "$ASSEMBLY")
 name=${name%.*}
 
 # HANDLE CHOPPING
@@ -191,6 +189,8 @@ if $CHOP_ASSEMBLY; then
     chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
     assembly=$(realpath "$chunk_file")
     name=${name}.chop
+else
+    assembly=$ASSEMBLY
 fi
 # END CHOPPING
 
