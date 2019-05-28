@@ -62,6 +62,11 @@ Optional parameters for which arguments are relative to each sample directory:
 
 Use either -f/-r, or -i, -or the -u option to specify read files but don't mix them.
 If no read files are specified, then the default forward and reverse files are used.
+
+To override bowtie2 default mapping options, set and export the environment
+variable OMICS_BOWTIE2_ARGS to a string listing your options as they would
+appear on the command line.  Your options will then be appended to the bowtie2
+command line overriding the default options.
 "
 SHORT_OPTIONS=a:cf:i:o:r:t:u:x:
 LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,threads:,unpaired
