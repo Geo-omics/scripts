@@ -334,10 +334,10 @@ else
         else
             # interpret comma-separated lists
             if $INTERLEAVED; then
-                IFS=, read -a int_reads < <(echo "$INT_READS")
+                IFS=, read -r -a int_reads < <(echo "$INT_READS")
             else
-                IFS=, read -a fwd_reads < <(echo "$FWD_READS")
-                IFS=, read -a rev_reads < <(echo "$REV_READS")
+                IFS=, read -r -a fwd_reads < <(echo "$FWD_READS")
+                IFS=, read -r -a rev_reads < <(echo "$REV_READS")
             fi
         fi
         if $INTERLEAVED; then
