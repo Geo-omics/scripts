@@ -284,20 +284,26 @@ trap clean_up EXIT
 tmpd=$(mktemp -d)
 debug "Using temp dir: $tmpd"
 
-# decompress input as needed
+# decompress input as needed and set output compression mode
+COMPRESS_GZ=false
+COMPRESS_ZST=false
 if [[ "$FWD_FASTQ" =~ .gz$ ]]; then
+    COMPRESS_GZ=true
     unpigz -c -p "$CPUS" "$FWD_FASTQ" > "$tmpd/$fwd.fastq"
     FWD_FASTQ="$tmpd/$fwd.fastq"
 elif [[ "$FWD_FASTQ" =~ .zst$ ]]; then
     unzstd -c "$FWD_FASTQ" > "$tmpd/$fwd.fastq"
     FWD_FASTQ="$tmpd/$fwd.fastq"
+    COMPRESS_ZST=true
 fi
 if [[ "$REV_FASTQ" =~ .gz$ ]]; then
+    COMPRESS_GZ=true
     unpigz -c -p "$CPUS" "$REV_FASTQ" > "$tmpd/$rev.fastq"
     REV_FASTQ="$tmpd/$rev.fastq"
 elif [[ "$REV_FASTQ" =~ .zst$ ]]; then
     unzstd -c "$REV_FASTQ" > "$tmpd/$rev.fastq"
     REV_FASTQ="$tmpd/$rev.fastq"
+    COMPRESS_ZST=true
 fi
 
 # estimate tmp space needs
@@ -496,9 +502,25 @@ while true; do
     fi
     sleep 10
 done
+
+out_compress_gz () {
+    pigz -c -p "$CPUS" "${V[@]}" "$1" > "$2" && rm "${V[@]}" -- "$1"
+}
+out_compress_zst () {
+    zstd -c --rm "${V[@]}" "$1" > "$2"
+}
+
 {
-    mv "${V[@]}" -- "$tmp_fwd_final" "$fwd_final"
-    mv "${V[@]}" -- "$tmp_rev_final" "$rev_final"
+    if $COMPRESS_GZ; then
+        out_compress_gz "$tmp_fwd_final" "$fwd_final".gz
+        out_compress_gz "$tmp_rev_final" "$rev_final".gz
+    elif $COMPRESS_ZST; then
+        out_compress_zst "$tmp_fwd_final" "$fwd_final".zst
+        out_compress_zst "$tmp_rev_final" "$rev_final".zst
+    else
+        mv "${V[@]}" -- "$tmp_fwd_final" "$fwd_final"
+        mv "${V[@]}" -- "$tmp_rev_final" "$rev_final"
+    fi
 } &
 
 if $KEEPALL; then
