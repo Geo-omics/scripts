@@ -13,9 +13,6 @@ support for any [issues](https://github.com/Geo-omics/scripts/issues "Report an
 issue"). Please do let us know if you find any bugs or easier/quicker/more
 elegant solutions.
 
-This material is based upon work supported by the **National Science
-Foundation** under Grant Number **EAR-1035955**.
-
 
 ## Language and OS Dependencies
 
@@ -26,10 +23,13 @@ environments.  Here is a list of easy to install languages that you'll need:
 * Python version 3.5 +
 * R version 3 +
 
+## Contact
+
+Please send questions or comments to <geo-omics-scripts@umich.edu>.
 
 ## Principal Investigator
 
-[Gregory J. Dick](https://sites.lsa.umich.edu/geomicro/ "Geo-omics Lab Homepage"), gdick [AT] umich [DOT] edu
+[Gregory J. Dick](https://sites.lsa.umich.edu/geomicro/ "Geomicrobiology Lab Homepage"), gdick [AT] umich [DOT] edu
 
 
 ## License
@@ -41,10 +41,6 @@ later version.
 
 
 ## Disclaimer
-
-Any opinions, findings, and conclusions or recommendations expressed in this
-material are those of the author(s) and do not necessarily reflect the views of
-the **National Science Foundation**.
 
 **Geo-omics scripts are distributed in the hope that they will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or

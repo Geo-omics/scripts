@@ -62,6 +62,11 @@ Optional parameters for which arguments are relative to each sample directory:
 
 Use either -f/-r, or -i, -or the -u option to specify read files but don't mix them.
 If no read files are specified, then the default forward and reverse files are used.
+
+To override bowtie2 default mapping options, set and export the environment
+variable OMICS_BOWTIE2_ARGS to a string listing your options as they would
+appear on the command line.  Your options will then be appended to the bowtie2
+command line overriding the default options.
 "
 SHORT_OPTIONS=a:cf:i:o:r:t:u:x:
 LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,threads:,unpaired
@@ -175,10 +180,8 @@ abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else
 #########################
 [ -e "$ASSEMBLY" ] || abort "Assembly file does not exist: $ASSEMBLY"
 
-assembly=$(realpath "$ASSEMBLY")
-
 # get a "name" from name of assembly file without suffix
-name=$(basename "$assembly")
+name=$(basename "$ASSEMBLY")
 name=${name%.*}
 
 # HANDLE CHOPPING
@@ -191,6 +194,8 @@ if $CHOP_ASSEMBLY; then
     chop-contigs --input "$assembly" --chunk-size "$CHUNK_SIZE" --output "$chunk_file"
     assembly=$(realpath "$chunk_file")
     name=${name}.chop
+else
+    assembly=$ASSEMBLY
 fi
 # END CHOPPING
 
@@ -249,6 +254,13 @@ else
     [ -e "$REV_READS" ] || abort "Reads file not found: $REV_READS"
 fi
 
+cleanup () {
+    if [[ -d "${tmpd:-}" ]]; then
+        rm -rf "$tmpd"
+    fi
+}
+trap cleanup EXIT
+
 #################################
 # do stuff
 ################################
@@ -257,8 +269,16 @@ if $use_int_reads; then
 elif $opts_unp; then
     unp_reads=$(readlink -f "$UNPAIRED_READS")
 else
-    fwd_reads=$(readlink -f "$FWD_READS")
-    rev_reads=$(readlink -f "$REV_READS")
+    if [[ "$FWD_READS" =~ \.zst$ ]]; then
+        [[ -d "${tmpd:-}" ]] || tmpd=$(mktemp -d)
+        fwd_reads="$tmpd"/fwd.fq
+        rev_reads="$tmpd"/rev.fq
+        zstd -d -T"$CPUS" "$FWD_READS" -o "$fwd_reads"
+        zstd -d -T"$CPUS" "$FWD_READS" -o "$rev_reads"
+    else
+        fwd_reads=$(readlink -f "$FWD_READS")
+        rev_reads=$(readlink -f "$REV_READS")
+    fi
 fi
 
 log=${name}.bowtie2.log
@@ -318,6 +338,8 @@ bowtie2 "${bt2_args[@]}" 2>"$log" \
     | samtools sort "${sort_args[@]}" - \
     | tee "$sortBam" \
     | samtools index - "$sortBam.bai" \
+
+cleanup  # temp decompressed files not needed anymore
 
 info "Calculating Coverage..."
 echo -e 'Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth' > "$bedOut"

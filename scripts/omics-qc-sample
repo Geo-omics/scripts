@@ -188,14 +188,20 @@ fi
 [ -r "$FWD_FASTQ" ] || abort1 "Forward reads file not found: $FWD_FASTQ"
 [ -r "$REV_FASTQ" ] || abort1 "Reverse reads file not found: $REV_FASTQ"
 
+input_basename () {
+    # helper function to be like a multi-suffix basename
+    # allows fq/fastq with optional gz or zst compression
+    basename "$1" | sed -r "s/($(echo .{fq,fastq}{,.gz,.zst} | sed 's/ /|/g'))$//"
+}
+
 #################################
 # do stuff
 ################################
 
 # get root of input file names
-fwd=$(basename "$FWD_FASTQ" .fastq)
-rev=$(basename "$REV_FASTQ" .fastq)
-[ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames are equal?"
+fwd=$(input_basename "$FWD_FASTQ")
+rev=$(input_basename "$REV_FASTQ")
+[ "$fwd" != "$rev" ] || abort1 "Forward and reverse reads filenames have same basename: $fwd"
 
 clean_all () {
     clean_some all
@@ -275,9 +281,35 @@ clean_up () {
 trap clean_up EXIT
 
 # set up temp dir
+tmpd=$(mktemp -d)
+debug "Using temp dir: $tmpd"
+
+# decompress input as needed and set output compression mode
+COMPRESS_GZ=false
+COMPRESS_ZST=false
+if [[ "$FWD_FASTQ" =~ .gz$ ]]; then
+    COMPRESS_GZ=true
+    unpigz -c -p "$CPUS" "$FWD_FASTQ" > "$tmpd/$fwd.fastq"
+    FWD_FASTQ="$tmpd/$fwd.fastq"
+elif [[ "$FWD_FASTQ" =~ .zst$ ]]; then
+    unzstd -c "$FWD_FASTQ" > "$tmpd/$fwd.fastq"
+    FWD_FASTQ="$tmpd/$fwd.fastq"
+    COMPRESS_ZST=true
+fi
+if [[ "$REV_FASTQ" =~ .gz$ ]]; then
+    COMPRESS_GZ=true
+    unpigz -c -p "$CPUS" "$REV_FASTQ" > "$tmpd/$rev.fastq"
+    REV_FASTQ="$tmpd/$rev.fastq"
+elif [[ "$REV_FASTQ" =~ .zst$ ]]; then
+    unzstd -c "$REV_FASTQ" > "$tmpd/$rev.fastq"
+    REV_FASTQ="$tmpd/$rev.fastq"
+    COMPRESS_ZST=true
+fi
+
+# estimate tmp space needs
+# TODO: re-evaluate this
 declare -i size_reads tmp_avail expected
 size_reads=$(stat --print=%s "$FWD_FASTQ")
-tmpd=$(mktemp -d)
 expected=$((size_reads*20))
 tmp_avail=$(df --output=avail "$tmpd" | grep '[0-9]')
 tmp_avail=$((tmp_avail*1024))
@@ -287,7 +319,6 @@ if [[ $expected -gt $tmp_avail ]]; then
     warning1 "There may not be sufficient space for your temporary files:"
     warning1 "Available at $tmpd: $tmp_avail bytes, expected need: $expected"
 fi
-debug "Using temp dir: $tmpd"
 
 # clean up first
 clean_some
@@ -354,13 +385,12 @@ if [[ $FILTER == trimmomatic ]]; then
 elif [[ $FILTER == scythe ]]; then
     info1 "Start adapter trimming..."
     base="${base}.scythe"
-    # scythe_out to be fed into interleaver
+    # FIXME: simplify the piping since we don't ointerleave here anymore
     fwd_scythe_out=$tmpd/$fwd$base.fastq
     rev_scythe_out=$tmpd/$rev$base.fastq
     mkfifo "$fwd_scythe_out" "$rev_scythe_out"
     scythe -a "$ADAPTERS" -q sanger -m "$fwd${oldbase}.matches.fastq" -o "$fwd_scythe_out" "$fwd_trim_in" &
     scythe -a "$ADAPTERS" -q sanger -m "$rev${oldbase}.matches.fastq" -o "$rev_scythe_out" "$rev_trim_in" &
-    info1 "Start interleaving reads..."
     if $KEEPALL; then
         fwd_sickle_in=$tmpd/fwd.int_in.fastq
         rev_sickle_in=$tmpd/rev.int_in.fastq
@@ -472,9 +502,25 @@ while true; do
     fi
     sleep 10
 done
+
+out_compress_gz () {
+    pigz -c -p "$CPUS" "${V[@]}" "$1" > "$2" && rm "${V[@]}" -- "$1"
+}
+out_compress_zst () {
+    zstd -c --rm "${V[@]}" "$1" > "$2"
+}
+
 {
-    mv "${V[@]}" -- "$tmp_fwd_final" "$fwd_final"
-    mv "${V[@]}" -- "$tmp_rev_final" "$rev_final"
+    if $COMPRESS_GZ; then
+        out_compress_gz "$tmp_fwd_final" "$fwd_final".gz
+        out_compress_gz "$tmp_rev_final" "$rev_final".gz
+    elif $COMPRESS_ZST; then
+        out_compress_zst "$tmp_fwd_final" "$fwd_final".zst
+        out_compress_zst "$tmp_rev_final" "$rev_final".zst
+    else
+        mv "${V[@]}" -- "$tmp_fwd_final" "$fwd_final"
+        mv "${V[@]}" -- "$tmp_rev_final" "$rev_final"
+    fi
 } &
 
 if $KEEPALL; then

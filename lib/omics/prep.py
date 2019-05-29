@@ -17,6 +17,9 @@
 
 """
 Prepare fastq files for processing with Geomicro Illumina Reads Pipeline
+
+prep copies, renames, and (optionally) decompresses your (gzipped) fastq
+files to ensure a standardized setup for further processing.
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -185,7 +188,7 @@ def sample_direction(filename):
 
 
 def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
-         skip_existing=False, executor=None):
+         keep_compression=False, skip_existing=False, executor=None):
     """
     Decompress and copy files into sample directory
 
@@ -196,6 +199,7 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
     :param Path dest: Project directory, destination / output directory
     :param bool force: If true, skip any safety check and overwrite existing
                        files.  Has no effect if skip_existing is True..
+    :param bool keep_compression: Do not decompress compressed data.
     :param bool skip_existing: Do nothing if a destination file exists.
     :param executor: A concurrent.futures.Executor object.  If executor is None
                      then all will be done single-threaded.
@@ -213,6 +217,17 @@ def prep(sample, files, dest=Path.cwd(), force=False, verbosity=1,
 
     fwd_outfile = destdir / FORWARD_READS_FILE
     rev_outfile = destdir / REVERSE_READS_FILE
+
+    if keep_compression:
+        if all([i.suffix == '.gz' for i in files]):
+            # keep output compressed only if *ALL* files of sample are gzipped
+            fwd_outfile = fwd_outfile.with_name(fwd_outfile.name + '.gz')
+            rev_outfile = rev_outfile.with_name(rev_outfile.name + '.gz')
+        else:
+            print('Note: some or all input files of sample {} are uncompressed'
+                  ' so all sample data will be uncompressed.'
+                  ''.format(sample), file=sys.stderr)
+
     for i in [fwd_outfile, rev_outfile]:
         if i.is_file():
             if skip_existing:
@@ -255,6 +270,11 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
     """
     Helper function doing all the parallelizable IO work
 
+    Input files with .gz suffix will be de-compressed unless the output
+    also has the .gz suffix.  If the output file suffix is .gz and the input
+    is mixed gzipped and uncompressed then the output will be a corrupted mix
+    of plain and compressed data.
+
     :param Path outfile: Output file
     :param series: List of input files
 
@@ -262,7 +282,7 @@ def _do_extract_and_copy(sample, outfile, series, verbosity):
     """
     with outfile.open('ab') as outf:
         for i in series:
-            if i.suffix == '.gz':
+            if i.suffix == '.gz' and outfile.suffix != '.gz':
                 infile = gzip.open(str(i), 'r')
                 action = 'extr'
             else:
@@ -343,6 +363,11 @@ def main(argv=None):
         '--skip-existing',
         action='store_true',
         help='Skip sample when a destination file exists',
+    )
+    argp.add_argument(
+        '--keep-compression',
+        action='store_true',
+        help='Keep files in compressed format.  The default is to decompress.',
     )
     argp.add_argument(
         '--keep-lanes-separate',
@@ -433,6 +458,7 @@ def main(argv=None):
                         dest=dest,
                         force=args.force,
                         verbosity=verbosity,
+                        keep_compression=args.keep_compression,
                         skip_existing=args.skip_existing,
                         executor=e,
                     )
