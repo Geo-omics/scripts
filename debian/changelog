@@ -1,3 +1,17 @@
+geo-omics-scripts (1.151-1) unstable; urgency=medium
+
+  * [prep] Add option to keep gzipped data compressed
+  * [qc] Accept gzipped input
+  * [qc] Remove obsolete info message and replace obsolete and misleading comment
+  * [qc] Fix regression: suffix stripping, also allow .fq suffices
+  * [qc] Accept zstd-compressed input
+  * [qc] Compress output if input is compressed
+  * [mapping] Respect symlink name of symlinked assemblies
+  * [qc] Add paragraph to help
+  * [mapping] Allow mapping of zstd compressed reads files
+
+ -- Robert <heinro@umich.edu>  Wed, 29 May 2019 11:03:49 -0400
+
 geo-omics-scripts (1.150-2) unstable; urgency=medium
 
   * d/copyright: updated and improved
