@@ -1,3 +1,10 @@
+geo-omics-scripts (1.152-1) unstable; urgency=medium
+
+  * more flexible metabat to anvio conversion script
+  * [mapping] Add --skip-coverage option
+
+ -- Robert <heinro@umich.edu>  Mon, 10 Jun 2019 16:50:39 -0400
+
 geo-omics-scripts (1.151-1) unstable; urgency=medium
 
   * [prep] Add option to keep gzipped data compressed
