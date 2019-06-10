@@ -25,11 +25,11 @@
 
 set -eu
 
-# This command will add the Bin ID in a column after the split name
-for i in Bin.*; do sed -i "s/$/\t$i/" "$i"; done
-
-# This command concatenates all the files into one binning results file for anvio:
-cat Bin.* > Metabat_binning_results.txt
-
-# Replace the dots with underscores to make anvio happy...
-sed -i 's/Bin./Bin_/g' Metabat_binning_results.txt
+[[ "$#" -gt 0 ]] || { echo "Arguments required: Metabat output files"; exit 1; }
+# This command will add the Bin ID in a column after the split name,
+# replace the dots with underscores to make anvio happy...,
+# and concatenate all the files into one binning results file for anvio:
+for i in "$@"; do
+    binid=${i/./_}
+    sed "s/$/\t$binid/" "$i"
+done > Metabat_binning_results.txt
