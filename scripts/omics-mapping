@@ -47,6 +47,8 @@ Optional parameters:
   -t, --cpus, --threads N
                         Number of CPUs/threads to use for parallel processing
       --force           Overwrite any previous results
+      --skip-coverage   Stop after the BAM files are created and skip calculating
+                        coverage
 
 Optional parameters for which arguments are relative to each sample directory:
 
@@ -69,13 +71,14 @@ appear on the command line.  Your options will then be appended to the bowtie2
 command line overriding the default options.
 "
 SHORT_OPTIONS=a:cf:i:o:r:t:u:x:
-LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,threads:,unpaired
-CHECK_PROGS="bowtie2 genomeCoverageBed samtools coveragePerScaffold"
+LONG_OPTIONS=chop,chunk-size:,cpus:,fwd-reads:,force,rev-reads:,assembly:,index-dir:,index-only,out-dir:,int-reads:,skip-coverage,threads:,unpaired
+CHECK_PROGS="bowtie2 samtools"
 }
 
 ##########################
 # default variable values
 ##########################
+CALCULATE_COVERAGE=true
 # chop up assembly into pieces of equal size,
 # should be done when using CONCOCT
 CHOP_ASSEMBLY=false
@@ -145,6 +148,9 @@ handle_options () {
 	    (--index-only)
 		INDEX_ONLY=true
 		return 1;;
+            (--skip-coverage)
+                CALCULATE_COVERAGE=false
+                return 1;;
 	    (-u|--unpaired)
 	        UNPAIRED_READS="$2"
 		opts_unp=true
@@ -341,14 +347,16 @@ bowtie2 "${bt2_args[@]}" 2>"$log" \
 
 cleanup  # temp decompressed files not needed anymore
 
-info "Calculating Coverage..."
-echo -e 'Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth' > "$bedOut"
-genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
-info "Result at $bedOut"
+if $CALCULATE_COVERAGE; then
+    info "Calculating Coverage..."
+    echo -e 'Contig\tDepth\tbases_with_depth\tcontigLen\tfraction_bases_with_depth' > "$bedOut"
+    genomeCoverageBed -ibam "$sortBam" -g "$assembly" | grep -v "^__" >> "$bedOut"
+    info "Result at $bedOut"
 
-info "Calculating Coverage Per Scaffold..."
-coveragePerScaffold -bed "$bedOut" > "$scafCov"
-info "Result at $scafCov"
+    info "Calculating Coverage Per Scaffold..."
+    coveragePerScaffold -bed "$bedOut" > "$scafCov"
+    info "Result at $scafCov"
+fi
 
 info "Mapping done, find results in $OUT_DIR"
 
