@@ -95,10 +95,13 @@ def _chop(sequence, size):
     """
     Helper function to chop up sequences
     """
-    if len(sequence) >= 2 * size:
-        return [sequence[:size]] + _chop(sequence[size:], size)
-    else:
-        return [sequence]
+    ret = []
+    while len(sequence) >= 2 * size:
+        ret.append(sequence[:size])
+        sequence = sequence[size:]
+
+    ret.append(sequence)
+    return ret
 
 
 def _write_chunks(outfile, header, chunks, wrap, no_dot_zero):
