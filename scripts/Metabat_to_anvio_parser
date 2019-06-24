@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Copyright 2019 Derek Smith
+# Copyright 2019 Regents of The University of Michigan.
 
 # This file is part of geo-omics-scripts.
 
@@ -28,8 +29,10 @@ set -eu
 [[ "$#" -gt 0 ]] || { echo "Arguments required: Metabat output files"; exit 1; }
 # This command will add the Bin ID in a column after the split name,
 # replace the dots with underscores to make anvio happy...,
-# and concatenate all the files into one binning results file for anvio:
+# and concatenate all the files into one binning results file for anvio.
+# (Assumes that filenames (if coming from different directories) don't collide)
 for i in "$@"; do
-    binid=${i/./_}
+    binid=$(basename -s .fa "$i")
+    binid=${binid/./_}
     sed "s/$/\t$binid/" "$i"
 done > Metabat_binning_results.txt
