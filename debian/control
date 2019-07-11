@@ -2,11 +2,10 @@ Source: geo-omics-scripts
 Section: science
 Priority: optional
 Maintainer: Robert <heinro@umich.edu>
-Build-Depends: debhelper (>=10), dh-python, python3-all, python3-sphinx-argparse,
+Build-Depends: debhelper (>=11), dh-python, python3-all, python3-sphinx-argparse,
  bash-completion,
 Standards-Version: 4.1.2
 Homepage: http://www.earth.lsa.umich.edu/geomicrobiology/
-X-Python3-Version: >= 3.2
 
 Package: geo-omics-scripts
 Architecture: all
