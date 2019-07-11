@@ -4,7 +4,7 @@ geo-omics-scripts (1.153-1) buster; urgency=medium
   * Increase robustness and flexibility
   * merge-coverage: improve speed: binary IO + operator functions for lambdas
 
- -- Robert <heinro@umich.edu>  Thu, 11 Jul 2019 16:05:13 -0400
+ -- Robert <heinro@umich.edu>  Thu, 11 Jul 2019 16:15:06 -0400
 
 geo-omics-scripts (1.152-1) unstable; urgency=medium
 
