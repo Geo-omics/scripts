@@ -23,6 +23,7 @@ Make a table of coverage per contig per sample suitable for input to CONCOCT
 import argparse
 from collections import OrderedDict
 from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 import sys
 
@@ -34,7 +35,7 @@ def read_tsv(file):
     :param iterable file: Iterable of lines of tab-separated data
     """
     for line in file:
-        yield line.strip().split('\t')
+        yield line.strip().split(b'\t')
 
 
 def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
@@ -72,13 +73,13 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
         raise RuntimeError('Please provide the assembly, assembly-less '
                            'algorithm is not implemented')
 
-    with assembly.open() as inf:
+    with assembly.open('rb') as inf:
         info('Reading assembly...', end=' ')
         # get contigs from assembly
         contigs = sorted([
-            line.strip().lstrip('>').split()[0]
+            line.strip().lstrip(b'>').split()[0]
             for line in inf
-            if line.startswith('>')
+            if line.startswith(b'>')
         ])
 
     out_data = OrderedDict([
@@ -88,9 +89,9 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
     info('done')
 
     for path, sample_id in zip(inputfiles, ids):
-        with path.open() as inf:
+        with path.open('rb') as inf:
             # check header
-            head = inf.readline().strip().split('\t')
+            head = [i.decode() for i in inf.readline().strip().split(b'\t')]
             if not head == ['Contig', 'Depth', 'bases_with_depth',
                             'contigLen', 'fraction_bases_with_depth']:
                 raise RuntimeError('Unexpected header found in {}'
@@ -102,8 +103,8 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
             in_data = {
                     contig: list(it)
                     for contig, it in groupby(
-                        sorted(read_tsv(inf), key=lambda x: x[0]),
-                        lambda x: x[0]
+                        sorted(read_tsv(inf), key=itemgetter(0)),
+                        itemgetter(0)
                     )
             }
 
@@ -160,12 +161,13 @@ def main(assembly, outfile, *inputfiles, with_length=False, verbose=False):
 
     info('Writing output...', end='')
     print(*header, sep='\t', file=outfile)
-    for contig in out_data:
-        out_line = [contig]
+    for contig, contig_data in out_data.items():
+        out_line = [contig.decode()]
         if with_length:
-            out_line.append(out_data[contig]['length'] or 0)
-        out_line += ['{:.6f}'.format(i) for i in out_data[contig]['means']]
-        print(*out_line, sep='\t', file=outfile)
+            out_line.append(contig_data['length'] or 0)
+        out_line += ['{:.6f}'.format(i) for i in contig_data['means']]
+        print(*out_line, sep='\t', file=outfile, flush=False)
+    outfile.flush()
     info('done')
 
 
