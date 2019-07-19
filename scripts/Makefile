@@ -160,6 +160,8 @@ OTHER_EXECUTABLES = \
     omics-qc-sample \
     refseq-rna \
     remove_space_from_filenames \
+    rgi-coverage \
+    rgi-setup \
     separate-interleaved\
     setup_metapathways \
     silva-db \
