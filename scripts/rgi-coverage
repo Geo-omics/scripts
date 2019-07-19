@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+
+# Copyright 2019 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Make sample and rgi hit coverage table
+"""
+import argparse
+from collections import OrderedDict
+import csv
+from itertools import groupby
+from pathlib import Path
+from statistics import median
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    '-r', '--rgi-main-result',
+    type=argparse.FileType(),
+    help='RGI main result, tab-separated text file',
+)
+argp.add_argument(
+    '-c', '--read-counts',
+    type=argparse.FileType(),
+    help='Read counts file, two-columns, tab-separated, mapping samples to '
+         'good readcounts.  Use this if the covarage files have the raw, '
+         'non-normalized values',
+)
+argp.add_argument(
+    '-n', '--normal-count',
+    type=int,
+    default=None,
+    help='Base read count used to normalize coverage when a read count file '
+         'is given also.  The default is to use the median read count over '
+         'all counts in the count file',
+)
+argp.add_argument(
+    '-a', '--aggregate-results',
+    action='store_true',
+    help='Sum coverage for hits on same CARD db entry (same Best_Hit_ARO.) '
+         'The default is to list coverage for each gene call with a hit.',
+)
+argp.add_argument(
+    '-o', '--output',
+    type=argparse.FileType('w'),
+    required=True,
+    help='name of output file',
+)
+argp.add_argument(
+    'coverage',
+    nargs='+',
+    type=argparse.FileType(),
+    help='One or more per-sample coverage files, tab-separated, first column '
+         'is contig id, second column is coverage, ignore line starting with '
+         '#',
+)
+args = argp.parse_args()
+
+# extract sample ids from variable part of coverage paths
+samples = [Path(i.name).parts for i in args.coverage]
+# remove leading parts if all the same
+while len(set([i[0] for i in samples])) == 1:
+    samples = [i[1:] for i in samples]
+# remove trailing parts if all the same
+while len(set([i[-1] for i in samples])) == 1:
+    samples = [i[:-1] for i in samples]
+samples = ['/'.join(i) for i in samples]
+
+if len(samples) != len(set(samples)):
+    raise RuntimeError('sample id extraction code broken: ids are not unique')
+
+# calculate normalizations factors from read counts
+cov_norm_factor = {}
+if args.read_counts:
+    # load read counts
+    # load counts for all samples in count file not just samples on cmd line
+    read_counts = {}
+    for line in args.read_counts:
+        try:
+            sample, count = line.strip().split('\t')
+            count = int(count)
+        except Exception as e:
+            raise RuntimeError(
+                'Failed to parse read count file: {}: {}, offending line:\n{}'
+                ''.format(e.__class__.__name__, e, line)
+            )
+        read_counts[sample] = count
+
+    if args.normal_count:
+        median_count = args.normal_count
+    else:
+        # use median over all counts in count file not just what;s on cmd line
+        median_count = median(read_counts.values())
+        print('Using median read count of {} as coverage normalization base.'
+              ''.format(median_count))
+
+    for sample in samples:
+        try:
+            count = read_counts[sample]
+        except KeyError:
+            raise RuntimeError(
+                'sample id {} (as parsed from command line not found in reads '
+                'count file'.format(sample)
+            )
+        cov_norm_factor[sample] = count / median_count
+else:
+    print('Read counts not provided: will not normalize coverages!')
+    for sample in samples:
+        cov_norm_factor[sample] = 1.0
+
+contig_map = {}
+data = OrderedDict()
+# load rgi data
+print('Loading RGI results ... ', end='', flush=True)
+for hit in csv.DictReader(args.rgi_main_result, delimiter='\t'):
+    # assume Contig column has entries of form k255_123456_4
+    # i.e. prodigal style identifiers
+    # get contig id (k255_123456) without gene id (4)
+    contig, _, _ = hit['Contig'].rpartition('_')
+    if contig in contig_map:
+        contig_map[contig].append(hit)
+    else:
+        contig_map[contig] = [hit]
+    # assumes Contig, i.e. the gene ids are unique
+    data[hit['Contig']] = (contig, hit['Best_Hit_ARO'], [])
+
+print('{} hits on {} contigs'.format(
+    sum([len(contig_map[i]) for i in contig_map]),
+    len(contig_map)
+))
+
+for sample, cov_file in zip(samples, args.coverage):
+    print('processing', sample)
+    for line in cov_file:
+        line = line.strip()
+        if line.startswith('#'):
+            continue
+        try:
+            contig, coverage = line.split('\t')[:2]
+        except Exception as e:
+            raise RuntimeError(
+                'Failed to parse coverage file: {}\n{}: {}\nat this line:\n{}'
+                ''.format(cov_file.name, e.__class__.__name__, e, line)
+            )
+
+        try:
+            coverage = float(coverage)
+        except ValueError:
+            raise RuntimeError(
+                'Failed to parse coverage file, string to float conversion, '
+                'offending line is:\n{}'.format(line)
+            )
+
+        coverage = coverage * cov_norm_factor[sample]
+
+        if contig in contig_map:
+            for hit in contig_map[contig]:
+                # assumes "Contig" i.e. the gene id values are unique in RGI
+                # result
+                data[hit['Contig']][2].append((
+                    sample,
+                    coverage,
+                ))
+
+# write output
+print('Writing output...', end='', flush=True)
+if args.aggregate_results:
+    header = ['Best_Hit_ARO'] + samples
+    args.output.write('\t'.join(header) + '\n')
+    # group by aro
+    sorted_data = sorted(data.items(), key=lambda x: x[1][1])
+    grouped_data = groupby(sorted_data, key=lambda x: x[1][1])
+    for aro, data_items in grouped_data:
+        cov_sums = None
+        for _, (_, _, item_cov_list) in data_items:
+            if cov_sums is None:
+                cov_sums = item_cov_list
+            else:
+                for i, ((sample1, cov_sum), (sample2, cov)) \
+                        in enumerate(zip(cov_sums, item_cov_list)):
+                    if sample1 != sample2:
+                        raise RuntimeError('a bug! expected same sample')
+                    cov_sums[i] = (sample1, cov_sum + cov)
+
+        row = [aro]
+        row += [str(i[1]) for i in cov_sums]
+        args.output.write('\t'.join(row) + '\n')
+else:
+    header = ['contig', 'gene_call', 'Best_Hit_ARO'] + samples
+    args.output.write('\t'.join(header) + '\n')
+    for seq_id, (contig, aro, cov_list) in data.items():
+        row = [contig, seq_id, aro]
+        row += [str(i[1]) for i in cov_list]
+        args.output.write('\t'.join(row) + '\n')
+print(' done')
