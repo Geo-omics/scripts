@@ -1,3 +1,10 @@
+geo-omics-scripts (1.154-1) buster; urgency=medium
+
+  * Add rgi setup and coverage compilation tools
+  * d/control: add latexmk build-dep, needed to make PDFs
+
+ -- Robert <heinro@umich.edu>  Fri, 19 Jul 2019 14:25:24 -0400
+
 geo-omics-scripts (1.153-1) buster; urgency=medium
 
   * [chop-contigs] Fix crash for small chunk sizes
