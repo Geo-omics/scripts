@@ -25,7 +25,7 @@
 ###########################################
 set -euo pipefail
 
-trap 'error at line $LINENO, exit status $?' ERR
+trap 'echo "error at line $LINENO, exit status $?"' ERR
 card=./card.json
 
 # Load CARD reference data
