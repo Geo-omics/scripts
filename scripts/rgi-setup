@@ -47,6 +47,7 @@ rgi load -i $card --card_annotation card_database_v"$version".fasta --local
 wget -O wildcard_data.tar.bz2 https://card.mcmaster.ca/latest/variants
 mkdir -p wildcard
 tar -xvf wildcard_data.tar.bz2 -C wildcard
+rm wildcard_data.tar.bz2
 gunzip wildcard/*.gz
 
 rgi wildcard_annotation -i wildcard --card_json $card -v "$version" > wildcard_annotation.log 2>&1
