@@ -3,6 +3,8 @@ import argparse
 from collections import OrderedDict
 import curses
 from enum import auto
+import sys
+
 
 PARTS_GAP = 3  # gap between upper and lower screen parts
 ENUM_WIDTH = 4  # space for enumeration
@@ -195,6 +197,21 @@ def alen(data):
     return alen
 
 
-args = get_args()
-data = prep_data(args.infile)
-curses.wrapper(display, data)
+def debug(*args, **kwargs):
+    debug_out.append((args, kwargs))
+
+
+def print_debug():
+    for args, kwargs in debug_out:
+        print(*args, **kwargs, file=sys.stdout)
+
+
+debug_out = []
+try:
+    args = get_args()
+    data = prep_data(args.infile)
+    curses.wrapper(display, data)
+except Exception:
+    raise
+finally:
+    print_debug()
