@@ -251,13 +251,13 @@ def alen(data):
     return alen
 
 
-def debug(*args, **kwargs):
-    debug_out.append((args, kwargs))
+def debug(*args, file=sys.stderr, **kwargs):
+    debug_out.append((args, kwargs, file))
 
 
 def print_debug():
-    for args, kwargs in debug_out:
-        print(*args, **kwargs, file=sys.stdout)
+    for args, kwargs, file in debug_out:
+        print(*args, file=file, **kwargs)
 
 
 debug_out = []
