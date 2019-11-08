@@ -40,25 +40,27 @@ class AlignmentWindow():
     def end(self):
         return self.start + self.maxx - 1
 
-    def show(self, move=None):
-        """
-        Show alignment centered on given 1-based position
-        """
-
-        if move is Move.LEFT:
+    def move(self, change):
+        if change is Move.LEFT:
             self.start -= 1
-        elif move is Move.RIGHT:
+        elif change is Move.RIGHT:
             self.start += 1
-        elif move is Move.PAGE_LEFT:
+        elif change is Move.PAGE_LEFT:
             self.start -= PAGE_JUMP
-        elif move is Move.PAGE_RIGHT:
+        elif change is Move.PAGE_RIGHT:
             self.start += PAGE_JUMP
-        elif move is Move.START:
+        elif change is Move.START:
             self.start = 1
-        elif move is Move.END:
+        elif change is Move.END:
             self.start = self.alen - self.maxx + 1
 
+        self.show()
 
+
+    def show(self):
+        """
+        Show alignment
+        """
         # apply corrections
         if self.alen < self.end:
             # try ends flushed to right
@@ -130,15 +132,15 @@ def display(stdscr, data):
             # exit
             break
         elif c == curses.KEY_LEFT:
-            win_seq.show(Move.LEFT)
+            win_seq.move(Move.LEFT)
         elif c == curses.KEY_RIGHT:
-            win_seq.show(Move.RIGHT)
+            win_seq.move(Move.RIGHT)
         elif c == curses.KEY_PPAGE:
-            win_seq.show(Move.PAGE_LEFT)
+            win_seq.move(Move.PAGE_LEFT)
         elif c == curses.KEY_NPAGE:
-            win_seq.show(Move.PAGE_RIGHT)
+            win_seq.move(Move.PAGE_RIGHT)
         elif c == curses.KEY_HOME:
-            win_seq.show(Move.START)
+            win_seq.move(Move.START)
         elif c == curses.KEY_END:
             win_seq.show(Move.END)
 
