@@ -44,7 +44,6 @@ class AlignmentWindow():
         """
         Show alignment centered on given 1-based position
         """
-        debug = []
 
         if move is Move.LEFT:
             self.start -= 1
@@ -59,28 +58,24 @@ class AlignmentWindow():
         elif move is Move.END:
             self.start = self.alen - self.maxx + 1
 
-        debug.append((self.start, self.end))
 
         # apply corrections
         if self.alen < self.end:
-            debug.append('end')
             # try ends flushed to right
             self.start = self.alen - self.maxx + 1
 
         if self.start < 1:
-            debug.append('start')
             # make starts flushed left
             self.start = 1
 
-        debug.append((self.start, self.end))
         self.clear()
-        self.addstr(0, 0, self.coords_row(debug=debug))
+        self.addstr(0, 0, self.coords_row())
         for num, seq in enumerate(data.values(), start=1):
             self.addstr(num, 0, seq[self.start - 1:self.end])
 
         self.noutrefresh()
 
-    def coords_row(self, debug=[]):
+    def coords_row(self):
         """
         Typeset coordinates row
         """
