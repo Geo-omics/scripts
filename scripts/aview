@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 import curses
 from enum import auto
 import sys
@@ -21,13 +21,17 @@ class Move():
 
 
 class AlignmentWindow():
-    def __init__(self, data):
+    def __init__(self, data, var_ranks, styles):
         self._window = curses.newwin(
             len(data) + 2,
             curses.COLS - ENUM_WIDTH,
             len(data) + PARTS_GAP,
             4,
         )
+        self.data = data
+        self.var_ranks = var_ranks
+        self.styles = styles
+
         self.maxy, self.maxx = self._window.getmaxyx()
         self.alen = alen(data)
         self.keypad(True)
@@ -78,8 +82,13 @@ class AlignmentWindow():
 
         self.clear()
         self.addstr(0, 0, self.coords_row())
-        for num, seq in enumerate(data.values(), start=1):
-            self.addstr(num, 0, seq[self.start - 1:self.end])
+        for num, seq in enumerate(self.data.values(), start=1):
+            for col, base in enumerate(seq[self.start - 1:self.end]):
+                rank = self.var_ranks[self.start - 1 + col][base]
+                st = self.styles[rank]
+                # call addch with ord(ch) to mitigate bug
+                # see https://bugs.python.org/issue37738
+                self.addch(num, col, ord(base), st)
 
         self.noutrefresh()
 
@@ -107,9 +116,24 @@ def num_to_str(i):
     return ('{:' + str(ENUM_WIDTH - 1) + 'd} ').format(i)
 
 
-def display(stdscr, data):
+def main(stdscr, data, var_ranks):
     stdscr.keypad(True)
     stdscr.clear()
+
+    # set colors
+    curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(6, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+
+    styles = [curses.color_pair(i) for i in range(1, 7)]
+    styles[0] |= curses.A_DIM  # variant mode should not standout
+    # styles[1]  # first major variant, keep normal white
+    for i in range(2, 6):
+        # other minor variants, are colored, make bold to stand out more
+        styles[i] |= curses.A_BOLD
 
     for num, name in enumerate(data.keys(), start=1):
         stdscr.addstr(num_to_str(num) + '{}\n'.format(name))
@@ -119,7 +143,7 @@ def display(stdscr, data):
 
     stdscr.noutrefresh()
 
-    win_seq = AlignmentWindow(data)
+    win_seq = AlignmentWindow(data, var_ranks, styles)
     win_seq.show()
 
     stats_win = curses.newwin(1, curses.COLS, curses.LINES - 1, 0)
@@ -174,7 +198,7 @@ def get_args():
     return argp.parse_args()
 
 
-def prep_data(infile):
+def load_data(infile):
     data = OrderedDict()
     last_name = None
     last_seq = None
@@ -194,6 +218,21 @@ def prep_data(infile):
         raise RuntimeError('Not all alignments have the same length')
 
     return data
+
+
+def get_variant_ranks(data):
+    """
+    map ranked base variant abundance per column
+    """
+    ret = []
+    for col in range(alen(data)):
+        counts = Counter([i[col] for i in data.values()])
+        ret.append(
+            {var: rank for rank, (var, _) in enumerate(counts.most_common())}
+        )
+
+    debug(*ret, sep='\n', file=open('counts', 'w'))
+    return ret
 
 
 def alen(data):
@@ -224,8 +263,9 @@ def print_debug():
 debug_out = []
 try:
     args = get_args()
-    data = prep_data(args.infile)
-    curses.wrapper(display, data)
+    data = load_data(args.infile)
+    var_ranks = get_variant_ranks(data)
+    curses.wrapper(main, data, var_ranks)
 except Exception:
     raise
 finally:
