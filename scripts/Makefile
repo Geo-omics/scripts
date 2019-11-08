@@ -131,6 +131,7 @@ PERL_SCRIPTS = \
 OTHER_EXECUTABLES = \
     antiSmash_summary \
     assemblyModules \
+    aview \
     bins2fasta \
     chop-contigs \
     createPhgDB \

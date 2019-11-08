@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+import argparse
+from collections import OrderedDict
+import curses
+from enum import auto
+
+PARTS_GAP = 3  # gap between upper and lower screen parts
+ENUM_WIDTH = 4  # space for enumeration
+PAGE_JUMP = 10
+
+
+class Move():
+    LEFT = auto()
+    RIGHT = auto()
+    PAGE_LEFT = auto()
+    PAGE_RIGHT = auto()
+    START = auto()
+    END = auto()
+
+
+class AlignmentWindow():
+    def __init__(self, data):
+        self._window = curses.newwin(
+            len(data) + 2,
+            curses.COLS - ENUM_WIDTH,
+            len(data) + PARTS_GAP,
+            4,
+        )
+        self.maxy, self.maxx = self._window.getmaxyx()
+        self.alen = alen(data)
+        self.keypad(True)
+        self.start = 1  # 1-based start coordinate
+
+    def __getattr__(self, name):
+        return getattr(self._window, name)
+
+    @property
+    def end(self):
+        return self.start + self.maxx - 1
+
+    def show(self, move=None):
+        """
+        Show alignment centered on given 1-based position
+        """
+        debug = []
+
+        if move is Move.LEFT:
+            self.start -= 1
+        elif move is Move.RIGHT:
+            self.start += 1
+        elif move is Move.PAGE_LEFT:
+            self.start -= PAGE_JUMP
+        elif move is Move.PAGE_RIGHT:
+            self.start += PAGE_JUMP
+        elif move is Move.START:
+            self.start = 1
+        elif move is Move.END:
+            self.start = self.alen - self.maxx + 1
+
+        debug.append((self.start, self.end))
+
+        # apply corrections
+        if self.alen < self.end:
+            debug.append('end')
+            # try ends flushed to right
+            self.start = self.alen - self.maxx + 1
+
+        if self.start < 1:
+            debug.append('start')
+            # make starts flushed left
+            self.start = 1
+
+        debug.append((self.start, self.end))
+        self.clear()
+        self.addstr(0, 0, self.coords_row(debug=debug))
+        for num, seq in enumerate(data.values(), start=1):
+            self.addstr(num, 0, seq[self.start - 1:self.end])
+
+        self.noutrefresh()
+
+    def coords_row(self, debug=[]):
+        """
+        Typeset coordinates row
+        """
+        if not hasattr(self, 'full_coords_row'):
+            row = '|1       '
+            for i in range(10, self.alen - 10, 10):
+                row += '|{:<9d}'.format(i)
+            row = row.strip()
+            end = '{}|'.format(self.alen)
+            gap = ' ' * (self.alen - len(row) - len(end))
+            self.full_coords_row = row + gap + end
+
+        ret = self.full_coords_row[self.start - 1:self.end]
+        if not ret.startswith((' ', '|')):
+            idx_space = ret.index(' ')
+            ret = ' ' * idx_space + ret[idx_space:]
+        return ret
+
+
+def num_to_str(i):
+    return ('{:' + str(ENUM_WIDTH - 1) + 'd} ').format(i)
+
+
+def display(stdscr, data):
+    stdscr.keypad(True)
+    stdscr.clear()
+
+    for num, name in enumerate(data.keys(), start=1):
+        stdscr.addstr(num_to_str(num) + '{}\n'.format(name))
+
+    for num, seq in enumerate(data.values(), start=1):
+        stdscr.addstr(len(data) + PARTS_GAP + num, 0, '{:3d}'.format(num))
+
+    stdscr.noutrefresh()
+
+    win_seq = AlignmentWindow(data)
+    win_seq.show()
+
+    stats_win = curses.newwin(1, curses.COLS, curses.LINES - 1, 0)
+    stats_win.keypad(True)
+
+    c = -1
+    while True:
+        stats_win.clear()
+        stats_win.addstr('{:5d}'.format(c))
+        stats_win.noutrefresh()
+        curses.doupdate()
+
+        c = win_seq.getch()
+
+        if c == ord('q'):
+            # exit
+            break
+        elif c == curses.KEY_LEFT:
+            win_seq.show(Move.LEFT)
+        elif c == curses.KEY_RIGHT:
+            win_seq.show(Move.RIGHT)
+        elif c == curses.KEY_PPAGE:
+            win_seq.show(Move.PAGE_LEFT)
+        elif c == curses.KEY_NPAGE:
+            win_seq.show(Move.PAGE_RIGHT)
+        elif c == curses.KEY_HOME:
+            win_seq.show(Move.START)
+        elif c == curses.KEY_END:
+            win_seq.show(Move.END)
+
+
+def get_args():
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'infile',
+        type=argparse.FileType(),
+        help='Multiple alignment in fasta format',
+    )
+
+    return argp.parse_args()
+
+
+def prep_data(infile):
+    data = OrderedDict()
+    last_name = None
+    last_seq = None
+    for line in infile:
+        if line.startswith('>'):
+            if last_name is not None:
+                data[last_name] = last_seq
+            last_name = line.strip().lstrip('>')
+            last_seq = ''
+        else:
+            last_seq += line.strip()
+
+    if len(data) == 0:
+        raise RuntimeError('No sequences found in input file')
+
+    if alen(data) is None:
+        raise RuntimeError('Not all alignments have the same length')
+
+    return data
+
+
+def alen(data):
+    """
+    Get alignment length from data
+    """
+
+    alen = None
+    for name, seq in data.items():
+        if alen is None:
+            alen = len(seq)
+        else:
+            if alen != len(seq):
+                # inconsistency, all seqs should be same length
+                return None
+    return alen
+
+
+args = get_args()
+data = prep_data(args.infile)
+curses.wrapper(display, data)
