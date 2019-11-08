@@ -56,6 +56,12 @@ class AlignmentWindow():
 
         self.show()
 
+    def show_at(self, pos):
+        """
+        Show alignment centered at given position
+        """
+        self.start = pos - int(self.maxx / 2)
+        self.show()
 
     def show(self):
         """
@@ -142,7 +148,19 @@ def display(stdscr, data):
         elif c == curses.KEY_HOME:
             win_seq.move(Move.START)
         elif c == curses.KEY_END:
-            win_seq.show(Move.END)
+            win_seq.move(Move.END)
+        elif c == ord('g'):
+            stats_win.clear()
+            stats_win.addstr('goto position: ')
+            curses.echo()
+            pos = stats_win.getstr()
+            curses.noecho()
+            try:
+                pos = int(pos)
+            except ValueError:
+                pass
+            else:
+                win_seq.show_at(pos)
 
 
 def get_args():
