@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-from collections import Counter, OrderedDict
+from collections import Counter
 import curses
 from enum import auto
 import sys
@@ -26,7 +26,7 @@ class AlignmentWindow():
             len(data) + 2,
             curses.COLS - ENUM_WIDTH,
             len(data) + PARTS_GAP,
-            4,
+            6,
         )
         self.data = data
         self.var_ranks = var_ranks
@@ -82,7 +82,7 @@ class AlignmentWindow():
 
         self.clear()
         self.addstr(0, 0, self.coords_row())
-        for num, seq in enumerate(self.data.values(), start=1):
+        for num, (_, _, seq) in enumerate(self.data, start=1):
             for col, base in enumerate(seq[self.start - 1:self.end]):
                 rank = self.var_ranks[self.start - 1 + col][base]
                 st = self.styles[rank]
@@ -135,11 +135,13 @@ def main(stdscr, data, var_ranks):
         # other minor variants, are colored, make bold to stand out more
         styles[i] |= curses.A_BOLD
 
-    for num, name in enumerate(data.keys(), start=1):
-        stdscr.addstr(num_to_str(num) + '{}\n'.format(name))
+    # print list of sequence ids
+    for num, (label, name, _) in enumerate(data, start=1):
+        stdscr.addstr(num_to_str(num) + '{} {}\n'.format(label, name))
 
-    for num, seq in enumerate(data.values(), start=1):
-        stdscr.addstr(len(data) + PARTS_GAP + num, 0, '{:3d}'.format(num))
+    for num, (label, _, _) in enumerate(data, start=1):
+        stdscr.addstr(len(data) + PARTS_GAP + num, 0,
+                      '{:3d} {}'.format(num, label))
 
     stdscr.noutrefresh()
 
@@ -199,13 +201,13 @@ def get_args():
 
 
 def load_data(infile):
-    data = OrderedDict()
+    data = []
     last_name = None
     last_seq = None
     for line in infile:
         if line.startswith('>'):
             if last_name is not None:
-                data[last_name] = last_seq
+                data.append((' ', last_name, last_seq))
             last_name = line.strip().lstrip('>')
             last_seq = ''
         else:
@@ -220,13 +222,37 @@ def load_data(infile):
     return data
 
 
+def label_uniq_seqs(data):
+    """
+    identify and label unique sequences
+    """
+    counts = Counter([i[2] for i in data]).most_common()
+    labels = 'abcdefghijklmnopqrstuvwxyz'
+    ret_data = []
+    for i in range(len(data)):
+        _, name, seq = data[i]
+        found = False
+        for label, (uniq_seq, _) in zip(labels, counts):
+            # if we run out of labels, remaining variants
+            # won't get one
+            if seq == uniq_seq:
+                found = True
+                break
+        if not found:
+            label = ' '
+
+        ret_data.append((label, name, seq))
+
+    return ret_data
+
+
 def get_variant_ranks(data):
     """
     map ranked base variant abundance per column
     """
     ret = []
     for col in range(alen(data)):
-        counts = Counter([i[col] for i in data.values()])
+        counts = Counter([i[col] for i in [j[2] for j in data]])
         ret.append(
             {var: rank for rank, (var, _) in enumerate(counts.most_common())}
         )
@@ -241,7 +267,7 @@ def alen(data):
     """
 
     alen = None
-    for name, seq in data.items():
+    for _, _, seq in data:
         if alen is None:
             alen = len(seq)
         else:
@@ -264,6 +290,7 @@ debug_out = []
 try:
     args = get_args()
     data = load_data(args.infile)
+    data = label_uniq_seqs(data)
     var_ranks = get_variant_ranks(data)
     curses.wrapper(main, data, var_ranks)
 except Exception:
