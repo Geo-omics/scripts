@@ -25,7 +25,7 @@ fragRec - generate fragment recruitment plot from blast outputs
 
 =head1 SYNOPSIS
 
-B<fragRec> [-f reference genome fasta] [-b path to folder containing the blast outputs] [-e extension for the blast outputs] [OPTIONS]
+B<fragRec> <-f reference genome fasta> <-b path to folder containing the blast outputs> <-e file extension for the blast outputs without leading dot> [OPTIONS]
 
 
 =head1 DESCRIPTION
