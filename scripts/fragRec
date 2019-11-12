@@ -169,8 +169,9 @@ else{
 my $rFile=$prefix.".r";
 my $pdf=$prefix.".pdf";
 
+-d $blast or die "Fatal: Not a directory: $blast\n";
 my @files=<$blast/*.$ext>;
-die "# [FATAL] Can't find \"$blast\"\n# Please check that the path exist or that you have sufficient privilages.\n" if (scalar(@files)==0);
+die "# [FATAL] Can't find \"$blast/*.$ext\"\n# Please check that the path exist or that you have sufficient privilages.\n" if (scalar(@files)==0);
 foreach my $file(@files){
 	&parseBlastOut($file);
 }
