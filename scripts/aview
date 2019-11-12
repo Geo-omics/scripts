@@ -261,7 +261,6 @@ def get_variant_ranks(data):
             {var: rank for rank, (var, _) in enumerate(counts.most_common())}
         )
 
-    debug(*ret, sep='\n', file=open('counts', 'w'))
     return ret
 
 
