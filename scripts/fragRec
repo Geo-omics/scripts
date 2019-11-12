@@ -143,7 +143,7 @@ GetOptions(
 	's|bitscore:i'=>\$minBS,
 	'details'=>\$details,
 	'by_aln'=>\$by_aln,
-	'h|help'=>sub{system('perldoc', $0); exit;},
+	'h|help'=>sub{system('perldoc', '-T', $0); exit;},
 	'v|version'=>sub{print "# $version\n"; exit;},
 );
 
