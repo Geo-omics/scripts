@@ -213,6 +213,10 @@ def load_data(infile):
         else:
             last_seq += line.strip()
 
+    # load last record
+    if last_name is not None:
+        data.append((' ', last_name, last_seq))
+
     if len(data) == 0:
         raise RuntimeError('No sequences found in input file')
 
