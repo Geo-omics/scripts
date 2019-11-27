@@ -41,6 +41,10 @@ Takes a GFF file and a corresponding fasta file and extracts the listed features
 
 Uniq project identifier added before sequence header.
 
+=item B<--postfix>
+
+Append start and stop positions to contig id to ensure a unique sequence indentifier
+
 =item B<--out>, B<-o> I<filename>
 
 output fasta file
@@ -117,9 +121,10 @@ use File::Basename;
 use Bio::SeqIO;
 
 my $help;
-my ($verbose, $contigFile, $prefix, $gffFile, $outFile);
+my ($verbose, $contigFile, $prefix, $postfix, $gffFile, $outFile);
 GetOptions(
 	'p|prefix:s'=>\$prefix,
+	'postfix'=>\$postfix,
 	'o|out:s'=>\$outFile,
 	'gff:s'=>\$gffFile,
 	'c|contigs:s'=>\$contigFile,
@@ -135,10 +140,10 @@ my $GFF=FileHandle->new();
 open ($GFF, '<', $gffFile) || die "failed reading gff file\n";
  
 while(<$GFF>){
-  my ($seqid, undef, undef, $start, $end,
-      undef, undef, undef, $attrs) = split(/\t/);
+    my ($seqid, undef, $feature, $start, $end,
+        undef, $strand, undef, $attrs) = split(/\t/);
  
-  push @{$gff{$seqid}}, [$start, $end, $attrs];
+    push @{$gff{$seqid}}, [$feature, $start, $end, $strand, $attrs];
 }
  
 warn "OK\n" if $verbose;
@@ -163,15 +168,14 @@ while(my $sobj = $seqio->next_seq){
   my $seq = $sobj->seq;
  
   for(@{$gff{$seqid}}){
-    my ($start, $end, $attrs) = @$_;
+    my ($feature, $start, $end, $strand, $attrs) = @$_;
  
-    warn join("\t", $start, $end, $attrs), "\n"
-      if $verbose > 0;
+    warn join("\t", $feature, $start, $end, $strand, $attrs), "\n"
+      if $verbose > 1;
  
-    my %attrs = split(/=|;/, $attrs);
- 
-    print $GENES ">".($prefix ? $prefix."_" : "").$seqid."-". $attrs{"ID"}.
-      "/$start-$end (". ($end-$start+1). ")\n";
+    print $GENES ">".($prefix ? $prefix."_" : "").$seqid.
+      ($postfix ? "_$start-$end" : "")." ".
+      "$feature|$start-$end|$strand|$attrs\n";
  
     print $GENES substr($seq, $start, $end-$start+1), "\n";
   }
