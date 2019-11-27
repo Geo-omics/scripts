@@ -140,6 +140,7 @@ my $GFF=FileHandle->new();
 open ($GFF, '<', $gffFile) || die "failed reading gff file\n";
  
 while(<$GFF>){
+    chomp;
     my ($seqid, undef, $feature, $start, $end,
         undef, $strand, undef, $attrs) = split(/\t/);
  
