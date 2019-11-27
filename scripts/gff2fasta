@@ -20,44 +20,44 @@
 
 =head1 NAME
 
-gff2fasta - Do this.
+gff2fasta - Extract GFF features from sequences in fasta file.
 
 
 =head1 SYNOPSIS
 
-B<gff2fasta> B<-gff> I<gff-file> B<-contig> I<fasta-file> B<-genes> I<output_fasta_file>
+B<gff2fasta> B<--gff> I<file> B<--contigs> I<file> B<-o> I<file>
 
 
 =head1 DESCRIPTION
 
-Do this.
+Takes a GFF file and a corresponding fasta file and extracts the listed features.
 
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<-prefix>, B<-p> I<prefix>
+=item B<--prefix>, B<-p> I<prefix>
 
 Uniq project identifier added before sequence header.
 
-=item B<-genes>, B<-g> I<filename>
+=item B<--out>, B<-o> I<filename>
 
 output fasta file
 
-=item B<-gff> I<filename>
+=item B<--gff> I<filename>
 
 input GFF file
 
-=item B<-contig>, B<-c> I<filename>
+=item B<--contigs>, B<-c> I<filename>
 
 Contigs/Scaffolds Input
 
-=item B<-version>, B<-v>
+=item B<--verbose>, B<-v>
 
-version of the current script
+Print diagnostic output
 
-=item B<-help>, B<-h>
+=item B<--help>, B<-h>
 
 Print help.
 
@@ -117,26 +117,22 @@ use File::Basename;
 use Bio::SeqIO;
 
 my $help;
-my $version=fileparse($0)."\tv0.1.1";
-my $verbose = 0;
-my ($quiet, $contigFile, $prefix, $gffFile, $outFile);
+my ($verbose, $contigFile, $prefix, $gffFile, $outFile);
 GetOptions(
-	'prefix:s'=>\$prefix,
-	'g|genes:s'=>\$outFile,	
+	'p|prefix:s'=>\$prefix,
+	'o|out:s'=>\$outFile,
 	'gff:s'=>\$gffFile,
-	'c|contig:s'=>\$contigFile,
-	'q|quiet'=>\$quiet,
-	'v|version'=>sub{print $version."\n"; exit;},
+	'c|contigs:s'=>\$contigFile,
+	'v|verbose+'=>\$verbose,
 	'h|help'=>sub{system("perldoc $0 \| cat"); exit;},
-);
-print "\# $version\n";
+) or exit;
 
 ## read in gff 
-warn "reading GFF\n";
+warn "reading GFF\n" if $verbose;
  
 my %gff;
 my $GFF=FileHandle->new();
-open ($GFF, '<', $gffFile) || die "fail\n";
+open ($GFF, '<', $gffFile) || die "failed reading gff file\n";
  
 while(<$GFF>){
   my ($seqid, undef, undef, $start, $end,
@@ -145,24 +141,22 @@ while(<$GFF>){
   push @{$gff{$seqid}}, [$start, $end, $attrs];
 }
  
-warn "OK\n";
- 
- 
+warn "OK\n" if $verbose;
  
 ## Do the fasta
 my $GENES=FileHandle->new();
 open( $GENES, ">", $outFile) || die $!;
-$verbose=-1 if ($quiet);
-my $seqio = Bio::SeqIO->new(	-file => $contigFile,
-								-format => 'fasta',
-								-verbose=> $verbose )
-							|| die "double fail\n";
+my $seqio = Bio::SeqIO->new(
+    -file => $contigFile,
+    -format => 'fasta',
+    -verbose=> 0 ? $verbose : -1
+) || die "failed reading input fasta file\n";
 
 while(my $sobj = $seqio->next_seq){
   my $seqid = $sobj->id;
  
   unless(defined($gff{$seqid})){
-    warn "no features for $seqid\n";
+    warn "no features for $seqid\n" if $verbose > 2;
     next;
   }
  
@@ -185,4 +179,4 @@ while(my $sobj = $seqio->next_seq){
   #exit;
 }
 close $GENES; 
-warn "OK\n";
+warn "OK\n" if $verbose > 0;;
