@@ -1,0 +1,525 @@
+#!/usr/bin/env python3
+"""
+Plot fragment recrutment and coverage from blast hit table
+"""
+import argparse
+from collections import Counter, OrderedDict
+import math
+from operator import itemgetter
+from pathlib import Path
+import sys
+
+import matplotlib
+matplotlib.use('agg')
+from matplotlib.backends.backend_agg import FigureCanvasAgg  # noqa: E402
+from matplotlib.figure import Figure  # noqa: E402
+from matplotlib.gridspec import GridSpec  # noqa: E402
+from matplotlib.path import Path as MPath  # noqa: E402
+from matplotlib.ticker import FuncFormatter, MaxNLocator  # noqa: E402
+
+
+label_map = {
+    '2511041728': 'mcyJ',
+    '2511041727': 'mcyI',
+    'AF183408.1:3056-4672': '',
+    'AF183408.1:12923-13678': '',
+    '2511041723': 'mcyE',
+    '2511041721': 'mcyD',
+    '2511041720': 'mcyA',
+    '2511041719': 'mcyB',
+    '2511041718': 'mcyC',
+}
+
+CHARS_PER_INCH = 11  # estimated xlabel characters per inch
+DEFAULT_MIN_IDENT = 0
+DEFAULT_MIN_LENGTH = 100
+DEFAULT_MIN_BITSCORE = 40
+FIGURE_WIDTH = 18  # in inch
+FIGURE_HEIGHT = 4  # in inch
+
+
+def thousands(x, pos):
+    """
+    Neat formatting thousands base positions along x-axis
+
+    Some space saviners, omit leading zero, full thousands and hundreds are
+    abbreviated
+    """
+    x = int(x)
+    if x == 0:
+        # omit zero
+        return ''
+    elif x % 1000 == 0:
+        # saving at least two characters
+        return '{:1.0f}k'.format(x / 1000).lstrip('0')
+    elif x % 100 == 0:
+        # saving at least one characters
+        return '{:1.1f}k'.format(x / 1000).lstrip('0')
+    else:
+        return x
+
+
+def plot_frag_rec(ax, subj, frags):
+    """
+    Plot line for each fragment
+
+    Return the smallest identity to be used for y-axis limit
+    """
+    min_ident = 100  # start with 100% going down
+    verts = []
+    xs = []
+    ys = []
+    for ident, beg, end in frags:
+        verts.append((beg, ident))
+        verts.append((end, ident))
+        xs.append(beg)
+        ys.append(ident)
+        min_ident = min(min_ident, ident)
+
+    codes = [MPath.MOVETO, MPath.LINETO] * len(frags)
+
+    if verts:
+        path = MPath(verts, codes)
+        patch = matplotlib.patches.PathPatch(path, lw=1, alpha=0.5)
+
+    col = ax.get_subplotspec().get_rows_columns()[4]
+    if col == 0:
+        # left-most plot
+        ax.set_ylabel('% identity')
+    else:
+        ax.get_yaxis().set_visible(False)
+
+    ax.get_xaxis().set_visible(False)
+    ax.margins(0.02)
+
+    ax.scatter(xs, ys, alpha=0.0)  # invisible, may help with layout?
+    if verts:
+        ax.add_patch(patch)
+
+    return min_ident
+
+
+def plot_cov(ax, subj, cov, base_range, label_row=0):
+    # add zero coverage positions
+    for i in range(base_range['min'], base_range['max'] + 1):
+        if i not in cov:
+            cov[i] = 0
+    log(subj, 'covs plotted:', len(cov))
+
+    bases, covs = zip(*sorted(cov.items(), key=itemgetter(0)))
+
+    col = ax.get_subplotspec().get_rows_columns()[4]
+    if col == 0:
+        # left-most plot
+        ax.set_ylabel('coverage')
+    else:
+        ax.get_yaxis().set_visible(False)
+
+    xlabel = subj
+    if len(xlabel) > 15:
+        xlabel = xlabel[:13] + '...'
+
+    xlabel = '\n' * label_row + xlabel
+    ax.set_xlabel(xlabel)
+    ax.xaxis.set_major_formatter(FuncFormatter(thousands))
+    ax.margins(0.02)
+
+    ax.plot(bases, covs, '-')
+
+
+def plot(frags, coverage, ranges):
+    if not frags:
+        raise ValueError('Must have hit data for at least on subject')
+
+    num_subjs = len(frags)
+
+    # set subplot width via length of subject sequences, use order from frags
+    # length is base count minus one, as technically the space the plot takes
+    # is between the data points, so this is very exact and will at most
+    # matter for very short reference sequences
+    width_ratios = []
+    for subj in frags:
+        width_ratios.append(ranges[subj]['max'] - ranges[subj]['min'] + 1)
+    log('plot width ratios:', *width_ratios)
+
+    fig = Figure(figsize=(FIGURE_WIDTH, FIGURE_HEIGHT))
+    FigureCanvasAgg(fig)
+    gs = GridSpec(2, len(frags), figure=fig, width_ratios=width_ratios)
+
+    # set up frag plots
+    first_frag_ax = fig.add_subplot(gs[0])
+    frag_axes = [first_frag_ax]
+    for i in range(1, num_subjs):
+        ax = fig.add_subplot(gs[i], sharey=frag_axes[0])
+        frag_axes.append(ax)
+
+    # set up cov plots
+    first_cov_ax = fig.add_subplot(gs[num_subjs], sharex=frag_axes[0])
+    cov_axes = [first_cov_ax]
+    for i in range(num_subjs + 1, 2 * num_subjs):
+        ax = fig.add_subplot(gs[i],
+                             sharex=frag_axes[i - num_subjs],
+                             sharey=cov_axes[0])
+        cov_axes.append(ax)
+
+    # Do the plotting
+    for ax, (subj, frag_data) in zip(frag_axes, frags.items()):
+        plot_frag_rec(ax, subj, frag_data)
+
+    tight_space = False
+
+    # estimate bases/plot points per character, assume 200 chs along figure
+    bpc = sum(width_ratios) / (CHARS_PER_INCH * FIGURE_WIDTH)
+    tight_space = False
+    xlabel_row = 0
+    for subj, ax in zip(frags, cov_axes):
+        nbases = ranges[subj]['max'] - ranges[subj]['min']
+        if tight_space:
+            # switch row
+            xlabel_row = (xlabel_row + 1) % 2
+        else:
+            xlabel_row = 0
+
+        # limit ticks when plot has about 8 characters of space on x-axis
+        if nbases / bpc < 5:
+            # the default x ticks are a mess for small x-axes
+            # The AutoLocator seems to want three or more ticks but with those
+            # narrow plots from short sequences there isn't space for those, we
+            # need to force 2 bins at most, the below seems to do the trick:
+            # So, two ticks, ensures a tick printed in the middle (0 should be
+            # invisible)
+            ax.get_xaxis().set_major_locator(
+                MaxNLocator(nbins=2, min_n_ticks=1)
+            )
+
+        plot_cov(ax, subj, coverage[subj], ranges[subj], xlabel_row)
+
+        if len(subj) + 2 > nbases / bpc:
+            tight_space = True
+        else:
+            tight_space = False
+
+    # w/hspace is space between subplots
+    # bottom space for (rotated?) label
+    fig.subplots_adjust(bottom=0.15, wspace=0.09, hspace=0.09)
+
+    return fig
+
+
+def calc_coverage(fragments):
+    """
+    Compute per-base coverage
+
+    Input is a dict mapping subject to lists of 3-tuples with %-identify and
+    begin, end position for each fragment
+
+    Output is a dict mapping subject to per-base coverage counter
+    """
+    data = OrderedDict()
+    for subj, frags in fragments.items():
+        cov = Counter()
+        for _, beg, end in frags:
+            low, high = sorted((beg, end))
+            cov.update(range(low, high + 1))
+
+        data[subj] = cov
+        log('coverage:', subj, 'non-zero covs:', len(data[subj]))
+
+    return data
+
+
+def log(*args, **kwargs):
+    # also print before global verbose is set, ie.e. before or during argument
+    # parsing
+    verbose = globals().get('verbose', None)
+    if verbose is not False:
+        print(*args, **kwargs)
+
+
+def load_data(args, ref={}):
+    """
+    Read input file into data structure
+
+    Input must be blast output format 6, i.e. tab-delimited, 12 colums.
+
+    Returns a tuple of:
+    1. value is a ordered dict mapping subjects to 3-tuple of %-identity, begin
+    and end positions for each hit passing the quality filter
+    2. dict of 1-based base position ranges, this way we include the range of
+    hits that got filtered out.
+    """
+    data = OrderedDict()
+    base_range = {}
+
+    total = 0
+    good = 0
+    for line in args.inputfile:
+        try:
+            (_, subj, ident, alen, _, _, _, _, beg, end, _, bit) = \
+                line.strip().split('\t')
+
+            ident = float(ident)
+            alen = int(alen)
+            beg = int(beg)
+            end = int(end)
+            bit = float(bit)
+        except Exception as e:
+            raise RuntimeError(
+                'Failed parsing input file: {}: {}: {}, offending line:\n{}'
+                ''.format(args.inputfile.name, type(e).__name__, e, line))
+
+        total += 1
+
+        if subj not in data:
+            data[subj] = []
+            base_range[subj] = {'min': beg, 'max': end}
+        else:
+            if beg < base_range[subj]['min']:
+                base_range[subj]['min'] = beg
+            if end > base_range[subj]['max']:
+                base_range[subj]['max'] = end
+
+        if ident < args.min_identity:
+            continue
+        elif alen < args.min_length:
+            continue
+        elif bit < args.min_bitscore:
+            continue
+
+        data[subj].append((ident, beg, end))
+
+        good += 1
+
+    log('hits total:', total)
+    log('hits good:', good)
+    log('# subjects:', len(data))
+
+    map_subj_order = []
+    if args.labelmap is not None:
+        # exchange subj ids and record order of mapping
+        data1 = {}
+        range1 = {}
+        for subj, refsubj in args.labelmap.items():
+            map_subj_order.append(refsubj)
+            try:
+                data1[refsubj] = data[subj]
+                range1[refsubj] = base_range[subj]
+            except KeyError:
+                log('[WARNING] subject {} in mapping file but not in '
+                    'blast data'.format(subj))
+            else:
+                del data[subj]
+                del base_range[subj]
+        # process any leftovers, may overwrite stuff if mapping tried to
+        # "rename"?
+        data1.update(data)
+        range1.update(base_range)
+
+        data = data1
+        base_range = range1
+
+        del data1, range1
+    log('map order', map_subj_order)
+
+    ref_subj_order = []
+    if ref is not None:
+        # Update the ranges from reference
+        # record subject order
+        for subj, seqlen in ref.items():
+            ref_subj_order.append(subj)
+            if subj in base_range:
+                if base_range[subj]['max'] > seqlen:
+                    log('WARNING: got hits on {} ({}-{}) out of range of '
+                        'reference (1-{})'.format(
+                            subj, base_range[subj]['min'],
+                            base_range[subj]['max'],
+                            seqlen - 1
+                        ))
+            else:
+                data[subj] = []
+                log('WARNING: sequence {} in reference but no good blast hits'
+                    ''.format(subj))
+            base_range[subj] = {'min': 1, 'max': seqlen}
+    log('ref order', ref_subj_order)
+
+    # order the data, map order takes precedence over refeerence order
+    def key_fun(x):
+        # FIXME: this can give some weird orderings, maybe not relevant in
+        # practice, maybe implement some topological sorting?
+        try:
+            k2 = ref_subj_order.index(x)
+        except ValueError:
+            k2 = math.inf
+
+        try:
+            k1 = map_subj_order.index(x)
+        except ValueError:
+            k1 = k2
+
+        # log(x, k1, k2)
+        return k1, k2
+
+    subj_ordered = sorted(data.keys(), key=key_fun)
+    log('sequence order: {}'.format(subj_ordered))
+    data = OrderedDict([(subj, data[subj]) for subj in subj_ordered])
+
+    return data, base_range
+
+
+def load_reference(file):
+    """
+    Load data from the reference file
+
+    We only want the lengths of the subject sequences.  The first word of each
+    fasta header must the the same as the blast search subject.  The order of
+    sequences can be used to order the plots.
+
+    Returns an ordered dict, mapping subject to sequence length.
+    """
+    data = OrderedDict()
+    subj = None
+    length = None
+    for line in file:
+        if line.startswith('>'):
+            if subj is not None:
+                data[subj] = length
+
+            subj = line.lstrip('>').split()[0]
+            if subj in data:
+                raise RuntimeError(
+                    'Failed parsing reference file: first words of fasta '
+                    'headers must be unique: {}'.format(subj)
+                )
+            length = 0
+        else:
+            if subj is None:
+                raise RuntimeError('Failed parsing reference: Fasta header '
+                                   'expected but got:\n{}'.format(line))
+            length += len(line.strip())
+
+    # add data for last sequence
+    if subj is not None:
+        data[subj] = length
+
+    return data
+
+
+def load_map(file):
+    labelmap = OrderedDict()
+    for line in file:
+        line = line.strip()
+        if line.startswith('#'):
+            continue
+        if not line:
+            continue
+
+        row = line.split(maxsplit=1)
+        if len(row) == 1:
+            # single column, map tp self!
+            labelmap[row[0]] = row[0]
+        elif len(row) == 2:
+            labelmap[row[0]] = row[1]
+        else:
+            raise RuntimeError('this is a bug, programming error ')
+
+    log('label mapping:', labelmap)
+    return labelmap
+
+
+def get_args(argv=None):
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'inputfile',
+        metavar='<blast-hit-table>',
+        nargs='?',
+        default='test.blastn',
+        type=argparse.FileType(),
+        help='Blast output table format 6',
+    )
+    argp.add_argument(
+        '-m', '--map',
+        metavar='FILE',
+        type=argparse.FileType(),
+        dest='labelmap',
+        help='Subject - reference sequence id mapping, a two-column '
+             '(white-space separated) file, mapping blast subject ids to the '
+             'first word of the references fasta headers.  Empty line and '
+             'lines starting with # (comments) are ignored.  The order of the '
+             'listing determines the order of the the plots.',
+    )
+    argp.add_argument(
+        '-r', '--reference',
+        metavar='FILE',
+        type=argparse.FileType(),
+        help='Fasta-formatted reference data, what the blast db was based on',
+    )
+    argp.add_argument(
+        '-o', '--output',
+        metavar='FILE',
+        dest='outfile',
+        default=None,
+        help='Name of file to which the results is saved.  By default a name '
+             'will be derived from the input file.',
+    )
+    argp.add_argument(
+        '--min-identity',
+        type=int,
+        default=DEFAULT_MIN_IDENT,
+        help='Ingore blast hits with less than given percent identity, '
+             'default is {}'.format(DEFAULT_MIN_IDENT),
+    )
+    argp.add_argument(
+        '--min-length',
+        type=int,
+        default=DEFAULT_MIN_LENGTH,
+        help='Ingore blast hits with less than given alignment length, '
+             'defauls is {}'.format(DEFAULT_MIN_LENGTH),
+    )
+    argp.add_argument(
+        '--min-bitscore',
+        type=int,
+        default=DEFAULT_MIN_BITSCORE,
+        help='Ingore blast hits with less than given bitscore, default'
+             'is {}'.format(DEFAULT_MIN_BITSCORE),
+    )
+    argp.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Print some diagnostic output',
+    )
+
+    args = argp.parse_args(argv)
+
+    if args.outfile is None:
+        args.outfile = Path(Path(args.inputfile.name).name).with_suffix('.pdf')
+
+    return args
+
+
+def main(*argv):
+    args = get_args(argv)
+
+    global verbose
+    verbose = args.verbose
+
+    if args.reference is None:
+        ref_data = None
+    else:
+        ref_data = load_reference(args.reference)
+
+    if args.labelmap is None:
+        args.labelmap = {}
+    else:
+        args.labelmap = load_map(args.labelmap)
+
+    fragment_data, base_ranges = load_data(args, ref=ref_data)
+    coverage = calc_coverage(fragment_data)
+    fig = plot(fragment_data, coverage, base_ranges)
+    fig.suptitle(Path(args.inputfile.name).name)
+    fig.savefig(args.outfile)
+    log('output written to:', args.outfile.name)
+    return fragment_data, coverage, fig
+
+
+if __name__ == '__main__':
+    main(*sys.argv[1:])

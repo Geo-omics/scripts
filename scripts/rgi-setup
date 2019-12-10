@@ -25,7 +25,7 @@
 ###########################################
 set -euo pipefail
 
-trap 'error at line $LINENO, exit status $?' ERR
+trap 'echo "error at line $LINENO, exit status $?"' ERR
 card=./card.json
 
 # Load CARD reference data
@@ -41,11 +41,14 @@ rgi load --card_json $card --local
 rgi card_annotation -i $card > card_annotation.log 2>&1
 [[ $(ls card_database_v*.fasta) =~ card_database_v(.*).fasta ]]
 version=${BASH_REMATCH[1]}
+echo "[INFO] version parsed: $version"
 rgi load -i $card --card_annotation card_database_v"$version".fasta --local
 
 wget -O wildcard_data.tar.bz2 https://card.mcmaster.ca/latest/variants
 mkdir -p wildcard
 tar -xvf wildcard_data.tar.bz2 -C wildcard
+rm wildcard_data.tar.bz2
+gunzip wildcard/*.gz
 
 rgi wildcard_annotation -i wildcard --card_json $card -v "$version" > wildcard_annotation.log 2>&1
 rgi load --wildcard_annotation wildcard_database_v"$version".fasta --wildcard_index wildcard/index-for-model-sequences.txt --card_annotation card_database_v"$version".fasta --local

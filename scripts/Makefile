@@ -131,6 +131,7 @@ PERL_SCRIPTS = \
 OTHER_EXECUTABLES = \
     antiSmash_summary \
     assemblyModules \
+    aview \
     bins2fasta \
     chop-contigs \
     createPhgDB \
@@ -158,6 +159,7 @@ OTHER_EXECUTABLES = \
     omics-qc \
     omics-qc-check \
     omics-qc-sample \
+    plot-blast-frag-cov \
     refseq-rna \
     remove_space_from_filenames \
     rgi-coverage \

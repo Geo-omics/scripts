@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+import argparse
+from collections import Counter
+import curses
+from enum import auto
+import sys
+
+
+PARTS_GAP = 3  # gap between upper and lower screen parts
+ENUM_WIDTH = 4  # space for enumeration
+PAGE_JUMP = 10
+
+
+class Move():
+    LEFT = auto()
+    RIGHT = auto()
+    PAGE_LEFT = auto()
+    PAGE_RIGHT = auto()
+    START = auto()
+    END = auto()
+
+
+class AlignmentWindow():
+    def __init__(self, data, var_ranks, styles):
+        self._window = curses.newwin(
+            len(data) + 2,
+            curses.COLS - ENUM_WIDTH,
+            len(data) + PARTS_GAP,
+            6,
+        )
+        self.data = data
+        self.var_ranks = var_ranks
+        self.styles = styles
+
+        self.maxy, self.maxx = self._window.getmaxyx()
+        self.alen = alen(data)
+        self.keypad(True)
+        self.start = 1  # 1-based start coordinate
+
+    def __getattr__(self, name):
+        return getattr(self._window, name)
+
+    @property
+    def end(self):
+        return self.start + self.maxx - 1
+
+    def move(self, change):
+        if change is Move.LEFT:
+            self.start -= 1
+        elif change is Move.RIGHT:
+            self.start += 1
+        elif change is Move.PAGE_LEFT:
+            self.start -= PAGE_JUMP
+        elif change is Move.PAGE_RIGHT:
+            self.start += PAGE_JUMP
+        elif change is Move.START:
+            self.start = 1
+        elif change is Move.END:
+            self.start = self.alen - self.maxx + 1
+
+        self.show()
+
+    def show_at(self, pos):
+        """
+        Show alignment centered at given position
+        """
+        self.start = pos - int(self.maxx / 2)
+        self.show()
+
+    def show(self):
+        """
+        Show alignment
+        """
+        # apply corrections
+        if self.alen < self.end:
+            # try ends flushed to right
+            self.start = self.alen - self.maxx + 1
+
+        if self.start < 1:
+            # make starts flushed left
+            self.start = 1
+
+        self.clear()
+        self.addstr(0, 0, self.coords_row())
+        for num, (_, _, seq) in enumerate(self.data, start=1):
+            for col, base in enumerate(seq[self.start - 1:self.end]):
+                rank = self.var_ranks[self.start - 1 + col][base]
+                st = self.styles[rank]
+                # call addch with ord(ch) to mitigate bug
+                # see https://bugs.python.org/issue37738
+                self.addch(num, col, ord(base), st)
+
+        self.noutrefresh()
+
+    def coords_row(self):
+        """
+        Typeset coordinates row
+        """
+        if not hasattr(self, 'full_coords_row'):
+            row = '|1       '
+            for i in range(10, self.alen - 10, 10):
+                row += '|{:<9d}'.format(i)
+            row = row.strip()
+            end = '{}|'.format(self.alen)
+            gap = ' ' * (self.alen - len(row) - len(end))
+            self.full_coords_row = row + gap + end
+
+        ret = self.full_coords_row[self.start - 1:self.end]
+        if not ret.startswith((' ', '|')):
+            idx_space = ret.index(' ')
+            ret = ' ' * idx_space + ret[idx_space:]
+        return ret
+
+
+def num_to_str(i):
+    return ('{:' + str(ENUM_WIDTH - 1) + 'd} ').format(i)
+
+
+def main(stdscr, data, var_ranks):
+    stdscr.keypad(True)
+    stdscr.clear()
+
+    # set colors
+    curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(6, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+
+    styles = [curses.color_pair(i) for i in range(1, 7)]
+    styles[0] |= curses.A_DIM  # variant mode should not standout
+    # styles[1]  # first major variant, keep normal white
+    for i in range(2, 6):
+        # other minor variants, are colored, make bold to stand out more
+        styles[i] |= curses.A_BOLD
+
+    # print list of sequence ids
+    for num, (label, name, _) in enumerate(data, start=1):
+        stdscr.addstr(num_to_str(num) + '{} {}\n'.format(label, name))
+
+    for num, (label, _, _) in enumerate(data, start=1):
+        stdscr.addstr(len(data) + PARTS_GAP + num, 0,
+                      '{:3d} {}'.format(num, label))
+
+    stdscr.noutrefresh()
+
+    win_seq = AlignmentWindow(data, var_ranks, styles)
+    win_seq.show()
+
+    stats_win = curses.newwin(1, curses.COLS, curses.LINES - 1, 0)
+    stats_win.keypad(True)
+
+    c = -1
+    while True:
+        stats_win.clear()
+        stats_win.addstr('{:5d}'.format(c))
+        stats_win.noutrefresh()
+        curses.doupdate()
+
+        c = win_seq.getch()
+
+        if c == ord('q'):
+            # exit
+            break
+        elif c == curses.KEY_LEFT:
+            win_seq.move(Move.LEFT)
+        elif c == curses.KEY_RIGHT:
+            win_seq.move(Move.RIGHT)
+        elif c == curses.KEY_PPAGE:
+            win_seq.move(Move.PAGE_LEFT)
+        elif c == curses.KEY_NPAGE:
+            win_seq.move(Move.PAGE_RIGHT)
+        elif c == curses.KEY_HOME:
+            win_seq.move(Move.START)
+        elif c == curses.KEY_END:
+            win_seq.move(Move.END)
+        elif c == ord('g'):
+            stats_win.clear()
+            stats_win.addstr('goto position: ')
+            curses.echo()
+            pos = stats_win.getstr()
+            curses.noecho()
+            try:
+                pos = int(pos)
+            except ValueError:
+                pass
+            else:
+                win_seq.show_at(pos)
+
+
+def get_args():
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'infile',
+        type=argparse.FileType(),
+        help='Multiple alignment in fasta format',
+    )
+
+    return argp.parse_args()
+
+
+def load_data(infile):
+    data = []
+    last_name = None
+    last_seq = None
+    for line in infile:
+        if line.startswith('>'):
+            if last_name is not None:
+                data.append((' ', last_name, last_seq))
+            last_name = line.strip().lstrip('>')
+            last_seq = ''
+        else:
+            last_seq += line.strip()
+
+    # load last record
+    if last_name is not None:
+        data.append((' ', last_name, last_seq))
+
+    if len(data) == 0:
+        raise RuntimeError('No sequences found in input file')
+
+    if alen(data) is None:
+        raise RuntimeError('Not all alignments have the same length')
+
+    return data
+
+
+def label_uniq_seqs(data):
+    """
+    identify and label unique sequences
+    """
+    counts = Counter([i[2] for i in data]).most_common()
+    labels = 'abcdefghijklmnopqrstuvwxyz'
+    ret_data = []
+    for i in range(len(data)):
+        _, name, seq = data[i]
+        found = False
+        for label, (uniq_seq, _) in zip(labels, counts):
+            # if we run out of labels, remaining variants
+            # won't get one
+            if seq == uniq_seq:
+                found = True
+                break
+        if not found:
+            label = ' '
+
+        ret_data.append((label, name, seq))
+
+    return ret_data
+
+
+def get_variant_ranks(data):
+    """
+    map ranked base variant abundance per column
+    """
+    ret = []
+    for col in range(alen(data)):
+        counts = Counter([i[col] for i in [j[2] for j in data]])
+        ret.append(
+            {var: rank for rank, (var, _) in enumerate(counts.most_common())}
+        )
+
+    return ret
+
+
+def alen(data):
+    """
+    Get alignment length from data
+    """
+
+    alen = None
+    for _, _, seq in data:
+        if alen is None:
+            alen = len(seq)
+        else:
+            if alen != len(seq):
+                # inconsistency, all seqs should be same length
+                return None
+    return alen
+
+
+def debug(*args, file=sys.stderr, **kwargs):
+    debug_out.append((args, kwargs, file))
+
+
+def print_debug():
+    for args, kwargs, file in debug_out:
+        print(*args, file=file, **kwargs)
+
+
+debug_out = []
+try:
+    args = get_args()
+    data = load_data(args.infile)
+    data = label_uniq_seqs(data)
+    var_ranks = get_variant_ranks(data)
+    curses.wrapper(main, data, var_ranks)
+except Exception:
+    raise
+finally:
+    print_debug()

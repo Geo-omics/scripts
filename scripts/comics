@@ -58,6 +58,10 @@ options with unintended consequences likely.
     -k, --keep-env
                 Keep environment (not really recommended,
                 but purge any loaded environment modules)
+    -l, --list  List container images available at standard search paths.  The
+                displayed names can be used with the -i option. Use with -v to
+                display full path and timestamps.  Other options have no effect
+                when used together with --list.
     -m, --keep-env-modules
                 Keep environment including environment modules loaded
                 (not recommended, this causes host-container interactions)
@@ -87,8 +91,8 @@ options with unintended consequences likely.
 # SHORT_OPTIONS: start with + for posix correct scanning mode
 # comics has no non-option arguments so, this way no -- is required before the
 # command to stop getopt from rearranging any command arguments
-SHORT_OPTIONS=+B:i:kms:uw
-LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,norc,rcfile:,singularity-opt:,update,write
+SHORT_OPTIONS=+B:i:klms:uw
+LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,list,norc,rcfile:,singularity-opt:,update,write
 }
 
 handle_options () {
@@ -99,6 +103,7 @@ handle_options () {
 		IMAGE=$2
 		return 2;;
             (-k|--keep-env) KEEP_ENV=true; return 1;;
+            (-l|--list) LIST=true; return 1;;
             (-m|--keep-env-modules)
                 KEEP_ENV=true;
                 KEEP_ENV_MODULES=true;
@@ -135,6 +140,7 @@ IMAGE=$DEFAULT_IMAGE_NAME
 # use clean environment by default to reduce interactions betwen host and container
 KEEP_ENV=false
 KEEP_ENV_MODULES=false
+LIST=false
 # useful mounts for flux and geomicro servers, will only be used if they exist
 # NOTE: assuming on flux /scratch and /nfs are mounted via /etc/../singularity.conf
 #       including it here may produce two warnings each time comics is called
@@ -161,7 +167,9 @@ WRITE=false
 
 if [[ -n "${SINGULARITY_CONTAINER:-}" ]]; then
     _msg="Singularity container already running"
-    if $WRITE; then
+    if $LIST; then
+        :  # pass
+    elif $WRITE; then
         abort "$_msg"
     elif $UPDATE; then
         abort "$_msg, please exit and retry the update"
@@ -175,6 +183,41 @@ fi
 #################################
 # do stuff
 ################################
+
+if $LIST; then
+    for p in "${CONTAINER_PATH[@]}"; do
+        if ! [[ -d "$p" ]]; then
+            if [[ $VERBOSITY -lt 2 ]]; then
+                :
+            elif [[ $VERBOSITY == 2 ]]; then
+                :
+            elif [[ $VERBOSITY -gt 2 ]]; then
+                echo "Directory does not exist: $p"
+            fi
+            continue
+        fi
+        find "$p" -maxdepth 1 -type f | xargs -r file | { grep "run-singularity script executable" || true; } | cut -d: -f1 | \
+            if [[ $VERBOSITY -lt 2 ]]; then
+                xargs -r ls -1rt | xargs -r basename -a
+            elif [[ $VERBOSITY == 2 ]]; then
+                xargs -r ls -lrth
+            elif [[ $VERBOSITY -gt 2 ]]; then
+                xargs -r ls -1rth
+            fi
+        find "$p" -maxdepth 1 -type d | while read; do
+            if [[ -d "$REPLY"/.singularity.d ]]; then
+                if [[ $VERBOSITY -lt 2 ]]; then
+                    basename "$REPLY"
+                elif [[ $VERBOSITY == 2 ]]; then
+                    echo "$REPLY"
+                elif [[ $VERBOSITY -gt 2 ]]; then
+                    echo "$REPLY"
+                fi
+            fi
+        done
+    done
+    exit
+fi
 
 image=
 if [[ -e "$IMAGE" ]]; then
