@@ -136,6 +136,7 @@ OTHER_EXECUTABLES = \
     chop-contigs \
     createPhgDB \
     comics \
+    dada2shared\
     do2folder \
     do2list \
     downsample \
@@ -144,6 +145,8 @@ OTHER_EXECUTABLES = \
     firefox_already_running \
     getGIAnnotation \
     getGISummary \
+    match-dada2-mothur\
+    merge-covs\
     merge-coverage \
     mVelvetPipe_paired \
     mVelvetPipe_singles \
@@ -160,12 +163,14 @@ OTHER_EXECUTABLES = \
     omics-qc-check \
     omics-qc-sample \
     plot-blast-frag-cov \
+    plot-shared-otu-counts\
     refseq-rna \
     remove_space_from_filenames \
     rgi-coverage \
     rgi-setup \
     separate-interleaved\
     setup_metapathways \
+    silva-align\
     silva-db \
     unchop-contigs \
     ESOM_binning_results_parser \

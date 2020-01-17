@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Match final DADA2 sequences to sequences in mothur pre.cluster map files
+"""
+import argparse
+from pathlib import Path
+
+from Bio import pairwise2
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'pre_cluster_map',
+    metavar='PRECLUSTER_MAP',
+    type=argparse.FileType(),
+    help='map output file from mothur\'s per.cluster command',
+)
+argp.add_argument(
+    'dada2_seqtab',
+    metavar='DADA2_SEQTAB',
+    type=argparse.FileType(),
+    help='DADA2 sequence table, saved with write.table and tab delimited',
+)
+args = argp.parse_args()
+
+# output file names
+map_o = Path(Path(args.pre_cluster_map.name).name)
+map_o = map_o.with_suffix('.dada2' + map_o.suffixes[-1])
+fa_o = Path(Path(args.dada2_seqtab.name).name).with_suffix('.fa')
+
+# read map file
+map_data = []
+map_header = args.pre_cluster_map.readline()
+for line in args.pre_cluster_map:
+    line = line.strip()
+    map_data.append(line.split('\t'))
+
+# read seqtab file
+seqtab = []
+seqs = args.dada2_seqtab.readline()
+seqs = seqs.strip().split('\t')
+seqs = [i.replace('"', '') for i in seqs]
+for line in args.dada2_seqtab:
+    line = line.strip()
+    seqtab.append(line.split('\t'))
+
+# assign ids to sequences
+seqs = {'dada2_{}'.format(i): s for i, s in enumerate(seqs)}
+
+
+# implement sequence matching
+def match_seq(query_seq, seqs):
+    """
+    Match a mothur-aligned query seq to those in seqs
+
+    Return id of closest match
+    """
+    # rm gaps
+    q = query_seq.replace('-', '')
+    high_score = None
+    best_hit = None
+    for id, seq in seqs.items():
+        score = pairwise2.align.globalms(
+            q, seq,
+            1, -1, -1, -1,
+            score_only=True
+        )
+        if high_score is None or score > high_score:
+            high_score = score
+            best_hit = id
+
+    return best_hit
+
+
+# write output map
+with map_o.open('w') as f:
+    map_header = map_header.split('\t')
+    map_header.insert(4, 'dada2')
+    f.write('\t'.join(map_header))
+    for row in map_data:
+        match = match_seq(row[4], seqs)
+        if match is None:
+            match = ''
+        row.insert(4, match)
+        f.write('\t'.join(row) + '\n')
+
+print('map output written to: {}'.format(map_o))
+
+# write fasta file
+with fa_o.open('w') as f:
+    for id, seq in seqs.items():
+        f.write('>{}\n{}\n'.format(id, seq))
+
+print('Fasta output written to: {}'.format(fa_o))
