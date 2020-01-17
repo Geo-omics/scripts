@@ -163,7 +163,6 @@ OTHER_EXECUTABLES = \
     omics-qc-check \
     omics-qc-sample \
     plot-blast-frag-cov \
-    plot-shared-otu-counts\
     refseq-rna \
     remove_space_from_filenames \
     rgi-coverage \
@@ -179,6 +178,7 @@ OTHER_EXECUTABLES = \
 
 # scripts for which help2man can make man pages
 HELP2MAN_EXECUTABLES = \
+    plot-shared-otu-counts\
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\

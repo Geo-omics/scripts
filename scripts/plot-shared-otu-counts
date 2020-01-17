@@ -397,6 +397,8 @@ def get_args():
         action='store_true',
         help='Print more diagnostic output to stdout.'
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
     args = argp.parse_args()
     if args.outfile is None:
         args.outfile = Path(args.infile.name).name + '.pdf'
