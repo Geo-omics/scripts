@@ -1,3 +1,31 @@
+geo-omics-scripts (1.155-1) buster; urgency=medium
+
+  * rgi-setup: Fix error handling
+  * rgi-setup: print CARD db version for info and debugging
+  * rgi-setup: decompress files wildcard data directory
+  * rgi-setup: remove downloaded file
+  * Add aview - text-based multiple alignment viewer
+  * aview: add simple debugging to stderr after curses screen closes
+  * aview: remove old debugging code
+  * aview: separate out move code into its own method
+  * aview: add jumping to position with 'g' command
+  * aview: add color to base variants based on abundance rank
+  * aview: allow debug message to be written to a file
+  * fragRec: fix help, don't show help in pager but print straight to stdout
+  * fragRec: mark mandatory arguments as such in synopsis
+  * fragRec: fix misleading error messages
+  * comics: add --list option to print list or available images
+  * aview: identify and mark unique sequences
+  * aview: fix last sequence in file not loading
+  * aview: remove debugging code
+  * gff2fasta: improve cmd line options and verbosity and error handling
+  * gff2fasta: improve resulting fasta headers
+  * gff2fasta: fix gff file parsing, remove newline from attrs field
+  * Add new blast fragment recruting plot script
+  * Add 5 more scripts
+
+ -- Robert <heinro@umich.edu>  Fri, 17 Jan 2020 14:55:15 -0500
+
 geo-omics-scripts (1.154-1) buster; urgency=medium
 
   * Add rgi setup and coverage compilation tools
