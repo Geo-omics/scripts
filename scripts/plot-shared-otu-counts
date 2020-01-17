@@ -1,0 +1,430 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Plot OTU counts of samples from mothur a shared file
+"""
+import argparse
+from array import array
+from collections import Counter
+from itertools import filterfalse
+import math
+import numpy
+from pathlib import Path
+import statistics
+
+import matplotlib
+matplotlib.use('agg')
+from matplotlib.backends.backend_agg import FigureCanvasAgg  # noqa: E402
+from matplotlib.figure import Figure  # noqa: E402
+from matplotlib.gridspec import GridSpec  # noqa: E402
+
+
+DEFAULT_MIN_COUNT = 1
+DEFAULT_N_BINS = 25
+DEFAULT_MIN_SAMPLE_SIZE = 1
+
+
+def align(num, to, ceil):
+    """
+    Align to an integer to multiple of magnitude
+    """
+    if ceil is True:
+        align_fun = math.ceil
+    else:
+        align_fun = math.floor
+    return align_fun(num / to) * to
+
+
+def plot_hist(ax, data, args):
+    counts = list(data.values())
+    print('count range: ', min(counts), '-', max(counts))
+    # aim to make 20 bins, but have step=1 for small data
+    magnitude = 10 ** math.floor(math.log10(max(counts)))
+    bin_min = align(min(counts), magnitude, ceil=False)
+    bin_max = align(max(counts), magnitude, ceil=True)
+    print('bin range: ', bin_min, '-', bin_max)
+    step = max(int((bin_max - bin_min) / DEFAULT_N_BINS), 1)
+    print('binning step: ', step)
+    if step == 1:
+        # adjust to make bins unambiguously integer
+        bins = list(range(bin_min, bin_max + 2))
+        bins = [i - 0.5 for i in bins]
+    else:
+        bins = list(range(bin_min, bin_max + step, step))
+    print('calculated bins: ', bins)
+
+    if args.verbose:
+        # print bins
+        for i in range(len(bins) - 1):
+            print('** {} - {}'.format(bins[i], bins[i + 1]))
+            print(*sorted([
+                j for j in counts
+                if bins[i] < j <= bins[i + 1]
+            ]), sep='\n')
+
+    n, bins, _ = ax.hist(counts, bins=bins, rwidth=0.9)
+
+    ax.set_ylabel('Number of samples')
+    ax.set_xlabel('OTUs/ESVs in sample')
+    if args.min_abund is None:
+        minimum_str = 'count >= {}'.format(args.min_count)
+    else:
+        minimum_str = '> {:g}% abundance'.format(args.min_abund * 100)
+    # ax.set_title('Number of OTUs/ESVs per sample, with {}'
+    #              ''.format(minimum_str))
+    ax.locator_params(axis='y', integer=True)
+    return minimum_str
+
+
+def plot_scat(ax, shared, counts, args):
+    counts = [counts[i] for i in shared.samples]
+
+    ax.scatter(counts, shared.sample_sizes)
+    ax.set_ylabel('sample size')
+    ax.get_xaxis().set_visible(False)
+    #  ax.set_title('Number of OTUs/ESVs vs. sample size')
+
+
+def plot_prev(ax, counts, shared, args):
+    """
+    Plot OTU/ESV prevalence: OTU count against number of samples
+    """
+    bins = numpy.logspace(
+        numpy.log10(1),
+        numpy.log10(len(shared.samples)),
+        20,
+    )
+    bins = [int(i) for i in bins]
+    bins = sorted(set(bins))
+    print('prev plot bins:', bins)
+    x = list(counts.values())
+    ax.hist(x, bins=bins)
+
+    ax.set_title('OTU/ESV prevalence')
+    ax.set_ylabel('number of OTUs/ESVs')
+    ax.set_xlabel('number of samples')
+    ax.locator_params(integer=True)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+
+
+def plot(shared, otu_counts, sample_counts, args):
+    fig = Figure(figsize=(8, 11))
+    FigureCanvasAgg(fig)
+    gs = GridSpec(3, 1)
+
+    scat_ax = fig.add_subplot(gs[0])
+    hist_ax = fig.add_subplot(gs[1], sharex=scat_ax)
+    prev_ax = fig.add_subplot(gs[2])
+
+    minimum_str = plot_hist(hist_ax, otu_counts, args)
+    plot_scat(scat_ax, shared, otu_counts, args)
+    plot_prev(prev_ax, sample_counts, shared, args)
+
+    if args.title is None:
+        title = (
+            '{} samples from {}\n'
+            '{} OTUs/ESVs total  --  filter: {}'
+            ''.format(
+                len(shared.samples),
+                args.infile.name,
+                len(shared.otus),
+                minimum_str,
+            )
+        )
+        if args.normalize:
+            title += '  --  normalized'
+
+        if args.min_sample_size != DEFAULT_MIN_SAMPLE_SIZE:
+            title += '  --  min sample size {}'.format(args.min_sample_size)
+
+        fig.suptitle(title)
+    else:
+        fig.suptitle(args.title)
+
+    # rect: add space for figure title
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    return fig
+
+
+class MothurShared():
+    def __init__(self, file, min_sample_size=DEFAULT_MIN_SAMPLE_SIZE):
+        file.seek(0)
+
+        head = file.readline().strip()
+        if not head.startswith('\t'.join(['label', 'Group', 'numOtus'])):
+            raise RuntimeError(
+                'input file does not seem to be a mothur shared file, first '
+                'line starts with:\n{}'.format(head[:100])
+            )
+
+        self.otus = head.split('\t')[3:]
+        self.ncols = len(self.otus)
+        print('total OTUs:  ', self.ncols)
+
+        self.counts = array('i')
+        self.samples = []
+        self.sample_sizes = []
+
+        label_ref = None
+        for line in file:
+            try:
+                label, sample, _, *counts = line.strip().split('\t')
+            except Exception:
+                raise RuntimeError('Failed to parse input: offending line '
+                                   'is:\n'.format(line))
+
+            if label_ref is None:
+                label_ref = label
+            elif label_ref != label:
+                raise RuntimeError('This shared file contained multiple label,'
+                                   ' handling this requires implementation')
+
+            if sample in self.samples:
+                raise RuntimeError('got sample {} a second time'
+                                   ''.format(sample))
+
+            if len(counts) != self.ncols:
+                raise RuntimeError('Not all rows have equal number of columns')
+
+            counts = array('i', map(int, counts))
+            size = sum(counts)
+
+            if size < min_sample_size:
+                print('Sample {} too small, size {}, ignoring'
+                      ''.format(sample, size))
+                continue
+
+            self.counts.extend(counts)
+            self.samples.append(sample)
+            self.sample_sizes.append(size)
+
+        self.nrows = len(self.samples)
+        print('total samples:  ', self.nrows)
+
+        # end init
+
+    def rows(self, sample=False):
+        for i in range(self.nrows):
+            offs = i * self.ncols
+            if sample:
+                yield self.samples[i], self.counts[offs:offs + self.ncols]
+            else:
+                yield self.counts[offs:offs + self.ncols]
+
+    def cols(self):
+        for i in range(self.ncols):
+            yield (self.counts[j * self.ncols + i] for j in range(self.nrows))
+
+
+def compile_by_abundance(shared, args):
+    pass_map = None
+
+    for counts in shared.rows():
+        if pass_map is None:
+            pass_map = [[] for _ in range(shared.ncols)]
+
+        total = sum(counts)
+        for c, m in zip(counts, pass_map):
+            if c / total >= args.min_abund:
+                m.append(True)
+            else:
+                m.append(False)
+
+    otu_map = [any(i) for i in pass_map]
+    num_passed = len([i for i in otu_map if i])
+    print('abundant OTU count: ', num_passed)
+
+    otu_counts = Counter()
+    sample_counts = dict(((i, 0) for i in shared.otus))
+    for sample, row in shared.rows(sample=True):
+
+        it_good = filterfalse(
+            lambda x: x[0] is False or x[1] == 0,
+            zip(otu_map, row, shared.otus)
+        )
+
+        c = 0
+        for _, _, otu in it_good:
+            sample_counts[otu] += 1
+            c = c + 1
+
+        otu_counts[sample] = c
+
+    return otu_counts, sample_counts
+
+
+def compile_by_count(shared, args):
+    otu_counts = dict()
+    sample_counts = dict(((i, 0) for i in shared.otus))
+
+    for sample, row in shared.rows(sample=True):
+        it_good = filterfalse(
+            lambda x: x[0] < args.min_count, zip(row, shared.otus)
+        )
+
+        c = 0
+        for _, otu in it_good:
+            sample_counts[otu] += 1
+            c = c + 1
+
+        otu_counts[sample] = c
+
+    return otu_counts, sample_counts
+
+
+def get_args():
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'infile',
+        metavar='SHARED_FILE',
+        type=argparse.FileType(),
+        help='Input file, a mothur shared file',
+    )
+    grp1 = argp.add_mutually_exclusive_group()
+    grp1.add_argument(
+        '-c', '--min-count',
+        type=int,
+        metavar='N',
+        default=DEFAULT_MIN_COUNT,
+        help='Low count cut-off, default is {}, OTUs with count of this many '
+             'or more are included'.format(DEFAULT_MIN_COUNT),
+    )
+    grp1.add_argument(
+        '-p', '--min-relative-abundance',
+        type=float,
+        metavar='nnnn',
+        default=None,
+        dest='min_abund',
+        help='Relative abundance cut-off, default is to use minimum count, '
+             'OTUs with relative abundance higher than this in at least one '
+             'sample are included.'
+    )
+    argp.add_argument(
+        '-s', '--min-sample-size',
+        type=int,
+        default=DEFAULT_MIN_SAMPLE_SIZE,
+        help='Ignore samples with size (number of sequences) below this, '
+             'by default, the data from all samples is taken',
+    )
+    argp.add_argument(
+        '-o', '--out',
+        metavar='FILE',
+        dest='outfile',
+        default=None,
+        help='Name of PDF output file',
+    )
+    argp.add_argument(
+        '--out-table',
+        metavar='FILE',
+        type=argparse.FileType('w'),
+        help='Also write ESV/OTU counts to tab-delimited file',
+    )
+    argp.add_argument(
+        '--out-prevalence',
+        metavar='FILE',
+        type=argparse.FileType('w'),
+        help='Export a table listing the most prevalent OTUs',
+    )
+    argp.add_argument(
+        '--sample-totals',
+        metavar='FILE',
+        type=argparse.FileType('w'),
+        help='File to which a sorted list of sample read count totals is '
+             'written, by default no such file is written',
+    )
+    argp.add_argument(
+        '-t', '--title',
+        help='Custom figure title.  By default a title will be generated'
+             'automatically.'
+    )
+    argp.add_argument(
+        '-n', '--normalize',
+        action='store_true',
+        help='Normalize OTU counts to sample size.  This divides all OTU '
+             'counts by the ratio of sample size to median sample size',
+    )
+    argp.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Print more diagnostic output to stdout.'
+    )
+    args = argp.parse_args()
+    if args.outfile is None:
+        args.outfile = Path(args.infile.name).name + '.pdf'
+    return args
+
+
+def main():
+    args = get_args()
+
+    shared = MothurShared(args.infile, min_sample_size=args.min_sample_size)
+
+    if args.sample_totals is not None:
+        print(*sorted(shared.sample_sizes), sep='\n', file=args.sample_totals)
+        args.sample_totals.close()
+
+    if args.min_abund is None:
+        otu_counts, sample_counts = compile_by_count(shared, args)
+    else:
+        otu_counts, sample_counts = compile_by_abundance(shared, args)
+
+    if args.normalize:
+        # do the normalization
+        median_size = statistics.median(shared.sample_sizes)
+        print('median sample size:  ', median_size)
+        sizes = {i: j for i, j in zip(shared.samples, shared.sample_sizes)}
+        for sample, raw_count in otu_counts.items():
+            norm_factor = median_size / sizes[sample]
+            if norm_factor > 50:
+                # Do not amplify very small samples (water, blank)
+                # the 50 is arbitrary
+                print('sample {} is too small, not normalized'.format(sample))
+            else:
+                # max: don't ever scale values down to 0, assume raw_count > 0
+                otu_counts[sample] = \
+                        max(1, int(raw_count * median_size / sizes[sample]))
+
+    if args.out_table is not None:
+        sizes = dict(zip(shared.samples, shared.sample_sizes))
+        rows = [
+            '{}\t{}\t{}'.format(k, sizes[k], v)
+            for k, v in otu_counts.items()
+        ]
+        print('sample', 'read count', 'otu count', sep='\t',
+              file=args.out_table)
+        print(*rows, sep='\n', file=args.out_table)
+        args.out_table.close()
+        print('OTU count table saved to:', args.out_table.name)
+
+    if args.out_prevalence is not None:
+        prevalence = sorted(sample_counts.items(), key=lambda x: -x[1])
+        rows = ['{}\t{}'.format(k, v) for k, v in prevalence]
+        print(*rows, sep='\n', file=args.out_prevalence)
+        args.out_prevalence.close()
+        print('OTU prevalence table saved to:', args.out_prevalence.name)
+
+    fig = plot(shared, otu_counts, sample_counts, args)
+    fig.savefig(args.outfile)
+    print('plot saved as', args.outfile)
+
+
+if __name__ == '__main__':
+    main()

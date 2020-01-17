@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Convert a DADA2 sequence table into a fasta file and a mothur shared file
+"""
+import argparse
+from pathlib import Path
+import re
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'infile',
+    metavar='dada2_sequence_table',
+    type=argparse.FileType(),
+    help='Sequence table from dada2, saved with write.table()',
+)
+args = argp.parse_args()
+
+# compute output file names
+basename = Path(args.infile.name).stem
+outfasta = Path() / (basename + '.fa')
+outshared = Path() / (basename + '.shared')
+
+# read sequences
+seqs = enumerate(args.infile.readline().strip().strip('"').split('" "'),
+                 start=1)
+seqs = [('{}_{}'.format(basename, i), s) for i, s in seqs]
+
+print('Total ASVs:', len(seqs))
+
+with outfasta.open('w') as fasta:
+    for id, seq in seqs:
+        fasta.write('>{}\n{}\n'.format(id, seq))
+
+print('Fasta file written:', outfasta)
+
+pat = re.compile(r'"([^"])"')
+with outshared.open('w') as shared:
+    header = ['label', 'Group', 'numOtus'] + [i for i, _ in seqs]
+    shared.write('\t'.join(header) + '\n')
+    total = len(seqs)
+    for row in args.infile:
+        sample, _, counts = row.strip().partition(' ')
+        sample = sample.strip('"')
+        counts = counts.replace(' ', '\t')
+        shared.write('dada2asv\t{}\t{}\t{}\n'.format(sample, total, counts))
+
+print('Shared file written:', outshared)

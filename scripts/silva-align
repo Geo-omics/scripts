@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Align fasta sequences to the SILVA 16S 50,000 column alignment
+
+In V4 mode, the 16S V4 region is extracted and, simulating the 16S/MiSeq
+Schloss SOP, aligned to the SILVA V4 restriction, resulting in V4 alignments
+comparable to those produced by the SOP.
+"""
+import argparse
+from base64 import b32encode, b32decode
+from pathlib import Path
+import subprocess
+import tempfile
+
+REFERENCE = '/geomicro/data9/flux/reference-data/mep/'
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'inputfile',
+    type=argparse.FileType(),
+    help='Fasta file with inout data',
+)
+argp.add_argument(
+    '--silva-full',
+    type=argparse.FileType(),
+    default=REFERENCE + 'silva.nr_v132.align',
+    help='Path to full 50,000 column SILVA alignment',
+)
+argp.add_argument(
+    '--silva-v4',
+    type=argparse.FileType(),
+    default=REFERENCE + 'silva.v4.align',
+    help='path to full silva alignment cut to v4 region according to Schloss '
+         'SOP',
+)
+argp.add_argument(
+    '--full-length',
+    action='store_true',
+    help='Get alignment for the whole-length 16S gene, by default only the v4'
+         'region is extracted and aligned',
+)
+argp.add_argument(
+    '--no-trump-dot',
+    action='store_true',
+    help='Do not use the usual trump=. option for mothur\'s filter.seqs '
+         'command, use this option if you get empty sequences after the '
+         'final filter step.',
+)
+argp.add_argument(
+    '-t', '--threads',
+    type=int,
+    default=4,
+    help='Number of threads/CPUs to use (will be passed to mothur)',
+)
+argp.add_argument(
+    '-o', '--output',
+    type=argparse.FileType('w'),
+    default='-',
+    help='Output file',
+)
+args = argp.parse_args()
+
+if args.threads < 1:
+    argp.error('threads must be set to larger than 0')
+
+args.inputfile.close()
+args.silva_full.close()
+args.silva_v4.close()
+infile = Path(args.inputfile.name)
+
+
+def run_mothur(cmd, *args, infiles=[], outfiles=[], workdir=Path.cwd(),
+               **kwargs):
+    argstr = ', '.join(
+            list(args) +
+            ['{}={}'.format(i, j) for i, j in kwargs.items()]
+        )
+    for i in infiles:
+        with i.open() as src:
+            with (workdir / Path(i.name).name).open('w') as dst:
+                for line in src:
+                    if line.startswith('>'):
+                        # make mothur-safe
+                        seq_header = line.strip().lstrip('>')
+                        seq_header = b32encode(seq_header.encode()).decode()
+                        line = '>{}\n'.format(seq_header)
+                    dst.write(line)
+
+    p = subprocess.run(
+        ['mothur', '#{}({})'.format(cmd, argstr)],
+        cwd=str(workdir),
+        capture_output=False,
+    )
+    p.check_returncode()
+    for i in outfiles:
+        with (workdir / i).open() as src:
+            with i.open('w') as dst:
+                for line in src:
+                    if line.startswith('>'):
+                        # decode from mothur-safe
+                        seq_header = line.strip().lstrip('>')
+                        seq_header = b32decode(seq_header.encode()).decode()
+                        line = '>{}\n'.format(seq_header)
+                    dst.write(line)
+
+
+def v4_workflow(tmpd, args, infile, trump_kw):
+    """
+    Continue with v4 extraction after full sequence alignment
+    """
+    run_mothur(
+        'pcr.seqs',
+        fasta=str(infile.with_suffix('.align')),
+        start='13862',
+        end='23445',
+        keepdots='F',
+        processors=str(args.threads),
+        workdir=tmpd,
+    )
+
+    v4_aligned = tmpd / infile.with_suffix('.pcr.align')
+    v4_fa = tmpd / infile.with_suffix('.v4.fa')
+
+    # remove dots and dashes i.e. remove alignments
+    with v4_aligned.open() as src:
+        with v4_fa.open('w') as dst:
+            trtab = str.maketrans({'.': None, '-': None})
+            for line in src:
+                if not line.startswith('>'):
+                    line = line.translate(trtab)
+                dst.write(line)
+
+    run_mothur(
+        'align.seqs',
+        fasta=str(infile.with_suffix('.v4.fa')),
+        reference=args.silva_v4.name,
+        processors=str(args.threads),
+        workdir=tmpd,
+    )
+    run_mothur(
+        'filter.seqs',
+        fasta=str(infile.with_suffix('.v4.align')),
+        vertical='T',
+        **trump_kw,
+        processors=str(args.threads),
+        workdir=tmpd,
+        outfiles=[infile.with_suffix('.v4.filter.fasta')],
+    )
+
+
+def full_16s_workflow(tmpd, args, infile, trump_kw):
+    """
+    Continue with post-processing full sequence alignment
+
+    Corresponds to the last step in the v4 workflow,
+    without the trump=. option
+    """
+    run_mothur(
+        'filter.seqs',
+        fasta=str(infile.with_suffix('.align')),
+        vertical='T',
+        **trump_kw,
+        processors=str(args.threads),
+        workdir=tmpd,
+        outfiles=[infile.with_suffix('.filter.fasta')],
+
+    )
+
+
+with tempfile.TemporaryDirectory() as tmpd:
+    tmpd = Path(tmpd)
+    run_mothur(
+        'align.seqs',
+        fasta=str(infile),
+        reference=args.silva_full.name,
+        processors=str(args.threads),
+        infiles=[infile],
+        workdir=tmpd,
+    )
+    if args.no_trump_dot:
+        trump_kw = {}
+    else:
+        trump_kw = {'trump': '.'}
+
+    if args.full_length:
+        full_16s_workflow(tmpd, args, infile, trump_kw)
+    else:
+        v4_workflow(tmpd, args, infile, trump_kw)
