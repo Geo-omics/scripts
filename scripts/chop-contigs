@@ -18,7 +18,7 @@
 # with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Chop up contigs of a metagenomic assembly in preparation tun run CONCOCT
+Chop up contigs of a metagenomic assembly in preparation to run CONCOCT
 """
 
 import argparse
