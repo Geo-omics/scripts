@@ -131,23 +131,17 @@ PERL_SCRIPTS = \
 OTHER_EXECUTABLES = \
     antiSmash_summary \
     assemblyModules \
-    aview \
     bins2fasta \
-    chop-contigs \
     createPhgDB \
     comics \
-    dada2shared\
     do2folder \
     do2list \
-    downsample \
     Ebot.Output.Extract.Gi.Title.Rev3 \
     extractEuks \
     firefox_already_running \
     getGIAnnotation \
     getGISummary \
-    match-dada2-mothur\
     merge-covs\
-    merge-coverage \
     mVelvetPipe_paired \
     mVelvetPipe_singles \
     oasesPaired_pipe \
@@ -162,14 +156,11 @@ OTHER_EXECUTABLES = \
     omics-qc \
     omics-qc-check \
     omics-qc-sample \
-    plot-blast-frag-cov \
     refseq-rna \
     remove_space_from_filenames \
     rgi-coverage \
     rgi-setup \
-    separate-interleaved\
     setup_metapathways \
-    silva-align\
     silva-db \
     unchop-contigs \
     ESOM_binning_results_parser \
@@ -178,7 +169,16 @@ OTHER_EXECUTABLES = \
 
 # scripts for which help2man can make man pages
 HELP2MAN_EXECUTABLES = \
+    aview\
+    chop-contigs\
+    dada2shared\
+    downsample\
+    match-dada2-mothur\
+    merge-coverage\
+    plot-blast-frag-cov\
     plot-shared-otu-counts\
+    separate-interleaved\
+    silva-align\
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\
