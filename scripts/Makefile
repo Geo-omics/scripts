@@ -175,7 +175,10 @@ HELP2MAN_EXECUTABLES = \
     downsample\
     match-dada2-mothur\
     merge-coverage\
+    merge-covs\
     plot-blast-frag-cov\
+    plot-megahit-log\
+    plot_alignment\
     plot-shared-otu-counts\
     separate-interleaved\
     silva-align\
