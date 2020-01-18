@@ -487,6 +487,8 @@ def get_args(argv=None):
         action='store_true',
         help='Print some diagnostic output',
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 
     args = argp.parse_args(argv)
 

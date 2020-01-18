@@ -76,6 +76,8 @@ argp.add_argument(
     default='-',
     help='Output file',
 )
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
 
 if args.threads < 1:

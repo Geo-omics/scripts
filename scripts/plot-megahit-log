@@ -32,6 +32,8 @@ argp.add_argument('log_file', type=argparse.FileType(),
                   help='log file from megahit run')
 argp.add_argument('-v', '--verbose', action='store_true', default=False,
                   help='Show diagnostig output')
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
 
 

@@ -180,6 +180,8 @@ if __name__ == '__main__':
              ' at the first white-space character, assuming everthing up to '
              'then uniquly identifies the contig.',
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
     argp.add_argument(
         '--debug',
         action='store_true',

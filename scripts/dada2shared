@@ -32,6 +32,8 @@ argp.add_argument(
     type=argparse.FileType(),
     help='Sequence table from dada2, saved with write.table()',
 )
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
 
 # compute output file names
