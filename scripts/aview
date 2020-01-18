@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Simple interactive display for aligned sequences
+"""
 import argparse
 from collections import Counter
 import curses
