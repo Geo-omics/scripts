@@ -70,6 +70,7 @@ options with unintended consequences likely.
     --norc      Do not use the omics container's default initialization file
                 when starting bash (if no command is given). This is also
                 singularity's default behaviour.
+    --new-start start the container the new way (experimental feature, will soon become the default and the option will be replaced with --old-way to allow still starting older copies of the container)
     --rcfile <file>
                 Provide a file to initialize the bash shell.  This option will
                 be passed to the bash shell if no command is given and the
@@ -94,7 +95,7 @@ options with unintended consequences likely.
 # comics has no non-option arguments so, this way no -- is required before the
 # command to stop getopt from rearranging any command arguments
 SHORT_OPTIONS=+B:i:klms:uw
-LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,list,norc,rcfile:,singularity-opt:,update,write
+LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,list,norc,rcfile:,singularity-opt:,update,write,new-start
 }
 
 handle_options () {
@@ -110,6 +111,7 @@ handle_options () {
                 KEEP_ENV=true;
                 KEEP_ENV_MODULES=true;
                 return 1;;
+            (--new-start) OLD_START_UP=false; return 1;;
             (--norc) NORC=true; return 1;;
             (--rcfile) RCFILE=$2; return 2;;
 	    (-s|--singularity)
@@ -152,7 +154,10 @@ MOUNT_POINTS=(
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
 )
 NORC=false
-RCFILE=/.singularity.d/specs/bashrc
+OLD_START_UP=true
+# by default run bash without --rcfile unless we do the old start style
+RCFILE=
+OLD_START_RCFILE=/.singularity.d/specs/bashrc
 SINGULARITY_ARGS=()
 #
 UPDATE=false
@@ -327,12 +332,25 @@ fi
 cmd+=(singularity)
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
 for i in $(seq 3 "$VERBOSITY"); do cmd+=(--verbose); done
-cmd+=(exec "${SINGULARITY_ARGS[@]}" "$image")
+if $OLD_START_UP; then
+    cmd+=(exec "${SINGULARITY_ARGS[@]}" "$image")
+else
+    cmd+=(run "${SINGULARITY_ARGS[@]}" "$image")
+fi
 if [ "$#" -gt 0 ]; then
     cmd+=("$@")
 else
-    cmd+=(/bin/bash)
-    [[ -n "$RCFILE" ]] && cmd+=(--rcfile "$RCFILE")
+    if $OLD_START_UP; then
+        cmd+=(/bin/bash)
+        if [[ -n "$RCFILE" ]]; then
+            cmd+=(--rcfile "$RCFILE")
+        else
+            cmd+=(--rcfile "$OLD_START_RCFILE")
+        fi
+    else
+        # option parsing in container runscript is primitive: order of options is fixed
+        [[ -n "$RCFILE" ]] && cmd+=(--rcfile "$RCFILE")
+    fi
     # NOTE: --norc overrules --rcfile in bash when both are given
     $NORC && cmd+=(--norc)
 fi
