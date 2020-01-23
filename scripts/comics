@@ -29,7 +29,6 @@ set -eEu
 DEFAULT_IMAGE_NAME=omics
 # Image file search paths
 CONTAINER_PATH=(
-"${PWD}"
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
 )
@@ -112,7 +111,8 @@ handle_options () {
 	case "$1" in
             (-B|--bind) MOUNT_POINTS+=("$2"); return 2;;
 	    (-i|--container-image)
-		IMAGE=$2
+                IMAGE=$2
+                USER_SPECIFIED_IMAGE=true
 		return 2;;
             (-k|--keep-env) KEEP_ENV=true; return 1;;
             (-l|--list) LIST=true; return 1;;
@@ -173,6 +173,8 @@ OLD_START_RCFILE=/.singularity.d/specs/bashrc
 SINGULARITY_ARGS=()
 #
 UPDATE=false
+# Image is considered not user-specified, i.e. using default unless -i option given
+USER_SPECIFIED_IMAGE=false
 # read-only by default
 WRITE=false
 
@@ -239,7 +241,8 @@ if $LIST; then
 fi
 
 image=
-if [[ -e "$IMAGE" ]]; then
+if $USER_SPECIFIED_IMAGE && [[ -e "$IMAGE" ]]; then
+    # user-specified image exist in $(pwd) or full path exists
     image=$IMAGE
 else
     if $WRITE; then
