@@ -25,8 +25,8 @@
 
 set -eEu
 
-# Default name of image file
-DEFAULT_IMAGE_NAME=omics.img
+# Default name of image file without suffix
+DEFAULT_IMAGE_NAME=omics
 # Image file search paths
 CONTAINER_PATH=(
 "${PWD}"
@@ -52,10 +52,17 @@ options with unintended consequences likely.
     -B PATH, --bind PATH
                 Mount path inside container.  On FLUX and the geomirco servers
                 common storage will be available.
-    -i <PATH>, --container-image <PATH>
-                Full path to singularity container image.  By default
-                image is $DEFAULT_IMAGE_NAME, search path is
+    -i <IMAGE>, --container-image <IMAGE>
+                Specify the container image to use.  This can be the full file
+                name or base name (without suffix) or the full path to the
+                singularity container image.  If a full filename is given and
+                it is not a file in the current directory or a base name is
+                given then the program will search for the container image in
+                these locations in this order:
                 ${CONTAINER_PATH[*]}
+                If only a base name is given, then the container image must
+                have the suffix .img or .sandbox.
+                By default the $DEFAULT_IMAGE_NAME container is used.                
 
     -k, --keep-env
                 Keep environment (not really recommended,
