@@ -71,6 +71,8 @@ options with unintended consequences likely.
                 when starting bash (if no command is given). This is also
                 singularity's default behaviour.
     --new-start start the container the new way (experimental feature, will soon become the default and the option will be replaced with --old-way to allow still starting older copies of the container)
+    -p, --keep-prompt
+                Do not prepend (name) to the bash prompt if started without COMMAND
     --rcfile <file>
                 Provide a file to initialize the bash shell.  This option will
                 be passed to the bash shell if no command is given and the
@@ -94,8 +96,8 @@ options with unintended consequences likely.
 # SHORT_OPTIONS: start with + for posix correct scanning mode
 # comics has no non-option arguments so, this way no -- is required before the
 # command to stop getopt from rearranging any command arguments
-SHORT_OPTIONS=+B:i:klms:uw
-LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,list,norc,rcfile:,singularity-opt:,update,write,new-start
+SHORT_OPTIONS=+B:i:klmps:uw
+LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,norc,rcfile:,singularity-opt:,update,write,new-start
 }
 
 handle_options () {
@@ -113,6 +115,7 @@ handle_options () {
                 return 1;;
             (--new-start) OLD_START_UP=false; return 1;;
             (--norc) NORC=true; return 1;;
+            (-p|--keep-prompt) KEEP_PROMPT=true; return 1;;
             (--rcfile) RCFILE=$2; return 2;;
 	    (-s|--singularity)
                 SINGULARITY_ARGS+=("$2")
@@ -144,6 +147,8 @@ IMAGE=$DEFAULT_IMAGE_NAME
 # use clean environment by default to reduce interactions betwen host and container
 KEEP_ENV=false
 KEEP_ENV_MODULES=false
+# change prompt by default
+KEEP_PROMPT=false
 LIST=false
 # useful mounts for flux and geomicro servers, will only be used if they exist
 # NOTE: assuming on flux /scratch and /nfs are mounted via /etc/../singularity.conf
@@ -349,6 +354,7 @@ else
         fi
     else
         # option parsing in container runscript is primitive: order of options is fixed
+        $KEEP_PROMPT && cmd+=(--no-change-prompt)
         [[ -n "$RCFILE" ]] && cmd+=(--rcfile "$RCFILE")
     fi
     # NOTE: --norc overrules --rcfile in bash when both are given
