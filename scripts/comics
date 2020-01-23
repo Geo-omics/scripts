@@ -95,7 +95,7 @@ options with unintended consequences likely.
 # comics has no non-option arguments so, this way no -- is required before the
 # command to stop getopt from rearranging any command arguments
 SHORT_OPTIONS=+B:i:klms:uw
-LONG_OPTIONS=bind:container-image:keep-env,kee-env-modules,list,norc,rcfile:,singularity-opt:,update,write,new-start
+LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,list,norc,rcfile:,singularity-opt:,update,write,new-start
 }
 
 handle_options () {
