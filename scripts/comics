@@ -32,6 +32,8 @@ CONTAINER_PATH=(
 "${PWD}"
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
+)
+SANDBOX_PATH=(
 /var/local/containers
 )
 
@@ -223,15 +225,29 @@ image=
 if [[ -e "$IMAGE" ]]; then
     image=$IMAGE
 else
-    for p in "${CONTAINER_PATH[@]}"; do
-        _image=$p/$IMAGE
-        [[ -e "$_image" ]] && image=$_image && break
+    if $WRITE; then
+        searchpaths=("${SANDBOX_PATH[@]}")
+    else
+        searchpaths=("${CONTAINER_PATH[@]}" "${SANDBOX_PATH[@]}")
+    fi
+
+    for p in "${searchpaths[@]}"; do
+        for suf in "" .img .sandbox; do
+            # only *.sandbox should be writable
+            $WRITE && [[ $suf == .img ]] && continue
+            _image=${p}/${IMAGE}${suf}
+            [[ -e "$_image" ]] && image=$_image && break 2
+        done
     done
 fi
 if [ -n "$image" ]; then
     [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Using image: $image"
 else
-    abort "Failed to find omics container image: $IMAGE"
+    if $WRITE; then
+        abort "Failed to find container sandbox: $IMAGE"
+    else
+        abort "Failed to find container image: $IMAGE"
+    fi
 fi
 
 if $UPDATE; then
