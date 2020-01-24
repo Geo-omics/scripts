@@ -339,6 +339,10 @@ fi
 # set DISPLAY if needed
 [[ -v DISPLAY ]] && export SINGULARITYENV_DISPLAY=$DISPLAY
 
+# memorize $PWD -- allows container runscript to issue a warning
+# if $PWD is not accessible
+export SINGULARITYENV_COMICS_PWD=$PWD
+
 cmd=()
 if $WRITE; then
     SINGULARITY_ARGS+=(--writable)
