@@ -40,6 +40,8 @@ DEFAULT_MIN_COUNT = 1
 DEFAULT_N_BINS = 25
 DEFAULT_MIN_SAMPLE_SIZE = 1
 
+MAX_SAMPLE_SIZE_PLOTTED = 100000
+
 
 def align(num, to, ceil):
     """
@@ -94,12 +96,22 @@ def plot_hist(ax, data, args):
 
 
 def plot_scat(ax, shared, counts, args):
-    counts = [counts[i] for i in shared.samples]
+    counts_good = []
+    sizes_good = []
+    sizes_out = []
+    counts_out = []
+    for i, j in zip(shared.samples, shared.sample_sizes):
+        if j <= MAX_SAMPLE_SIZE_PLOTTED:
+            counts_good.append(counts[i])
+            sizes_good.append(j)
+        else:
+            counts_out.append(counts[i])
+            sizes_out.append(MAX_SAMPLE_SIZE_PLOTTED)
 
-    ax.scatter(counts, shared.sample_sizes)
+    ax.scatter(counts_good, sizes_good, marker='.', alpha=0.5)
+    ax.scatter(counts_out, sizes_out, c='tab:blue', marker='^')
     ax.set_ylabel('sample size')
     ax.get_xaxis().set_visible(False)
-    #  ax.set_title('Number of OTUs/ESVs vs. sample size')
 
 
 def plot_prev(ax, counts, shared, args):
@@ -400,7 +412,7 @@ def main():
             else:
                 # max: don't ever scale values down to 0, assume raw_count > 0
                 otu_counts[sample] = \
-                        max(1, int(raw_count * median_size / sizes[sample]))
+                    max(1, int(raw_count * median_size / sizes[sample]))
 
     if args.out_table is not None:
         sizes = dict(zip(shared.samples, shared.sample_sizes))
