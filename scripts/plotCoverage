@@ -32,7 +32,7 @@ unless ($Rversion =~ /R\sversion/) {
 
 
 my $USAGE=q/ USAGE:
-plot_coverage.pl	-r <filename> Reference genome in fasta format.
+plotCoverage	        -r <filename> Reference genome in fasta format.
 			-b <filename> Blast output, in -m8 hit table format. You may plot multiple samples by using the -b flag multiple times, e.g. "-b firstsample.blast_output -b secondsample.blast_output". The coverage maps for the different samples will be displayed on the sample plot, overlayed in different colours. A maximum of 5 different samples can be displayed on the same plot.
 			-p <string> Prefix for output files.
 			-w <integer> Window size for binning. A window size of 0 will simply plot base-by-base coverage.
