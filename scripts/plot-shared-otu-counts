@@ -60,6 +60,10 @@ def plot_hist(ax, data, args):
     print('count range: ', min(counts), '-', max(counts))
     # aim to make 20 bins, but have step=1 for small data
     magnitude = 10 ** math.floor(math.log10(max(counts)))
+    if magnitude > 10:
+        # adjust magnitude to reduce white space on right side of plot
+        magnitude = int(magnitude / 10)
+    print('adjusted magnitude: ', magnitude)
     bin_min = align(min(counts), magnitude, ceil=False)
     bin_max = align(max(counts), magnitude, ceil=True)
     print('bin range: ', bin_min, '-', bin_max)
