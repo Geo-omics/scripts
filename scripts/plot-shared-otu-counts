@@ -27,6 +27,7 @@ from itertools import filterfalse
 import math
 import numpy
 from pathlib import Path
+from scipy.stats.stats import iqr
 import statistics
 
 import matplotlib
@@ -83,8 +84,14 @@ def plot_hist(ax, data, args):
 
     n, bins, _ = ax.hist(counts, bins=bins, rwidth=0.9)
 
+    counts_iqr = iqr(counts)
+    counts_median = statistics.median(counts)
+    q1 = counts_median - counts_iqr / 2
+    q3 = counts_median + counts_iqr / 2
+
     ax.set_ylabel('Number of samples')
-    ax.set_xlabel('OTUs/ESVs in sample')
+    ax.set_xlabel('OTUs/ESVs in sample, median: {} (IRQ:{}-{})'
+                  ''.format(counts_median, q1, q3))
     if args.min_abund is None:
         minimum_str = 'count >= {}'.format(args.min_count)
     else:
