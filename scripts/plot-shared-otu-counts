@@ -112,12 +112,12 @@ def plot_scat(ax, shared, counts, args):
     sizes_out = []
     counts_out = []
     for i, j in zip(shared.samples, shared.sample_sizes):
-        if j <= MAX_SAMPLE_SIZE_PLOTTED:
+        if j <= args.sample_size_outliers:
             counts_good.append(counts[i])
             sizes_good.append(j)
         else:
             counts_out.append(counts[i])
-            sizes_out.append(MAX_SAMPLE_SIZE_PLOTTED)
+            sizes_out.append(args.sample_size_outliers)
 
     ax.scatter(counts_good, sizes_good, marker='.', alpha=0.5)
     ax.scatter(counts_out, sizes_out, c='tab:blue', marker='^')
@@ -383,6 +383,14 @@ def get_args():
         action='store_true',
         help='Normalize OTU counts to sample size.  This divides all OTU '
              'counts by the ratio of sample size to median sample size',
+    )
+    argp.add_argument(
+        '--sample-size-outliers',
+        type=int,
+        default=MAX_SAMPLE_SIZE_PLOTTED,
+        help='Cut off scatter plot here, outliers will be set, visually '
+             'distinct, on the upper margin, the default is {}'
+             ''.format(MAX_SAMPLE_SIZE_PLOTTED),
     )
     argp.add_argument(
         '-v', '--verbose',
