@@ -1,3 +1,30 @@
+geo-omics-scripts (1.156-1) buster; urgency=medium
+
+  * plot-shared-otu-counts: add logic to plot sample-size outliers on margin
+  * plotCoverage: fix script name spelling in help text
+  * comics: allow specifying container with -i without suffix
+  * comics:  Add option to support starting a shell in the container via the runscript
+  * comics: fix: recognize --keep-env-modules option
+  * comics: add --keep-prompt option to skip manipulating PS1 with the new way of staring the shell
+  * comics:  rewrite -i option help to reflect current behaviour
+  * comics: do not mistake file/dir in $(pwd) as default image if name matches
+  * comics: keep track of $PWD into the container
+  * dada2shared: make sample ids mothur-compatible (s/-/_/g)
+  * plot-shared-otu-counts: add IQR
+  * plot-shared: reduce empty space on right side of scatter plot
+  * plot-shared: add option to limit scatter plot range
+  * Add omics.shared module
+  * script/Makefile: man target: generate man pages with help2man for supporting scripts
+  * plot-shared-otu-counts: add -version option and make man page with help2man
+  * aview: add missing __doc__ text
+  * Add --version option to various python scripts
+  * chop-contigs: fix spelling in __doc_ string
+  * scripts/Makefile: add man pages for some python scripts
+  * scripts/Makefile: make man pages for three more scripts
+  * Fix distdir target in scripts/
+
+ -- Robert <heinro@umich.edu>  Fri, 31 Jan 2020 00:00:33 -0500
+
 geo-omics-scripts (1.155-1) buster; urgency=medium
 
   * rgi-setup: Fix error handling
