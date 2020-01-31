@@ -246,9 +246,10 @@ all: man
 
 distdir: version ?= unknown_version
 distdir: dst = ../$(dist_dir)/scripts/
+distdir:
 	$(info Copying scripts ...)
 	mkdir -p -- "$(dst)"
-	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) $(dst)
+	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(HELP2MAN_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) $(dst)
 	$(info Replacing version placeholder in some scripts ...)
 	for i in $(HELP2MAN_EXECUTABLES); do sed "s/VERSION_PLACEHOLDER/$(version)/" $$i > $(dst)/$$i; chmod +x $(dst)/$$i; done
 
