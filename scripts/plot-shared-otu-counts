@@ -27,6 +27,7 @@ from itertools import filterfalse
 import math
 import numpy
 from pathlib import Path
+from scipy.stats.stats import iqr
 import statistics
 
 import matplotlib
@@ -39,6 +40,8 @@ from matplotlib.gridspec import GridSpec  # noqa: E402
 DEFAULT_MIN_COUNT = 1
 DEFAULT_N_BINS = 25
 DEFAULT_MIN_SAMPLE_SIZE = 1
+
+MAX_SAMPLE_SIZE_PLOTTED = 100000
 
 
 def align(num, to, ceil):
@@ -57,6 +60,10 @@ def plot_hist(ax, data, args):
     print('count range: ', min(counts), '-', max(counts))
     # aim to make 20 bins, but have step=1 for small data
     magnitude = 10 ** math.floor(math.log10(max(counts)))
+    if magnitude > 10:
+        # adjust magnitude to reduce white space on right side of plot
+        magnitude = int(magnitude / 10)
+    print('adjusted magnitude: ', magnitude)
     bin_min = align(min(counts), magnitude, ceil=False)
     bin_max = align(max(counts), magnitude, ceil=True)
     print('bin range: ', bin_min, '-', bin_max)
@@ -81,8 +88,14 @@ def plot_hist(ax, data, args):
 
     n, bins, _ = ax.hist(counts, bins=bins, rwidth=0.9)
 
+    counts_iqr = iqr(counts)
+    counts_median = statistics.median(counts)
+    q1 = counts_median - counts_iqr / 2
+    q3 = counts_median + counts_iqr / 2
+
     ax.set_ylabel('Number of samples')
-    ax.set_xlabel('OTUs/ESVs in sample')
+    ax.set_xlabel('OTUs/ESVs in sample, median: {} (IRQ:{}-{})'
+                  ''.format(counts_median, q1, q3))
     if args.min_abund is None:
         minimum_str = 'count >= {}'.format(args.min_count)
     else:
@@ -94,12 +107,22 @@ def plot_hist(ax, data, args):
 
 
 def plot_scat(ax, shared, counts, args):
-    counts = [counts[i] for i in shared.samples]
+    counts_good = []
+    sizes_good = []
+    sizes_out = []
+    counts_out = []
+    for i, j in zip(shared.samples, shared.sample_sizes):
+        if j <= args.sample_size_outliers:
+            counts_good.append(counts[i])
+            sizes_good.append(j)
+        else:
+            counts_out.append(counts[i])
+            sizes_out.append(args.sample_size_outliers)
 
-    ax.scatter(counts, shared.sample_sizes)
+    ax.scatter(counts_good, sizes_good, marker='.', alpha=0.5)
+    ax.scatter(counts_out, sizes_out, c='tab:blue', marker='^')
     ax.set_ylabel('sample size')
     ax.get_xaxis().set_visible(False)
-    #  ax.set_title('Number of OTUs/ESVs vs. sample size')
 
 
 def plot_prev(ax, counts, shared, args):
@@ -362,10 +385,20 @@ def get_args():
              'counts by the ratio of sample size to median sample size',
     )
     argp.add_argument(
+        '--sample-size-outliers',
+        type=int,
+        default=MAX_SAMPLE_SIZE_PLOTTED,
+        help='Cut off scatter plot here, outliers will be set, visually '
+             'distinct, on the upper margin, the default is {}'
+             ''.format(MAX_SAMPLE_SIZE_PLOTTED),
+    )
+    argp.add_argument(
         '-v', '--verbose',
         action='store_true',
         help='Print more diagnostic output to stdout.'
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
     args = argp.parse_args()
     if args.outfile is None:
         args.outfile = Path(args.infile.name).name + '.pdf'
@@ -400,7 +433,7 @@ def main():
             else:
                 # max: don't ever scale values down to 0, assume raw_count > 0
                 otu_counts[sample] = \
-                        max(1, int(raw_count * median_size / sizes[sample]))
+                    max(1, int(raw_count * median_size / sizes[sample]))
 
     if args.out_table is not None:
         sizes = dict(zip(shared.samples, shared.sample_sizes))

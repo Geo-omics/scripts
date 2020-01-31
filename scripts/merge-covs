@@ -311,6 +311,8 @@ if __name__ == '__main__':
         action='store_true',
         help='Report progress to stderr.'
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
     args = argp.parse_args()
 
     try:

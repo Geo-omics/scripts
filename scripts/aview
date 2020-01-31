@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Simple interactive display for aligned sequences
+"""
 import argparse
 from collections import Counter
 import curses
@@ -196,6 +199,8 @@ def get_args():
         type=argparse.FileType(),
         help='Multiple alignment in fasta format',
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 
     return argp.parse_args()
 

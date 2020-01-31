@@ -131,23 +131,17 @@ PERL_SCRIPTS = \
 OTHER_EXECUTABLES = \
     antiSmash_summary \
     assemblyModules \
-    aview \
     bins2fasta \
-    chop-contigs \
     createPhgDB \
     comics \
-    dada2shared\
     do2folder \
     do2list \
-    downsample \
     Ebot.Output.Extract.Gi.Title.Rev3 \
     extractEuks \
     firefox_already_running \
     getGIAnnotation \
     getGISummary \
-    match-dada2-mothur\
     merge-covs\
-    merge-coverage \
     mVelvetPipe_paired \
     mVelvetPipe_singles \
     oasesPaired_pipe \
@@ -162,21 +156,32 @@ OTHER_EXECUTABLES = \
     omics-qc \
     omics-qc-check \
     omics-qc-sample \
-    plot-blast-frag-cov \
-    plot-shared-otu-counts\
     refseq-rna \
     remove_space_from_filenames \
     rgi-coverage \
     rgi-setup \
-    separate-interleaved\
     setup_metapathways \
-    silva-align\
     silva-db \
     unchop-contigs \
     ESOM_binning_results_parser \
     Metabat_to_anvio_parser \
     VizBin_parser \
 
+# scripts for which help2man can make man pages
+HELP2MAN_EXECUTABLES = \
+    aview\
+    chop-contigs\
+    dada2shared\
+    downsample\
+    match-dada2-mothur\
+    merge-coverage\
+    merge-covs\
+    plot-blast-frag-cov\
+    plot-megahit-log\
+    plot_alignment\
+    plot-shared-otu-counts\
+    separate-interleaved\
+    silva-align\
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\
@@ -215,22 +220,38 @@ BAD_PODS = \
 # compute names for manpages
 bad_re = $(foreach i,$(BAD_PODS),"-F $(i)")
 perl_scripts_good = $(filter-out $(BAD_PODS),$(PERL_SCRIPTS))
-man_pages = $(foreach i,$(perl_scripts_good),$(i).1)
+man_pages_pod = $(foreach i,$(perl_scripts_good),$(i).1)
+man_pages_h2m = $(foreach i,$(HELP2MAN_EXECUTABLES),$(i).1)
 
-$(man_pages): name = $(subst .1,,$@)
-$(man_pages): version ?= unknown_version
-$(man_pages):
+$(man_pages_pod): name = $(subst .1,,$@)
+$(man_pages_pod): version ?= unknown_version
+$(man_pages_pod):
+	$(info pod manpage for $(name))
 	@pod2man --utf8 --release=$(version) --center $(name) $(name) $@
-	$(info manpage for $(name))
 
-man: $(man_pages)
+# help2man: for python scripts with argparse
+# $(short) should be the first line of the file's __doc__ string
+# The --version option can display the version as VERSION_PLACEHOLDER that can
+# be replaces with the real version when distributing (see also distdir target)
+$(man_pages_h2m): name = $(subst .1,,$@)
+$(man_pages_h2m): short = $(shell ./$(name) --help | grep -m1 -A1 "^$$" | tail -n1)
+$(man_pages_h2m): version ?= unknown_version
+$(man_pages_h2m):
+	$(info help2man manpage for $(name))
+	@help2man --locale en_US.UTF-8 --no-info --name "$(short)" --source "geo-omics-scripts $(version)" --output $(name).1 ./$(name)
+
+man: $(man_pages_pod) $(man_pages_h2m)
 
 all: man
 
+distdir: version ?= unknown_version
+distdir: dst = ../$(dist_dir)/scripts/
 distdir:
 	$(info Copying scripts ...)
-	mkdir -p -- "../$(dist_dir)/scripts"
-	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) ../$(dist_dir)/scripts/
+	mkdir -p -- "$(dst)"
+	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(HELP2MAN_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) $(dst)
+	$(info Replacing version placeholder in some scripts ...)
+	for i in $(HELP2MAN_EXECUTABLES); do sed "s/VERSION_PLACEHOLDER/$(version)/" $$i > $(dst)/$$i; chmod +x $(dst)/$$i; done
 
 install: install-scripts install-man
 
@@ -247,13 +268,13 @@ install-scripts:
 install-man: man
 	$(info Installing man pages for perl scripts ...)
 	mkdir -p -- "$(DESTDIR)$(man1dir)"
-	$(INSTALL_DATA) $(man_pages) $(DESTDIR)$(man1dir)
+	$(INSTALL_DATA) $(man_pages_pod) $(DESTDIR)$(man1dir)
 
 uninstall:
 	$(info Removing executable scripts...)
 	cd $(DESTDIR)$(bindir) && $(RM) -f -- $(PERL_SCRIPTS) $(OTHER_EXECUTABLES)
 	$(info Removing executable perl script man pages...)
-	cd $(DESTDIR)$(man1dir) && $(RM) -f -- $(man_pages)
+	cd $(DESTDIR)$(man1dir) && $(RM) -f -- $(man_pages_pod)
 
 clean:
 	$(info Removing generated man pages ...)
@@ -264,7 +285,7 @@ debug:
 	@echo $(perl_scripts_good)
 	@echo
 	@echo Corresponding man pages:
-	@echo $(man_pages)
+	@echo $(man_pages_pod)
 	@echo
 	@echo Bad pods grep args:
 	@echo $(bad_re)

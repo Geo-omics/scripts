@@ -200,6 +200,8 @@ def main():
         help='How many different queries to show, defaults to {}'
              ''.format(DEFAULT_LIMIT),
     )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
     args = argp.parse_args()
 
     data = load(args.inputfile, subject_mode=args.subject)

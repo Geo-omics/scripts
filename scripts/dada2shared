@@ -32,6 +32,8 @@ argp.add_argument(
     type=argparse.FileType(),
     help='Sequence table from dada2, saved with write.table()',
 )
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
 
 # compute output file names
@@ -57,9 +59,16 @@ with outshared.open('w') as shared:
     header = ['label', 'Group', 'numOtus'] + [i for i, _ in seqs]
     shared.write('\t'.join(header) + '\n')
     total = len(seqs)
+    replace_warning_shown = False
     for row in args.infile:
         sample, _, counts = row.strip().partition(' ')
         sample = sample.strip('"')
+        if '-' in sample:
+            sample = sample.replace('-', '_')
+            if not replace_warning_shown:
+                print('Some sample ids have dashes replaced by underscores to '
+                      'make them mothur-compatible')
+                replace_warning_shown = True
         counts = counts.replace(' ', '\t')
         shared.write('dada2asv\t{}\t{}\t{}\n'.format(sample, total, counts))
 
