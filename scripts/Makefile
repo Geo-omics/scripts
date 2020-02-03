@@ -141,7 +141,6 @@ OTHER_EXECUTABLES = \
     firefox_already_running \
     getGIAnnotation \
     getGISummary \
-    merge-covs\
     mVelvetPipe_paired \
     mVelvetPipe_singles \
     oasesPaired_pipe \
