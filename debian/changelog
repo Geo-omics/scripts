@@ -1,3 +1,14 @@
+geo-omics-scripts (1.157-1) buster; urgency=medium
+
+  * omics.shared: print info notes to stderr not stdout
+  * omics.shared: add method to return single row from shared file
+  * Makefile: fix regression, some scripts were not installed
+  * Makefile: install help2man man pages
+  * Makefile: fix, remove extra script in target list
+  * Makefile: fix replacing version placeholder
+
+ -- Robert <heinro@umich.edu>  Mon, 03 Feb 2020 14:41:13 -0500
+
 geo-omics-scripts (1.156-1) buster; urgency=medium
 
   * plot-shared-otu-counts: add logic to plot sample-size outliers on margin
