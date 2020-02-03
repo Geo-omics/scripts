@@ -267,9 +267,10 @@ install-scripts:
 	$(INSTALL_DATA) $(NON_EXECUTABLES) $(DESTDIR)$(datadir)/$(package_name)
 
 install-man: man
-	$(info Installing man pages for perl scripts ...)
+	$(info Installing generated POD and help2man man pages ...)
 	mkdir -p -- "$(DESTDIR)$(man1dir)"
 	$(INSTALL_DATA) $(man_pages_pod) $(DESTDIR)$(man1dir)
+	$(INSTALL_DATA) $(man_pages_h2m) $(DESTDIR)$(man1dir)
 
 uninstall:
 	$(info Removing executable scripts...)
