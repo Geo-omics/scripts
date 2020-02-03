@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along
 # with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
 
+BUILDDIR = _build
+
 PERL_SCRIPTS = \
     addFileName2header\
     addInfo2lrn\
@@ -241,16 +243,23 @@ $(man_pages_h2m):
 
 man: $(man_pages_pod) $(man_pages_h2m)
 
-all: man
+set_version_scripts = $(foreach i,$(HELP2MAN_EXECUTABLES),$(BUILDDIR)/$(i))
 
-distdir: version ?= unknown_version
+setversion: $(set_version_scripts)
+$(set_version_scripts): version ?= unknown_version
+$(set_version_scripts): src = $(subst $(BUILDDIR)/,,$@)
+$(set_version_scripts):
+	$(info Replacing version placeholder in $(src))
+	@mkdir -p -- $(BUILDDIR)
+	@sed "s/VERSION_PLACEHOLDER/$(version)/" $(src) > $@ && chmod +x $@
+
+all: man setversion
+
 distdir: dst = ../$(dist_dir)/scripts/
 distdir:
 	$(info Copying scripts ...)
 	mkdir -p -- "$(dst)"
 	cp -a $(PERL_SCRIPTS) $(OTHER_EXECUTABLES) $(HELP2MAN_EXECUTABLES) $(NON_EXECUTABLES) $(EXTRA_DIST) $(dst)
-	$(info Replacing version placeholder in some scripts ...)
-	for i in $(HELP2MAN_EXECUTABLES); do sed "s/VERSION_PLACEHOLDER/$(version)/" $$i > $(dst)/$$i; chmod +x $(dst)/$$i; done
 
 install: install-scripts install-man
 
@@ -260,7 +269,8 @@ install-scripts:
 	$(INSTALL_PROGRAM) $(PERL_SCRIPTS) $(DESTDIR)$(bindir)
 	$(info Installing other executable scripts ...)
 	$(INSTALL_PROGRAM) $(OTHER_EXECUTABLES) $(DESTDIR)$(bindir)
-	$(INSTALL_PROGRAM) $(HELP2MAN_EXECUTABLES) $(DESTDIR)$(bindir)
+	$(info Installing scripts with set version...)
+	cd $(BUILDDIR) && $(INSTALL_PROGRAM) $(HELP2MAN_EXECUTABLES) $(DESTDIR)$(bindir)
 	mkdir -p -- "$(DESTDIR)$(datadir)/$(package_name)"
 	$(info Installing non-executable scripts ...)
 	$(INSTALL_DATA) $(NON_EXECUTABLES) $(DESTDIR)$(datadir)/$(package_name)
@@ -280,6 +290,8 @@ uninstall:
 clean:
 	$(info Removing generated man pages ...)
 	$(RM) -- *.1
+	$(info Removing modified scripts ...)
+	$(RM) -rf -- $(BUILDDIR)
 
 debug:
 	@echo good Perl scripts found:
@@ -291,4 +303,4 @@ debug:
 	@echo Bad pods grep args:
 	@echo $(bad_re)
 
-.PHONY: all man distdir install install-scripts install-man clean debug
+.PHONY: all man distdir install install-scripts install-man clean debug setversion
