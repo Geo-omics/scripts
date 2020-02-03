@@ -96,3 +96,15 @@ class MothurShared():
     def cols(self):
         for i in range(self.ncols):
             yield (self.counts[j * self.ncols + i] for j in range(self.nrows))
+
+    def get_row(self, sample):
+        """
+        Return list of counts form single sample
+        """
+        if type(sample) == str:
+            offs = self.samples.index(sample) * self.ncols
+        else:
+            # assume integer index given
+            offs = sample * self.ncols
+
+        return self.counts[offs:offs + self.ncols]
