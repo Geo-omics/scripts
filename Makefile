@@ -100,7 +100,8 @@ INSTALL = /usr/bin/install
 INSTALL_PROGRAM := $(INSTALL)
 INSTALL_DATA := $(INSTALL) -m 644
 
-all: sphinx-docs scripts-man hard-code-version
+all: sphinx-docs hard-code-version
+	cd scripts && $(MAKE) $@
 
 sphinx-docs: custom_style = _static/css/custom.css
 sphinx-docs: stylesheet = _build/html/_static/css/theme.css
@@ -114,9 +115,6 @@ sphinx-docs:
 	else \
 	    echo "[WARNING] sphinx-build not available, skipping sphinx-based documentation"; \
 	fi
-
-scripts-man:
-	cd scripts && $(MAKE) man
 
 hard-code-version:
 	echo "hard-coding version $(version) ..."
@@ -306,4 +304,4 @@ debug:
 	$(info dist_dir: $(dist_dir))
 	if $(all_committed); then echo "git: all changed committed"; else echo "git: there are uncommitted changes"; fi
 
-.PHONY: all sphinx-docs scripts-man distdir dist inc_version_tag release install-docs install uninstall clean distclean debug
+.PHONY: all sphinx-docs scripts distdir dist inc_version_tag release install-docs install uninstall clean distclean debug

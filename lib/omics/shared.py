@@ -21,6 +21,7 @@
 
 """
 from array import array
+from sys import stderr
 
 
 DEFAULT_MIN_SAMPLE_SIZE = 0
@@ -39,7 +40,7 @@ class MothurShared():
 
         self.otus = head.split('\t')[3:]
         self.ncols = len(self.otus)
-        print('total OTUs:  ', self.ncols)
+        print('total OTUs:  ', self.ncols, file=stderr)
 
         self.counts = array('i')
         self.samples = []
@@ -55,7 +56,7 @@ class MothurShared():
 
             if label_ref is None:
                 label_ref = label
-                print('label:  ', label)
+                print('label:  ', label, file=stderr)
             elif label_ref != label:
                 raise RuntimeError('This shared file contained multiple label,'
                                    ' handling this requires implementation')
@@ -72,7 +73,7 @@ class MothurShared():
 
             if size < min_sample_size:
                 print('Sample {} too small, size {}, ignoring'
-                      ''.format(sample, size))
+                      ''.format(sample, size), file=stderr)
                 continue
 
             self.counts.extend(counts)
@@ -80,7 +81,7 @@ class MothurShared():
             self.sample_sizes.append(size)
 
         self.nrows = len(self.samples)
-        print('total samples:  ', self.nrows)
+        print('total samples:  ', self.nrows, file=stderr)
 
         # end init
 
@@ -95,3 +96,15 @@ class MothurShared():
     def cols(self):
         for i in range(self.ncols):
             yield (self.counts[j * self.ncols + i] for j in range(self.nrows))
+
+    def get_row(self, sample):
+        """
+        Return list of counts form single sample
+        """
+        if type(sample) == str:
+            offs = self.samples.index(sample) * self.ncols
+        else:
+            # assume integer index given
+            offs = sample * self.ncols
+
+        return self.counts[offs:offs + self.ncols]
