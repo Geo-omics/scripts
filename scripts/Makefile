@@ -261,6 +261,7 @@ install-scripts:
 	$(INSTALL_PROGRAM) $(PERL_SCRIPTS) $(DESTDIR)$(bindir)
 	$(info Installing other executable scripts ...)
 	$(INSTALL_PROGRAM) $(OTHER_EXECUTABLES) $(DESTDIR)$(bindir)
+	$(INSTALL_PROGRAM) $(HELP2MAN_EXECUTABLES) $(DESTDIR)$(bindir)
 	mkdir -p -- "$(DESTDIR)$(datadir)/$(package_name)"
 	$(info Installing non-executable scripts ...)
 	$(INSTALL_DATA) $(NON_EXECUTABLES) $(DESTDIR)$(datadir)/$(package_name)
