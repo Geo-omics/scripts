@@ -108,3 +108,71 @@ class MothurShared():
             offs = sample * self.ncols
 
         return self.counts[offs:offs + self.ncols]
+
+    def pick(self, samples=None, otus=None):
+        """
+        Keep given samples and OTUs
+        """
+        if samples is None:
+            samples = set(self.samples)
+        else:
+            samples = set(samples)
+            if samples - set(self.samples):
+                raise ValueError('invalid sample(s)')
+
+        if otus is None:
+            otus = set(self.otus)
+        else:
+            otus = set(otus)
+            if otus - set(self.otus):
+                raise ValueError('invalid otu(s)')
+
+        counts = array('i')
+        sizes = []
+
+        for sample, all_counts in zip(self.samples, self.rows()):
+            if sample not in samples:
+                continue
+            new_row = \
+                (c for otu, c in zip(self.otus, all_counts) if otu in otus)
+            new_row = array('i', new_row)
+            counts.extend(new_row)
+            sizes.append(sum(new_row))
+
+        # update self
+        self.counts = counts
+        self.samples = [i for i in self.samples if i in samples]
+        self.nrows = len(samples)
+        self.sample_sizes = sizes
+        self.otus = [i for i in self.otus if i in otus]
+        self.ncols = len(otus)
+
+    def remove(self, samples=[], otus=[]):
+        """
+        Remove the given samples and OTUs from the data set
+        """
+        for i in samples:
+            if i not in self.samples:
+                raise ValueError('not a sample: {}'.format(i))
+
+        for i in otus:
+            if i not in self.otus:
+                raise ValueError('not an otu: {}'.format(i))
+
+        self.pick(
+            samples=(set(self.samples) - set(samples)),
+            otus=(set(self.otus) - set(otus)),
+        )
+
+    def save(self, filename):
+        """
+        Save as mothur shared file under given name or file handle
+        """
+        data = zip(self.samples, self.rows())
+        with open(filename, 'w') as f:
+            row = ['label', 'Group', 'numOtus'] + self.otus
+            f.write('\t'.join(row) + '\n')
+            for sample, counts in data:
+                row = [self.label, sample, str(len(self.otus))]
+                row += list(map(str, counts))
+                f.write('\t'.join(row) + '\n')
