@@ -46,7 +46,7 @@ class MothurShared():
         self.samples = []
         self.sample_sizes = []
 
-        label_ref = None
+        self.label = None
         for line in file:
             try:
                 label, sample, _, *counts = line.strip().split('\t')
@@ -54,10 +54,10 @@ class MothurShared():
                 raise RuntimeError('Failed to parse input: offending line '
                                    'is:\n'.format(line))
 
-            if label_ref is None:
-                label_ref = label
+            if self.label is None:
+                self.label = label
                 print('label:  ', label, file=stderr)
-            elif label_ref != label:
+            elif self.label != label:
                 raise RuntimeError('This shared file contained multiple label,'
                                    ' handling this requires implementation')
 
