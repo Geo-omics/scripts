@@ -1,3 +1,13 @@
+geo-omics-scripts (1.158-1) buster; urgency=medium
+
+  * omics.shared: keep track of label
+  * omics.shared: add pick(), remove(), and save() methods
+  * omics.shared: use pandas+numpy to store the count array
+  * Add shared-unique-prevalence script
+  * plot-shared: Use the MothurShared class from omics.shared
+
+ -- Robert <heinro@umich.edu>  Thu, 06 Feb 2020 12:18:58 -0500
+
 geo-omics-scripts (1.157-1) buster; urgency=medium
 
   * omics.shared: print info notes to stderr not stdout
