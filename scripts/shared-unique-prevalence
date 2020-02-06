@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Determine and remove uniquely-prevalent OTU/ASVs (aka singletons) from a
+mothur shared file
+"""
+import argparse
+import sys
+
+from omics.shared import MothurShared
+
+
+def get_args():
+    argp = argparse.ArgumentParser(description=__doc__)
+    argp.add_argument(
+        'infile',
+        metavar='SHARED_FILE',
+        type=argparse.FileType(),
+        help='Input file, a mothur shared file',
+    )
+    argp.add_argument(
+        '-o', '--out',
+        help='Save as shared file with singletons removed under the given '
+             'file name',
+    )
+    argp.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Force printing list of uniquely-prevalent OTUs to stdout.'
+    )
+    argp.add_argument('--version', action='version', version='%(prog)s '
+                      'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+    args = argp.parse_args()
+    return args
+
+
+def info(*args, file=sys.stderr, flush=True, **kwargs):
+    print(*args, file=file, **kwargs)
+
+
+def main():
+    args = get_args()
+
+    info('loading shared file...')
+    shared = MothurShared(args.infile)
+
+    info('screening for ASV presence...')
+    presence = shared.counts > 0
+    info('compiling single-prevalent ASV indicies...')
+    ones_idx = (presence.sum(axis=0) == 1).nonzero()[0]
+    info('extracting single-prevalent ASV counts...')
+    ones = shared.counts.take(ones_idx, axis=1)
+
+    info('compiling single-prevalent ASV list...')
+    singletons = []
+    for sidx, oidx in zip(*(ones.values.nonzero())):
+        singletons.append(
+            (ones.columns[oidx], ones.index[sidx], ones.iat[sidx, oidx])
+        )
+
+    if args.out is not None:
+        info('writing shared file...')
+        shared.remove(otus=[i[0] for i in singletons])
+        shared.save(args.out)
+        info('saved as', args.out, file=sys.stderr)
+
+    info('printing list...')
+    if args.out is None or args.verbose:
+        singletons = sorted(singletons, key=lambda x: -x[2])
+        for otu, sample, count in singletons:
+            try:
+                foo = shared.samples.index(sample)
+                size = shared.sample_sizes[foo]
+            except Exception as e:
+                info(type(e), e)
+                info(type(shared.sample_sizes), len(shared.sample_sizes))
+                info(otu, sample, count)
+                raise
+            print(otu, sample, count, size, sep='\t')
+
+    info('all done.')
+
+
+if __name__ == '__main__':
+    main()
