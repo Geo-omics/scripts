@@ -183,6 +183,7 @@ HELP2MAN_EXECUTABLES = \
     plot-shared-otu-counts\
     separate-interleaved\
     silva-align\
+    shared-unique-prevalence\
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\

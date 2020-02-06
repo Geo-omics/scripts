@@ -18,10 +18,9 @@
 # with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Plot OTU counts of samples from mothur a shared file
+Plot OTU counts and prevalence vs. samples from mothur a shared file
 """
 import argparse
-from array import array
 from collections import Counter
 from itertools import filterfalse
 import math
@@ -36,6 +35,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg  # noqa: E402
 from matplotlib.figure import Figure  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
+from omics.shared import MothurShared  # noqa: E402
 
 DEFAULT_MIN_COUNT = 1
 DEFAULT_N_BINS = 25
@@ -187,76 +187,6 @@ def plot(shared, otu_counts, sample_counts, args):
     return fig
 
 
-class MothurShared():
-    def __init__(self, file, min_sample_size=DEFAULT_MIN_SAMPLE_SIZE):
-        file.seek(0)
-
-        head = file.readline().strip()
-        if not head.startswith('\t'.join(['label', 'Group', 'numOtus'])):
-            raise RuntimeError(
-                'input file does not seem to be a mothur shared file, first '
-                'line starts with:\n{}'.format(head[:100])
-            )
-
-        self.otus = head.split('\t')[3:]
-        self.ncols = len(self.otus)
-        print('total OTUs:  ', self.ncols)
-
-        self.counts = array('i')
-        self.samples = []
-        self.sample_sizes = []
-
-        label_ref = None
-        for line in file:
-            try:
-                label, sample, _, *counts = line.strip().split('\t')
-            except Exception:
-                raise RuntimeError('Failed to parse input: offending line '
-                                   'is:\n'.format(line))
-
-            if label_ref is None:
-                label_ref = label
-            elif label_ref != label:
-                raise RuntimeError('This shared file contained multiple label,'
-                                   ' handling this requires implementation')
-
-            if sample in self.samples:
-                raise RuntimeError('got sample {} a second time'
-                                   ''.format(sample))
-
-            if len(counts) != self.ncols:
-                raise RuntimeError('Not all rows have equal number of columns')
-
-            counts = array('i', map(int, counts))
-            size = sum(counts)
-
-            if size < min_sample_size:
-                print('Sample {} too small, size {}, ignoring'
-                      ''.format(sample, size))
-                continue
-
-            self.counts.extend(counts)
-            self.samples.append(sample)
-            self.sample_sizes.append(size)
-
-        self.nrows = len(self.samples)
-        print('total samples:  ', self.nrows)
-
-        # end init
-
-    def rows(self, sample=False):
-        for i in range(self.nrows):
-            offs = i * self.ncols
-            if sample:
-                yield self.samples[i], self.counts[offs:offs + self.ncols]
-            else:
-                yield self.counts[offs:offs + self.ncols]
-
-    def cols(self):
-        for i in range(self.ncols):
-            yield (self.counts[j * self.ncols + i] for j in range(self.nrows))
-
-
 def compile_by_abundance(shared, args):
     pass_map = None
 
@@ -298,7 +228,7 @@ def compile_by_count(shared, args):
     otu_counts = dict()
     sample_counts = dict(((i, 0) for i in shared.otus))
 
-    for sample, row in shared.rows(sample=True):
+    for sample, row in shared.rows():
         it_good = filterfalse(
             lambda x: x[0] < args.min_count, zip(row, shared.otus)
         )
