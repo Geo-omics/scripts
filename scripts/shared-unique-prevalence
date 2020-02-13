@@ -61,39 +61,30 @@ def main():
     info('loading shared file...')
     shared = MothurShared(args.infile)
 
-    info('screening for ASV presence...')
-    presence = shared.counts > 0
-    info('compiling single-prevalent ASV indicies...')
-    ones_idx = (presence.sum(axis=0) == 1).nonzero()[0]
-    info('extracting single-prevalent ASV counts...')
-    ones = shared.counts.take(ones_idx, axis=1)
+    info('running sieve...')
+    candidates = dict(zip(shared.otus, (None for _ in range(shared.ncols))))
+    for sample, row in shared.rows():
+        for o, c in zip(shared.otus, row):
+            if c > 0 and o in candidates:
+                if candidates[o] is None:
+                    candidates[o] = (sample, c)
+                else:
+                    del candidates[o]
 
-    info('compiling single-prevalent ASV list...')
-    singletons = []
-    for sidx, oidx in zip(*(ones.values.nonzero())):
-        singletons.append(
-            (ones.columns[oidx], ones.index[sidx], ones.iat[sidx, oidx])
-        )
+    singletons = candidates.keys()
+
+    # secondary sort by sample to make result comparable to first implementaton
+    candidates = sorted(candidates.items(), key=lambda x: (-x[1][1], x[1][0]))
+    size = dict(zip(shared.samples, shared.sample_sizes))
+    for otu, (sample, count) in candidates:
+        print(otu, sample, count, size[sample], sep='\t')
 
     if args.out is not None:
+        info('removing singletons from data...')
+        shared.remove_otus(singletons)
         info('writing shared file...')
-        shared.remove(otus=[i[0] for i in singletons])
         shared.save(args.out)
         info('saved as', args.out, file=sys.stderr)
-
-    info('printing list...')
-    if args.out is None or args.verbose:
-        singletons = sorted(singletons, key=lambda x: -x[2])
-        for otu, sample, count in singletons:
-            try:
-                foo = shared.samples.index(sample)
-                size = shared.sample_sizes[foo]
-            except Exception as e:
-                info(type(e), e)
-                info(type(shared.sample_sizes), len(shared.sample_sizes))
-                info(otu, sample, count)
-                raise
-            print(otu, sample, count, size, sep='\t')
 
     info('all done.')
 
