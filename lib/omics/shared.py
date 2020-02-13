@@ -104,17 +104,33 @@ class MothurShared():
             self.samples.append(sample)
             self.sample_sizes.append(size)
 
-    def rows(self, counts_only=False):
+    def rows(self, counts_only=False, as_iter=False):
+        it = self.counts.iterrows()
         if counts_only:
-            return (list(i[1]) for i in self.counts.iterrows())
+            it = (i[1] for i in it)
+            if as_iter:
+                return it
+            else:
+                return list(map(list, it))
         else:
-            return ((i, list(row)) for i, row in self.counts.iterrows())
+            if as_iter:
+                return it
+            else:
+                return [(i, list(row)) for i, row in it]
 
-    def cols(self, counts_only=False):
+    def cols(self, counts_only=False, as_iter=False):
+        it = self.counts.iteritems()
         if counts_only:
-            return (list(i[1]) for i in self.counts.iteritems())
+            it = (i[1] for i in it)
+            if as_iter:
+                return it
+            else:
+                return list(map(list, it))
         else:
-            return ((i, list(col)) for i, col in self.counts.iteritems())
+            if as_iter:
+                return it
+            else:
+                return [(i, list(col)) for i, col in it]
 
     def get_row(self, sample):
         """
