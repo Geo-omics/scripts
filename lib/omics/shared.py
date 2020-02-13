@@ -136,10 +136,7 @@ class MothurShared():
         """
         Return list of counts form single sample
         """
-        if type(sample) == str:
-            idx = self.samples.index(sample)
-
-        return self.counts[idx, :]
+        return self.counts.loc[sample]
 
     def pick(self, samples=None, otus=None):
         """
