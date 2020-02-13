@@ -1,3 +1,14 @@
+geo-omics-scripts (1.159-1) buster; urgency=medium
+
+  * omics.shared: add flag to make rows() cols() return an iterator
+  * omics.shared: make get_row() require sample name as argument (no indicies)
+  * omics.shared: API change: separate methods to pick/remove samples/OTUs
+  * plot-shared: fix generated output file name
+  * shared-unique-prev: improve speed hopefully
+  * shared-jaccard: add script to compute jaccard indicies over shared file
+
+ -- Robert <heinro@umich.edu>  Thu, 13 Feb 2020 15:07:58 -0500
+
 geo-omics-scripts (1.158-1) buster; urgency=medium
 
   * omics.shared: keep track of label
