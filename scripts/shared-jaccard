@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""
+Calculate Jaccard index between (grouped) samples of shared file
+
+Prints tab-delimited table to stdout.  Columns are sample group name, size of
+group, mean Jaccard index.
+"""
+import argparse
+from itertools import combinations
+from random import choice
+from statistics import mean
+from sys import stderr
+
+from omics.shared import MothurShared
+
+
+def jaccard(v1, v2):
+    """
+    Jaccard index of two vectors/lists of integers of equal length
+
+    A zero is absense, other values are presence.  Raises RuntimeError if one
+    (or both) list is 'empty', i.e. all zero, usually such sample should be
+    discarded.
+    """
+    isect = 0
+    total = 0
+    for ci, cj in zip(v1, v2):
+        if ci > 0 and cj > 0:
+            isect += 1
+        if ci > 0 or cj > 0:
+            total += 1
+    if isect == 0:
+        raise RuntimeError('got all-zero list')
+    return isect / total
+
+
+def group_jaccard(samples):
+    """
+    Pairwise Jaccard indicies for a set of samples
+    """
+    ret = []
+    for i, j in combinations(samples, 2):
+        try:
+            ret.append(jaccard(shared.get_row(i), shared.get_row(j)))
+        except RuntimeError as e:
+            print(samples, e, file=stderr)
+            continue
+    return ret
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'shared_file',
+    type=argparse.FileType(),
+    help='A mothur shared file'
+)
+argp.add_argument(
+    '-m', '--sample-group-map',
+    type=argparse.FileType(),
+    help='A two-column tab-delimited file, mapping sample names to a group',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+args = argp.parse_args()
+
+shared = MothurShared(args.shared_file)
+
+groups = {}
+for line in args.sample_group_map:
+    try:
+        sample, group = line.strip().split('\t')
+    except ValueError:
+        argp.error('Failed to parse mapping file at line:\n{}'.format(line))
+
+    if sample not in shared.samples:
+        # sample is not in shared file, ignore
+        continue
+
+    if group not in groups:
+        groups[group] = []
+
+    # Note: allows sample to belong to multiple groups
+    groups[group].append(sample)
+
+print('map file loaded: shared file mapped into {} groups'
+      ''.format(len(groups)), file=stderr)
+
+# random cross-group reference
+groups['cross_group'] = [choice(i) for i in groups.values()]
+
+rows = []
+for group, samples in groups.items():
+    if len(samples) == 1:
+        print(group, ': skipping (only one sample)', file=stderr)
+        continue
+
+    mean_jac = mean(group_jaccard(samples))
+    rows.append((group, len(samples), mean_jac))
+
+sorted_rows = sorted(rows, key=lambda x: -x[2])
+
+print('group_name', 'group_size', 'jaccard_mean', sep='\t')
+for group, size, jac in sorted_rows:
+    print(group, size, jac, sep='\t')

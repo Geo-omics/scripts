@@ -104,73 +104,77 @@ class MothurShared():
             self.samples.append(sample)
             self.sample_sizes.append(size)
 
-    def rows(self, counts_only=False):
+    def rows(self, counts_only=False, as_iter=False):
+        it = self.counts.iterrows()
         if counts_only:
-            return (list(i[1]) for i in self.counts.iterrows())
+            it = (i[1] for i in it)
+            if as_iter:
+                return it
+            else:
+                return list(map(list, it))
         else:
-            return ((i, list(row)) for i, row in self.counts.iterrows())
+            if as_iter:
+                return it
+            else:
+                return [(i, list(row)) for i, row in it]
 
-    def cols(self, counts_only=False):
+    def cols(self, counts_only=False, as_iter=False):
+        it = self.counts.iteritems()
         if counts_only:
-            return (list(i[1]) for i in self.counts.iteritems())
+            it = (i[1] for i in it)
+            if as_iter:
+                return it
+            else:
+                return list(map(list, it))
         else:
-            return ((i, list(col)) for i, col in self.counts.iteritems())
+            if as_iter:
+                return it
+            else:
+                return [(i, list(col)) for i, col in it]
 
     def get_row(self, sample):
         """
         Return list of counts form single sample
         """
-        if type(sample) == str:
-            idx = self.samples.index(sample)
+        return self.counts.loc[sample]
 
-        return self.counts[idx, :]
-
-    def pick(self, samples=None, otus=None):
+    def pick_otus(self, otus):
         """
-        Keep given samples and OTUs
+        Pick the given OTUs from the data set
         """
-        if samples is None:
-            samples = set(self.samples)
-        else:
-            samples = set(samples)
-            if samples - set(self.samples):
-                raise ValueError('invalid sample(s)')
+        self.counts = self.counts.loc[:, otus]
+        self._update_from_counts()
 
-        if otus is None:
-            otus = set(self.otus)
-        else:
-            otus = set(otus)
-            if otus - set(self.otus):
-                raise ValueError('invalid otu(s)')
+    def pick_samples(self, samples):
+        """
+        Pick the given samples from the data set
+        """
+        self.counts = self.counts.loc[samples]
+        self._update_from_counts()
 
-        # get indices for array access
-        sis = [i for i, j in enumerate(self.samples) if j in samples]
-        ois = [i for i, j in enumerate(self.otus) if j in otus]
-
-        # update self
-        self.counts = self.counts.take(sis, axis=0).take(ois, axis=1)
+    def _update_from_counts(self):
+        """
+        updates self after changes to counts
+        """
         self.sample_sizes = list(self.counts.sum(axis=1))
-        self.samples = [i for i in self.samples if i in samples]
-        self.otus = [i for i in self.otus if i in otus]
-        self.nrows = len(samples)
-        self.ncols = len(otus)
+        self.samples = list(self.counts.index)
+        self.otus = list(self.counts.columns)
+        self.nrows = len(self.samples)
+        self.ncols = len(self.otus)
 
-    def remove(self, samples=[], otus=[]):
+    def remove_otus(self, otus):
         """
-        Remove the given samples and OTUs from the data set
+        Remove the given OTUs from the data set
         """
-        for i in samples:
-            if i not in self.samples:
-                raise ValueError('not a sample: {}'.format(i))
+        self.counts.drop(otus, axis=1, inplace=True)
+        self._update_from_counts()
 
-        for i in otus:
-            if i not in self.otus:
-                raise ValueError('not an otu: {}'.format(i))
-
-        self.pick(
-            samples=(set(self.samples) - set(samples)),
-            otus=(set(self.otus) - set(otus)),
-        )
+    def remove_samples(self, samples):
+        """
+        Remove the given samples from the data set
+        """
+        self.counts.drop(samples, axis=0, inplace=True)
+        self._update_from_counts()
 
     def save(self, filename):
         """

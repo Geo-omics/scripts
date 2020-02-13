@@ -331,7 +331,7 @@ def get_args():
                       'is part of geo-omics-scripts VERSION_PLACEHOLDER')
     args = argp.parse_args()
     if args.outfile is None:
-        args.outfile = Path(args.infile.name).name + '.pdf'
+        args.outfile = Path(args.infile.name).with_suffix('.pdf').name
     return args
 
 
