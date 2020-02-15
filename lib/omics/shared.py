@@ -41,36 +41,34 @@ class MothurShared():
                 'line starts with:\n{}'.format(head[:100])
             )
 
-        self.otus = head.split('\t')[3:]
-        self.ncols = len(self.otus)
-        self.info('total OTUs:  ', self.ncols)
+        otus = head.split('\t')[3:]
+        ncols = len(otus)
+        self.info('total OTUs:  ', ncols)
 
         counts = numpy.ndarray([], numpy.int32)
-        self.samples = []
-        self.sample_sizes = []
-
         self.label = None
 
         # stack over a generator is deprecated, numpy issues a warning
         # TODO: research alternative
         counts = numpy.stack(
-            self._counts_per_sample(file, min_sample_size)
+            self._counts_per_sample(file, ncols, min_sample_size)
         )
 
-        self.nrows = len(self.samples)
-
         self.counts = pandas.DataFrame(counts, index=self.samples,
-                                       columns=self.otus)
+                                       columns=otus)
+        self._update_from_counts(trim=False)
         self.info('total samples:  ', self.nrows)
         # end init
 
-    def _counts_per_sample(self, file, min_sample_size):
+    def _counts_per_sample(self, file, ncols, min_sample_size):
         """
         Generates array of counts for one sample
 
         This is called by __init__ to import the data.  As side effect it
         collects the sample names and sizes and checks label.
         """
+        # store sample ids as list here to make to index later
+        self.samples = []
         for line in file:
             try:
                 label, sample, _, *counts = line.strip().split('\t')
@@ -89,11 +87,10 @@ class MothurShared():
                 raise RuntimeError('got sample {} a second time'
                                    ''.format(sample))
 
-            if len(counts) != self.ncols:
+            if len(counts) != ncols:
                 raise RuntimeError('Not all rows have equal number of columns')
 
-            counts = numpy.fromiter(map(int, counts), numpy.int32,
-                                    count=self.ncols)
+            counts = numpy.fromiter(map(int, counts), numpy.int32, count=ncols)
             size = counts.sum()
 
             if size < min_sample_size:
@@ -102,9 +99,7 @@ class MothurShared():
                 continue
 
             yield counts
-
             self.samples.append(sample)
-            self.sample_sizes.append(size)
 
     def rows(self, counts_only=False, as_iter=False):
         it = self.counts.iterrows()
@@ -158,9 +153,9 @@ class MothurShared():
         """
         updates self after changes to counts
         """
-        self.sample_sizes = list(self.counts.sum(axis=1))
-        self.samples = list(self.counts.index)
-        self.otus = list(self.counts.columns)
+        self.sample_sizes = self.counts.sum(axis=1)
+        self.samples = self.counts.index
+        self.otus = self.counts.columns
         self.nrows = len(self.samples)
         self.ncols = len(self.otus)
 
@@ -183,10 +178,11 @@ class MothurShared():
         Save as mothur shared file under given name or file handle
         """
         with open(filename, 'w') as f:
-            row = ['label', 'Group', 'numOtus'] + self.otus
+            row = ['label', 'Group', 'numOtus'] + list(self.otus)
+            num_otus = str(len(self.otus))
             f.write('\t'.join(row) + '\n')
             for sample, counts in self.rows():
-                row = [self.label, sample, str(len(self.otus))]
+                row = [self.label, sample, num_otus]
                 row += list(map(str, counts))
                 f.write('\t'.join(row) + '\n')
 
