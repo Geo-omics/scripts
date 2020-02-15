@@ -183,6 +183,8 @@ HELP2MAN_EXECUTABLES = \
     plot-shared-otu-counts\
     separate-interleaved\
     silva-align\
+    shared-get \
+    shared-filter-abundance \
     shared-jaccard\
     shared-unique-prevalence\
 

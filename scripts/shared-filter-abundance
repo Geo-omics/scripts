@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Remove OTUs with small relative abundance from a mothur shared file.
+
+For each sample, for OTUs less abundant than the threashold, the count is set
+to zero for that sample.  OTUs that consequently are all zero in the whole data
+set will be removed completely.
+"""
+import argparse
+from pathlib import Path
+
+from omics.shared import MothurShared
+
+
+DEFAULT_FILTER_CUTOFF = 1000
+
+
+def per_sample_cut_off(row):
+    """
+    Set read counts below cut-off to zero
+
+    To be passed to DataFrame.apply
+    """
+    cutoff = size[row.name] / args.filter_cut_off
+    row[row < cutoff] = 0
+    sh.counts.loc[row.name] = row
+
+
+def is_all_zero(col):
+    """
+    Return name of an "all zero count" OTU
+
+    To be passed to DataFrame.apply
+    """
+    for i in col:
+        if i > 0:
+            return None
+    return col.name
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'shared_file',
+    type=argparse.FileType(),
+    help='Input data, a mothur shared file.'
+)
+argp.add_argument(
+    '-f', '--filter-cut-off',
+    type=int,
+    default=DEFAULT_FILTER_CUTOFF,
+    help='Set OTUs count with relative abundance of less than one in this many'
+         'sequences in a sample to zero.  The default is {0}, i.e. counts of '
+         'less than 1/{0} of the sample size are set to zero.'
+         ''.format(DEFAULT_FILTER_CUTOFF),
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+args = argp.parse_args()
+
+sh = MothurShared(args.shared_file)
+old_sizes = sh.sample_sizes.copy()
+size = dict(zip(sh.samples, sh.sample_sizes))
+
+sh.counts.apply(per_sample_cut_off, axis=1)
+zero_otus = [i for i in sh.counts.apply(is_all_zero, axis=0) if i is not None]
+sh.remove_otus(zero_otus)
+
+diffs = old_sizes - sh.sample_sizes
+print('reads removed from dataset: {} ({:%})'
+      ''.format(diffs.sum(), diffs.sum() / old_sizes.sum()))
+max_sample = diffs.idxmax()
+print('max removed in a sample: {} {:%}'
+      ''.format(max_sample, diffs[max_sample] / old_sizes[max_sample]))
+print('Low-abundance OTUs removed: {} ({:%})'
+      ''.format(
+          len(zero_otus),
+          len(zero_otus) / (len(zero_otus) + len(sh.otus))
+      ))
+
+outfile = Path(Path(args.shared_file.name).name).with_suffix('.filter.shared')
+sh.save(outfile)
