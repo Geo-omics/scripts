@@ -140,19 +140,29 @@ class MothurShared():
         Pick the given OTUs from the data set
         """
         self.counts = self.counts.loc[:, otus]
-        self._update_from_counts()
+        self._update_from_counts(trim=False)
 
-    def pick_samples(self, samples):
+    def pick_samples(self, samples, trim=True):
         """
         Pick the given samples from the data set
         """
         self.counts = self.counts.loc[samples]
-        self._update_from_counts()
+        self._update_from_counts(trim=trim)
 
-    def _update_from_counts(self):
+    def _update_from_counts(self, trim=True):
         """
         updates self after changes to counts
+
+        :param bool trim: Remove zero OTUs
         """
+        if trim:
+            old_ncols = len(self.counts.columns)
+            self.counts = self.counts.loc[:, self.counts.sum() > 0]
+            new_ncols = len(self.counts.columns)
+            if old_ncols != new_ncols:
+                self.info('Removed OTUs with all-zero count:',
+                          old_ncols - new_ncols)
+
         self.sample_sizes = self.counts.sum(axis=1)
         self.samples = self.counts.index
         self.otus = self.counts.columns
@@ -164,14 +174,14 @@ class MothurShared():
         Remove the given OTUs from the data set
         """
         self.counts.drop(otus, axis=1, inplace=True)
-        self._update_from_counts()
+        self._update_from_counts(trim=False)
 
-    def remove_samples(self, samples):
+    def remove_samples(self, samples, trim=True):
         """
         Remove the given samples from the data set
         """
         self.counts.drop(samples, axis=0, inplace=True)
-        self._update_from_counts()
+        self._update_from_counts(trim=trim)
 
     def save(self, filename):
         """
