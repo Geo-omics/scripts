@@ -1,3 +1,13 @@
+geo-omics-scripts (1.160-1) buster; urgency=medium
+
+  * omics.shared: make printing info to stderr optional via kwarg in constructor
+  * omics.shared: expose underlying pandas objects for more attributes
+  * omics.shared: remove, by default, all-zero OTUs after removing samples
+  * Add two more scripts for manipulating shared files
+  * Add missing copyright and license info to three scripts
+
+ -- Robert <heinro@umich.edu>  Fri, 14 Feb 2020 21:08:03 -0500
+
 geo-omics-scripts (1.159-1) buster; urgency=medium
 
   * omics.shared: add flag to make rows() cols() return an iterator
