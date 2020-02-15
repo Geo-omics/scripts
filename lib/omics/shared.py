@@ -20,7 +20,7 @@
 """
 Implementation of mothur shared file format
 """
-from sys import stderr
+import sys
 
 import numpy
 import pandas
@@ -29,7 +29,9 @@ DEFAULT_MIN_SAMPLE_SIZE = 0
 
 
 class MothurShared():
-    def __init__(self, file=None, min_sample_size=DEFAULT_MIN_SAMPLE_SIZE):
+    def __init__(self, file=None, min_sample_size=DEFAULT_MIN_SAMPLE_SIZE,
+                 verbose=True):
+        self.verbose = verbose
         file.seek(0)
 
         head = file.readline().strip()
@@ -41,7 +43,7 @@ class MothurShared():
 
         self.otus = head.split('\t')[3:]
         self.ncols = len(self.otus)
-        print('total OTUs:  ', self.ncols, file=stderr)
+        self.info('total OTUs:  ', self.ncols)
 
         counts = numpy.ndarray([], numpy.int32)
         self.samples = []
@@ -56,10 +58,10 @@ class MothurShared():
         )
 
         self.nrows = len(self.samples)
-        print('total samples:  ', self.nrows, file=stderr)
 
         self.counts = pandas.DataFrame(counts, index=self.samples,
                                        columns=self.otus)
+        self.info('total samples:  ', self.nrows)
         # end init
 
     def _counts_per_sample(self, file, min_sample_size):
@@ -78,7 +80,7 @@ class MothurShared():
 
             if self.label is None:
                 self.label = label
-                print('label:  ', label, file=stderr)
+                self.info('label:  ', label)
             elif self.label != label:
                 raise RuntimeError('This shared file contained multiple label,'
                                    ' handling this requires implementation')
@@ -95,8 +97,8 @@ class MothurShared():
             size = counts.sum()
 
             if size < min_sample_size:
-                print('Sample {} too small, size {}, ignoring'
-                      ''.format(sample, size), file=stderr)
+                self.info('Sample {} too small, size {}, ignoring'
+                          ''.format(sample, size))
                 continue
 
             yield counts
@@ -187,3 +189,7 @@ class MothurShared():
                 row = [self.label, sample, str(len(self.otus))]
                 row += list(map(str, counts))
                 f.write('\t'.join(row) + '\n')
+
+    def info(self, *args, **kwargs):
+        if self.verbose:
+            print(*args, file=sys.stderr, **kwargs)
