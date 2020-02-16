@@ -62,6 +62,8 @@ args = argp.parse_args()
 if args.output is None:
     outfile = Path(Path(args.shared_file.name).name)
     outfile = outfile.with_suffix('.pick.shared')
+else:
+    outfile = args.output
 
 meta = pandas.read_table(args.meta_data, index_col=0, dtype=str,
                          keep_default_na=False)
