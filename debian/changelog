@@ -1,3 +1,11 @@
+geo-omics-scripts (1.161-1) buster; urgency=medium
+
+  * shared-get: fix crash when --output option is used
+  * shared-jaccard: require the -m option, running script without has little value
+  * shared-jaccard: run Jaccard on set of all samples if map file provieds no groupings for our samples
+
+ -- Robert <heinro@umich.edu>  Sun, 16 Feb 2020 22:19:34 -0500
+
 geo-omics-scripts (1.160-1) buster; urgency=medium
 
   * omics.shared: make printing info to stderr optional via kwarg in constructor
