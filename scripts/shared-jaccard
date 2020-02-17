@@ -75,6 +75,7 @@ argp.add_argument(
 argp.add_argument(
     '-m', '--sample-group-map',
     type=argparse.FileType(),
+    required=True,
     help='A two-column tab-delimited file, mapping sample names to a group',
 )
 argp.add_argument('--version', action='version', version='%(prog)s '
