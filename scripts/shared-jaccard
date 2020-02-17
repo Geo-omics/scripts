@@ -75,6 +75,7 @@ argp.add_argument(
 argp.add_argument(
     '-m', '--sample-group-map',
     type=argparse.FileType(),
+    required=True,
     help='A two-column tab-delimited file, mapping sample names to a group',
 )
 argp.add_argument('--version', action='version', version='%(prog)s '
@@ -104,7 +105,12 @@ print('map file loaded: shared file mapped into {} groups'
       ''.format(len(groups)), file=stderr)
 
 # random cross-group reference
-groups['cross_group'] = [choice(i) for i in groups.values()]
+if groups:
+    groups['cross_group'] = [choice(i) for i in groups.values()]
+else:
+    # no sample had group info, so groups is {}
+    # use all samples
+    groups['all_samples'] = shared.samples
 
 rows = []
 for group, samples in groups.items():
