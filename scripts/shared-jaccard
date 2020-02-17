@@ -105,7 +105,12 @@ print('map file loaded: shared file mapped into {} groups'
       ''.format(len(groups)), file=stderr)
 
 # random cross-group reference
-groups['cross_group'] = [choice(i) for i in groups.values()]
+if groups:
+    groups['cross_group'] = [choice(i) for i in groups.values()]
+else:
+    # no sample had group info, so groups is {}
+    # use all samples
+    groups['all_samples'] = shared.samples
 
 rows = []
 for group, samples in groups.items():
