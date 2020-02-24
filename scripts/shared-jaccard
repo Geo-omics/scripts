@@ -32,6 +32,10 @@ from sys import stderr
 from omics.shared import MothurShared
 
 
+class EmptySampleError(Exception):
+    pass
+
+
 def jaccard(v1, v2):
     """
     Jaccard index of two vectors/lists of integers of equal length
@@ -61,12 +65,18 @@ def group_jaccard(samples):
     Pairwise Jaccard indicies for a set of samples
     """
     ret = []
+    zeros = set()
     for i, j in combinations(samples, 2):
         try:
             ret.append(jaccard(shared.get_row(i), shared.get_row(j)))
-        except RuntimeError as e:
-            print(samples, e, file=stderr)
+        except EmptySampleError as e:
+            for k in i, j:
+                if k not in zeros and shared.get_row(k).sum() == 0:
+                    zeros.add(k)
             continue
+    if zeros:
+        print('Samples with no OTUs were skipped:', *sorted(zeros), sep='\n',
+              file=stderr)
     return ret
 
 
@@ -113,8 +123,8 @@ if groups:
     groups['cross_group'] = [choice(i) for i in groups.values()]
 else:
     # no sample had group info, so groups is {}
-    # use all samples
-    groups['all_samples'] = shared.samples
+    print('no samples with group info ? no groups ? all groups empty ?')
+    sys.exit(1)
 
 rows = []
 for group, samples in groups.items():
