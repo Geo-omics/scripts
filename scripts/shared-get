@@ -36,7 +36,7 @@ def info(*args, **kwargs):
 argp = argparse.ArgumentParser(description=__doc__)
 argp.add_argument(
     'query',
-    nargs='+',
+    nargs='*',
     help='One or more query specifications of the form <column>[!]=<field>',
 )
 argp.add_argument(
@@ -45,9 +45,16 @@ argp.add_argument(
     help='Mothur shared file',
 )
 argp.add_argument(
+    '-s', '--min-sample-size',
+    type=int,
+    default=0,
+    help='Remove samples with a read count lower than this.  A value lower '
+         'than 1 has no effect.  The default is to not apply a cutoff.',
+)
+argp.add_argument(
     '-m', '--meta-data',
-    required=True,
     type=argparse.FileType(),
+    default=None,
     help='Tab-separated table with meta data with header row with column '
          'names, and one row per sample, first column must be sample names',
 )
@@ -65,10 +72,13 @@ if args.output is None:
 else:
     outfile = args.output
 
-meta = pandas.read_table(args.meta_data, index_col=0, dtype=str,
-                         keep_default_na=False)
+if args.meta_data is None:
+    meta = None
+else:
+    meta = pandas.read_table(args.meta_data, index_col=0, dtype=str,
+                             keep_default_na=False)
 
-info('Loaded meta data for {} samples'.format(len(meta.index)))
+    info('Loaded meta data for {} samples'.format(len(meta.index)))
 
 # parse query specs
 query = []
@@ -97,12 +107,24 @@ for key, val in query:
 for key, val in anti_query:
     meta = meta[meta[key] != val]
 
-info('Samples matching query:', len(meta.index))
+if meta is not None:
+    info('Samples matching query:', len(meta.index))
 
 info('Loading shared file...')
 sh = MothurShared(args.shared_file)
-samples = [str(i).replace('-', '_') for i in meta.index]
-samples = [i for i in samples if i in sh.samples]
+if meta is None:
+    samples = sh.samples
+else:
+    samples = [str(i).replace('-', '_') for i in meta.index]
+    samples = [i for i in samples if i in sh.samples]
+
+if args.min_sample_size > 0:
+    big = sh.counts.sum(axis=1) >= args.min_sample_size
+    big_samples = sh.counts[big].index
+    print(big_samples)
+    info('samples above minimum size:', len(big_samples))
+    samples = [i for i in samples if i in big_samples]
+
 info('Matching samples present in shared file:', len(samples))
 info('Selecting subset...')
 sh.pick_samples(samples)

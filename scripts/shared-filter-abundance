@@ -95,5 +95,7 @@ print('Low-abundance OTUs removed: {} ({:%})'
           len(zero_otus) / (len(zero_otus) + len(sh.otus))
       ))
 
-outfile = Path(Path(args.shared_file.name).name).with_suffix('.filter.shared')
+outfile = Path(Path(args.shared_file.name).name).with_suffix(
+    '.f{}.shared'.format(args.filter_cut_off)
+)
 sh.save(outfile)

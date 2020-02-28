@@ -20,18 +20,33 @@
 """
 Implementation of mothur shared file format
 """
+from array import array
+import argparse
+from concurrent.futures import (ProcessPoolExecutor as PoolExecutor,
+                                as_completed)
+from mmap import mmap, ACCESS_READ
+import os.path
+from pathlib import Path
 import sys
 
 import numpy
 import pandas
 
-DEFAULT_MIN_SAMPLE_SIZE = 0
+DEFAULT_THREADS = 1
 
 
 class MothurShared():
-    def __init__(self, file=None, min_sample_size=DEFAULT_MIN_SAMPLE_SIZE,
-                 verbose=True):
+    def __init__(self, file_arg=None, verbose=True, threads=DEFAULT_THREADS):
         self.verbose = verbose
+        self.threads = threads
+        if isinstance(file_arg, str):
+            file = open(file_arg, 'r')
+        elif isinstance(file_arg, Path):
+            file = file_arg.open('r')
+        else:
+            # assume a file-like object
+            file = file_arg
+
         file.seek(0)
 
         head = file.readline().strip()
@@ -42,25 +57,27 @@ class MothurShared():
             )
 
         otus = head.split('\t')[3:]
-        ncols = len(otus)
-        self.info('total OTUs:  ', ncols)
+        self.ncols = len(otus)
+        self.info('total OTUs:  ', self.ncols)
 
-        counts = numpy.ndarray([], numpy.int32)
         self.label = None
+        self.samples = []
 
-        # stack over a generator is deprecated, numpy issues a warning
-        # TODO: research alternative
-        counts = numpy.stack(
-            self._counts_per_sample(file, ncols, min_sample_size)
-        )
+        counts = self.get_counts(file)
 
+        self.info('Making data frame...', end='', flush=True)
         self.counts = pandas.DataFrame(counts, index=self.samples,
                                        columns=otus)
+        self.info('[ok]')
         self._update_from_counts(trim=False)
         self.info('total samples:  ', self.nrows)
+        self.info('label:  ', self.label)
+
+        if isinstance(file_arg, (str, Path)):
+            file.close()
         # end init
 
-    def _counts_per_sample(self, file, ncols, min_sample_size):
+    def _counts_per_sample(self, file):
         """
         Generates array of counts for one sample
 
@@ -69,37 +86,145 @@ class MothurShared():
         """
         # store sample ids as list here to make to index later
         self.samples = []
+        self.label = None
         for line in file:
-            try:
-                label, sample, _, *counts = line.strip().split('\t')
-            except Exception:
-                raise RuntimeError('Failed to parse input: offending line '
-                                   'is:\n'.format(line))
+            label, sample, counts = self.process_line(line)
 
-            if self.label is None:
-                self.label = label
-                self.info('label:  ', label)
-            elif self.label != label:
-                raise RuntimeError('This shared file contained multiple label,'
-                                   ' handling this requires implementation')
+            yield numpy.array(counts)
 
-            if sample in self.samples:
-                raise RuntimeError('got sample {} a second time'
-                                   ''.format(sample))
-
-            if len(counts) != ncols:
-                raise RuntimeError('Not all rows have equal number of columns')
-
-            counts = numpy.fromiter(map(int, counts), numpy.int32, count=ncols)
-            size = counts.sum()
-
-            if size < min_sample_size:
-                self.info('Sample {} too small, size {}, ignoring'
-                          ''.format(sample, size))
-                continue
-
-            yield counts
             self.samples.append(sample)
+            if label != self.label:
+                if self.label is None:
+                    self.label = label
+                else:
+                    raise RuntimeError(
+                        'This shared file contained multiple label, handling '
+                        'this requires implementation: {} != {}'
+                        ''.format(label, self.label))
+
+    def get_counts(self, file):
+        """
+        Make a numpy array, single-thread implementation
+        """
+        if self.threads > 1:
+            return self.get_counts_mp(file)
+
+        counts = numpy.ndarray([], numpy.int32)
+
+        # stack over a generator is deprecated, numpy issues a warning
+        # TODO: research alternative
+        counts = numpy.stack(
+            self._counts_per_sample(file)
+        )
+        return counts
+
+    def get_counts_mp(self, file):
+        """
+        Make numpy array, multi-processing+futures implementation
+
+        Using the pre-3.8 functionality, (it seems) it's not possible to use
+        shared memory to send the data back from the children.  So we use
+        Pool/starmap and receive arrays through pickling, assemble them and
+        wrap a ndarray around.
+
+        TODO: for 3.8 explore the shared_memory submodule
+        """
+        fsize = os.path.getsize(file.name)
+        self.info('filesize:', fsize)
+        breaks = numpy.linspace(0, fsize, num=self.threads + 1, dtype=int)
+        sargs = []
+        for i in range(len(breaks) - 1):
+            sargs.append((file.name, breaks[i], breaks[i + 1]))
+
+        counts = array('i')
+        with PoolExecutor(max_workers=self.threads) as pe:
+            futmap = {pe.submit(self.chunk2array, *i): i[1] for i in sargs}
+            for future in as_completed(futmap):
+                start = futmap[future]
+                try:
+                    label, s, a = future.result()
+                except Exception as e:
+                    raise RuntimeError(
+                        'Chunk starting at {} failed: {}: {}'
+                        ''.format(start, e.__class__.__name__, e)
+                    )
+                else:
+                    self.label = label
+                    self.samples += s
+                    counts.extend(a)
+
+        counts = numpy.frombuffer(counts, dtype=numpy.dtype('int32'))
+        counts = counts.reshape(len(self.samples), self.ncols)
+        return counts
+
+    def chunk2array(self, path, start, end):
+        """
+        Process one chunk of input file into an array
+
+        This should be run in multi-processing.  If 'start' falls between two
+        lines, the partial line is ignored and processing starts with the next
+        full line.  Likewise, a line extending beyond 'end' will be fully
+        processes.  If no newline falls between 'start' and 'end' then nothing
+        is done. The usual range-semantic is used for 'start' and 'end'.
+
+        Using the mmap logic seems to be much faster then regular readline over
+        the file object.
+        """
+        a = array('i')
+        label = None
+        samples = []
+        with open(path, 'rb') as f:
+            mm = mmap(f.fileno(), 0, access=ACCESS_READ)
+            mm.seek(start)
+            if start > 0 and mm[start - 1] != ord('\n'):
+                # consume partial line
+                mm.readline()
+            if start == 0:
+                # skip header
+                mm.readline()
+
+            while mm.tell() < end:
+                label0, sample, counts = self.process_line(
+                    mm.readline().decode()
+                )
+                a.extend(counts)
+                samples.append(sample)
+
+                if label0 != label:
+                    if label is None:
+                        label = label0
+                    else:
+                        raise RuntimeError(
+                            'This shared file contained multiple label, '
+                            'handling this requires implementation: {} != {}'
+                            ''.format(label, label0))
+
+        if len(a) > 0.99 * (2 ** 29):
+            # max space for pickling is 2GB, 512x10^6 32bit ints
+            # see https://github.com/python/cpython/pull/10305
+            # fix is in 3.8
+            self.info('[WARNING] too much data in child process for pickling')
+            self.info('array size is', len(a))
+        return label, samples, a
+
+    def process_line(self, line):
+        """
+        Get count array from line
+        """
+        try:
+            label, sample, _, *counts = line.strip().split('\t')
+        except Exception:
+            raise RuntimeError('Failed to parse input: offending line '
+                               'is:\n'.format(line))
+
+        if sample in self.samples:
+            raise RuntimeError('got sample {} a second time'
+                               ''.format(sample))
+
+        if len(counts) != self.ncols:
+            raise RuntimeError('Not all rows have equal number of columns')
+
+        return label, sample, array('i', map(int, counts))
 
     def rows(self, counts_only=False, as_iter=False):
         it = self.counts.iterrows()
@@ -199,3 +324,17 @@ class MothurShared():
     def info(self, *args, **kwargs):
         if self.verbose:
             print(*args, file=sys.stderr, **kwargs)
+
+
+def __main__():
+    # run test
+    argp = argparse.ArgumentParser(description='Test importing a shared file '
+                                   'via command line')
+    argp.add_argument('shared_file', help='Name of shared file')
+    argp.add_argument('-t', type=int, help='number of threads')
+    args = argp.parse_args()
+    MothurShared(args.shared_file, threads=args.threads)
+
+
+if __name__ == '__main__':
+    __main__()
