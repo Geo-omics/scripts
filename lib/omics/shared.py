@@ -20,17 +20,16 @@
 """
 Implementation of mothur shared file format
 """
+from array import array
 import sys
 
 import numpy
 import pandas
 
-DEFAULT_MIN_SAMPLE_SIZE = 0
 
 
 class MothurShared():
-    def __init__(self, file=None, min_sample_size=DEFAULT_MIN_SAMPLE_SIZE,
-                 verbose=True):
+    def __init__(self, file=None, verbose=True):
         self.verbose = verbose
         file.seek(0)
 
@@ -42,25 +41,24 @@ class MothurShared():
             )
 
         otus = head.split('\t')[3:]
-        ncols = len(otus)
-        self.info('total OTUs:  ', ncols)
+        self.ncols = len(otus)
+        self.info('total OTUs:  ', self.ncols)
 
-        counts = numpy.ndarray([], numpy.int32)
         self.label = None
+        self.samples = []
 
-        # stack over a generator is deprecated, numpy issues a warning
-        # TODO: research alternative
-        counts = numpy.stack(
-            self._counts_per_sample(file, ncols, min_sample_size)
-        )
+        counts = self.get_counts(file)
 
+        self.info('Making data frame...', end='', flush=True)
         self.counts = pandas.DataFrame(counts, index=self.samples,
                                        columns=otus)
+        self.info('[ok]')
         self._update_from_counts(trim=False)
         self.info('total samples:  ', self.nrows)
+        self.info('label:  ', self.label)
         # end init
 
-    def _counts_per_sample(self, file, ncols, min_sample_size):
+    def _counts_per_sample(self, file):
         """
         Generates array of counts for one sample
 
@@ -69,37 +67,53 @@ class MothurShared():
         """
         # store sample ids as list here to make to index later
         self.samples = []
+        self.label = None
         for line in file:
-            try:
-                label, sample, _, *counts = line.strip().split('\t')
-            except Exception:
-                raise RuntimeError('Failed to parse input: offending line '
-                                   'is:\n'.format(line))
+            label, sample, counts = self.process_line(line)
 
-            if self.label is None:
-                self.label = label
-                self.info('label:  ', label)
-            elif self.label != label:
-                raise RuntimeError('This shared file contained multiple label,'
-                                   ' handling this requires implementation')
+            yield numpy.array(counts)
 
-            if sample in self.samples:
-                raise RuntimeError('got sample {} a second time'
-                                   ''.format(sample))
-
-            if len(counts) != ncols:
-                raise RuntimeError('Not all rows have equal number of columns')
-
-            counts = numpy.fromiter(map(int, counts), numpy.int32, count=ncols)
-            size = counts.sum()
-
-            if size < min_sample_size:
-                self.info('Sample {} too small, size {}, ignoring'
-                          ''.format(sample, size))
-                continue
-
-            yield counts
             self.samples.append(sample)
+            if label != self.label:
+                if self.label is None:
+                    self.label = label
+                else:
+                    raise RuntimeError(
+                        'This shared file contained multiple label, handling '
+                        'this requires implementation: {} != {}'
+                        ''.format(label, self.label))
+
+    def get_counts(self, file):
+        """
+        Make a numpy array, single-thread implementation
+        """
+        counts = numpy.ndarray([], numpy.int32)
+
+        # stack over a generator is deprecated, numpy issues a warning
+        # TODO: research alternative
+        counts = numpy.stack(
+            self._counts_per_sample(file)
+        )
+        return counts
+
+    def process_line(self, line):
+        """
+        Get count array from line
+        """
+        try:
+            label, sample, _, *counts = line.strip().split('\t')
+        except Exception:
+            raise RuntimeError('Failed to parse input: offending line '
+                               'is:\n'.format(line))
+
+        if sample in self.samples:
+            raise RuntimeError('got sample {} a second time'
+                               ''.format(sample))
+
+        if len(counts) != self.ncols:
+            raise RuntimeError('Not all rows have equal number of columns')
+
+        return label, sample, array('i', map(int, counts))
 
     def rows(self, counts_only=False, as_iter=False):
         it = self.counts.iterrows()
