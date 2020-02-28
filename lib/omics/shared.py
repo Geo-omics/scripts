@@ -21,6 +21,7 @@
 Implementation of mothur shared file format
 """
 from array import array
+from pathlib import Path
 import sys
 
 import numpy
@@ -29,8 +30,16 @@ import pandas
 
 
 class MothurShared():
-    def __init__(self, file=None, verbose=True):
+    def __init__(self, file_arg=None, verbose=True):
         self.verbose = verbose
+        if isinstance(file_arg, str):
+            file = open(file_arg, 'r')
+        elif isinstance(file_arg, Path):
+            file = file_arg.open('r')
+        else:
+            # assume a file-like object
+            file = file_arg
+
         file.seek(0)
 
         head = file.readline().strip()
@@ -56,6 +65,9 @@ class MothurShared():
         self._update_from_counts(trim=False)
         self.info('total samples:  ', self.nrows)
         self.info('label:  ', self.label)
+
+        if isinstance(file_arg, (str, Path)):
+            file.close()
         # end init
 
     def _counts_per_sample(self, file):
