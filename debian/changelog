@@ -1,3 +1,19 @@
+geo-omics-scripts (1.162-1) buster; urgency=medium
+
+  * shared-jaccard: abort loop early for common case
+  * shared-jaccard: be less verbose
+  * shared-filter-abundance: add filter size to output file name
+  * shared-get: Add option to filter by sample size
+  * plot-shared: Remove --min-sample-size option
+  * plot-shared: print minimum count only when differing from default
+  * plot-shared: Use 'ASV' for 'ESV' as the more common acronym
+  * omics.shared: Refactor to allow adding alpternative import implementations
+  * omics.shared: Allow passing filename to constructor
+  * omiccs.shared: Add multiprocessing import implementation
+  * omics.shared: allow testing data import via command line
+
+ -- Robert <heinro@umich.edu>  Fri, 28 Feb 2020 16:03:11 -0500
+
 geo-omics-scripts (1.161-1) buster; urgency=medium
 
   * shared-get: fix crash when --output option is used
