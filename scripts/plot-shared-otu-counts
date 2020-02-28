@@ -93,7 +93,7 @@ def plot_hist(ax, data, args):
     q3 = counts_median + counts_iqr / 2
 
     ax.set_ylabel('Number of samples')
-    ax.set_xlabel('OTUs/ESVs in sample, median: {} (IRQ:{}-{})'
+    ax.set_xlabel('OTUs/ASVs in sample, median: {} (IRQ:{}-{})'
                   ''.format(counts_median, q1, q3))
     if args.min_abund is None:
         if args.min_count == DEFAULT_MIN_COUNT:
@@ -102,7 +102,7 @@ def plot_hist(ax, data, args):
             minimum_str = 'count >= {}'.format(args.min_count)
     else:
         minimum_str = '> {:g}% abundance'.format(args.min_abund * 100)
-    # ax.set_title('Number of OTUs/ESVs per sample, with {}'
+    # ax.set_title('Number of OTUs/ASVs per sample, with {}'
     #              ''.format(minimum_str))
     ax.locator_params(axis='y', integer=True)
     return minimum_str
@@ -129,7 +129,7 @@ def plot_scat(ax, shared, counts, args):
 
 def plot_prev(ax, counts, shared, args):
     """
-    Plot OTU/ESV prevalence: OTU count against number of samples
+    Plot OTU/ASV prevalence: OTU count against number of samples
     """
     bins = numpy.logspace(
         numpy.log10(1),
@@ -142,8 +142,8 @@ def plot_prev(ax, counts, shared, args):
     x = list(counts.values())
     ax.hist(x, bins=bins)
 
-    ax.set_title('OTU/ESV prevalence')
-    ax.set_ylabel('number of OTUs/ESVs')
+    ax.set_title('OTU/ASV prevalence')
+    ax.set_ylabel('number of OTUs/ASVs')
     ax.set_xlabel('number of samples')
     ax.locator_params(integer=True)
     ax.set_yscale('log')
@@ -166,7 +166,7 @@ def plot(shared, otu_counts, sample_counts, args):
     if args.title is None:
         title = (
             '{} samples from {}\n'
-            '{} OTUs/ESVs total'
+            '{} OTUs/ASVs total'
             ''.format(
                 len(shared.samples),
                 args.infile.name,
@@ -281,7 +281,7 @@ def get_args():
         '--out-table',
         metavar='FILE',
         type=argparse.FileType('w'),
-        help='Also write ESV/OTU counts to tab-delimited file',
+        help='Also write ASV/OTU counts to tab-delimited file',
     )
     argp.add_argument(
         '--out-prevalence',
