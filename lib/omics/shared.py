@@ -21,6 +21,7 @@
 Implementation of mothur shared file format
 """
 from array import array
+import argparse
 from concurrent.futures import (ProcessPoolExecutor as PoolExecutor,
                                 as_completed)
 from mmap import mmap, ACCESS_READ
@@ -323,3 +324,17 @@ class MothurShared():
     def info(self, *args, **kwargs):
         if self.verbose:
             print(*args, file=sys.stderr, **kwargs)
+
+
+def __main__():
+    # run test
+    argp = argparse.ArgumentParser(description='Test importing a shared file '
+                                   'via command line')
+    argp.add_argument('shared_file', help='Name of shared file')
+    argp.add_argument('-t', type=int, help='number of threads')
+    args = argp.parse_args()
+    MothurShared(args.shared_file, threads=args.threads)
+
+
+if __name__ == '__main__':
+    __main__()
