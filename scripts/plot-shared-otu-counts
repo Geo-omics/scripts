@@ -96,7 +96,10 @@ def plot_hist(ax, data, args):
     ax.set_xlabel('OTUs/ESVs in sample, median: {} (IRQ:{}-{})'
                   ''.format(counts_median, q1, q3))
     if args.min_abund is None:
-        minimum_str = 'count >= {}'.format(args.min_count)
+        if args.min_count == DEFAULT_MIN_COUNT:
+            minimum_str = ''
+        else:
+            minimum_str = 'count >= {}'.format(args.min_count)
     else:
         minimum_str = '> {:g}% abundance'.format(args.min_abund * 100)
     # ax.set_title('Number of OTUs/ESVs per sample, with {}'
@@ -163,14 +166,15 @@ def plot(shared, otu_counts, sample_counts, args):
     if args.title is None:
         title = (
             '{} samples from {}\n'
-            '{} OTUs/ESVs total  --  filter: {}'
+            '{} OTUs/ESVs total'
             ''.format(
                 len(shared.samples),
                 args.infile.name,
                 len(shared.otus),
-                minimum_str,
             )
         )
+        if minimum_str:
+            title += '  --  filter: {}'.format(minimum_str)
         if args.normalize:
             title += '  --  normalized'
 
