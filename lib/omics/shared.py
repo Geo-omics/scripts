@@ -21,17 +21,23 @@
 Implementation of mothur shared file format
 """
 from array import array
+from concurrent.futures import (ProcessPoolExecutor as PoolExecutor,
+                                as_completed)
+from mmap import mmap, ACCESS_READ
+import os.path
 from pathlib import Path
 import sys
 
 import numpy
 import pandas
 
+DEFAULT_THREADS = 1
 
 
 class MothurShared():
-    def __init__(self, file_arg=None, verbose=True):
+    def __init__(self, file_arg=None, verbose=True, threads=DEFAULT_THREADS):
         self.verbose = verbose
+        self.threads = threads
         if isinstance(file_arg, str):
             file = open(file_arg, 'r')
         elif isinstance(file_arg, Path):
@@ -99,6 +105,9 @@ class MothurShared():
         """
         Make a numpy array, single-thread implementation
         """
+        if self.threads > 1:
+            return self.get_counts_mp(file)
+
         counts = numpy.ndarray([], numpy.int32)
 
         # stack over a generator is deprecated, numpy issues a warning
@@ -107,6 +116,95 @@ class MothurShared():
             self._counts_per_sample(file)
         )
         return counts
+
+    def get_counts_mp(self, file):
+        """
+        Make numpy array, multi-processing+futures implementation
+
+        Using the pre-3.8 functionality, (it seems) it's not possible to use
+        shared memory to send the data back from the children.  So we use
+        Pool/starmap and receive arrays through pickling, assemble them and
+        wrap a ndarray around.
+
+        TODO: for 3.8 explore the shared_memory submodule
+        """
+        fsize = os.path.getsize(file.name)
+        self.info('filesize:', fsize)
+        breaks = numpy.linspace(0, fsize, num=self.threads + 1, dtype=int)
+        sargs = []
+        for i in range(len(breaks) - 1):
+            sargs.append((file.name, breaks[i], breaks[i + 1]))
+
+        counts = array('i')
+        with PoolExecutor(max_workers=self.threads) as pe:
+            futmap = {pe.submit(self.chunk2array, *i): i[1] for i in sargs}
+            for future in as_completed(futmap):
+                start = futmap[future]
+                try:
+                    label, s, a = future.result()
+                except Exception as e:
+                    raise RuntimeError(
+                        'Chunk starting at {} failed: {}: {}'
+                        ''.format(start, e.__class__.__name__, e)
+                    )
+                else:
+                    self.label = label
+                    self.samples += s
+                    counts.extend(a)
+
+        counts = numpy.frombuffer(counts, dtype=numpy.dtype('int32'))
+        counts = counts.reshape(len(self.samples), self.ncols)
+        return counts
+
+    def chunk2array(self, path, start, end):
+        """
+        Process one chunk of input file into an array
+
+        This should be run in multi-processing.  If 'start' falls between two
+        lines, the partial line is ignored and processing starts with the next
+        full line.  Likewise, a line extending beyond 'end' will be fully
+        processes.  If no newline falls between 'start' and 'end' then nothing
+        is done. The usual range-semantic is used for 'start' and 'end'.
+
+        Using the mmap logic seems to be much faster then regular readline over
+        the file object.
+        """
+        a = array('i')
+        label = None
+        samples = []
+        with open(path, 'rb') as f:
+            mm = mmap(f.fileno(), 0, access=ACCESS_READ)
+            mm.seek(start)
+            if start > 0 and mm[start - 1] != ord('\n'):
+                # consume partial line
+                mm.readline()
+            if start == 0:
+                # skip header
+                mm.readline()
+
+            while mm.tell() < end:
+                label0, sample, counts = self.process_line(
+                    mm.readline().decode()
+                )
+                a.extend(counts)
+                samples.append(sample)
+
+                if label0 != label:
+                    if label is None:
+                        label = label0
+                    else:
+                        raise RuntimeError(
+                            'This shared file contained multiple label, '
+                            'handling this requires implementation: {} != {}'
+                            ''.format(label, label0))
+
+        if len(a) > 0.99 * (2 ** 29):
+            # max space for pickling is 2GB, 512x10^6 32bit ints
+            # see https://github.com/python/cpython/pull/10305
+            # fix is in 3.8
+            self.info('[WARNING] too much data in child process for pickling')
+            self.info('array size is', len(a))
+        return label, samples, a
 
     def process_line(self, line):
         """
