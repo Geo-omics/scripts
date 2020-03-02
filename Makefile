@@ -20,7 +20,7 @@ package_name = geo-omics-scripts
 # shell fragment to give status 0 if all changes are commited
 all_committed := ! git status --porcelain 2>/dev/null | grep -q -v '^??'
 
-git_version := $(shell git describe 2>/dev/null)
+git_version := $(shell git describe 2>/dev/null | sed s,^release/,,)
 
 # date part of version if there are uncommitted changes
 date := $(shell date +%Y%m%d-%H%M)
@@ -177,7 +177,7 @@ inc-version-tag:
 	#    make release
 	# to make patch releases.
 	$(if $(VERSION),,$(eval version := $(inc_version)))
-	git tag -a "$(version)" -m "Release version $(version)"
+	git tag -a "release/$(version)" -m "Release version $(version)"
 	$(info Version incremented to $(version))
 
 # make a new release:
