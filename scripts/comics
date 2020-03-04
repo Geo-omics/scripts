@@ -162,7 +162,6 @@ LIST=false
 #       including it here may produce two warnings each time comics is called
 MOUNT_POINTS=(
 /dept
-"${geomicro_base}"/geomicro/data9/flux/reference-data:ro
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
 )
 NORC=false
