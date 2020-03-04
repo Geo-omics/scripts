@@ -63,6 +63,12 @@ argp.add_argument(
     help='Input data, a mothur shared file.'
 )
 argp.add_argument(
+    '-t', '--threads',
+    type=int,
+    default=1,
+    help='Number of threads to use for parallizable steps',
+)
+argp.add_argument(
     '-f', '--filter-cut-off',
     type=int,
     default=DEFAULT_FILTER_CUTOFF,
@@ -75,7 +81,7 @@ argp.add_argument('--version', action='version', version='%(prog)s '
                   'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
 
-sh = MothurShared(args.shared_file)
+sh = MothurShared(args.shared_file, threads=args.threads)
 old_sizes = sh.sample_sizes.copy()
 size = dict(zip(sh.samples, sh.sample_sizes))
 

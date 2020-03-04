@@ -335,9 +335,9 @@ def __main__():
     argp = argparse.ArgumentParser(description='Test importing a shared file '
                                    'via command line')
     argp.add_argument('shared_file', help='Name of shared file')
-    argp.add_argument('-t', type=int, help='number of threads')
+    argp.add_argument('-t', type=int, default=DEFAULT_THREADS, help='number of threads')
     args = argp.parse_args()
-    MothurShared(args.shared_file, threads=args.threads)
+    MothurShared(args.shared_file, threads=args.t)
 
 
 if __name__ == '__main__':

@@ -41,6 +41,12 @@ def get_args():
              'file name',
     )
     argp.add_argument(
+        '-t', '--threads',
+        type=int,
+        default=1,
+        help='Number of threads to use for parallizable steps',
+    )
+    argp.add_argument(
         '-v', '--verbose',
         action='store_true',
         help='Force printing list of uniquely-prevalent OTUs to stdout.'
@@ -59,7 +65,7 @@ def main():
     args = get_args()
 
     info('loading shared file...')
-    shared = MothurShared(args.infile)
+    shared = MothurShared(args.infile, threads=args.threads)
 
     info('running sieve...')
     candidates = dict(zip(shared.otus, (None for _ in range(shared.ncols))))
