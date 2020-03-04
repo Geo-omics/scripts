@@ -22,6 +22,7 @@ Determine and remove uniquely-prevalent OTU/ASVs (aka singletons) from a
 mothur shared file
 """
 import argparse
+from pathlib import Path
 import sys
 
 from omics.shared import MothurShared
@@ -36,9 +37,20 @@ def get_args():
         help='Input file, a mothur shared file',
     )
     argp.add_argument(
+        '--tab-out',
+        help='Also save a tab-delimited table of singleton ASVs/OTUs under '
+             'the given file name',
+    )
+    argp.add_argument(
         '-o', '--out',
-        help='Save as shared file with singletons removed under the given '
-             'file name',
+        help='Name of output shared file with singletons removed, by default '
+             'a name will be generated based on the input file name',
+    )
+    argp.add_argument(
+        '-t', '--threads',
+        type=int,
+        default=1,
+        help='Number of threads to use for parallizable steps',
     )
     argp.add_argument(
         '-v', '--verbose',
@@ -59,32 +71,40 @@ def main():
     args = get_args()
 
     info('loading shared file...')
-    shared = MothurShared(args.infile)
+    shared = MothurShared(args.infile, threads=args.threads)
 
-    info('running sieve...')
-    candidates = dict(zip(shared.otus, (None for _ in range(shared.ncols))))
+    info('running sieve... ', flush=True, end='')
+    uniques = dict(zip(shared.otus, (None for _ in range(shared.ncols))))
     for sample, row in shared.rows():
         for o, c in zip(shared.otus, row):
-            if c > 0 and o in candidates:
-                if candidates[o] is None:
-                    candidates[o] = (sample, c)
+            if c > 0 and o in uniques:
+                if uniques[o] is None:
+                    uniques[o] = (sample, c)
                 else:
-                    del candidates[o]
+                    del uniques[o]
 
-    singletons = candidates.keys()
+    info(len(uniques), 'found')
 
-    # secondary sort by sample to make result comparable to first implementaton
-    candidates = sorted(candidates.items(), key=lambda x: (-x[1][1], x[1][0]))
-    size = dict(zip(shared.samples, shared.sample_sizes))
-    for otu, (sample, count) in candidates:
-        print(otu, sample, count, size[sample], sep='\t')
+    if args.tab_out is not None:
+        uniques_s = sorted(uniques.items(), key=lambda x: (-x[1][1], x[1][0]))
+        size = dict(zip(shared.samples, shared.sample_sizes))
+        with Path(args.tab_out).open('w') as o:
+            print('OTU', 'sample', 'count', 'sample_size', sep='\t', file=o)
+            for otu, (sample, count) in uniques_s:
+                print(otu, sample, count, size[sample], sep='\t', file=o,
+                      flush=True)
 
-    if args.out is not None:
-        info('removing singletons from data...')
-        shared.remove_otus(singletons)
-        info('writing shared file...')
-        shared.save(args.out)
-        info('saved as', args.out, file=sys.stderr)
+    if args.out is None:
+        stem = Path(args.infile.name).stem
+        outfname = Path(stem).with_suffix('.nup.shared')
+    else:
+        outfname = args.out
+
+    info('removing singletons from data...')
+    shared.remove_otus(uniques.keys())
+    info('writing shared file...')
+    shared.save(outfname)
+    info('saved as:', outfname, file=sys.stderr)
 
     info('all done.')
 

@@ -68,7 +68,7 @@ class MothurShared():
         self.info('Making data frame...', end='', flush=True)
         self.counts = pandas.DataFrame(counts, index=self.samples,
                                        columns=otus)
-        self.info('[ok]')
+        self.info('[ok]', inline=True)
         self._update_from_counts(trim=False)
         self.info('total samples:  ', self.nrows)
         self.info('label:  ', self.label)
@@ -321,9 +321,13 @@ class MothurShared():
                 row += list(map(str, counts))
                 f.write('\t'.join(row) + '\n')
 
-    def info(self, *args, **kwargs):
+    def info(self, *args, inline=False, **kwargs):
         if self.verbose:
-            print(*args, file=sys.stderr, **kwargs)
+            if inline:
+                print(*args, file=sys.stderr, **kwargs)
+            else:
+                print('[{}]'.format(Path(sys.argv[0]).name), *args,
+                      file=sys.stderr, **kwargs)
 
 
 def __main__():
@@ -331,9 +335,9 @@ def __main__():
     argp = argparse.ArgumentParser(description='Test importing a shared file '
                                    'via command line')
     argp.add_argument('shared_file', help='Name of shared file')
-    argp.add_argument('-t', type=int, help='number of threads')
+    argp.add_argument('-t', type=int, default=DEFAULT_THREADS, help='number of threads')
     args = argp.parse_args()
-    MothurShared(args.shared_file, threads=args.threads)
+    MothurShared(args.shared_file, threads=args.t)
 
 
 if __name__ == '__main__':

@@ -62,6 +62,12 @@ argp.add_argument(
     '-o', '--output',
     help='Name of output file.  If not given, a filename will be generated',
 )
+argp.add_argument(
+    '-t', '--threads',
+    type=int,
+    default=1,
+    help='Number of threads to use for parallizable steps',
+)
 argp.add_argument('--version', action='version', version='%(prog)s '
                   'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
@@ -111,7 +117,7 @@ if meta is not None:
     info('Samples matching query:', len(meta.index))
 
 info('Loading shared file...')
-sh = MothurShared(args.shared_file)
+sh = MothurShared(args.shared_file, threads=args.threads)
 if meta is None:
     samples = sh.samples
 else:

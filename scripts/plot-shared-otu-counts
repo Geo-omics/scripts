@@ -297,9 +297,15 @@ def get_args():
              'written, by default no such file is written',
     )
     argp.add_argument(
-        '-t', '--title',
+        '--title',
         help='Custom figure title.  By default a title will be generated'
              'automatically.'
+    )
+    argp.add_argument(
+        '-t', '--threads',
+        type=int,
+        default=1,
+        help='Number of threads to use for parallizable steps',
     )
     argp.add_argument(
         '-n', '--normalize',
@@ -331,7 +337,7 @@ def get_args():
 def main():
     args = get_args()
 
-    shared = MothurShared(args.infile)
+    shared = MothurShared(args.infile, threads=args.threads)
 
     if args.sample_totals is not None:
         print(*sorted(shared.sample_sizes), sep='\n', file=args.sample_totals)
