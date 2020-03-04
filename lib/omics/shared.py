@@ -23,6 +23,7 @@ Implementation of mothur shared file format
 from array import array
 import argparse
 from collections import Counter
+from collections import namedtuple
 from concurrent.futures import (ProcessPoolExecutor as PoolExecutor,
                                 as_completed)
 from mmap import mmap, ACCESS_READ
@@ -35,9 +36,27 @@ import pandas
 
 DEFAULT_THREADS = 1
 
+# file format id names
+SHARED = 'mothur shared'
+
+SPEC_FIELDS = ['index_cols', 'num_index_cols']
+SPEC = {
+    SHARED: {
+        'index_cols': ['label', 'Group', 'numOtus'],
+        'num_index_cols': 3,
+    },
+}
+
+Spec = namedtuple('Spec', ['name'] + SPEC_FIELDS)
+
 
 class MothurShared():
-    def __init__(self, file_arg=None, verbose=True, threads=DEFAULT_THREADS):
+    def __init__(self, file_arg, verbose=True, threads=DEFAULT_THREADS,
+                 file_format=SHARED):
+        try:
+            self.spec = Spec(name=file_format, **SPEC[file_format])
+        except KeyError:
+            raise ValueError('Invalid file format identifier')
         self.verbose = verbose
         self.threads = threads
         if isinstance(file_arg, str):
@@ -51,24 +70,35 @@ class MothurShared():
         file.seek(0)
 
         head = file.readline().strip()
-        if not head.startswith('\t'.join(['label', 'Group', 'numOtus'])):
+        if not head.startswith('\t'.join(self.spec.index_cols)):
             raise RuntimeError(
-                'input file does not seem to be a mothur shared file, first '
-                'line starts with:\n{}'.format(head[:100])
+                'input file does not seem to be a {} file, first '
+                'line starts with:\n{}'.format(self.spec.name, head[:100])
             )
 
-        otus = head.split('\t')[3:]
-        self.ncols = len(otus)
-        self.info('total OTUs:  ', self.ncols)
+        input_cols = head.split('\t')[self.spec.num_index_cols:]
+
+        if self.spec.name == SHARED:
+            self.otus = input_cols
+            self.info('total OTUs:  ', len(self.otus))
+        else:
+            raise NotImplementedError
 
         self.label = None
-        self.samples = []
 
-        counts = self.get_counts(file)
+        row_ids, counts = self.get_counts(file)
+
+        if len(row_ids) != len(set(row_ids)):
+            raise RuntimeError('Duplicate row ids in intput file')
+
+        if self.spec.name == SHARED:
+            self.samples = row_ids
+        else:
+            NotImplementedError
 
         self.info('Making data frame...', end='', flush=True)
         self.counts = pandas.DataFrame(counts, index=self.samples,
-                                       columns=otus)
+                                       columns=self.otus)
         self.info('[ok]', inline=True)
         self._update_from_counts(trim=False)
         self.info('total samples:  ', self.nrows)
@@ -85,23 +115,32 @@ class MothurShared():
         This is called by __init__ to import the data.  As side effect it
         collects the sample names and sizes and checks label.
         """
-        # store sample ids as list here to make to index later
-        self.samples = []
-        self.label = None
+        self._input_row_ids = []
+        if self.spec.name == SHARED:
+            # store sample ids as list here to make to index later
+            self.label = None
+        else:
+            raise NotImplementedError
+
         for line in file:
-            label, sample, counts = self.process_line(line)
+
+            row_id, row_meta, counts = self.process_line(line)
+            self._input_row_ids.append(row_id)
+
+            if self.spec.name == SHARED:
+                # row_meta is the label
+                if row_meta != self.label:
+                    if self.label is None:
+                        self.label = row_meta
+                    else:
+                        raise RuntimeError(
+                            'This shared file contained multiple label, '
+                            'handling this requires implementation: {} != {}'
+                            ''.format(row_meta, self.label))
+            else:
+                raise NotImplementedError
 
             yield numpy.array(counts)
-
-            self.samples.append(sample)
-            if label != self.label:
-                if self.label is None:
-                    self.label = label
-                else:
-                    raise RuntimeError(
-                        'This shared file contained multiple label, handling '
-                        'this requires implementation: {} != {}'
-                        ''.format(label, self.label))
 
     def get_counts(self, file):
         """
@@ -112,12 +151,13 @@ class MothurShared():
 
         counts = numpy.ndarray([], numpy.int32)
 
+        self._input_row_ids = []
         # stack over a generator is deprecated, numpy issues a warning
         # TODO: research alternative
         counts = numpy.stack(
             self._counts_per_sample(file)
         )
-        return counts
+        return self._input_row_ids, counts
 
     def get_counts_mp(self, file):
         """
@@ -137,26 +177,31 @@ class MothurShared():
         for i in range(len(breaks) - 1):
             sargs.append((file.name, breaks[i], breaks[i + 1]))
 
+        row_ids = []
         counts = array('i')
         with PoolExecutor(max_workers=self.threads) as pe:
             futmap = {pe.submit(self.chunk2array, *i): i[1] for i in sargs}
             for future in as_completed(futmap):
                 start = futmap[future]
                 try:
-                    label, s, a = future.result()
+                    chunk_row_ids, chunk_meta, a = future.result()
                 except Exception as e:
                     raise RuntimeError(
                         'Chunk starting at {} failed: {}: {}'
                         ''.format(start, e.__class__.__name__, e)
                     )
                 else:
-                    self.label = label
-                    self.samples += s
+                    if self.spec.name == SHARED:
+                        # FIXME: last worker wins, needs a check
+                        self.label = chunk_meta
+                    else:
+                        raise NotImplementedError
+                    row_ids += chunk_row_ids
                     counts.extend(a)
 
         counts = numpy.frombuffer(counts, dtype=numpy.dtype('int32'))
-        counts = counts.reshape(len(self.samples), self.ncols)
-        return counts
+        counts = counts.reshape(len(row_ids), len(counts) // len(row_ids))
+        return row_ids, counts
 
     def chunk2array(self, path, start, end):
         """
@@ -172,8 +217,12 @@ class MothurShared():
         the file object.
         """
         a = array('i')
-        label = None
-        samples = []
+        chunk_meta = None
+        if self.spec.name == SHARED:
+            label = None
+        else:
+            raise NotImplementedError
+        row_ids = []
         with open(path, 'rb') as f:
             mm = mmap(f.fileno(), 0, access=ACCESS_READ)
             mm.seek(start)
@@ -185,20 +234,29 @@ class MothurShared():
                 mm.readline()
 
             while mm.tell() < end:
-                label0, sample, counts = self.process_line(
+                row_id, row_meta, counts = self.process_line(
                     mm.readline().decode()
                 )
                 a.extend(counts)
-                samples.append(sample)
+                row_ids.append(row_id)
 
-                if label0 != label:
-                    if label is None:
-                        label = label0
-                    else:
-                        raise RuntimeError(
-                            'This shared file contained multiple label, '
-                            'handling this requires implementation: {} != {}'
-                            ''.format(label, label0))
+                if self.spec.name == SHARED:
+                    # row_meta is the label
+                    # FIXME: setting the label is not coordinated among workers
+                    #        last worker process wins??
+                    if row_meta != label:
+                        if label is None:
+                            label = row_meta
+                        else:
+                            raise RuntimeError(
+                                'This shared file contained multiple label, '
+                                'handling this requires implementation:'
+                                '{} != {}'.format(label, row_meta))
+
+        if self.spec.name == SHARED:
+            chunk_meta = label
+        else:
+            raise NotImplementedError
 
         if len(a) > 0.99 * (2 ** 29):
             # max space for pickling is 2GB, 512x10^6 32bit ints
@@ -206,26 +264,25 @@ class MothurShared():
             # fix is in 3.8
             self.info('[WARNING] too much data in child process for pickling')
             self.info('array size is', len(a))
-        return label, samples, a
+        return row_ids, chunk_meta, a
 
     def process_line(self, line):
         """
         Get count array from line
         """
         try:
-            label, sample, _, *counts = line.strip().split('\t')
+            if self.spec.name == SHARED:
+                # first field is label, return as row meta data
+                # second field is sample, return as row id
+                # third field is numOtus? -- ignore
+                row_meta, row_id, _, *counts = line.strip().split('\t')
+            else:
+                raise NotImplementedError
         except Exception:
             raise RuntimeError('Failed to parse input: offending line '
                                'is:\n'.format(line))
 
-        if sample in self.samples:
-            raise RuntimeError('got sample {} a second time'
-                               ''.format(sample))
-
-        if len(counts) != self.ncols:
-            raise RuntimeError('Not all rows have equal number of columns')
-
-        return label, sample, array('i', map(int, counts))
+        return row_id, row_meta, array('i', map(int, counts))
 
     def rows(self, counts_only=False, as_iter=False):
         it = self.counts.iterrows()
