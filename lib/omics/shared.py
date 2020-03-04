@@ -22,6 +22,7 @@ Implementation of mothur shared file format
 """
 from array import array
 import argparse
+from collections import Counter
 from concurrent.futures import (ProcessPoolExecutor as PoolExecutor,
                                 as_completed)
 from mmap import mmap, ACCESS_READ
@@ -328,6 +329,24 @@ class MothurShared():
             else:
                 print('[{}]'.format(Path(sys.argv[0]).name), *args,
                       file=sys.stderr, **kwargs)
+
+
+class Groups():
+    """
+    Implements support for mothur groups files
+    """
+    def __init__(self, file):
+        if isinstance(file, str):
+            file = open(file)
+        elif isinstance(file, Path):
+            file = file.open()
+        else:
+            # assume it's file-like
+            pass
+
+        self.counts = pandas.Series(Counter(
+            (i.strip().split('\t')[1] for i in file)
+        ))
 
 
 def __main__():
