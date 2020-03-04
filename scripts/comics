@@ -76,7 +76,7 @@ options with unintended consequences likely.
     --norc      Do not use the omics container's default initialization file
                 when starting bash (if no command is given). This is also
                 singularity's default behaviour.
-    --new-start start the container the new way (experimental feature, will soon become the default and the option will be replaced with --old-way to allow still starting older copies of the container)
+    --old-start start the container the old way (for older copies of the container)
     -p, --keep-prompt
                 Do not prepend (name) to the bash prompt if started without COMMAND
     --rcfile <file>
@@ -103,7 +103,7 @@ options with unintended consequences likely.
 # comics has no non-option arguments so, this way no -- is required before the
 # command to stop getopt from rearranging any command arguments
 SHORT_OPTIONS=+B:i:klmps:uw
-LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,norc,rcfile:,singularity-opt:,update,write,new-start
+LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,norc,old-start,rcfile:,singularity-opt:,update,write
 }
 
 handle_options () {
@@ -120,7 +120,7 @@ handle_options () {
                 KEEP_ENV=true;
                 KEEP_ENV_MODULES=true;
                 return 1;;
-            (--new-start) OLD_START_UP=false; return 1;;
+            (--old-start) OLD_START_UP=true; return 1;;
             (--norc) NORC=true; return 1;;
             (-p|--keep-prompt) KEEP_PROMPT=true; return 1;;
             (--rcfile) RCFILE=$2; return 2;;
@@ -166,7 +166,7 @@ MOUNT_POINTS=(
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
 )
 NORC=false
-OLD_START_UP=true
+OLD_START_UP=false
 # by default run bash without --rcfile unless we do the old start style
 RCFILE=
 OLD_START_RCFILE=/.singularity.d/specs/bashrc
