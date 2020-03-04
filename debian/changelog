@@ -1,3 +1,13 @@
+geo-omics-scripts (1.163-1) buster; urgency=medium
+
+  * Makefile:  Add release/ prefix to release version tags
+  * omics.shared: Prefix info messages with program name
+  * omics.shared: Add to and pass --thread option from MothurShared call sites
+  * sh-uniq-prev: Always save new shared file, save csv via new --tab-out option
+  * d/gbp.conf: new upstream version tag format
+
+ -- Robert <heinro@umich.edu>  Wed, 04 Mar 2020 10:03:32 -0500
+
 geo-omics-scripts (1.162-1) buster; urgency=medium
 
   * shared-jaccard: abort loop early for common case
