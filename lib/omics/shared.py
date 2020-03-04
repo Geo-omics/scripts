@@ -37,26 +37,46 @@ import pandas
 DEFAULT_THREADS = 1
 
 # file format id names
+AUTO_DETECT = 'autodetect'
 SHARED = 'mothur shared'
+COUNT_TABLE = 'mothur count table'
+COMPRESSED_COUNT_TABLE = 'mothur compressed count table'
 
-SPEC_FIELDS = ['index_cols', 'num_index_cols']
+SPEC_FIELDS = ['index_cols', 'num_index_cols', 'transposed',
+               'compressed', 'magic', 'skip_initial_comments']
 SPEC = {
     SHARED: {
         'index_cols': ['label', 'Group', 'numOtus'],
         'num_index_cols': 3,
     },
+    COUNT_TABLE: {
+        'index_cols': ['Representative_Sequence', 'total'],
+        'num_index_cols': 2,
+        'transposed': True,
+    },
+    COMPRESSED_COUNT_TABLE: {
+        'magic': '#Compressed Format: groupIndex,abundance',
+        'skip_initial_comments': True,
+        'index_cols': ['Representative_Sequence', 'total'],
+        'num_index_cols': 2,
+        'transposed': True,
+        'compressed': True,
+    },
 }
 
-Spec = namedtuple('Spec', ['name'] + SPEC_FIELDS)
+# Required fields for the specs are index_cols and num_index_cols
+# Defaults for optional fields are:
+#  transposed: False
+#  compressed: False
+#  magic: None  # i.e. derive magic from index column names
+#  skip-initial_comments: False
+SPEC_DEFAULTS = (False, False, None, False)
+Spec = namedtuple('Spec', ['name'] + SPEC_FIELDS, defaults=SPEC_DEFAULTS)
 
 
 class MothurShared():
     def __init__(self, file_arg, verbose=True, threads=DEFAULT_THREADS,
-                 file_format=SHARED):
-        try:
-            self.spec = Spec(name=file_format, **SPEC[file_format])
-        except KeyError:
-            raise ValueError('Invalid file format identifier')
+                 file_format=AUTO_DETECT):
         self.verbose = verbose
         self.threads = threads
         if isinstance(file_arg, str):
@@ -68,21 +88,43 @@ class MothurShared():
             file = file_arg
 
         file.seek(0)
-
         head = file.readline().strip()
+
+        if file_format == AUTO_DETECT:
+            for i, testspec in SPEC.items():
+                magic = testspec.get('magic')
+                if magic is None:
+                    magic = '\t'.join(testspec['index_cols'])
+                if head.startswith(magic):
+                    file_format = i
+                    break
+            else:
+                # no for loop break
+                raise RuntimeError('Fileformat auto-detection failed')
+
+        try:
+            self.spec = Spec(name=file_format, **SPEC[file_format])
+        except KeyError:
+            raise ValueError('Invalid file format identifier')
+
+        if self.spec.skip_initial_comments:
+            while head.startswith('#'):
+                head = file.readline().strip()
+
         if not head.startswith('\t'.join(self.spec.index_cols)):
             raise RuntimeError(
-                'input file does not seem to be a {} file, first '
-                'line starts with:\n{}'.format(self.spec.name, head[:100])
+                'input file does not seem to be a {} file, table column header'
+                'starts with:\n{}'.format(self.spec.name, head[:100])
             )
 
         input_cols = head.split('\t')[self.spec.num_index_cols:]
 
-        if self.spec.name == SHARED:
+        if self.spec.transposed:
+            self.samples = input_cols
+            self.info('total samples:  ', len(self.samples))
+        else:
             self.otus = input_cols
             self.info('total OTUs:  ', len(self.otus))
-        else:
-            raise NotImplementedError
 
         self.label = None
 
@@ -91,17 +133,21 @@ class MothurShared():
         if len(row_ids) != len(set(row_ids)):
             raise RuntimeError('Duplicate row ids in intput file')
 
-        if self.spec.name == SHARED:
-            self.samples = row_ids
+        if self.spec.transposed:
+            self.otus = row_ids
+            counts = counts.T
         else:
-            NotImplementedError
+            self.samples = row_ids
 
         self.info('Making data frame...', end='', flush=True)
         self.counts = pandas.DataFrame(counts, index=self.samples,
                                        columns=self.otus)
         self.info('[ok]', inline=True)
         self._update_from_counts(trim=False)
-        self.info('total samples:  ', self.nrows)
+        if self.spec.transposed:
+            self.info('total otus:  ', self.ncols)
+        else:
+            self.info('total samples:  ', self.nrows)
         self.info('label:  ', self.label)
 
         if isinstance(file_arg, (str, Path)):
@@ -116,18 +162,16 @@ class MothurShared():
         collects the sample names and sizes and checks label.
         """
         self._input_row_ids = []
-        if self.spec.name == SHARED:
+        if 'label' in self.spec.index_cols:
             # store sample ids as list here to make to index later
             self.label = None
-        else:
-            raise NotImplementedError
 
         for line in file:
 
             row_id, row_meta, counts = self.process_line(line)
             self._input_row_ids.append(row_id)
 
-            if self.spec.name == SHARED:
+            if 'label' in self.spec.index_cols:
                 # row_meta is the label
                 if row_meta != self.label:
                     if self.label is None:
@@ -137,8 +181,6 @@ class MothurShared():
                             'This shared file contained multiple label, '
                             'handling this requires implementation: {} != {}'
                             ''.format(row_meta, self.label))
-            else:
-                raise NotImplementedError
 
             yield numpy.array(counts)
 
@@ -191,11 +233,9 @@ class MothurShared():
                         ''.format(start, e.__class__.__name__, e)
                     )
                 else:
-                    if self.spec.name == SHARED:
+                    if 'label' in self.spec.index_cols:
                         # FIXME: last worker wins, needs a check
                         self.label = chunk_meta
-                    else:
-                        raise NotImplementedError
                     row_ids += chunk_row_ids
                     counts.extend(a)
 
@@ -218,10 +258,8 @@ class MothurShared():
         """
         a = array('i')
         chunk_meta = None
-        if self.spec.name == SHARED:
+        if 'label' in self.spec.index_cols:
             label = None
-        else:
-            raise NotImplementedError
         row_ids = []
         with open(path, 'rb') as f:
             mm = mmap(f.fileno(), 0, access=ACCESS_READ)
@@ -240,7 +278,7 @@ class MothurShared():
                 a.extend(counts)
                 row_ids.append(row_id)
 
-                if self.spec.name == SHARED:
+                if 'label' in self.spec.index_cols:
                     # row_meta is the label
                     # FIXME: setting the label is not coordinated among workers
                     #        last worker process wins??
@@ -253,10 +291,8 @@ class MothurShared():
                                 'handling this requires implementation:'
                                 '{} != {}'.format(label, row_meta))
 
-        if self.spec.name == SHARED:
+        if 'label' in self.spec.index_cols:
             chunk_meta = label
-        else:
-            raise NotImplementedError
 
         if len(a) > 0.99 * (2 ** 29):
             # max space for pickling is 2GB, 512x10^6 32bit ints
@@ -270,14 +306,20 @@ class MothurShared():
         """
         Get count array from line
         """
+        row_meta = None
         try:
             if self.spec.name == SHARED:
                 # first field is label, return as row meta data
                 # second field is sample, return as row id
                 # third field is numOtus? -- ignore
                 row_meta, row_id, _, *counts = line.strip().split('\t')
-            else:
+            elif self.spec.compressed:
                 raise NotImplementedError
+            else:
+                # count tables:
+                # first field is sequence id, return as row id
+                # second field is the total for the sequence, ignore
+                row_id, _, *counts = line.strip().split('\t')
         except Exception:
             raise RuntimeError('Failed to parse input: offending line '
                                'is:\n'.format(line))
@@ -408,13 +450,29 @@ class Groups():
 
 def __main__():
     # run test
+    fmt_args = {
+        'auto': AUTO_DETECT,
+        'shared': SHARED,
+        'count-table': COUNT_TABLE,
+        'compressed': COMPRESSED_COUNT_TABLE,
+    }
     argp = argparse.ArgumentParser(description='Test importing a shared file '
                                    'via command line')
     argp.add_argument('shared_file', help='Name of shared file')
+    argp.add_argument(
+        '-f', '--format',
+        choices=fmt_args.keys(),
+        default='shared',
+        help='Input file format',
+    )
     argp.add_argument('-t', type=int, default=DEFAULT_THREADS,
                       help='number of threads')
     args = argp.parse_args()
-    MothurShared(args.shared_file, threads=args.t)
+    try:
+        file_format = fmt_args[args.format]
+    except KeyError:
+        argp.error('Invalid value for --format option')
+    MothurShared(args.shared_file, threads=args.t, file_format=file_format)
 
 
 if __name__ == '__main__':
