@@ -268,6 +268,11 @@ class MothurShared():
                 # consume partial line
                 mm.readline()
             if start == 0:
+                if self.spec.skip_initial_comments:
+                    # Assumes all comments are in first chunk
+                    while mm[mm.tell()] == ord('#'):
+                        # skip comment
+                        mm.readline()
                 # skip header
                 mm.readline()
 
@@ -313,8 +318,6 @@ class MothurShared():
                 # second field is sample, return as row id
                 # third field is numOtus? -- ignore
                 row_meta, row_id, _, *counts = line.strip().split('\t')
-            elif self.spec.compressed:
-                raise NotImplementedError
             else:
                 # count tables:
                 # first field is sequence id, return as row id
@@ -324,7 +327,19 @@ class MothurShared():
             raise RuntimeError('Failed to parse input: offending line '
                                'is:\n'.format(line))
 
-        return row_id, row_meta, array('i', map(int, counts))
+        if self.spec.compressed:
+            a = array('i', [0]) * len(self.samples)
+            for item in counts:
+                # items are two whole numbers, an index for the sample and the
+                # count, separated by a comma
+                i, c = item.split(',')
+                # the sample index is 1-based!
+                a[int(i) - 1] = int(c)
+            counts = a
+        else:
+            counts = array('i', map(int, counts))
+
+        return row_id, row_meta, counts
 
     def rows(self, counts_only=False, as_iter=False):
         it = self.counts.iterrows()
