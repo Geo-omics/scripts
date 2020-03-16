@@ -95,8 +95,8 @@ def main():
                       flush=True)
 
     if args.out is None:
-        stem = Path(args.infile.name).stem
-        outfname = Path(stem).with_suffix('.nup.shared')
+        outfname = Path(args.infile.name).name
+        outfname = Path(outfname).with_suffix('.nup.shared')
     else:
         outfname = args.out
 
