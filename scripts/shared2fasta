@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Take a fasta file and reduce sequences to those OTUs found in a mothur shared file
+"""
+import argparse
+from pathlib import Path
+import sys
+
+from omics.shared import MothurShared
+
+
+def info(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'fasta',
+    type=argparse.FileType(),
+    help='Input fasta file',
+)
+argp.add_argument(
+    'shared',
+    type=argparse.FileType(),
+    help='mothur shared file based on given fasta sequences',
+)
+argp.add_argument(
+    '-m', '--map',
+    type=argparse.FileType(),
+    help='Sequence name to OTU map, mapping names to OTUs as made by mothur'
+         ', this is a tab-separated two-column text file, first column has '
+         'the sequence names, the second column has the OTUs',
+)
+argp.add_argument(
+    '-k', '--keep-original-names',
+    action='store_true',
+    help='Do not use the OTU names for the output fasta sequences, without '
+         'the --map option this has no effect',
+)
+argp.add_argument(
+    '-t', '--threads',
+    type=int,
+    default=1,
+    help='Number of threads to use for parallelizable operations',
+)
+argp.add_argument(
+    '-o', '--output',
+    default=None,
+    help='Name of the out fasta file, by default a name will be generated',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+
+args = argp.parse_args()
+
+if args.output is None:
+    # use shared file name in PWD with .fa suffix
+    outfile = Path(Path(args.shared.name).name).with_suffix('.fa')
+else:
+    outfile = Path(args.output)
+
+name_map = {}
+if args.map is not None:
+    info('Loading names -> OTU map...')
+    try:
+        name_map = dict((i.strip().split('\t') for i in args.map))
+    except Exception as e:
+        args.error('Failed to parse map file: {}: {}'.format(type(e), e))
+
+info('Loading shared file...')
+sh = MothurShared(args.shared, threads=args.threads)
+otus_remaining = set(sh.counts.columns[sh.counts.sum() > 0])
+
+info('Processing fasta...')
+found_some = False
+with outfile.open('w') as o:
+    keep = False
+
+    for line in args.fasta:
+        line.strip()
+        if line.startswith('>'):
+            seqname = line.strip().lstrip('>')
+            otu = name_map.get(seqname, seqname)
+            if otu in otus_remaining:
+                found_some = True
+                keep = True
+                o.write('>{}\n'.format(otu))
+                otus_remaining.remove(otu)
+            else:
+                keep = False
+        else:
+            if keep:
+                o.write(line)
+
+    if otus_remaining:
+        if not found_some:
+            info("OTUs from shared file don't mach those in fasta file at all")
+        else:
+            info('Some OTUs in have no matching sequence in fasta file:',
+                 *sorted(otus_remaining), sep='\n')
+
+info('Output written to', outfile)
