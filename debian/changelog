@@ -1,3 +1,18 @@
+geo-omics-scripts (1.164-1) buster; urgency=medium
+
+  * comics: switch to the "new" way to enter the container by default
+  * comics: Allow write access to normal reference data path
+  * omics.shared: add mothur group file support
+  * comics: keep SLURM environment variable
+  * omics.shared: minor delint
+  * omics.shared: Generalize import code to allow additional file formats
+  * omics.shared: Add uncompressed mothur count_table support
+  * omics.shared: add implementation for compressed count_table support
+  * shared-unique-prevalence: fix output file name generation
+  * Add shared2fasta script
+
+ -- Robert <heinro@umich.edu>  Thu, 19 Mar 2020 12:09:52 -0400
+
 geo-omics-scripts (1.163-1) buster; urgency=medium
 
   * Makefile:  Add release/ prefix to release version tags
