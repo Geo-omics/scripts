@@ -184,6 +184,7 @@ HELP2MAN_EXECUTABLES = \
     separate-interleaved\
     silva-align\
     shared-get \
+    shared2fasta \
     shared-filter-abundance \
     shared-jaccard\
     shared-unique-prevalence\
