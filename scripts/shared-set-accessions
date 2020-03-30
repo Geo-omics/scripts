@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Set new OTU numbering scheme
+"""
+import argparse
+from pathlib import Path
+
+from omics.shared import MothurShared
+
+DEFAULT_PREFIX = 'ASV'
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'shared',
+    type=argparse.FileType(),
+    help='Mothur shared file',
+)
+argp.add_argument(
+    '-p', '--prefix',
+    default=DEFAULT_PREFIX,
+    help='Numbering scheme prefix, default is ' + DEFAULT_PREFIX +'. This '
+         'option has no effect if the --with-map option is used',
+)
+argp.add_argument(
+    '-z', '--leading-zeros',
+    action='store_true',
+    help='Add leading zeros to small numbers',
+)
+mapgrp = argp.add_mutually_exclusive_group()
+mapgrp.add_argument(
+    '--with-map',
+    type=argparse.FileType(),
+    help='Use the mapping in given two-column tab-separated text file'
+)
+mapgrp.add_argument(
+    '--save-map',
+    type=argparse.FileType('w'),
+    help='Save old->new OTU accession mapping in two-column tab-separated text'
+         ' file under given name',
+)
+argp.add_argument(
+    '-o', '--output',
+    default=None,
+    help='Name of output shared file, by default a name will be generated '
+         'based on the input file name',
+)
+argp.add_argument(
+    '-t', '--threads',
+    type=int,
+    default=1,
+    help='Number of threads',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+args = argp.parse_args()
+if args.output is None:
+    output = Path(Path(args.shared.name).stem).with_suffix('.accs.shared')
+else:
+    output = args.output
+
+if args.with_map is None:
+    acc_map=None
+else:
+    acc_map = {}
+    for line in args.with_map:
+        old, new = line.strip().split('\t')
+        acc_map[old] = new
+
+sh = MothurShared(args.shared, threads=args.threads)
+acc_map = sh.set_accessions(
+    with_map=acc_map,
+    prefix=args.prefix,
+    leading_zeros=args.leading_zeros,
+)
+if args.save_map is not None:
+    for k, v in acc_map.items():
+        args.save_map.write('{}\t{}\n'.format(k, v))
+    args.save_map.close()
+    sh.info('Accession map saved as', args.save_map.name)
+sh.save(str(output))
+sh.info('New shared file saved as:', output)

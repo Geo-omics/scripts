@@ -188,6 +188,7 @@ HELP2MAN_EXECUTABLES = \
     shared2fasta \
     shared-filter-abundance \
     shared-jaccard\
+    shared-set-accessions \
     shared-unique-prevalence\
     track-mothur-counts \
 
