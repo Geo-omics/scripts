@@ -45,9 +45,13 @@ argp.add_argument(
 argp.add_argument(
     '-m', '--map',
     type=argparse.FileType(),
+    action='append',
     help='Sequence name to OTU map, mapping names to OTUs as made by mothur'
          ', this is a tab-separated two-column text file, first column has '
-         'the sequence names, the second column has the OTUs',
+         'the sequence names, the second column has the OTUs.  This option '
+         'can be used multiple times in case sequences/OTUs were renamed more '
+         'than once, the "pointwise" transitive closure of maps in the given '
+         'order will be used.',
 )
 argp.add_argument(
     '-k', '--keep-original-names',
@@ -74,16 +78,30 @@ args = argp.parse_args()
 if args.output is None:
     # use shared file name in PWD with .fa suffix
     outfile = Path(Path(args.shared.name).name).with_suffix('.fa')
+    if outfile.exists():
+        argp.error('File exists: {}'.format(outfile))
 else:
     outfile = Path(args.output)
 
 name_map = {}
-if args.map is not None:
-    info('Loading names -> OTU map...')
+for f in args.map:
+    if not name_map:
+        info('Loading names -> OTU map...', end=' ', flush=True)
+    next_map = {}
     try:
-        name_map = dict((i.strip().split('\t') for i in args.map))
+        next_map = dict((i.strip().split('\t') for i in f))
     except Exception as e:
-        args.error('Failed to parse map file: {}: {}'.format(type(e), e))
+        args.error('Failed to parse map file {}: {}: {}'
+                   ''.format(f.name, type(e), e))
+    if not name_map:
+        name_map = next_map
+        continue
+
+    for k, v in name_map.items():
+        # apply next mapping, if possible, but keep original in case of
+        # incomplete mappings.
+        name_map[k] = next_map.get(v, v)
+info(len(name_map))
 
 info('Loading shared file...')
 sh = MothurShared(args.shared, threads=args.threads)
