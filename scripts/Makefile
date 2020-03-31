@@ -177,6 +177,7 @@ HELP2MAN_EXECUTABLES = \
     match-dada2-mothur\
     merge-coverage\
     merge-covs\
+    mockest \
     plot-blast-frag-cov\
     plot-megahit-log\
     plot_alignment\
@@ -187,7 +188,9 @@ HELP2MAN_EXECUTABLES = \
     shared2fasta \
     shared-filter-abundance \
     shared-jaccard\
+    shared-set-accessions \
     shared-unique-prevalence\
+    track-mothur-counts \
 
 NON_EXECUTABLES = \
     parseTinySeqXML.xslt\

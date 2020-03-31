@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Estimate contamination in mock samples
+"""
+import argparse
+from io import StringIO
+from pathlib import Path
+import subprocess
+import sys
+
+import pandas
+
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.style
+from matplotlib import cm
+from matplotlib.backends.backend_agg import FigureCanvasAgg  # noqa: E402
+from matplotlib.backends.backend_pdf import PdfPages  # noqa: E402
+from matplotlib.figure import Figure  # noqa: E402
+
+from omics.shared import MothurShared  # noqa: E402
+
+DEFAULT_SIZE_CUTOFF = 2000
+
+
+def info(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'reference',
+    help='Fasta file with mock community reference sequences',
+)
+argp.add_argument(
+    'mock_sequences',
+    help='Fasta file with ASV/OTU sequences, sequence headers must be the '
+         'ASV/OTU',
+)
+argp.add_argument(
+    'shared',
+    type=argparse.FileType(),
+    help='Shared file, (for read counts)',
+)
+argp.add_argument(
+    '-c', '--sample-size-cut-off',
+    type=int,
+    default=DEFAULT_SIZE_CUTOFF,
+    help='Ignore data from mock samples with less than this many reads, the '
+         'default is {}.'.format(DEFAULT_SIZE_CUTOFF)
+)
+argp.add_argument(
+    '--save-blast',
+    default=None,
+    help='File name under which to save the blast results.  The default is '
+         'not to save the results.',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+
+args = argp.parse_args()
+
+# this is format 6 + slen
+blastoutfmt = ('qaccver saccver slen pident length mismatch gapopen '
+               'qstart qend sstart send evalue bitscore')
+blast_cmd = [
+    'blastn',
+    '-query', args.mock_sequences,
+    '-subject', args.reference,
+    '-outfmt', '6 ' + blastoutfmt,
+    # '-num_alignments', '1',
+    # '-subject_besthit',
+    '-max_hsps', '1',
+    '-max_target_seqs', '1',
+]
+info('Running blastn...')
+blast_proc = subprocess.run(blast_cmd, capture_output=True)
+if blast_proc.returncode > 0:
+    errmsg = ('Failed to run blastn, return code was {}\n'
+              ''.format(blast_proc.returncode))
+    if blast_proc.stderr:
+        errmsg += 'blastn stderr was:\n{}\n'.format(blast_proc.stderr.decode())
+    else:
+        errmsg += 'nothing was printed to stderr'
+    argp.error(errmsg)
+
+if args.save_blast is not None:
+    with open(args.save_blast, 'wb') as o:
+        o.write(blast_proc.stdout)
+    info('Blast result saved under: ', args.save_blast)
+
+info('Parsing blast output...')
+blastoutfmt = blastoutfmt.split()
+blast = pandas.read_table(
+    StringIO(blast_proc.stdout.decode()),
+    names=blastoutfmt,
+    index_col='qaccver',
+)
+blast['perfect'] = (blast['pident'] == 100.0) \
+        & (blast['length'] == blast['slen'])
+
+if not blast.index.is_unique:
+    dups = blast.index.get_duplicates()
+    info('Filtering multiple hits with same OTU/(and reference?):')
+    info(blast.loc[dups])
+    blast = blast.drop(index=dups)
+
+info('Perfect matches:')
+for otu, ref in blast[blast.perfect]['saccver'].items():
+    info(otu, ref, sep='\t')
+
+info('Loading shared file...')
+sh = MothurShared(args.shared)
+
+# make OTU table | one row per OTU, cols are counts for each samples
+otus = sh.counts.T.copy()
+otus.index.name = 'otus'
+otus.columns.name = 'samples'
+
+# uncomment to remove single read counts
+# otus[otus == 1] = 0
+
+# rm small samples
+otus = otus.loc[:, otus.sum() >= args.sample_size_cut_off]
+
+# rm OTUs which just became all-zero
+otus = otus[otus.sum(axis=1) > 0]
+if len(otus.columns) < sh.nrows:
+    info('Removed samples because they have too few reads:')
+    info('Samples remaining:', len(otus.columns))
+    info('OTUs remaining:', len(otus.index))
+# align blast index with otu index
+# this also adds rows for OTUs that blast didn't align at all
+blast.reindex(index=otus.index)
+
+info('Calculating relative abundance...')
+otus = otus.div(otus.sum())
+
+# make tabular output
+out_tab = otus.join(blast)
+out_tab['maxab'] = out_tab.max(axis=1)
+out_tab = out_tab.sort_values(by=['maxab'])
+out_tab = out_tab[['saccver', 'perfect', 'mismatch', 'maxab']]
+for o, (s, perfect, mismatch, maxab) in out_tab.iterrows():
+    if perfect:
+        perfect = 'perfect_match'
+    else:
+        perfect = '-'
+    try:
+        mismatch = int(mismatch)
+    except ValueError:
+        # is nan
+        pass
+    print(o, s or '?', perfect, mismatch, maxab, sep='\t')
+
+# prep for plot
+
+
+def prev(x):
+    return len([i for i in x if i > 0])
+
+
+# sort otus by prevalence
+otus_s_i = otus.agg(prev, axis=1).sort_values(ascending=False).index
+otus = otus.reindex(index=otus_s_i)
+
+# transform into table of points and add blast data
+points = otus.stack().to_frame()
+points[points == 0] = pandas.np.nan
+points.columns = ['abund']
+points = points.join(blast, on='otus')
+# make otus into numeric x coordinates
+xs = list(points.index)  # a list of tuples (OTU x Sample)
+otus2int = {o: i for i, o in enumerate(otus.index)}
+xs = [otus2int[o] for o, _ in xs]
+points['xs'] = xs
+
+# plotting
+matplotlib.style.use('seaborn')
+fig = Figure(figsize=(11, 8))
+FigureCanvasAgg(fig)
+ax = fig.add_subplot(111)
+ax.set_yscale('symlog', linthreshy=0.00005)
+title = 'abundance of ASVs in {} mock samples'.format(len(otus.columns))
+if args.sample_size_cut_off > 0:
+    title += ' (>= {} reads)'.format(args.sample_size_cut_off)
+ax.set_title(title)
+scatkw = dict(ax=ax, marker='.', alpha=0.8, edgecolor='none')
+cs = cm.get_cmap('Dark2')(range(4))
+
+# prevalence plot
+prev_ax = ax.twinx()
+prev_ax.grid(None)
+prev_ax.set_ylabel('ASV prevalence')
+
+perfect = points[points['perfect'] == True]
+nonaligned = points[points['saccver'].isnull()]
+rest = points[points['perfect'] == False & points['saccver'].isnull()]
+
+more = rest[rest['mismatch'] > 5]
+less = rest[rest['mismatch'] <= 5]
+
+points.to_csv('points.csv', sep='\t')
+xyargs = dict(x='xs', y='abund')
+perfect.plot.scatter(**xyargs, color='green', label='perfect', **scatkw)
+less.plot.scatter(**xyargs, color='blue', label='<=5 mismatches', **scatkw)
+if not more.empty:
+    more.plot.scatter(**xyargs, color='orange', label='>5 mismatches', **scatkw)
+nonaligned.plot.scatter(**xyargs, color='red', label='unaligned', **scatkw)
+prev_ax.plot(
+    range(len(otus.index)),
+    otus.agg(prev, axis=1).values,
+    color='grey', alpha=0.5,
+)
+
+# fix labels
+ax.set_xlabel('{} OTUs/ASVs, in columns, ordered high to low prevalence'
+              ''.format(len(otus.index)))
+ax.set_ylabel('relative abundance (> 0)')
+ax.grid(True, axis='y')
+
+pdfsuffix = '.mockest.pdf'
+if args.sample_size_cut_off > 0:
+    pdfsuffix = '.ge{}'.format(args.sample_size_cut_off) + pdfsuffix
+pdf = Path(args.shared.name).with_suffix(pdfsuffix).name
+with PdfPages(pdf) as pdf:
+    pdf.savefig(fig)

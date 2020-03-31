@@ -1,0 +1,265 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Plot read and asv counts for pipeline stages side-by-side
+"""
+import argparse
+from pathlib import Path
+import sys
+
+import pandas
+import numpy
+import matplotlib
+matplotlib.use('agg')
+from matplotlib import cm
+from matplotlib.figure import Figure  # noqa: E402
+
+from omics.shared import Groups, MothurShared  # noqa: E402
+
+# track choice
+READS = 'reads'
+ASVS = 'asvs'
+BOTH = 'both'
+
+text = {
+    READS: {
+        'title': 'Tracking read counts',
+        'axis_label': 'number of reads in sample',
+    },
+    ASVS: {
+        'title': 'Tracking ASV counts',
+        'axis_label': 'ASVs present in sample',
+    },
+}
+
+
+def info(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'inputfile',
+    nargs='*',
+    type=argparse.FileType(),
+    help='groups, count_table, or shared files, in order.  Input files will '
+         'be processed after those listed via the -f option.  Groups files '
+         'can not be used to track asv counts.',
+)
+argp.add_argument(
+    '-f', '--file-input',
+    type=argparse.FileType(),
+    help='Two-column file listing input files and description, separated by '
+         'a white space, i.e. paths and filenames (in the first column) must '
+         'not contain a whitespace',
+)
+argp.add_argument(
+    '--tab-input',
+    type=argparse.FileType(),
+    help='A tab-separated file with input counts of either reads or ASVs, can '
+         'not be used together with --track both.  This is to accommodate '
+         'e.g. the DADA2 track file.  This data is ordered coming first, if '
+         'used together with -f or inputfile given via positional arguments.',
+)
+argp.add_argument(
+    '--track',
+    choices=(READS, ASVS, BOTH),
+    default=BOTH,
+    help='What to track, defaults to track both',
+)
+argp.add_argument(
+    '-t', '--threads',
+    type=int,
+    default=1,
+    help='Number of threads',
+)
+argp.add_argument(
+    '-o', '--read-count-output',
+    default=None,
+    help='Name of read count track table output file, by default none is '
+         'saved',
+)
+argp.add_argument(
+    '-p', '--plot',
+    help='Save plot to PDF file with given name',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+args = argp.parse_args()
+
+for i in args.inputfile:
+    i.close()
+
+read_counts = pandas.DataFrame()
+asv_counts = pandas.DataFrame()
+
+# Add with tabular count data
+if args.tab_input is not None:
+    if args.track == BOTH:
+        argp.error('Option "--track both" in incompatible with --tab-input')
+    tab_counts = pandas.read_table(args.tab_input, index_col=0)
+    # shift column headers !!!!!
+    tab_counts.columns = tab_counts.columns[1:].append(
+        pandas.Index(['good data'])
+    )
+    if args.track == READS:
+        read_counts = tab_counts
+    elif args.track == ASVS:
+        asv_counts = tab_counts
+    else:
+        raise ValueError()
+
+infiles = []
+if args.file_input is not None:
+    # Collect files from listing
+    for line in args.file_input:
+        if line.strip().startswith('#'):
+            continue
+        infiles.append(line.strip().split(maxsplit=1))
+
+# Add files from positional arguments
+infiles += [[i.name, Path(i.name).stem] for i in args.inputfile]
+
+# Process input files
+for i, descr in infiles:
+    try:
+        if i.endswith('.groups'):
+            gp = Groups(i)
+            read_counts[descr] = gp.counts
+        elif i.endswith(('.shared', '.count_table')):
+            sh = MothurShared(i, threads=args.threads)
+            read_counts[descr] = sh.counts.sum(axis=1)
+            asv_counts[descr] = (sh.counts > 0).sum(axis=1)
+        else:
+            argp.error('Unrecognised file extension: {}'.format(i))
+    except Exception as e:
+        raise RuntimeError('Failed processing {}'.format(i)) from e
+
+if read_counts.empty and asv_counts.empty \
+        or args.track == READS and read_counts.empty \
+        or args.track == ASVS and asv_counts.empty:
+    argp.error('Input data is needed')
+
+if args.read_count_output is not None:
+    read_counts.index.name = 'sample'
+    read_counts.to_csv(args.read_count_output, sep='\t')
+
+sums = pandas.DataFrame(read_counts.sum(), columns=['reads'])
+if args.track != READS:
+    sums['ASV'] = asv_counts.sum()
+
+if args.track == ASVS:
+    sums.drop(columns=['reads'])
+
+print(sums)
+# Bad hack: fill NaN from below (for missing top-row number in ASV column)
+sums = sums.fillna(method='bfill', axis=0)
+# % percentage reduction, will be 1 row below
+# these values will mostly be negative if the columns are ordered correctly
+pct = sums.diff() / sums.iloc[0, :]
+pct = pct.shift(-1)
+# abs(): sum at the end will not be 100% if there where positive values at
+# this point
+pct = pct.abs()
+pct.iloc[-1, :] = sums.iloc[-1] / sums.iloc[0]
+print(pct)
+# add percent of each "color" to column names
+# this is for the legend!
+col_descr = [
+    '{} ({})'.format(
+        i,
+        ' / '.join([
+            '{:.1%}'.format(j)
+            for j in pct.loc[i, :]
+            if pandas.notna(j)
+        ]))
+    for i in read_counts.columns
+]
+
+if args.plot is None:
+    sys.exit()
+
+# common plotting stuff
+fig = Figure(figsize=(11, 8))
+colors = cm.Dark2_r.colors
+
+if args.track == BOTH:
+    # plot side-by-side
+    index = numpy.arange(1, len(read_counts) + 1)
+    sort_col = read_counts.columns[len(read_counts.columns) // 2]
+    info('Sorting on:', sort_col)
+    reads_ax, asvs_ax = fig.subplots(ncols=2, sharey=True)
+    read_counts.sort_values(by=sort_col, inplace=True)
+    read_counts['sort_order'] = range(read_counts.shape[0])
+    asv_counts['sort_order'] = read_counts['sort_order']
+    asv_counts.sort_values(by='sort_order', inplace=True)
+    plots = []
+    missed = 0
+    for col, color in zip(read_counts.columns, colors):
+        if col == 'sort_order':
+            continue
+        plots.append(
+            reads_ax.barh(index, read_counts[col], color=color)
+        )
+        if col in asv_counts.columns:
+            # plot same data for missed groups file data
+            # to keep up with colors
+            for _ in range(missed + 1):
+                asvs_ax.barh(index, asv_counts[col], color=color)
+            missed = 0
+        else:
+            missed += 1
+
+    reads_ax.invert_xaxis()
+    reads_ax.legend([i[0] for i in plots], col_descr)
+    asvs_ax.set_xlabel('samples')
+    reads_ax.set_xlabel(text[READS]['axis_label'])
+    asvs_ax.set_xlabel(text[ASVS]['axis_label'])
+    reads_ax.set_title(text[READS]['title'])
+    asvs_ax.set_title(text[ASVS]['title'])
+else:
+    ax = fig.subplots()
+
+    if args.track == READS:
+        counts = read_counts
+    elif args.track == ASVS:
+        counts = asv_counts
+    else:
+        raise ValueError()
+
+    index = numpy.arange(1, len(counts) + 1)
+    sort_col = counts.columns[len(counts.columns) // 2]
+    info('Sorting on:', sort_col)
+    counts.sort_values(by=sort_col, inplace=True, ascending=False)
+    plots = []
+    for col, rgb in zip(counts.columns, colors):
+        plots.append(
+            ax.bar(index, counts[col], color=rgb, log=False)
+        )
+
+    ax.legend([i[0] for i in plots], col_descr)
+    ax.set_xlabel('{} samples'.format(len(counts.index)))
+    ax.set_ylabel(text[args.track]['axis_label'])
+    ax.set_title(text[args.track]['title'])
+    ax.set_ybound(upper=75000)
+
+# more common plot stuff
+fig.tight_layout()
+fig.savefig(args.plot)

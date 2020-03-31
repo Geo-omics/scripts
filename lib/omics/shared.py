@@ -26,6 +26,7 @@ from collections import Counter
 from collections import namedtuple
 from concurrent.futures import (ProcessPoolExecutor as PoolExecutor,
                                 as_completed)
+import math
 from mmap import mmap, ACCESS_READ
 import os.path
 from pathlib import Path
@@ -35,6 +36,7 @@ import numpy
 import pandas
 
 DEFAULT_THREADS = 1
+DEFAULT_OTU_NUM_PREFIX = 'Otu'
 
 # file format id names
 AUTO_DETECT = 'autodetect'
@@ -443,6 +445,36 @@ class MothurShared():
             else:
                 print('[{}]'.format(Path(sys.argv[0]).name), *args,
                       file=sys.stderr, **kwargs)
+
+    def set_accessions(self, prefix=DEFAULT_OTU_NUM_PREFIX, with_map=None,
+                       sort=True, leading_zeros=True):
+        """
+        Sets a new OTU-accession scheme
+
+        OTUs get numbered <prefix>nnn with numbering starting with the OTU with
+        the highest count.  If with_map provides a dictionary then that will be
+        used to map old to new identifiers.
+        """
+        if sort:
+            orig_otus = self.counts.sum().sort_values(ascending=False).index
+        else:
+            orig_otus = self.otus
+
+        if with_map is None:
+            self.counts = self.counts[orig_otus]
+            size = len(orig_otus)
+            accs = map(str, range(1, size + 1))
+            if leading_zeros:
+                magnitude = math.floor(math.log10(size)) + 1
+                accs = map(lambda x: x.zfill(magnitude), accs)
+            accs = map(lambda x: prefix + x, accs)
+            accs = list(accs)
+        else:
+            accs = [with_map[i] for i in orig_otus]
+
+        self.counts.columns = accs
+        self._update_from_counts(trim=False)
+        return dict(zip(orig_otus, accs))
 
 
 class Groups():
