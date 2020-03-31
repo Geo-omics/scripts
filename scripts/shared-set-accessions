@@ -73,7 +73,7 @@ argp.add_argument('--version', action='version', version='%(prog)s '
                   'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 args = argp.parse_args()
 if args.output is None:
-    output = Path(Path(args.shared.name).stem).with_suffix('.accs.shared')
+    output = Path(Path(args.shared.name).name).with_suffix('.accs.shared')
 else:
     output = args.output
 
