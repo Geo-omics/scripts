@@ -37,7 +37,7 @@ argp.add_argument(
 argp.add_argument(
     '-p', '--prefix',
     default=DEFAULT_PREFIX,
-    help='Numbering scheme prefix, default is ' + DEFAULT_PREFIX +'. This '
+    help='Numbering scheme prefix, default is ' + DEFAULT_PREFIX + '. This '
          'option has no effect if the --with-map option is used',
 )
 argp.add_argument(
@@ -78,7 +78,7 @@ else:
     output = args.output
 
 if args.with_map is None:
-    acc_map=None
+    acc_map = None
 else:
     acc_map = {}
     for line in args.with_map:
