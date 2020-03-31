@@ -1,3 +1,13 @@
+geo-omics-scripts (1.165-1) buster; urgency=medium
+
+  * Add two more scripts
+  * Add OTU-renumbering script for shared files
+  * shared-set-accessions: fix minor code formatting
+  * shared-set-accession: fix output file name, keep all infixes
+  * shared2fasta: allow multiple --map options for transitve renaming
+
+ -- Robert <heinro@umich.edu>  Tue, 31 Mar 2020 10:22:46 -0400
+
 geo-omics-scripts (1.164-1) buster; urgency=medium
 
   * comics: switch to the "new" way to enter the container by default
