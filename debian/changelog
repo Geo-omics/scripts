@@ -1,3 +1,10 @@
+geo-omics-scripts (1.166-1) buster; urgency=medium
+
+  * shared-get: be very smart when samples names differ between meta and shared files
+  * shared.get: improve diagnostic output
+
+ -- Robert <heinro@umich.edu>  Wed, 01 Apr 2020 14:54:52 -0400
+
 geo-omics-scripts (1.165-1) buster; urgency=medium
 
   * Add two more scripts
