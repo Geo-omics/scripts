@@ -59,6 +59,18 @@ argp.add_argument(
          'names, and one row per sample, first column must be sample names',
 )
 argp.add_argument(
+    '--force-prefix-matching',
+    action='store_true',
+    help='This script need to match the sample names from the meta data to '
+         'the names from the shared file.  If there is no overlap at all by '
+         'exact string matching, the script will first see if substituting '
+         'dashes for underscore in the meta data samples will produce any '
+         'exact matches.  If that fails prefix matching will be attempted, so '
+         'the names in the meta data need to uniquely match the beginning of '
+         'a name in the shared file.  This option forces prefix matching, '
+         'even if there are some exact matches already.',
+)
+argp.add_argument(
     '-o', '--output',
     help='Name of output file.  If not given, a filename will be generated',
 )
@@ -121,8 +133,44 @@ sh = MothurShared(args.shared_file, threads=args.threads)
 if meta is None:
     samples = sh.samples
 else:
-    samples = [str(i).replace('-', '_') for i in meta.index]
-    samples = [i for i in samples if i in sh.samples]
+    samples = None
+    if set(sh.samples).isdisjoint(meta.index) or args.force_prefix_matching:
+        if not args.force_prefix_matching:
+            info('Sample names in shared file don\'t match sample names in '
+                 'meta data at all!')
+        mchrs = set(''.join(meta.index))
+        schrs = set(''.join(sh.samples))
+        if '-' in mchrs and '_' in schrs and '-' not in schrs:
+            # think: shared samples conform to mothur group names
+            info('Converting meta data samples to match mothur '
+                 'expectations (s/-/_/g) ...')
+            meta.index = map(lambda x: x.replace('-', '_'), meta.index)
+
+        if set(sh.samples).isdisjoint(meta.index) \
+                or args.force_prefix_matching:
+            # try unique prefix matching, e.g. if shared samples have S-number
+            # attached
+            # NOTE: only considering meta samples matching the query
+            pref_map = {}
+            for i in sh.samples:
+                for j in sorted(meta.index, key=lambda x: -len(x)):
+                    if i.startswith(j):
+                        pref_map[i] = j
+                        break
+            if len(set(pref_map.values())) < len(pref_map):
+                # multiple meta data samples map to same shared sample
+                argp.error('Failed to uniquely match meta data sample names '
+                           'to shared file via matching prefixes')
+            samples = list(pref_map.keys())
+            if not samples:
+                argp.error(
+                    'Also failed to match up any samples in shared file with '
+                    'any sample in the meta data via prefix matching'
+                )
+
+    if samples is None:
+        # do exact matching
+        samples = [i for i in meta.index if i in sh.samples]
 
 if args.min_sample_size > 0:
     big = sh.counts.sum(axis=1) >= args.min_sample_size
