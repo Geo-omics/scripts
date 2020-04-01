@@ -172,14 +172,16 @@ else:
         # do exact matching
         samples = [i for i in meta.index if i in sh.samples]
 
+    info('Matching samples present in shared file:', len(samples))
+
 if args.min_sample_size > 0:
     big = sh.counts.sum(axis=1) >= args.min_sample_size
     big_samples = sh.counts[big].index
-    print(big_samples)
-    info('samples above minimum size:', len(big_samples))
+    info('Samples in shared file above minimum size:', len(big_samples))
     samples = [i for i in samples if i in big_samples]
+    if meta is not None:
+        info('Of those, {} are also matching the query'.format(len(samples)))
 
-info('Matching samples present in shared file:', len(samples))
 info('Selecting subset...')
 sh.pick_samples(samples)
 info('Writing output... ', end='', flush=True)
