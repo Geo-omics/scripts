@@ -235,7 +235,9 @@ class MothurShared():
                         ''.format(start, e.__class__.__name__, e)
                     )
                 else:
-                    if 'label' in self.spec.index_cols:
+                    # TODO: preserve order of chunks in file
+                    if chunk_row_ids and 'label' in self.spec.index_cols:
+                        # if there was data in the chunk use label
                         # FIXME: last worker wins, needs a check
                         self.label = chunk_meta
                     row_ids += chunk_row_ids
@@ -307,6 +309,7 @@ class MothurShared():
             # fix is in 3.8
             self.info('[WARNING] too much data in child process for pickling')
             self.info('array size is', len(a))
+
         return row_ids, chunk_meta, a
 
     def process_line(self, line):

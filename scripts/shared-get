@@ -59,6 +59,13 @@ argp.add_argument(
          'names, and one row per sample, first column must be sample names',
 )
 argp.add_argument(
+    '--rename-col',
+    default=None,
+    help='Rename samples to the content of meta-data column provided by this '
+         'option.  Only samples that have a non-empty value in this column are'
+         ' renamed, others are left unchanged.',
+)
+argp.add_argument(
     '--force-prefix-matching',
     action='store_true',
     help='This script need to match the sample names from the meta data to '
@@ -97,6 +104,8 @@ else:
                              keep_default_na=False)
 
     info('Loaded meta data for {} samples'.format(len(meta.index)))
+    if args.rename_col is not None and args.rename_col not in meta.columns:
+        argp.error('Not a column in meta data: {}'.format(args.rename_col))
 
 # parse query specs
 query = []
@@ -184,6 +193,16 @@ if args.min_sample_size > 0:
 
 info('Selecting subset...')
 sh.pick_samples(samples)
+
+if args.rename_col is not None:
+    # The lambda implements proper rename semantics, i.e. missing rows or empty
+    # string leaves the name unchanged
+    rename_map = dict(meta[args.rename_col])
+    sh.counts.index = sh.counts.index.map(lambda x: rename_map.get(x, x) or x)
+    info('Renaming old-vs-new stats:')
+    info(pandas.Series(sh.counts.index == sh.samples).describe())
+    sh.samples = sh.counts.index
+
 info('Writing output... ', end='', flush=True)
 sh.save(outfile)
 info('saved as:', outfile)
