@@ -1,3 +1,9 @@
+geo-omics-scripts (1.168-1) buster; urgency=medium
+
+  * [qc] fix --rqcfilterdata option parsing, option wasn't recognized
+
+ -- Robert <heinro@umich.edu>  Wed, 06 May 2020 14:19:47 -0400
+
 geo-omics-scripts (1.167-1) buster; urgency=medium
 
   * omics.shared: Fix label processing when using many threads
