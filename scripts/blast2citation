@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+
+# Copyright 2020 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Map blast result subject to journal reference via NCBI's Entrez+nucliotide DBs
+"""
+import argparse
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+from Bio import Entrez
+
+
+RETMODE = 'xml'
+DEBUG = False
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'blast_result',
+    metavar='blast-result-file',
+    type=argparse.FileType(),
+    help='Tab-separated table, second column are nucliotide accessions, e.g. '
+         'Std fmt 6, tabular blast result file, or single column with '
+         'accessions',
+)
+argp.add_argument(
+    '-s', '--sep', '--delimiter',
+    dest='sep',
+    default='\t',
+    help='Input file column delimiter, <tab> by default',
+)
+argp.add_argument(
+    '-e', '--email',
+    default=None,
+    help='User\'s email address, required by NCBI\'s Entrez',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+args = argp.parse_args()
+
+if args.email is None:
+    err_msg = 'Please supply your email address with --email'
+    p = subprocess.run(['hostname', '-f'], capture_output=True)
+    if False and p.returncode != 0:
+        argp.error(err_msg)
+    host = p.stdout.decode().strip()
+    if False and not host.endswith('umich.edu'):
+        argp.error(err_msg)
+    user = os.environ.get('USER')
+    if not user:
+        user = Path.home().name
+    Entrez.email = user + '@' + 'umich.edu'
+    print('Using email: ', Entrez.email, file=sys.stderr)
+else:
+    Entrez.email = args.email
+
+accns = []
+for line in args.blast_result:
+    line = line.strip()
+    if line.startswith('#'):
+        continue
+    row = line.split(args.sep)
+    if not row:
+        continue
+    if len(row) == 1:
+        accn_col = 0
+    else:
+        accn_col = 1
+
+    accn = row[accn_col].strip()
+    if accn not in accns:
+        accns.append(accn)
+
+res = Entrez.read(Entrez.epost('nucleotide', id=",".join(accns)))
+efh = Entrez.efetch(
+    db='nucleotide',
+    webenv=res['WebEnv'],
+    query_key=res['QueryKey'],
+    rettype='gb',
+    retmode=RETMODE,
+)
+
+AUTHORS = '  AUTHORS   '
+TITLE = '  TITLE     '
+JOURNAL = '  JOURNAL   '
+
+
+def log(*args, **kwargs):
+    if not DEBUG:
+        return
+    print('[DEBUG]', *args, file=sys.stderr, **kwargs)
+
+
+refs = {}
+for i in Entrez.parse(efh):
+    accn = i['GBSeq_accession-version']
+    refs[accn] = []
+    for j in i['GBSeq_references']:
+        refs[accn].append(j)
+
+for k, lst in refs.items():
+    for i in lst:
+        pos = i.get('GBReference_position')
+        if pos:
+            pos = '[{}] '.format(pos)
+        else:
+            pos = ''
+
+        xrefs = i.get('GBReference_xref')
+        if xrefs:
+            xrefs = ', ' + ', '.join([
+                ':'.join([
+                    str(x) for x in k.values()
+                ])
+                for k
+                in i.get('GBReference_xref', [])
+            ])
+        else:
+            xrefs = ''
+
+        pubmed = i.get('GBReference_pubmed')
+        if pubmed:
+            pubmed = ', pubmed:' + str(pubmed)
+        else:
+            pubmed = ''
+
+        print(
+            '{}\t{}{}: "{}." {}{}{}'.format(
+                k, pos,
+                ', '.join(i.get('GBReference_authors', ['??'])),
+                i.get('GBReference_title', '??'),
+                i.get('GBReference_journal', '??'),
+                xrefs,
+                pubmed,
+            )
+        )
