@@ -171,6 +171,7 @@ OTHER_EXECUTABLES = \
 # scripts for which help2man can make man pages
 HELP2MAN_EXECUTABLES = \
     aview\
+    blast2citation \
     chop-contigs\
     dada2shared\
     downsample\
