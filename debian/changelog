@@ -1,3 +1,9 @@
+geo-omics-scripts (1.170-1) buster; urgency=medium
+
+  * blast2citations: add option to extract and save the sequences
+
+ -- Robert <heinro@umich.edu>  Tue, 07 Jul 2020 10:23:17 -0400
+
 geo-omics-scripts (1.169-1) buster; urgency=medium
 
   * Add blast2citation script
