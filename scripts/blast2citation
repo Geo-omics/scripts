@@ -49,6 +49,11 @@ argp.add_argument(
     help='Input file column delimiter, <tab> by default',
 )
 argp.add_argument(
+    '--save-seqs',
+    type=argparse.FileType('w'),
+    help='File to which to save sequences in fasta format',
+)
+argp.add_argument(
     '-e', '--email',
     default=None,
     help='User\'s email address, required by NCBI\'s Entrez',
@@ -111,11 +116,23 @@ def log(*args, **kwargs):
 
 
 refs = {}
+seqs = []
 for i in Entrez.parse(efh):
     accn = i['GBSeq_accession-version']
     refs[accn] = []
     for j in i['GBSeq_references']:
         refs[accn].append(j)
+    if args.save_seqs:
+        seqs.append((
+            i['GBSeq_accession-version'],
+            i['GBSeq_definition'],
+            i['GBSeq_sequence'],
+        ))
+
+if args.save_seqs:
+    for a, d, s in seqs:
+        args.save_seqs.write('>{}|{}\n{}\n'.format(a, d, s))
+    args.save_seqs.close()
 
 for k, lst in refs.items():
     for i in lst:
