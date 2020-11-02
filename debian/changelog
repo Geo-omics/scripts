@@ -1,3 +1,9 @@
+geo-omics-scripts (1.171-1) buster; urgency=medium
+
+  * shared2fasta: fix crash when --map option not given
+
+ -- Robert <heinro@umich.edu>  Mon, 02 Nov 2020 15:24:58 -0500
+
 geo-omics-scripts (1.170-1) buster; urgency=medium
 
   * blast2citations: add option to extract and save the sequences
