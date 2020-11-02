@@ -18,7 +18,8 @@
 # with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Take a fasta file and reduce sequences to those OTUs found in a mothur shared file
+Take a fasta file and reduce sequences to those OTUs found in a mothur shared
+file
 """
 import argparse
 from pathlib import Path
@@ -84,24 +85,27 @@ else:
     outfile = Path(args.output)
 
 name_map = {}
-for f in args.map:
-    if not name_map:
-        info('Loading names -> OTU map...', end=' ', flush=True)
-    next_map = {}
-    try:
-        next_map = dict((i.strip().split('\t') for i in f))
-    except Exception as e:
-        args.error('Failed to parse map file {}: {}: {}'
-                   ''.format(f.name, type(e), e))
-    if not name_map:
-        name_map = next_map
-        continue
+if args.map:
+    for f in args.map:
+        if not name_map:
+            info('Loading names -> OTU map...', end=' ', flush=True)
+        next_map = {}
+        try:
+            next_map = dict((i.strip().split('\t') for i in f))
+        except Exception as e:
+            args.error('Failed to parse map file {}: {}: {}'
+                       ''.format(f.name, type(e), e))
+        if not name_map:
+            name_map = next_map
+            continue
 
-    for k, v in name_map.items():
-        # apply next mapping, if possible, but keep original in case of
-        # incomplete mappings.
-        name_map[k] = next_map.get(v, v)
-info(len(name_map))
+        for k, v in name_map.items():
+            # apply next mapping, if possible, but keep original in case of
+            # incomplete mappings.
+            name_map[k] = next_map.get(v, v)
+    info(len(name_map))
+else:
+    info('No map given, assuming OTU/ASV names correspond to sequence names.')
 
 info('Loading shared file...')
 sh = MothurShared(args.shared, threads=args.threads)
@@ -130,7 +134,7 @@ with outfile.open('w') as o:
 
     if otus_remaining:
         if not found_some:
-            info("OTUs from shared file don't mach those in fasta file at all")
+            info('OTUs in shared file don\'t match those in fasta file at all')
         else:
             info('Some OTUs in have no matching sequence in fasta file:',
                  *sorted(otus_remaining), sep='\n')
