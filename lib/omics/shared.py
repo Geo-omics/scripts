@@ -450,7 +450,7 @@ class MothurShared():
                       file=sys.stderr, **kwargs)
 
     def set_accessions(self, prefix=DEFAULT_OTU_NUM_PREFIX, with_map=None,
-                       sort=True, leading_zeros=True):
+                       sort=True, leading_zeros=True, first=1):
         """
         Sets a new OTU-accession scheme
 
@@ -462,22 +462,33 @@ class MothurShared():
             orig_otus = self.counts.sum().sort_values(ascending=False).index
         else:
             orig_otus = self.otus
+        self.counts = self.counts[orig_otus]
 
-        if with_map is None:
-            self.counts = self.counts[orig_otus]
-            size = len(orig_otus)
-            accs = map(str, range(1, size + 1))
-            if leading_zeros:
-                magnitude = math.floor(math.log10(size)) + 1
-                accs = map(lambda x: x.zfill(magnitude), accs)
-            accs = map(lambda x: prefix + x, accs)
-            accs = list(accs)
-        else:
-            accs = [with_map[i] for i in orig_otus]
+        # make reservoir of well-formatted accessions:
+        # TODO: num of leading zeros may differ from with_map
+        size = len(orig_otus)
+        accs = map(str, range(first, first + size))
+        if leading_zeros:
+            magnitude = math.floor(math.log10(first + size)) + 1
+            accs = map(lambda x: x.zfill(magnitude), accs)
+        accs = map(lambda x: prefix + x, accs)
 
-        self.counts.columns = accs
+        new_otus = []
+        for i in orig_otus:
+            if i in with_map:
+                new_otus.append(with_map[i])
+            else:
+                new_otus.append(next(accs))
+
+        if len(set(new_otus)) != size:
+            raise RuntimeError(
+                'Final mapping is not injective, you should increase the '
+                '<first> parameter or check with provided <with_map>'
+            )
+
+        self.counts.columns = new_otus
         self._update_from_counts(trim=False)
-        return dict(zip(orig_otus, accs))
+        return dict(zip(orig_otus, new_otus))
 
 
 class Groups():
