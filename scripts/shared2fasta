@@ -61,6 +61,13 @@ argp.add_argument(
          'the --map option this has no effect',
 )
 argp.add_argument(
+    '-g', '--keep-gaps',
+    action='store_true',
+    help='Keep gaps in sequences.  By default gaps, ("-" characters) are '
+         'removed, since the usual input fasta file comes as an alignment '
+         'from mothur'
+)
+argp.add_argument(
     '-t', '--threads',
     type=int,
     default=1,
@@ -111,32 +118,39 @@ info('Loading shared file...')
 sh = MothurShared(args.shared, threads=args.threads)
 otus_remaining = set(sh.counts.columns[sh.counts.sum() > 0])
 
-info('Processing fasta...')
+info('Reading fasta...')
 found_some = False
-with outfile.open('w') as o:
-    keep = False
-
-    for line in args.fasta:
-        line.strip()
-        if line.startswith('>'):
-            seqname = line.strip().lstrip('>')
-            otu = name_map.get(seqname, seqname)
-            if otu in otus_remaining:
-                found_some = True
-                keep = True
-                o.write('>{}\n'.format(otu))
-                otus_remaining.remove(otu)
+seqs = {}
+otu = None
+for line in args.fasta:
+    line = line.strip()
+    if line.startswith('>'):
+        seqname = line.lstrip('>').split()[0]
+        otu = name_map.get(seqname, seqname)
+        if otu in otus_remaining:
+            found_some = True
+            otus_remaining.remove(otu)
+        else:
+            otu = None
+    else:
+        if otu is not None:
+            if args.keep_gaps:
+                seq = line
             else:
-                keep = False
-        else:
-            if keep:
-                o.write(line)
+                seq = line.replace('-', '').strip('.')
 
-    if otus_remaining:
-        if not found_some:
-            info('OTUs in shared file don\'t match those in fasta file at all')
-        else:
-            info('Some OTUs in have no matching sequence in fasta file:',
-                 *sorted(otus_remaining), sep='\n')
+            seqs[otu] = seq
+
+if otus_remaining:
+    if not found_some:
+        info('OTUs in shared file don\'t match those in fasta file at all')
+    else:
+        info('Some OTUs in have no matching sequence in fasta file:',
+             *sorted(otus_remaining), sep='\n')
+
+info('Writing fasta...')
+with outfile.open('w') as o:
+    for otu, seq in sorted(seqs.items(), key=lambda x: x[0]):
+        o.write(f'>{otu}\n{seq}\n')
 
 info('Output written to', outfile)

@@ -170,6 +170,7 @@ OTHER_EXECUTABLES = \
 
 # scripts for which help2man can make man pages
 HELP2MAN_EXECUTABLES = \
+    asv-map-update \
     aview\
     blast2citation \
     chop-contigs\

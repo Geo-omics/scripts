@@ -19,6 +19,12 @@
 
 """
 Set new OTU numbering scheme
+
+This can be used in the ASV-producing pipeline.  An existing ASV->sequence
+assignment can be supplied.  Any new sequence will be assigned a new ASV
+number.
+
+This script is part of the Schmidt Lab Mothur pipeline.
 """
 import argparse
 from pathlib import Path
@@ -45,13 +51,19 @@ argp.add_argument(
     action='store_true',
     help='Add leading zeros to small numbers',
 )
-mapgrp = argp.add_mutually_exclusive_group()
-mapgrp.add_argument(
+argp.add_argument(
+    '-s', '--start-with',
+    type=int,
+    default=1,
+    help='Accession number to start with.  This should be one larger than the '
+         'largest existing ASV number',
+)
+argp.add_argument(
     '--with-map',
     type=argparse.FileType(),
     help='Use the mapping in given two-column tab-separated text file'
 )
-mapgrp.add_argument(
+argp.add_argument(
     '--save-map',
     type=argparse.FileType('w'),
     help='Save old->new OTU accession mapping in two-column tab-separated text'
@@ -90,6 +102,7 @@ acc_map = sh.set_accessions(
     with_map=acc_map,
     prefix=args.prefix,
     leading_zeros=args.leading_zeros,
+    first=args.start_with,
 )
 if args.save_map is not None:
     for k, v in acc_map.items():
