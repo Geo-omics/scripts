@@ -1,3 +1,12 @@
+geo-omics-scripts (1.172-1) buster; urgency=medium
+
+  * omics.shared: Allow accession setting with numbers starting at an offset
+  * shared-set-accessions: Allow start numbering at an offset
+  * shared2fasta: smallish feature update
+  * Added asv-map-update script, part of Schmidt Lab Mothur pipeline
+
+ -- Robert <heinro@umich.edu>  Sat, 21 Nov 2020 12:00:39 -0500
+
 geo-omics-scripts (1.171-1) buster; urgency=medium
 
   * shared2fasta: fix crash when --map option not given
