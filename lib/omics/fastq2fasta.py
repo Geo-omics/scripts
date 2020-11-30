@@ -35,21 +35,21 @@ def convert(data, output, check=True):
     state = 0
     for line in data:
         if check:
-            if state is 0 and not line.startswith('@'):
+            if state == 0 and not line.startswith('@'):
                 raise RuntimeError('Input not in FASTQ format? Expected line '
                                    'to start with @: {}'.format(line))
-            elif state is 2 and not line == '+\n':
+            elif state == 2 and not line == '+\n':
                 raise RuntimeError('Input not in FASTQ format? Expected + '
                                    'separator line: {}'.format(line))
 
-        if state is 0:
+        if state == 0:
             output.write('>' + line[1:])
-        elif state is 1:
+        elif state == 1:
             output.write(line)
 
         state = (state + 1) % 4
 
-    if state is not 0:
+    if state != 0:
         raise RuntimeError('Input not in FASTQ format? Expected total number '
                            'of lines to be multiple of 4, last line: {}'
                            ''.format(line))
