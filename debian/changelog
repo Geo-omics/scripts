@@ -1,3 +1,9 @@
+geo-omics-scripts (1.173-1) buster; urgency=medium
+
+  * Rename script plotCoverage -> plot-coverage to avoid name collision
+
+ -- Robert <heinro@umich.edu>  Mon, 30 Nov 2020 13:55:25 -0500
+
 geo-omics-scripts (1.172-1) buster; urgency=medium
 
   * omics.shared: Allow accession setting with numbers starting at an offset
