@@ -105,7 +105,7 @@ PERL_SCRIPTS = \
     parseBlastXML\
     parseFastq\
     patchBlastLineage\
-    plotCoverage\
+    plot-coverage\
     postBlast\
     ppt_getGI\
     ppt_getXML\
@@ -222,7 +222,7 @@ BAD_PODS = \
     iClust\
     kmerFreq\
     patchBlastLineage\
-    plotCoverage\
+    plot-coverage\
     removeBlastSubj\
     removeCommentLines\
     tally\
