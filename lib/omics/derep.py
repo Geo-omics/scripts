@@ -75,7 +75,7 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
     highest quality paired duplicate read.
     """
     if rev_in is None:
-        raise NotImplemented('Single reads processing not implemented')
+        raise NotImplementedError('Single reads processing not implemented')
 
     data = {}
     fwd_read_pos = 0
@@ -111,10 +111,10 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                 )
             else:
                 # read to be deleted, goes at end
-                    data[paired_hash] = (
-                        best_mean,
-                        pos_list + [fwd_read_pos]
-                    )
+                data[paired_hash] = (
+                    best_mean,
+                    pos_list + [fwd_read_pos]
+                )
         else:
             data[paired_hash] = (
                 cur_mean,
@@ -155,7 +155,7 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
                        duplicated reads in the forward reads file.
     """
     if rev_in is None or rev_out is None:
-        raise NotImplemented('Single reads processing not implemented')
+        raise NotImplementedError('Single reads processing not implemented')
 
     pos = fwd_in.tell()
     for (fh, rh), (fs, rs), (fp, rp), (fq, rq) in read_groups(fwd_in, rev_in):
