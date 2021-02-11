@@ -1,3 +1,11 @@
+geo-omics-scripts (1.174-1) buster; urgency=medium
+
+  * omics.fastq2fasta: Fix syntax: 'is' with literals are not good
+  * derep: minor flake8 de-linting
+  * derep: allow processing fastq files with non-empty +-separation line headers
+
+ -- Robert <heinro@umich.edu>  Thu, 11 Feb 2021 14:53:53 -0500
+
 geo-omics-scripts (1.173-1) buster; urgency=medium
 
   * Rename script plotCoverage -> plot-coverage to avoid name collision
