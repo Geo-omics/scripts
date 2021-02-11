@@ -92,9 +92,11 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                 raise RuntimeError('Expected fastq header in {}: {}'
                                    ''.format(rev_in.name, rh))
             # TODO: check if headers match
-            if not fp == rp == b'+\n':
-                raise RuntimeError('Expected two + lines:\n{}\n{}'
-                                   ''.format(fp, rp))
+            if not fp.startswith(b'+') or not rp.startswith(b'+'):
+                raise RuntimeError(
+                    'Expected two + lines:\n{}{}'
+                    ''.format(fp.decode()[:50], rp.decode()[:50])
+                )
 
         paired_hash = hash_read_pair(fh, fs, rh, rs)
 
