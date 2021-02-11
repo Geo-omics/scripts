@@ -75,7 +75,7 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
     highest quality paired duplicate read.
     """
     if rev_in is None:
-        raise NotImplemented('Single reads processing not implemented')
+        raise NotImplementedError('Single reads processing not implemented')
 
     data = {}
     fwd_read_pos = 0
@@ -92,9 +92,11 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                 raise RuntimeError('Expected fastq header in {}: {}'
                                    ''.format(rev_in.name, rh))
             # TODO: check if headers match
-            if not fp == rp == b'+\n':
-                raise RuntimeError('Expected two + lines:\n{}\n{}'
-                                   ''.format(fp, rp))
+            if not fp.startswith(b'+') or not rp.startswith(b'+'):
+                raise RuntimeError(
+                    'Expected two + lines:\n{}{}'
+                    ''.format(fp.decode()[:50], rp.decode()[:50])
+                )
 
         paired_hash = hash_read_pair(fh, fs, rh, rs)
 
@@ -111,10 +113,10 @@ def find_duplicates(fwd_in, rev_in=None, *, check=False):
                 )
             else:
                 # read to be deleted, goes at end
-                    data[paired_hash] = (
-                        best_mean,
-                        pos_list + [fwd_read_pos]
-                    )
+                data[paired_hash] = (
+                    best_mean,
+                    pos_list + [fwd_read_pos]
+                )
         else:
             data[paired_hash] = (
                 cur_mean,
@@ -155,7 +157,7 @@ def filter_write(refuse, fwd_in, rev_in, fwd_out, rev_out, check=False,
                        duplicated reads in the forward reads file.
     """
     if rev_in is None or rev_out is None:
-        raise NotImplemented('Single reads processing not implemented')
+        raise NotImplementedError('Single reads processing not implemented')
 
     pos = fwd_in.tell()
     for (fh, rh), (fs, rs), (fp, rp), (fq, rq) in read_groups(fwd_in, rev_in):
