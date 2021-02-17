@@ -27,10 +27,10 @@ def get_version(version=VERSION, raise_on_error=False):
     Get the version string
 
     Get the hard-coded version if possible, then fall back to ask git.  If that
-    fails raise an execption or return an 'unknown' depending on the
+    fails raise an exeception or return an 'unknown' depending on the
     raise_on_error flag.
     """
-    if version:
+    if version is not None:
         return version
 
     try:
