@@ -38,11 +38,15 @@ def get_version(version=VERSION, raise_on_error=False):
             ['git', 'describe'],
             cwd=os.path.dirname(__file__),
             stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=raise_on_error,
         )
     except Exception as e:
-        if raise_on_error:
-            raise RuntimeError('Failed to get version info from git: {}: {}'
-                               ''.format(e.__class__.__name__, e))
+        out = e.stdout.decode()
+        err = e.stderr.decode()
+        raise RuntimeError(
+            'Failed to get version info from git: {}: {}\n{}{}'
+            ''.format(e.__class__.__name__, e, out, err))
     else:
         version = p.stdout.decode().strip()
         # version should be like 1.0.134-42-gd3adb33f
