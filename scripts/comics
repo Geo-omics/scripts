@@ -27,13 +27,11 @@ set -eEu
 
 # Default name of image file without suffix
 DEFAULT_IMAGE_NAME=omics
-# Image file search paths
+# Image file search paths, local paths go first
 CONTAINER_PATH=(
+/var/local/containers
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
-)
-SANDBOX_PATH=(
-/var/local/containers
 )
 
 # shellcheck disable=SC2034
@@ -244,13 +242,7 @@ if $USER_SPECIFIED_IMAGE && [[ -e "$IMAGE" ]]; then
     # user-specified image exist in $(pwd) or full path exists
     image=$IMAGE
 else
-    if $WRITE; then
-        searchpaths=("${SANDBOX_PATH[@]}")
-    else
-        searchpaths=("${CONTAINER_PATH[@]}" "${SANDBOX_PATH[@]}")
-    fi
-
-    for p in "${searchpaths[@]}"; do
+    for p in "${CONTAINER_PATH[@]}"; do
         for suf in "" .img .sandbox; do
             # only *.sandbox should be writable
             $WRITE && [[ $suf == .img ]] && continue
