@@ -178,8 +178,13 @@ eval "_$(declare -f abort)"
 info () { if [[ -n ${sample_dir:-} ]]; then _info "[${sample_dir:-}] $1"; else _info "$1"; fi; }
 abort () { if [[ -n ${sample_dir:-} ]]; then _abort "[${sample_dir:-}] $1"; else _abort "$1"; fi; }
 
-# set CPUS from available cores on pbs job if needed
-[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
+# use available cores on slurm job
+if [[ -v SLURM_JOB_CPUS_PER_NODE && ! -v CPUS ]]; then
+    echo "Detected running as SLURM job, using $SLURM_JOB_CPUS_PER_NODE CPUs"
+    CPUS=${SLURM_JOB_CPUS_PER_NODE}
+fi
+
+[[ -v CPUS ]] || CPUS=$DEFAULT_CPUS
 
 #########################
 # some input sanitation

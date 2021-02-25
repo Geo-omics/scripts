@@ -33,7 +33,11 @@ import sys
 from ._version import get_version
 
 
-__version__ = get_version()
+def __getattr__(name):
+    if name == '__version__':
+        # lazy __version__ attribute since it calls a git subprocess
+        return get_version()
+    raise AttributeError(f'Module {__name__!r} has no attribute {name!r}')
 
 
 OMICS_DIR = '.omics'

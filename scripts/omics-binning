@@ -140,8 +140,13 @@ else
     abort "Sample data directories must be listed as positional parameters." usage
 fi
 
-# set CPUS from pbs job available cores if needed and possible
-[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
+# use available cores on slurm job
+if [[ -v SLURM_JOB_CPUS_PER_NODE && ! -v CPUS ]]; then
+    echo "Detected running as SLURM job, using $SLURM_JOB_CPUS_PER_NODE CPUs"
+    CPUS=${SLURM_JOB_CPUS_PER_NODE}
+fi
+
+[[ -v CPUS ]] || CPUS=$DEFAULT_CPUS
 
 if $USE_CONCOCT && [[ -n "$MAX_CLUSTERS" ]]; then
     [[ $MAX_CLUSTERS -gt 0 ]] || abort "max-cluster parameter must be number greater than 0"

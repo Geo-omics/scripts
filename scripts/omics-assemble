@@ -232,8 +232,13 @@ SAMPLE_DIRS=()
 # default output path is the working directory, which is only defined after sourcing liba.sh
 [ ! -z "$OUTDIR" ] || OUTDIR="ASSEMBLY"
 
-# use available cores on pbs job as needed
-[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
+# use available cores on slurm job
+if [[ -v SLURM_JOB_CPUS_PER_NODE && ! -v CPUS ]]; then
+    echo "Detected running as SLURM job, using $SLURM_JOB_CPUS_PER_NODE CPUs"
+    CPUS=${SLURM_JOB_CPUS_PER_NODE}
+fi
+
+[[ -v CPUS ]] || CPUS=$DEFAULT_CPUS
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then

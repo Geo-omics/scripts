@@ -27,13 +27,11 @@ set -eEu
 
 # Default name of image file without suffix
 DEFAULT_IMAGE_NAME=omics
-# Image file search paths
+# Image file search paths, local paths go first
 CONTAINER_PATH=(
+/var/local/containers
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
-)
-SANDBOX_PATH=(
-/var/local/containers
 )
 
 # shellcheck disable=SC2034
@@ -216,7 +214,7 @@ if $LIST; then
             fi
             continue
         fi
-        find "$p" -maxdepth 1 -type f | xargs -r file | { grep "run-singularity script executable" || true; } | cut -d: -f1 | \
+        find "$p" -maxdepth 1 -type f -exec file '{}' + | { grep "run-singularity script executable" || true; } | cut -d: -f1 | \
             if [[ $VERBOSITY -lt 2 ]]; then
                 xargs -r ls -1rt | xargs -r basename -a
             elif [[ $VERBOSITY == 2 ]]; then
@@ -224,7 +222,7 @@ if $LIST; then
             elif [[ $VERBOSITY -gt 2 ]]; then
                 xargs -r ls -1rth
             fi
-        find "$p" -maxdepth 1 -type d | while read; do
+        find "$p" -maxdepth 1 -type d | while read -r; do
             if [[ -d "$REPLY"/.singularity.d ]]; then
                 if [[ $VERBOSITY -lt 2 ]]; then
                     basename "$REPLY"
@@ -244,13 +242,7 @@ if $USER_SPECIFIED_IMAGE && [[ -e "$IMAGE" ]]; then
     # user-specified image exist in $(pwd) or full path exists
     image=$IMAGE
 else
-    if $WRITE; then
-        searchpaths=("${SANDBOX_PATH[@]}")
-    else
-        searchpaths=("${CONTAINER_PATH[@]}" "${SANDBOX_PATH[@]}")
-    fi
-
-    for p in "${searchpaths[@]}"; do
+    for p in "${CONTAINER_PATH[@]}"; do
         for suf in "" .img .sandbox; do
             # only *.sandbox should be writable
             $WRITE && [[ $suf == .img ]] && continue

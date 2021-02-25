@@ -164,8 +164,13 @@ if [[ ! -v ADAPTERS ]]; then
     fi
 fi
 
-# use available cores on pbs job as needed
-[[ -v CPUS ]] || CPUS=${PBS_NP:-$DEFAULT_CPUS}
+# use available cores on slurm job
+if [[ -v SLURM_JOB_CPUS_PER_NODE && ! -v CPUS ]]; then
+    echo "Detected running as SLURM job, using $SLURM_JOB_CPUS_PER_NODE CPUs"
+    CPUS=${SLURM_JOB_CPUS_PER_NODE}
+fi
+
+[[ -v CPUS ]] || CPUS=$DEFAULT_CPUS
 
 # handle non-option parameters
 if [ "$#" -gt 0 ]; then
@@ -453,7 +458,7 @@ elif [[ $FILTER == derek-bbduk ]]; then
         cd "$tmpd"
         # adapted from Derek's bbmap_qc.sh
         info1 "Removing 3' adapters"
-        bbduk in1="$WORK_DIR/$fwd_trim_in" in2="$WORK_DIR/$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$ADAPTERS" ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
+        bbduk in1="$fwd_trim_in" in2="$rev_trim_in" out1="$tmpd"/rtrim_fwd.fastq out2="$tmpd"/rtrim_rev.fastq ref="$ADAPTERS" ktrim=r k=21 mink=8 hdist=2 ftm=5 tpe tbo threads="$CPUS"
 
         # Now Remove 5' adapters, allowing 2 mismatches, trim paired ends to equal length:
         info1 "Removing 5' adapters"
