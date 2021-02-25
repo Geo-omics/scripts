@@ -1,3 +1,15 @@
+geo-omics-scripts (1.175-1) buster; urgency=medium
+
+  * omics: make omics.__version__ module attribute lazy
+  * omics: fix the raise_on_error flag of get_version()
+  * omics: fix get_version() to correctly recognize unset hard-coded version
+  * comics: Detect images on local filesystem at /var/local/container
+  * comics: minor de-linting, follow a couple of shellcheck reommendations
+  * Automatically sense number of CPUs on Slurm for omics- scripts
+  * omics-qc: fix bbduk invocation when using --fwd and --rev options
+
+ -- Robert <heinro@umich.edu>  Thu, 25 Feb 2021 15:55:59 -0500
+
 geo-omics-scripts (1.174-1) buster; urgency=medium
 
   * omics.fastq2fasta: Fix syntax: 'is' with literals are not good
