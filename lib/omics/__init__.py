@@ -191,10 +191,7 @@ class OmicsArgParser(argparse.ArgumentParser):
                 try:
                     args.threads = project['threads']
                 except (TypeError, AttributeError, KeyError):
-                    if 'PBS_ENVIRONMENT' in environ:
-                        args.threads = get_num_cpus()
-                    else:
-                        args.threads = DEFAULT_THREADS
+                    args.threads = DEFAULT_THREADS
             else:
                 if args.threads <= 0:
                     self.error('The number of threads given via --threads '
@@ -321,28 +318,32 @@ def get_num_cpus():
     On a non-PBS system, i.e. some shared machine, 1/2 the available CPUs are
     taken.
     """
-    if 'PBS_ENVIRONMENT' in environ:
-        try:
-            num_cpus = int(environ.get('PBS_NP'))
-        except Exception as e:
-            print('omics [WARNING]: Failed to read PBS_NP variable: {}: {}'
-                  ''.format(e.__class__.__name__, e), file=sys.stderr)
-            num_cpus = 1
-    else:
-        # `lscpu -p=cpu` prints list of cpu ids, starting with 0, so take last
-        # line, divide by 2 (sharing the system) add 1 is the number of CPUs
-        # used
-        try:
-            p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
-            p.check_returncode()
-            num_cpus = p.stdout.decode().splitlines()[-1].strip()
-            num_cpus = int(int(num_cpus) / 2) + 1
-        except Exception as e:
-            print('omics [WARNING]: Failed to obtain number of CPUs: {}: {}'
-                  ''.format(e.__class__.__name__, e), file=sys.stdout)
-            num_cpus = 1
+    envvars = [
+        'PBS_ENVIRONMENT',
+        'SLURM_JOB_CPUS_PER_NODE',
+    ]
 
-    return num_cpus
+    for i in envvars:
+        if i in environ:
+            try:
+                return int(environ.get(i))
+            except Exception as e:
+                print('omics [WARNING]: Failed to read {} variable: {}: {}'
+                      ''.format(i, e.__class__.__name__, e), file=sys.stderr)
+                return 1
+
+    # `lscpu -p=cpu` prints list of cpu ids, starting with 0, so take last
+    # line, divide by 2 (sharing the system) add 1 is the number of CPUs
+    # used
+    try:
+        p = subprocess.run(['lscpu', '-p=cpu'], stdout=subprocess.PIPE)
+        p.check_returncode()
+        num_cpus = p.stdout.decode().splitlines()[-1].strip()
+        return int(int(num_cpus) / 2) + 1
+    except Exception as e:
+        print('omics [WARNING]: Failed to obtain number of CPUs: {}: {}'
+              ''.format(e.__class__.__name__, e), file=sys.stdout)
+        return 1
 
 
 def get_argparser(*args, **kwargs):
