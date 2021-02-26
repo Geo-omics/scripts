@@ -151,7 +151,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         if self.auto_complete:
             try:
                 self.bash_complete(args)
-            except:
+            except Exception:
                 if 'OMICS_AUTO_COMPLETE_DEBUG' in environ:
                     raise
             sys.exit()
@@ -676,7 +676,7 @@ def get_available_commands():
     ret = set()
     try:
         commands = get_available_scripts()
-    except:
+    except Exception:
         pass
     else:
         for i in commands:
