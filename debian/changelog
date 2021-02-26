@@ -1,3 +1,13 @@
+geo-omics-scripts (1.176-1) buster; urgency=medium
+
+  * omics: fix regression of --version command line option
+  * omics: minor de-linting
+  * qc: fix edge case in adapter file detection
+  * omics: detect core number for omics wrapper in SLURM environments
+  * qc: fix directories in derek-bbduk workflow
+
+ -- Robert <heinro@umich.edu>  Fri, 26 Feb 2021 16:17:03 -0500
+
 geo-omics-scripts (1.175-1) buster; urgency=medium
 
   * omics: make omics.__version__ module attribute lazy
