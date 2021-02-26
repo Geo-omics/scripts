@@ -34,8 +34,9 @@ from ._version import get_version
 
 
 def __getattr__(name):
+    # Define a lazy __version__ attribute for this module
+    # get_version() can be expensive / calls a git subprocess
     if name == '__version__':
-        # lazy __version__ attribute since it calls a git subprocess
         return get_version()
     raise AttributeError(f'Module {__name__!r} has no attribute {name!r}')
 
@@ -158,7 +159,7 @@ class OmicsArgParser(argparse.ArgumentParser):
         args, argv = super().parse_known_args(args, namespace)
 
         if args.version:
-            print(__version__)
+            print(get_version())
             self.exit()
 
         if 'OMICS_DEBUG' in environ:
