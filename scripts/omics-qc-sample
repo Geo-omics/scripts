@@ -117,7 +117,7 @@ set_default_scythe_adapters () {
     while [ $# -gt 0 ] && [ ! -r "$1" ]; do
         shift
     done
-    ADAPTERS_SCYTHE=$1
+    ADAPTERS_SCYTHE=${1:-}
 }
 set_default_scythe_adapters $ADAPTERS_DEBIAN $ADAPTERS_FLUX $ADAPTERS_VONDAMM
 
