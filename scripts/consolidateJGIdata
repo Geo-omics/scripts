@@ -401,7 +401,7 @@ foreach(keys %bins){
 	print $_."\t".$bins{$_}{"Contigs"}."\t".($bins{$_}{"Contigs"}/$totalContigs)."\t".$genes_per_bin{$_}."\t".($genes_per_bin{$_}/$totalGenes)."\t".$bins{$_}{"Bases"}."\t".($bins{$_}{"GC"}/$bins{$_}{"Contigs"})."\t".$numCDS{$_}."\n";
 }
 
-if ($fasta && -e $ess){
+if ($fasta){
 	&REAP;
 }
 
