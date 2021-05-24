@@ -1,3 +1,9 @@
+geo-omics-scripts (1.177-1) buster; urgency=medium
+
+  * consolidateJGIdata: fix regression, didn't compile
+
+ -- Robert <heinro@umich.edu>  Mon, 24 May 2021 10:19:49 -0400
+
 geo-omics-scripts (1.176-1) buster; urgency=medium
 
   * omics: fix regression of --version command line option
