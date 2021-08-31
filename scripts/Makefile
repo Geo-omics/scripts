@@ -245,8 +245,9 @@ $(man_pages_pod):
 # The --version option can display the version as VERSION_PLACEHOLDER that can
 # be replaces with the real version when distributing (see also distdir target)
 $(man_pages_h2m): name = $(subst .1,,$@)
-$(man_pages_h2m): short = $(shell ./$(name) --help | grep -m1 -A1 "^$$" | tail -n1)
+$(man_pages_h2m): short = $(shell PYTHONPATH=../lib ./$(name) --help | grep -m1 -A1 "^$$" | tail -n1)
 $(man_pages_h2m): version ?= unknown_version
+$(man_pages_h2m): export PYTHONPATH=../lib
 $(man_pages_h2m):
 	$(info help2man manpage for $(name))
 	@help2man --locale en_US.UTF-8 --no-info --name "$(short)" --source "geo-omics-scripts $(version)" --output $(name).1 ./$(name)
