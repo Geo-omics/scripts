@@ -1,3 +1,10 @@
+geo-omics-scripts (1.178-1) buster; urgency=medium
+
+  * Makefile: fix help2man invocation for script importing from omics
+  * Makefile: fix install directory for bash completion
+
+ -- Robert <heinro@umich.edu>  Tue, 31 Aug 2021 13:52:41 -0400
+
 geo-omics-scripts (1.177-1) buster; urgency=medium
 
   * consolidateJGIdata: fix regression, didn't compile
