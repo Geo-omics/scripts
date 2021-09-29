@@ -433,7 +433,7 @@ else
             bbnorm_args+=($OMICS_BBNORM_EXTRA)
         fi
         for i in "${bbnorm_args[@]}"; do echo "$i"; done
-        /usr/bin/time -v bbnorm "${bbnorm_args[@]}" |& tee "$bbnorm_log"
+        /usr/bin/time -v bbnorm.sh "${bbnorm_args[@]}" |& tee "$bbnorm_log"
         if [[ -n "$int_norm_reads" ]]; then
             int_reads_arg=$int_norm_reads
         else
