@@ -13,7 +13,7 @@ Multi-Arch: foreign
 Depends: ${misc:Depends}, ${python3:Depends}
 Recommends: bowtie2, checkm-genome, concoct, fastqc, idba, libjs-jquery,
  libjs-underscore, libjs-modernizr, megahit, ncbi-blast+, phylosift, quast,
- samtools, scythe, sickle
+ samtools, scythe, sickle, bbmap
 Description: Tools to process and analyse metagenomic sequencing data
  A collection of various tools and scripts used by the Geomicrobiology group at
  the Dept. of Earth & Environmental Sciences at the University of Michigan.
