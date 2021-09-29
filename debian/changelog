@@ -1,3 +1,10 @@
+geo-omics-scripts (1.179-1) bullseye; urgency=medium
+
+  * scripts: call bbtools' bbduk/bbnorm scripts with .sh suffix
+  * d/control: add bbmap as recommend
+
+ -- Robert <heinro@umich.edu>  Wed, 29 Sep 2021 09:42:04 -0400
+
 geo-omics-scripts (1.178-1) buster; urgency=medium
 
   * Makefile: fix help2man invocation for script importing from omics
