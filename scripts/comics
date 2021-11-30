@@ -107,7 +107,7 @@ LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,nor
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
-            (-B|--bind) MOUNT_POINTS+=("$2"); return 2;;
+            (-B|--bind) BIND_PATHS+=("$2"); return 2;;
 	    (-i|--container-image)
                 IMAGE=$2
                 USER_SPECIFIED_IMAGE=true
@@ -156,11 +156,14 @@ KEEP_ENV_MODULES=false
 KEEP_PROMPT=false
 LIST=false
 # useful mounts for flux and geomicro servers, will only be used if they exist
-# NOTE: assuming on flux /scratch and /nfs are mounted via /etc/../singularity.conf
-#       including it here may produce two warnings each time comics is called
-MOUNT_POINTS=(
+# NOTE: assuming on flux /scratch and /nfs are mounted via
+# /etc/singularity/singularity.conf including it here may produce two warnings
+# each time comics is called
+BIND_PATHS=(
 /dept
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
+/etc/passwd
+/etc/group
 )
 NORC=false
 OLD_START_UP=false
@@ -286,11 +289,13 @@ if $UPDATE; then
     exit
 fi
 
-for i in "${MOUNT_POINTS[@]}"; do
+for i in "${BIND_PATHS[@]}"; do
     # assume no colon in pathname
-    if [[ -d "${i%%:*}" ]]; then
+    if [[ -e "${i%%:*}" ]]; then
         SINGULARITY_ARGS+=(-B "$i")
-        [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Mounting: $i"
+        [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Binding: $i"
+    else
+        [[ $VERBOSITY -lt 2 ]] || debug 1>&2 "Bind path not found: $i"
     fi
 done
 
