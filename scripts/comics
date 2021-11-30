@@ -29,9 +29,9 @@ set -eEu
 DEFAULT_IMAGE_NAME=omics
 # Image file search paths, local paths go first
 CONTAINER_PATH=(
-/var/local/containers
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
+/var/local/containers
 )
 
 # shellcheck disable=SC2034
@@ -247,7 +247,11 @@ else
             # only *.sandbox should be writable
             $WRITE && [[ $suf == .img ]] && continue
             _image=${p}/${IMAGE}${suf}
-            [[ -e "$_image" ]] && image=$_image && break 2
+            if [[ -e "$_image" ]]; then
+                image=$_image && break 2
+            else
+                [[ $VERBOSITY -lt 2 ]] || debug 1>&2 "image not found: $_image"
+            fi
         done
     done
 fi
