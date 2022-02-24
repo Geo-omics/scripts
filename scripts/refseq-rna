@@ -42,9 +42,16 @@ else
     CURL="curl --silent"
 fi
 
-echo -n "Getting current RefSeq release number... "
-refseq_release=$($CURL $URL/RELEASE_NUMBER)
-echo "$refseq_release"
+if [[ -z ${REFSEQ_RELEASE:-} ]]; then
+    echo -n "Getting current RefSeq release number... "
+    refseq_release=$($CURL $URL/RELEASE_NUMBER)
+    archive_part=
+    echo "$refseq_release"
+else
+    refseq_release=$REFSEQ_RELEASE
+    # assume given release number is from archive, not the current one
+    archive_part=archive/
+fi
 [[ $refseq_release =~ [0-9]+ ]] || (echo "Failed to get RefSeq release number, got: ${refseq_release}"; exit 1)
 
 out_dir="$WORK_DIR/refseq$refseq_release"
@@ -52,7 +59,7 @@ $MKDIR "$out_dir" || (echo "Directory exists alread: $out_dir"; exit 1)
 
 log=$out_dir/refseq-rna.log
 
-files_installed=$URL/release-catalog/release${refseq_release}.files.installed
+files_installed=$URL/release-catalog/${archive_part}release${refseq_release}.files.installed
 curl --silent "$files_installed" | grep -o -P '(archaea|bacteria).[0-9]+\.rna\.fna\.gz' | sort -n |
     while read -r i; do
 	echo -n "Getting $i... "
@@ -72,7 +79,9 @@ done
 
 echo -n "Finishing... "
 # no need to ever touch these files again
-chmod -R -w "$out_dir"
+chmod -w "$out_dir"/*
 
-$RM -f latest && $LN -s "$(basename "$out_dir")" latest
+if [[ -z ${REFSEQ_RELEASE:-} ]]; then
+    $RM -f latest && $LN -s "$(basename "$out_dir")" latest
+fi
 echo "done"
