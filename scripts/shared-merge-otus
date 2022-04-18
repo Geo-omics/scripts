@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+
+# Copyright 2022 Regents of The University of Michigan.
+
+# This file is part of geo-omics-scripts.
+
+# Geo-omics-scripts is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# Geo-omics-scripts is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with Geo-omics-scripts.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+combine groups of ASVs/OTUs of a mothur shared file
+
+This scrip can take a shared and a cons.taxonomy file and sum up the abundances
+to a given taxonomic rank.
+"""
+import argparse
+from pathlib import Path
+import re
+
+import pandas
+
+
+# RDP taxonomic ranks
+RANKS = (
+    'domain',
+    'phylum',
+    'class',
+    'order',
+    'family',
+    'genus',
+)
+DEFAULT_RANK = RANKS[-1]
+
+
+argp = argparse.ArgumentParser(description=__doc__)
+argp.add_argument(
+    'shared_file',
+    help='Mothur shared (or similar) file.',
+)
+arggrp = argp.add_mutually_exclusive_group()
+arggrp.add_argument(
+    '--cons-taxonomy',
+    type=argparse.FileType(),
+    help='A cons.taxonomy file from Mothur.'
+)
+arggrp.add_argument(
+    '--generic-groupings',
+    type=argparse.FileType(),
+    help='Generic group definition file; Format: one line per grouping, '
+         'line format: <leader><tab><member>,<member>,...',
+)
+argp.add_argument(
+    '-r', '--rank',
+    default=DEFAULT_RANK,
+    choices=RANKS,
+    help=f'Taxonomic rank at which to group.  Use this only together with the '
+         f'--cons-taxonomy option.  Default is {DEFAULT_RANK}',
+)
+argp.add_argument(
+    '--debug',
+    action='store_true',
+    help='prints debugging info',
+)
+argp.add_argument('--version', action='version', version='%(prog)s '
+                  'is part of geo-omics-scripts VERSION_PLACEHOLDER')
+
+args = argp.parse_args()
+
+
+# GET GROUP->OTUs MAPPING
+groups = {}
+rank = None
+if args.cons_taxonomy:
+    rank = RANKS.index(args.rank)
+    score_pat = re.compile(r'\([0-9-]+\)$')
+    head = args.cons_taxonomy.readline().split()
+    if head != ['OTU', 'Size', 'Taxonomy']:
+        print('WARNING: unexpected header for cons.taxonomy file')
+    for line in args.cons_taxonomy:
+        otu, _, lineage = line.rstrip().split('\t')
+        taxon = lineage.split(';')[rank]
+        taxon = score_pat.sub('', taxon)  # rm score
+        if taxon not in groups:
+            groups[taxon] = []
+        groups[taxon].append(otu)
+else:
+    # use generic group definition file
+    for line in args.grouping_file:
+        leader, members, *_ = line.rstrip('\n').split('\t')
+        if not members:
+            continue
+        members = members.split(',')
+        groups[leader] = members
+    args.grouping_file.close()
+
+# READ ABUNDANCES
+mothur_mode = False
+with open(args.shared_file) as f:
+    if f.readline().split()[:3] == ['label', 'Group', 'numOtus']:
+        # is a Mothur shared file
+        mothur_mode = True
+        index_col = 1
+    else:
+        # non-mothur abundance table, assume sample ID colum is first
+        index_col = 0
+    f.seek(0)
+    data = pandas.read_table(f, index_col=index_col)
+
+if args.debug:
+    print(data, data.sum().sum())
+
+# ADD UP COLUMNS, RM INDIVIDUAL GROUP MEMBERS
+# non-existing members are ignored; the leader (new group name) may or may not
+# already exist
+columns0 = set(data.columns)
+to_drop = []
+for leader, members in groups.items():
+    to_drop += [i for i in members if i in columns0]
+    if leader in columns0:
+        members.append(leader)
+    existing_members = [i for i in members if i in columns0]
+    data[leader] = data[existing_members].sum(axis=1)
+data = data.drop(columns=to_drop)
+
+if mothur_mode:
+    data['numOtus'] = len(data.columns) - 2
+    if rank is None:
+        data['label'] = 'custom'  # generic groupings were used
+    else:
+        data['label'] = RANKS[rank]
+
+# REMOVE EMPTY COLUMNS
+# (they may come with the input data, and would have 0.0 entries)
+zero_cols = data.columns[data.sum() == 0]
+data = data.drop(columns=zero_cols)
+
+# OUTPUT
+inpath = Path(args.shared_file)
+outname = inpath.stem + f'.{RANKS[rank]}'
+if inpath.suffix:
+    outname += inpath.suffix
+outpath = inpath.parent / outname
+if mothur_mode:
+    data.insert(1, 'Group', data.index)
+    data.to_csv(outname, index=False, sep='\t')
+else:
+    data.to_csv(outname, sep='\t')
+print('saved to:', outpath)
+
+if args.debug:
+    print(data, data.sum().sum())
