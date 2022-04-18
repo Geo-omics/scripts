@@ -29,9 +29,9 @@ set -eEu
 DEFAULT_IMAGE_NAME=omics
 # Image file search paths, local paths go first
 CONTAINER_PATH=(
-/var/local/containers
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
+/var/local/containers
 )
 
 # shellcheck disable=SC2034
@@ -107,7 +107,7 @@ LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,nor
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
-            (-B|--bind) MOUNT_POINTS+=("$2"); return 2;;
+            (-B|--bind) BIND_PATHS_EXTRA+=("$2"); return 2;;
 	    (-i|--container-image)
                 IMAGE=$2
                 USER_SPECIFIED_IMAGE=true
@@ -156,12 +156,16 @@ KEEP_ENV_MODULES=false
 KEEP_PROMPT=false
 LIST=false
 # useful mounts for flux and geomicro servers, will only be used if they exist
-# NOTE: assuming on flux /scratch and /nfs are mounted via /etc/../singularity.conf
-#       including it here may produce two warnings each time comics is called
-MOUNT_POINTS=(
+# NOTE: assuming on flux /scratch and /nfs are mounted via
+# /etc/singularity/singularity.conf including it here may produce two warnings
+# each time comics is called
+BIND_PATHS=(
 /dept
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
+/etc/passwd
+/etc/group
 )
+BIND_PATHS_EXTRA=()
 NORC=false
 OLD_START_UP=false
 # by default run bash without --rcfile unless we do the old start style
@@ -247,7 +251,11 @@ else
             # only *.sandbox should be writable
             $WRITE && [[ $suf == .img ]] && continue
             _image=${p}/${IMAGE}${suf}
-            [[ -e "$_image" ]] && image=$_image && break 2
+            if [[ -e "$_image" ]]; then
+                image=$_image && break 2
+            else
+                [[ $VERBOSITY -lt 2 ]] || debug 1>&2 "image not found: $_image"
+            fi
         done
     done
 fi
@@ -267,10 +275,9 @@ if $UPDATE; then
     [[ -d "$sandbox" ]] || abort "Sandbox does not exists: $sandbox"
     local_temp_image=/tmp/${image_name}.new
     [[ -e "$local_temp_image" ]] && rm -- "$local_temp_image"
-    info "Checking sandbox..."
-    singularity check "$sandbox"
     info "Building local temp image at $local_temp_image ..."
-    fakeroot singularity build "$local_temp_image" "$sandbox"
+    info "Need to be root to run build command:"
+    sudo singularity build "$local_temp_image" "$sandbox"
     info "Build done, moving to destination..."
     new_image=${image}.new
     mv -v -- "$local_temp_image" "$new_image"
@@ -282,11 +289,22 @@ if $UPDATE; then
     exit
 fi
 
-for i in "${MOUNT_POINTS[@]}"; do
+bind_paths=()
+if ! $WRITE && [[ -v BIND_PATHS[@] ]]; then
+    # skip default bind paths for sandboxes (/etc/passwd/group interferes with apt)
+    bind_paths+=("${BIND_PATHS[@]}")
+fi
+if [[ -v BIND_PATHS_EXTRA[@] ]]; then
+    bind_paths+=("${BIND_PATHS_EXTRA[@]}")
+fi
+
+for i in "${bind_paths[@]:-()}"; do
     # assume no colon in pathname
-    if [[ -d "${i%%:*}" ]]; then
+    if [[ -e "${i%%:*}" ]]; then
         SINGULARITY_ARGS+=(-B "$i")
-        [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Mounting: $i"
+        [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Binding: $i"
+    else
+        [[ $VERBOSITY -lt 2 ]] || debug 1>&2 "Bind path not found: $i"
     fi
 done
 

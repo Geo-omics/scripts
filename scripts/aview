@@ -217,6 +217,11 @@ def get_args():
         type=argparse.FileType(),
         help='Multiple alignment in fasta format',
     )
+    argp.add_argument(
+        '-t', '--trim-gap-only-columns',
+        action='store_true',
+        help='Remove columns that only contain gaps/dashes',
+    )
     argp.add_argument('--version', action='version', version='%(prog)s '
                       'is part of geo-omics-scripts VERSION_PLACEHOLDER')
 
@@ -312,10 +317,29 @@ def print_debug():
         print(*args, file=file, **kwargs)
 
 
+def trim_gaps_only(data):
+    onlygaps = set(range(alen(data)))
+    for _, _, seq in data:
+        for i in list(onlygaps):
+            if seq[i] != '-':
+                onlygaps.remove(i)
+
+    newdata = []
+    for x, name, seq in data:
+        newseq = ''
+        for i, b in enumerate(seq):
+            if i not in onlygaps:
+                newseq += b
+        newdata.append((x, name, newseq))
+    return newdata
+
+
 debug_out = []
 try:
     args = get_args()
     data = load_data(args.infile)
+    if args.trim_gap_only_columns:
+        data = trim_gaps_only(data)
     data = label_uniq_seqs(data)
     var_ranks = get_variant_ranks(data)
     curses.wrapper(main, data, var_ranks)

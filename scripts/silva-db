@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2019 Regents of The University of Michigan.
+# Copyright 2019, 2022 Regents of The University of Michigan.
 
 # This file is part of geo-omics-scripts.
 
@@ -46,6 +46,8 @@ echo -n "Getting current SIVLA db release number... "
 # slash after url makes curl list directory in complex format, -> indicates a symlink
 release=$($CURL $URL/ | grep -o "current.*" | sed -r 's/current -> release_//')
 [[ $release =~ [0-9]+ ]] || (echo; echo "Failed to get current SIVLA db release number, got: ${release}"; exit 1)
+# for point releases, replace _ by .
+release=${release/_/.}
 echo "$release"
 
 out_dir="$WORK_DIR/release_$release"
