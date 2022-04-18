@@ -1,3 +1,15 @@
+geo-omics-scripts (1.180-1) bullseye; urgency=medium
+
+  * comics: "fix" for finding the default container on alpena
+  * comics: Bind to /etc/passwd+group files for better local system integration
+  * aview: add --trim-gap-only-columns option
+  * [silva-db] Fix to handle SILVA point releases
+  * refseq-rna: fixed (sorry, forgot details)
+  * comics: add support for singularity 3.*, drop version 2.* support
+  * Add shared-merge-otus tool
+
+ -- Robert <heinro@umich.edu>  Mon, 18 Apr 2022 15:13:01 -0400
+
 geo-omics-scripts (1.179-1) bullseye; urgency=medium
 
   * scripts: call bbtools' bbduk/bbnorm scripts with .sh suffix
