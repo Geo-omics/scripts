@@ -277,7 +277,7 @@ if $UPDATE; then
     [[ -e "$local_temp_image" ]] && rm -- "$local_temp_image"
     info "Building local temp image at $local_temp_image ..."
     info "Need to be root to run build command:"
-    sudo singularity build "$local_temp_image" "$sandbox"
+    sudo nice singularity build "$local_temp_image" "$sandbox"
     info "Build done, moving to destination..."
     new_image=${image}.new
     cp -av -- "$local_temp_image" "$new_image"
