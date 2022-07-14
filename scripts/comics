@@ -29,9 +29,9 @@ set -eEu
 DEFAULT_IMAGE_NAME=omics
 # Image file search paths, local paths go first
 CONTAINER_PATH=(
+/var/local/containers
 /dept/geology/geomicro/data9/flux
 /geomicro/data9/flux
-/var/local/containers
 )
 
 # shellcheck disable=SC2034
@@ -246,8 +246,8 @@ if $USER_SPECIFIED_IMAGE && [[ -e "$IMAGE" ]]; then
     # user-specified image exist in $(pwd) or full path exists
     image=$IMAGE
 else
-    for p in "${CONTAINER_PATH[@]}"; do
-        for suf in "" .img .sandbox; do
+    for suf in "" .img .sandbox; do
+        for p in "${CONTAINER_PATH[@]}"; do
             # only *.sandbox should be writable
             $WRITE && [[ $suf == .img ]] && continue
             _image=${p}/${IMAGE}${suf}
@@ -280,10 +280,18 @@ if $UPDATE; then
     sudo singularity build "$local_temp_image" "$sandbox"
     info "Build done, moving to destination..."
     new_image=${image}.new
-    mv -v -- "$local_temp_image" "$new_image"
+    cp -av -- "$local_temp_image" "$new_image"
     info "Renaming new image, keeping backup..."
     mv -v --backup=numbered "$new_image" "$image"
     info "New image at $image"
+    local_image=/var/local/containers/$(basename "$image")
+    mv -v -- "$local_temp_image" "$local_image"
+    info "Local image at $local_image"
+    # assume we're on alpena
+    for host in vondamm cayman; do
+        scp -p "$local_image" "$host:$local_image"
+        info "Server-local image at $host:$local_image"
+    done
     info "Saved backup images:"
     ls -l "$image".~*~
     exit

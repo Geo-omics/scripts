@@ -236,6 +236,7 @@ standalone-comics:
 	# 4. remove mark
 	$(info Building standalone $(prog) ...)
 	sed -n '/^trap/,/not accessible/p' lib/liba.sh > $(insert_tmp)
+	rm -f -- $(comics_temp)
 	cat $(prog) \
 	    | sed "/liba.sh/,/liba.sh/c BORK42" \
 	    | sed "/BORK42/r $(insert_tmp)" \
