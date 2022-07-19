@@ -305,7 +305,7 @@ if $UPDATE; then
 fi
 
 bind_paths=()
-if ! $WRITE && [[ -v BIND_PATHS[@] ]]; then
+if ! $WRITE; then
     # skip default bind paths for sandboxes (/etc/passwd/group interferes with apt)
     bind_paths+=("${BIND_PATHS[@]}")
 fi
