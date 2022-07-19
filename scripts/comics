@@ -27,11 +27,12 @@ set -eEu
 
 # Default name of image file without suffix
 DEFAULT_IMAGE_NAME=omics
+GEOMICRO_STORAGE=/geomicro/data9/flux
 # Image file search paths, local paths go first
 CONTAINER_PATH=(
 /var/local/containers
-/dept/geology/geomicro/data9/flux
-/geomicro/data9/flux
+/dept/geology/$GEOMICRO_STORAGE
+$GEOMICRO_STORAGE
 )
 
 # shellcheck disable=SC2034
@@ -161,6 +162,7 @@ LIST=false
 # each time comics is called
 BIND_PATHS=(
 /dept
+/nfs
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
 /etc/passwd
 /etc/group
@@ -183,6 +185,8 @@ WRITE=false
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo 1>&2 "Failed to source script library"; exit 1)
 
+
+[[ $VERBOSITY -gt 2 ]] && debug "script path: $0"
 ###############
 # sanity check
 ###############
@@ -282,18 +286,21 @@ if $UPDATE; then
     new_image=${image}.new
     cp -av -- "$local_temp_image" "$new_image"
     info "Renaming new image, keeping backup..."
-    mv -v --backup=numbered "$new_image" "$image"
+    geomicro_img="$GEOMICRO_STORAGE/$(basename "$image")"
+    # copy to /geomicro/... with mv for numbered backup + atomicity
+    mv -v --backup=numbered "$new_image" "$geomicro_img"
     info "New image at $image"
     local_image=/var/local/containers/$(basename "$image")
-    mv -v -- "$local_temp_image" "$local_image"
+    # use rsync for atomicity
+    rsync -v "$local_temp_image" "$local_image"
     info "Local image at $local_image"
     # assume we're on alpena
     for host in vondamm cayman; do
-        scp -p "$local_image" "$host:$local_image"
+        rsync -av "$local_image" "$host:$local_image"
         info "Server-local image at $host:$local_image"
     done
     info "Saved backup images:"
-    ls -l "$image".~*~
+    ls -l "$geomicro_img".~*~
     exit
 fi
 
