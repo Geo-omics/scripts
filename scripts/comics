@@ -19,9 +19,9 @@
 
 
 # comics is a convenience wrapper to execute commands inside certain
-# singularity containers in the Geomicrobiology group's and Flux computing
+# apptainer containers in the Geomicrobiology group's and Flux computing
 # environments at the University of Michigan as well as to manage said
-# singularity containers.  It may be of little use outside these environments.
+# apptainer containers.  It may be of little use outside these environments.
 
 set -eEu
 
@@ -47,13 +47,21 @@ options with unintended consequences likely.
     COMMAND     Command line to execute inside the container environment.  If
                 this is empty then a bash prompt will be provided.
 
+    -a <option>, --apptainer-opt <option>
+                Options passed on to apptainer.  For instance,
+                to additionally mount a path /some/path, add
+                --apptainer-opt \"-B /some/path\" and the option
+                -B /some-path will be appended to the call
+                to 'apptainer run'.  The empty space between the
+                option and its parameter must be protected by quotes
+                to prevent premature word splitting by the shell.
     -B PATH, --bind PATH
                 Mount path inside container.  On FLUX and the geomirco servers
                 common storage will be available.
     -i <IMAGE>, --container-image <IMAGE>
                 Specify the container image to use.  This can be the full file
                 name or base name (without suffix) or the full path to the
-                singularity container image.  If a full filename is given and
+                apptainer container image.  If a full filename is given and
                 it is not a file in the current directory or a base name is
                 given then the program will search for the container image in
                 these locations in this order:
@@ -74,7 +82,7 @@ options with unintended consequences likely.
                 (not recommended, this causes host-container interactions)
     --norc      Do not use the omics container's default initialization file
                 when starting bash (if no command is given). This is also
-                singularity's default behaviour.
+                apptainer's default behaviour.
     --old-start start the container the old way (for older copies of the container)
     -p, --keep-prompt
                 Do not prepend (name) to the bash prompt if started without COMMAND
@@ -82,14 +90,6 @@ options with unintended consequences likely.
                 Provide a file to initialize the bash shell.  This option will
                 be passed to the bash shell if no command is given and the
                 shell is invoked.
-    -s <option>, --singularity-opt <option>
-                Options passed on to singularity.  For instance,
-                to additionally mount a path /some/path, add
-                --singularity \"-B /some/path\" and the option
-                -B /some-path will be appended to the call
-                to 'singularity exec'.  The empty space between the
-                option and its parameter must be protected by quotes
-                to prevent premature word splitting by the shell.
     -u, --update
                 Update the container specified by -i with its sandbox version
                 located at /var/local/container/NAME.sandbox where NAME is the
@@ -108,6 +108,9 @@ LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,nor
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
+	    (-a|--apptainer-opt)
+                APPTAINER_ARGS+=("$2")
+		return 2;;
             (-B|--bind) BIND_PATHS_EXTRA+=("$2"); return 2;;
 	    (-i|--container-image)
                 IMAGE=$2
@@ -123,9 +126,6 @@ handle_options () {
             (--norc) NORC=true; return 1;;
             (-p|--keep-prompt) KEEP_PROMPT=true; return 1;;
             (--rcfile) RCFILE=$2; return 2;;
-	    (-s|--singularity)
-                SINGULARITY_ARGS+=("$2")
-		return 2;;
             (-w|--write)
                 WRITE=true
                 return 1;;
@@ -173,7 +173,7 @@ OLD_START_UP=false
 # by default run bash without --rcfile unless we do the old start style
 RCFILE=
 OLD_START_RCFILE=/.singularity.d/specs/bashrc
-SINGULARITY_ARGS=()
+APPTAINER_ARGS=()
 #
 UPDATE=false
 # Image is considered not user-specified, i.e. using default unless -i option given
@@ -191,8 +191,8 @@ WRITE=false
 # sanity check
 ###############
 
-if [[ -n "${SINGULARITY_CONTAINER:-}" ]]; then
-    _msg="Singularity container already running"
+if [[ -n "${APPTAINER_CONTAINER:-}" ]]; then
+    _msg="Apptainer/Singularity container already running"
     if $LIST; then
         :  # pass
     elif $WRITE; then
@@ -281,7 +281,7 @@ if $UPDATE; then
     [[ -e "$local_temp_image" ]] && rm -- "$local_temp_image"
     info "Building local temp image at $local_temp_image ..."
     info "Need to be root to run build command:"
-    sudo nice singularity build "$local_temp_image" "$sandbox"
+    sudo nice apptainer build "$local_temp_image" "$sandbox"
     info "Build done, moving to destination..."
     new_image=${image}.new
     cp -av -- "$local_temp_image" "$new_image"
@@ -293,6 +293,7 @@ if $UPDATE; then
     local_image=/var/local/containers/$(basename "$image")
     # use rsync for atomicity
     rsync -v "$local_temp_image" "$local_image"
+    rm -v -- "$local_temp_image"
     info "Local image at $local_image"
     # assume we're on alpena
     for host in vondamm cayman; do
@@ -316,7 +317,7 @@ fi
 for i in "${bind_paths[@]:-()}"; do
     # assume no colon in pathname
     if [[ -e "${i%%:*}" ]]; then
-        SINGULARITY_ARGS+=(-B "$i")
+        APPTAINER_ARGS+=(-B "$i")
         [[ $VERBOSITY -lt 2 ]] || info 1>&2 "Binding: $i"
     else
         [[ $VERBOSITY -lt 2 ]] || debug 1>&2 "Bind path not found: $i"
@@ -333,7 +334,7 @@ if $KEEP_ENV; then
         fi
     fi
 else
-    SINGULARITY_ARGS+=(--cleanenv)
+    APPTAINER_ARGS+=(--cleanenv)
 fi
 
 # In any case, keep PBS, SLURM, and OMICS variables
@@ -341,7 +342,7 @@ keep_vars=()
 mapfile -t keep_vars < <(env | { grep -P '(^PBS_|^OMICS_|^SLURM)' || [[ $? = 1 ]]; })
 if [[ ${#keep_vars[@]} -gt 0 ]]; then
     for i in "${keep_vars[@]}"; do
-        export "SINGULARITYENV_$i"
+        export "APPTAINERENV_$i"
     done
 fi
 
@@ -353,7 +354,7 @@ if [[ -v PBS_JOBID ]]; then
         info "Detected requested memory for PBS job: $pbs_req_mem"
         pbs_req_mem=${pbs_req_mem%kb}
         pbs_req_mem=$(echo "scale=0; $pbs_req_mem / 1.1" | bc)
-        export SINGULARITYENV_OMICS_PBS_REQ_MEM=${pbs_req_mem}k
+        export APPTAINERENV_OMICS_PBS_REQ_MEM=${pbs_req_mem}k
     else
         warning "Failed to detect requested memory for pbs job"
         debug "parsed from qstat output: \"$pbs_req_mem\""
@@ -361,24 +362,24 @@ if [[ -v PBS_JOBID ]]; then
 fi
 
 # set DISPLAY if needed
-[[ -v DISPLAY ]] && export SINGULARITYENV_DISPLAY=$DISPLAY
+[[ -v DISPLAY ]] && export APPTAINERENV_DISPLAY=$DISPLAY
 
 # memorize $PWD -- allows container runscript to issue a warning
 # if $PWD is not accessible
-export SINGULARITYENV_COMICS_PWD=$PWD
+export APPTAINERENV_COMICS_PWD=$PWD
 
 cmd=()
 if $WRITE; then
-    SINGULARITY_ARGS+=(--writable)
+    APPTAINER_ARGS+=(--writable)
     cmd+=(sudo)
 fi
-cmd+=(singularity)
+cmd+=(apptainer)
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
 for i in $(seq 3 "$VERBOSITY"); do cmd+=(--verbose); done
 if $OLD_START_UP; then
-    cmd+=(exec "${SINGULARITY_ARGS[@]}" "$image")
+    cmd+=(exec "${APPTAINER_ARGS[@]}" "$image")
 else
-    cmd+=(run "${SINGULARITY_ARGS[@]}" "$image")
+    cmd+=(run "${APPTAINER_ARGS[@]}" "$image")
 fi
 if [ "$#" -gt 0 ]; then
     cmd+=("$@")
@@ -399,5 +400,5 @@ else
     $NORC && cmd+=(--norc)
 fi
 
-[[ $VERBOSITY -lt 2 ]] || info >&2 "Singularity command: ${cmd[*]}"
+[[ $VERBOSITY -lt 2 ]] || info >&2 "Apptainer command: ${cmd[*]}"
 exec "${cmd[@]}"
