@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2019 Regents of The University of Michigan.
+# Copyright 2019-2024 Regents of The University of Michigan.
 
 # This file is part of geo-omics-scripts.
 
@@ -27,13 +27,25 @@ set -eEu
 
 # Default name of image file without suffix
 DEFAULT_IMAGE_NAME=omics
-GEOMICRO_STORAGE=/geomicro/data9/flux
-# Image file search paths, local paths go first
-CONTAINER_PATH=(
-/var/local/containers
-/dept/geology/$GEOMICRO_STORAGE
-$GEOMICRO_STORAGE
-)
+# Image file search path
+DEFAULT_CONTAINER_PATH=/var/local/containers
+GEOMICRO_STORAGE=/nfs/turbo/lsa-gdick2/geomicro/data9/flux
+
+container_path=()
+[[ -d $DEFAULT_CONTAINER_PATH ]] && container_path+=("$DEFAULT_CONTAINER_PATH")
+for conf_file0 in $(dirname "$0")/../comics.conf /etc/comics.conf; do
+    [[ -e "$conf_file0" ]] || continue
+    conf_file=$conf_file0
+    # shellcheck disable=SC1090
+    source "$conf_file"
+    [[ -v CONTAINER_PATH ]] && container_path+=("${CONTAINER_PATH[@]}")
+    break
+done
+
+if ! apptainer_exec=$(command -v apptainer || command -v singularity); then
+    echo >&2 "apptainer/singularity not installed?"
+    exit 1;
+fi
 
 # shellcheck disable=SC2034
 {
@@ -48,13 +60,14 @@ options with unintended consequences likely.
                 this is empty then a bash prompt will be provided.
 
     -a <option>, --apptainer-opt <option>
-                Options passed on to apptainer.  For instance,
-                to additionally mount a path /some/path, add
-                --apptainer-opt \"-B /some/path\" and the option
-                -B /some-path will be appended to the call
-                to 'apptainer run'.  The empty space between the
-                option and its parameter must be protected by quotes
-                to prevent premature word splitting by the shell.
+    -s <option>, --singularity-opt <option>
+                Options passed on to apptainer.  For instance, to additionally
+                mount a path /some/path, add --apptainer-opt \"-B /some/path\"
+                and the option -B /some-path will be appended to the call to
+                'apptainer run'.  The empty space between the option and its
+                parameter must be protected by quotes to prevent premature word
+                splitting by the shell.
+
     -B PATH, --bind PATH
                 Mount path inside container.  On FLUX and the geomirco servers
                 common storage will be available.
@@ -65,7 +78,7 @@ options with unintended consequences likely.
                 it is not a file in the current directory or a base name is
                 given then the program will search for the container image in
                 these locations in this order:
-                ${CONTAINER_PATH[*]}
+                ${container_path[*]}
                 If only a base name is given, then the container image must
                 have the suffix .img or .sandbox.
                 By default the $DEFAULT_IMAGE_NAME container is used.                
@@ -101,14 +114,14 @@ options with unintended consequences likely.
 # SHORT_OPTIONS: start with + for posix correct scanning mode
 # comics has no non-option arguments so, this way no -- is required before the
 # command to stop getopt from rearranging any command arguments
-SHORT_OPTIONS=+B:i:klmps:uw
-LONG_OPTIONS=bind:container-image:keep-env,keep-env-modules,keep-prompt,list,norc,old-start,rcfile:,singularity-opt:,update,write
+SHORT_OPTIONS=+a:B:i:klmps:uw
+LONG_OPTIONS=apptainer-opt:,bind:container-image:keep-env,keep-env-modules,keep-prompt,list,norc,old-start,rcfile:,singularity-opt:,update,write
 }
 
 handle_options () {
     if [ "$#" -gt 0 ]; then
 	case "$1" in
-	    (-a|--apptainer-opt)
+	    (-a|-s|--apptainer-opt|--singularity-opt)
                 APPTAINER_ARGS+=("$2")
 		return 2;;
             (-B|--bind) BIND_PATHS_EXTRA+=("$2"); return 2;;
@@ -161,8 +174,6 @@ LIST=false
 # /etc/singularity/singularity.conf including it here may produce two warnings
 # each time comics is called
 BIND_PATHS=(
-/dept
-/nfs
 "${geomicro_base}"/geomicro/data9/flux/reference-data:/reference-data:ro
 /etc/passwd
 /etc/group
@@ -185,13 +196,15 @@ WRITE=false
 # shellcheck disable=SC1091
 . "$(dirname "$0")/../share/geo-omics-scripts/liba.sh" || (echo 1>&2 "Failed to source script library"; exit 1)
 
-
 [[ $VERBOSITY -gt 2 ]] && debug "script path: $0"
+[[ $VERBOSITY -gt 2 ]] && debug "config file: ${conf_file:-}"
+[[ $VERBOSITY -gt 2 ]] && debug "image search path: ${container_path[*]}"
+
 ###############
 # sanity check
 ###############
 
-if [[ -n "${APPTAINER_CONTAINER:-}" ]]; then
+if [[ -n "${APPTAINER_CONTAINER:-}" || -n "${SINGULARITY_CONTAINER:-}" ]]; then
     _msg="Apptainer/Singularity container already running"
     if $LIST; then
         :  # pass
@@ -211,7 +224,7 @@ fi
 ################################
 
 if $LIST; then
-    for p in "${CONTAINER_PATH[@]}"; do
+    for p in "${container_path[@]}"; do
         if ! [[ -d "$p" ]]; then
             if [[ $VERBOSITY -lt 2 ]]; then
                 :
@@ -251,7 +264,7 @@ if $USER_SPECIFIED_IMAGE && [[ -e "$IMAGE" ]]; then
     image=$IMAGE
 else
     for suf in "" .img .sandbox; do
-        for p in "${CONTAINER_PATH[@]}"; do
+        for p in "${container_path[@]}"; do
             # only *.sandbox should be writable
             $WRITE && [[ $suf == .img ]] && continue
             _image=${p}/${IMAGE}${suf}
@@ -281,19 +294,14 @@ if $UPDATE; then
     [[ -e "$local_temp_image" ]] && rm -- "$local_temp_image"
     info "Building local temp image at $local_temp_image ..."
     info "Need to be root to run build command:"
-    sudo nice apptainer build "$local_temp_image" "$sandbox"
-    info "Build done, moving to destination..."
-    new_image=${image}.new
-    cp -av -- "$local_temp_image" "$new_image"
-    info "Renaming new image, keeping backup..."
+    sudo nice "$apptainer_exec" build "$local_temp_image" "$sandbox"
+    info "Build done, copying to global destination..."
     geomicro_img="$GEOMICRO_STORAGE/$(basename "$image")"
-    # copy to /geomicro/... with mv for numbered backup + atomicity
-    mv -v --backup=numbered "$new_image" "$geomicro_img"
-    info "New image at $image"
+    cp -av -- "$local_temp_image" "${geomicro_img}.new"
+    info "Renaming new global image, keeping backup..."
+    mv -v --backup=numbered "${geomicro_img}.new" "$geomicro_img"
     local_image=/var/local/containers/$(basename "$image")
-    # use rsync for atomicity
-    rsync -v "$local_temp_image" "$local_image"
-    rm -v -- "$local_temp_image"
+    mv -v "$local_temp_image" "$local_image"
     info "Local image at $local_image"
     # assume we're on alpena
     for host in vondamm cayman; do
@@ -306,8 +314,10 @@ if $UPDATE; then
 fi
 
 bind_paths=()
-if ! $WRITE; then
+if $WRITE; then
     # skip default bind paths for sandboxes (/etc/passwd/group interferes with apt)
+    APPTAINER_ARGS+=(--no-mount bind-paths)
+elif [[ -v BIND_PATHS[@] ]]; then
     bind_paths+=("${BIND_PATHS[@]}")
 fi
 if [[ -v BIND_PATHS_EXTRA[@] ]]; then
@@ -343,6 +353,7 @@ mapfile -t keep_vars < <(env | { grep -P '(^PBS_|^OMICS_|^SLURM)' || [[ $? = 1 ]
 if [[ ${#keep_vars[@]} -gt 0 ]]; then
     for i in "${keep_vars[@]}"; do
         export "APPTAINERENV_$i"
+        export "SINGULARITYENV_$i"
     done
 fi
 
@@ -355,6 +366,7 @@ if [[ -v PBS_JOBID ]]; then
         pbs_req_mem=${pbs_req_mem%kb}
         pbs_req_mem=$(echo "scale=0; $pbs_req_mem / 1.1" | bc)
         export APPTAINERENV_OMICS_PBS_REQ_MEM=${pbs_req_mem}k
+        export SINGULARITYENV_OMICS_PBS_REQ_MEM=${pbs_req_mem}k
     else
         warning "Failed to detect requested memory for pbs job"
         debug "parsed from qstat output: \"$pbs_req_mem\""
@@ -362,18 +374,22 @@ if [[ -v PBS_JOBID ]]; then
 fi
 
 # set DISPLAY if needed
-[[ -v DISPLAY ]] && export APPTAINERENV_DISPLAY=$DISPLAY
+if [[ -v DISPLAY ]]; then
+    export APPTAINERENV_DISPLAY=$DISPLAY
+    export SINGULARITYENV_DISPLAY=$DISPLAY
+fi
 
 # memorize $PWD -- allows container runscript to issue a warning
 # if $PWD is not accessible
 export APPTAINERENV_COMICS_PWD=$PWD
+export SINGULARITYENV_COMICS_PWD=$PWD
 
 cmd=()
 if $WRITE; then
     APPTAINER_ARGS+=(--writable)
     cmd+=(sudo)
 fi
-cmd+=(apptainer)
+cmd+=("$apptainer_exec")
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
 for i in $(seq 3 "$VERBOSITY"); do cmd+=(--verbose); done
 if $OLD_START_UP; then
@@ -400,5 +416,5 @@ else
     $NORC && cmd+=(--norc)
 fi
 
-[[ $VERBOSITY -lt 2 ]] || info >&2 "Apptainer command: ${cmd[*]}"
+[[ $VERBOSITY -lt 2 ]] || info >&2 "Apptainer/Singularity command: ${cmd[*]}"
 exec "${cmd[@]}"
