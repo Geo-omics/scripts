@@ -392,16 +392,13 @@ fi
 cmd+=("$apptainer_exec")
 [[ $VERBOSITY == 0 ]] && cmd+=(--quiet)
 for i in $(seq 3 "$VERBOSITY"); do cmd+=(--verbose); done
-if $OLD_START_UP; then
-    cmd+=(exec "${APPTAINER_ARGS[@]}" "$image")
-else
-    cmd+=(run "${APPTAINER_ARGS[@]}" "$image")
-fi
 if [ "$#" -gt 0 ]; then
-    cmd+=("$@")
+    # command provided
+    cmd+=(exec "${APPTAINER_ARGS[@]}" "$image" "$@")
 else
+    # run shell
+    cmd+=(shell "${APPTAINER_ARGS[@]}" "$image")
     if $OLD_START_UP; then
-        cmd+=(/bin/bash)
         if [[ -n "$RCFILE" ]]; then
             cmd+=(--rcfile "$RCFILE")
         else
